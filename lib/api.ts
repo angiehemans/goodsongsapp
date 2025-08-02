@@ -44,6 +44,40 @@ export interface UserProfile {
   email: string;
   username: string;
   reviews: Review[];
+  bands?: Band[];
+}
+
+export interface BandData {
+  name: string;
+  slug?: string;
+  location?: string;
+  about?: string;
+  spotify_link?: string;
+  bandcamp_link?: string;
+  apple_music_link?: string;
+  youtube_music_link?: string;
+  profile_picture?: File;
+}
+
+export interface Band {
+  id: number;
+  slug: string;
+  name: string;
+  location?: string;
+  about?: string;
+  spotify_link?: string;
+  bandcamp_link?: string;
+  apple_music_link?: string;
+  youtube_music_link?: string;
+  profile_picture_url?: string;
+  reviews_count: number;
+  user_owned: boolean;
+  owner: {
+    id: number;
+    username: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
 class ApiClient {
@@ -143,6 +177,119 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to fetch user profile');
+    }
+
+    return response.json();
+  }
+
+  async createBand(data: BandData): Promise<Band> {
+    // Check if we need to use FormData for file upload
+    const hasFile = data.profile_picture instanceof File;
+    
+    if (hasFile) {
+      const formData = new FormData();
+      formData.append('band[name]', data.name);
+      if (data.slug) {
+        formData.append('band[slug]', data.slug);
+      }
+      if (data.location) {
+        formData.append('band[location]', data.location);
+      }
+      if (data.about) {
+        formData.append('band[about]', data.about);
+      }
+      if (data.spotify_link) {
+        formData.append('band[spotify_link]', data.spotify_link);
+      }
+      if (data.bandcamp_link) {
+        formData.append('band[bandcamp_link]', data.bandcamp_link);
+      }
+      if (data.apple_music_link) {
+        formData.append('band[apple_music_link]', data.apple_music_link);
+      }
+      if (data.youtube_music_link) {
+        formData.append('band[youtube_music_link]', data.youtube_music_link);
+      }
+      if (data.profile_picture) {
+        formData.append('band[profile_picture]', data.profile_picture);
+      }
+
+      const response = await fetch('/api/bands', {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create band');
+      }
+
+      return response.json();
+    }
+    
+    // Use JSON for non-file uploads
+    const response = await fetch('/api/bands', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ band: data }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create band');
+    }
+
+    return response.json();
+  }
+
+  async getBand(slug: string): Promise<Band> {
+    const response = await fetch(`/api/bands/${slug}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch band');
+    }
+
+    return response.json();
+  }
+
+  async getUserBands(): Promise<Band[]> {
+    const response = await fetch('/api/bands/user', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch user bands');
+    }
+
+    return response.json();
+  }
+
+  async getUserReviews(): Promise<Review[]> {
+    const response = await fetch('/api/reviews/user', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch user reviews');
     }
 
     return response.json();
