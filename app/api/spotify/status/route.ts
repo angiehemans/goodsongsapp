@@ -2,17 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ username: string }> }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { username } = await params;
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Authorization token required' },
+        { status: 401 }
+      );
+    }
 
-    // Forward the request to your backend API
-    const response = await fetch(`${API_BASE_URL}/users/${username}`, {
+    const token = authHeader.substring(7);
+
+    const response = await fetch(`${API_BASE_URL}/spotify/status`, {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
@@ -20,7 +26,7 @@ export async function GET(
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.error || 'Failed to fetch user profile' },
+        { error: data.error || 'Failed to get Spotify status' },
         { status: response.status }
       );
     }

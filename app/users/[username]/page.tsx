@@ -176,7 +176,7 @@ export default async function UserProfilePage({
                         <Group gap="xs">
                           {review.liked_aspects.map((aspect, index) => (
                             <Badge key={index} variant="light" color="grape">
-                              {aspect}
+                              {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
                             </Badge>
                           ))}
                         </Group>

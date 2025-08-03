@@ -11,14 +11,16 @@ import {
   Center,
   Button,
   SimpleGrid,
+  Card,
+  Rating,
+  Divider,
 } from '@mantine/core';
-import { IconAlertCircle, IconMapPin, IconMusic, IconBrandSpotify, IconBrandApple, IconBrandYoutube } from '@tabler/icons-react';
+import { IconAlertCircle, IconMapPin, IconMusic, IconBrandSpotify, IconBrandApple, IconBrandYoutube, IconPlus, IconCalendar } from '@tabler/icons-react';
 import { Band } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export async function generateMetadata({
   params,
@@ -43,7 +45,12 @@ export async function generateMetadata({
 
 async function getBand(slug: string): Promise<Band> {
   try {
-    const response = await fetch(`${API_BASE_URL}/bands/${slug}`, {
+    // For server components, we need to use the full URL to the Next.js API route
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'
+      : 'http://localhost:3001';
+      
+    const response = await fetch(`${baseUrl}/api/bands/${slug}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -141,7 +148,7 @@ export default async function BandProfilePage({
               </Group>
 
               <Text size="sm" c="dimmed">
-                Created by @{band.owner.username} • {formatDate(band.created_at)}
+                Created by @{band.owner?.username || 'Unknown'} • {formatDate(band.created_at)}
               </Text>
             </Stack>
           </Group>
@@ -183,9 +190,19 @@ export default async function BandProfilePage({
 
         {/* Reviews Section */}
         <Paper p="lg" radius="md">
-          <Title order={3} mb="md">Reviews</Title>
+          <Group justify="space-between" align="center" mb="md">
+            <Title order={3}>Reviews</Title>
+            <Button
+              component={Link}
+              href="/user/create-review"
+              variant="outline"
+              leftSection={<IconPlus size={16} />}
+            >
+              Write a Review
+            </Button>
+          </Group>
           
-          {band.reviews_count === 0 ? (
+          {!band.reviews || band.reviews.length === 0 ? (
             <Center py="xl">
               <Stack align="center">
                 <IconMusic size={48} color="var(--mantine-color-dimmed)" />
@@ -195,25 +212,102 @@ export default async function BandProfilePage({
                 <Button
                   component={Link}
                   href="/user/create-review"
-                  variant="outline"
+                  variant="filled"
                 >
-                  Write a Review
+                  Write the First Review
                 </Button>
               </Stack>
             </Center>
           ) : (
             <Stack>
-              <Text c="dimmed">
-                {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''} for this band.
+              <Text size="sm" c="dimmed" mb="md">
+                {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''} for this band
               </Text>
-              {/* TODO: Add actual reviews list when backend provides it */}
-              <Button
-                component={Link}
-                href="/user/create-review"
-                variant="outline"
-              >
-                Write a Review
-              </Button>
+              
+              {band.reviews.map((review) => (
+                <Card key={review.id} p="lg">
+                  <Stack>
+                    {/* Review Header */}
+                    <Group justify="space-between" align="flex-start">
+                      <Group>
+                        {review.artwork_url && (
+                          <img
+                            src={review.artwork_url}
+                            alt={`${review.song_name} artwork`}
+                            style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }}
+                          />
+                        )}
+                        <Stack gap="xs">
+                          <div>
+                            <Title order={4}>{review.song_name}</Title>
+                            <Text size="sm" c="dimmed">{review.band_name}</Text>
+                          </div>
+                          <Group gap="xs">
+                            <Text size="sm" fw={500}>by</Text>
+                            <Text 
+                              size="sm" 
+                              component={Link} 
+                              href={`/users/${review.user?.username || 'unknown'}`}
+                              c="grape.6"
+                              style={{ textDecoration: 'none' }}
+                            >
+                              @{review.user?.username || 'Unknown User'}
+                            </Text>
+                          </Group>
+                        </Stack>
+                      </Group>
+                      <Group align="center" gap="xs">
+                        <Rating value={review.overall_rating} readOnly size="sm" />
+                        <Text size="sm" c="dimmed">
+                          {review.overall_rating}/5
+                        </Text>
+                      </Group>
+                    </Group>
+
+                    <Divider />
+
+                    {/* Review Content */}
+                    <Text>{review.review_text}</Text>
+
+                    {/* Liked Aspects */}
+                    {review.liked_aspects.length > 0 && (
+                      <Group>
+                        <Text size="sm" fw={500}>Liked:</Text>
+                        <Group gap="xs">
+                          {review.liked_aspects.map((aspect, index) => (
+                            <Badge key={index} variant="light" color="grape">
+                              {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
+                            </Badge>
+                          ))}
+                        </Group>
+                      </Group>
+                    )}
+
+                    {/* Review Footer */}
+                    <Group justify="space-between" align="center">
+                      <Group gap="xs">
+                        <IconCalendar size={14} />
+                        <Text size="xs" c="dimmed">
+                          {formatDate(review.created_at)}
+                        </Text>
+                      </Group>
+                      
+                      {review.song_link && (
+                        <Button
+                          component="a"
+                          href={review.song_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="subtle"
+                          size="xs"
+                        >
+                          Listen
+                        </Button>
+                      )}
+                    </Group>
+                  </Stack>
+                </Card>
+              ))}
             </Stack>
           )}
         </Paper>

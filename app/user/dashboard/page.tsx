@@ -19,11 +19,12 @@ import {
   Rating,
   Divider,
 } from '@mantine/core';
-import { IconMusic, IconPlaylist, IconUsers, IconLogout, IconPlus } from '@tabler/icons-react';
+import { IconMusic, IconPlaylist, IconUsers, IconLogout, IconPlus, IconBrandSpotify } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
 import { apiClient, Band, Review } from '@/lib/api';
+import { SpotifyConnection } from '@/components/SpotifyConnection/SpotifyConnection';
 
 export default function DashboardPage() {
   const { user, logout, isLoading } = useAuth();
@@ -32,6 +33,9 @@ export default function DashboardPage() {
   const [bandsLoading, setBandsLoading] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
+  const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -41,7 +45,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchBands = async () => {
-      if (!user) return;
+      if (!user) {
+        return;
+      }
       
       try {
         setBandsLoading(true);
@@ -66,7 +72,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchReviews = async () => {
-      if (!user) return;
+      if (!user) {
+        return;
+      }
       
       try {
         setReviewsLoading(true);
@@ -85,6 +93,33 @@ export default function DashboardPage() {
       fetchReviews();
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchRecentlyPlayed = async () => {
+      if (!user || !spotifyConnected) {
+        return;
+      }
+      
+      try {
+        setRecentlyPlayedLoading(true);
+        const tracks = await apiClient.getRecentlyPlayed();
+        
+        // Ensure tracks is an array, handle different response formats
+        const tracksArray = Array.isArray(tracks) ? tracks : ((tracks as any)?.tracks || (tracks as any)?.items || []);
+        
+        setRecentlyPlayed(tracksArray);
+      } catch (error) {
+        console.error('Failed to fetch recently played tracks:', error);
+        setRecentlyPlayed([]);
+      } finally {
+        setRecentlyPlayedLoading(false);
+      }
+    };
+
+    if (user && spotifyConnected) {
+      fetchRecentlyPlayed();
+    }
+  }, [user, spotifyConnected]);
 
   const handleLogout = () => {
     logout();
@@ -187,6 +222,9 @@ export default function DashboardPage() {
           </Grid.Col>
         </Grid>
 
+        {/* Spotify Connection */}
+        <SpotifyConnection onConnectionChange={setSpotifyConnected} />
+
         {/* Quick Actions */}
         <Paper p="lg" radius="md">
           <Title order={3} mb="md">Quick Actions</Title>
@@ -203,7 +241,6 @@ export default function DashboardPage() {
             >
               Create Band
             </Button>
-            <Button variant="outline">Connect Spotify</Button>
             <Button variant="outline">Discover Music</Button>
           </Group>
         </Paper>
@@ -339,7 +376,7 @@ export default function DashboardPage() {
                           <Group gap="xs">
                             {review.liked_aspects.slice(0, 3).map((aspect, index) => (
                               <Badge key={index} size="sm" variant="light" color="grape">
-                                {aspect}
+                                {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
                               </Badge>
                             ))}
                             {review.liked_aspects.length > 3 && (
@@ -380,6 +417,110 @@ export default function DashboardPage() {
             </Stack>
           )}
         </Paper>
+
+        {/* Recently Played from Spotify */}
+        {spotifyConnected && (
+          <Paper p="lg" radius="md">
+            <Group justify="space-between" align="center" mb="md">
+              <Title order={3}>Recently Played on Spotify</Title>
+              <Badge variant="light" color="green" leftSection={<IconMusic size={12} />}>
+                From Spotify
+              </Badge>
+            </Group>
+            
+            {recentlyPlayedLoading ? (
+              <Center py="md">
+                <Loader size="sm" />
+              </Center>
+            ) : !Array.isArray(recentlyPlayed) || recentlyPlayed.length === 0 ? (
+              <Center py="xl">
+                <Stack align="center">
+                  <IconMusic size={48} color="var(--mantine-color-dimmed)" />
+                  <Text c="dimmed" ta="center">
+                    No recently played tracks found. Start listening on Spotify!
+                  </Text>
+                </Stack>
+              </Center>
+            ) : (
+              <Stack>
+                {(Array.isArray(recentlyPlayed) ? recentlyPlayed : []).slice(0, 10).map((track, index) => (
+                  <Card key={`${track.id}-${index}`} p="md">
+                    <Group justify="space-between" align="flex-start">
+                      <Group>
+                        {track.album?.images?.[0] && (
+                          <img
+                            src={track.album.images[0].url}
+                            alt={`${track.name} album art`}
+                            style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
+                          />
+                        )}
+                        <Stack gap="xs">
+                          <div>
+                            <Title order={5}>{track.name}</Title>
+                            <Text size="sm" c="dimmed">
+                              {Array.isArray(track.artists) 
+                                ? track.artists.map((artist: any) => typeof artist === 'string' ? artist : artist.name).join(', ')
+                                : track.artists
+                              }
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {track.album?.name}
+                            </Text>
+                          </div>
+                          <Text size="xs" c="dimmed">
+                            Played {new Date(track.played_at).toLocaleString()}
+                          </Text>
+                        </Stack>
+                      </Group>
+                      <Group gap="xs">
+                        <Button
+                          component="a"
+                          href={track.external_urls?.spotify}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="subtle"
+                          size="xs"
+                          color="green"
+                          leftSection={<IconBrandSpotify size={14} />}
+                        >
+                          Open in Spotify
+                        </Button>
+                        <Button
+                          component={Link}
+                          href={`/user/create-review?${new URLSearchParams({
+                            song_name: track.name || '',
+                            band_name: Array.isArray(track.artists) 
+                              ? track.artists.map((artist: any) => typeof artist === 'string' ? artist : artist.name).join(', ')
+                              : track.artists || '',
+                            artwork_url: track.album?.images?.[0]?.url || '',
+                            song_link: track.external_urls?.spotify || ''
+                          }).toString()}`}
+                          variant="filled"
+                          size="xs"
+                          color="grape"
+                          leftSection={<IconPlus size={14} />}
+                        >
+                          Recommend
+                        </Button>
+                      </Group>
+                    </Group>
+                  </Card>
+                ))}
+                
+                {Array.isArray(recentlyPlayed) && recentlyPlayed.length > 10 && (
+                  <>
+                    <Divider />
+                    <Group justify="center">
+                      <Text size="sm" c="dimmed">
+                        Showing 10 of {recentlyPlayed.length} recently played tracks
+                      </Text>
+                    </Group>
+                  </>
+                )}
+              </Stack>
+            )}
+          </Paper>
+        )}
       </Stack>
     </Container>
   );

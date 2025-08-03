@@ -30,13 +30,17 @@ export interface ReviewData {
   artwork_url: string;
   review_text: string;
   overall_rating: number;
-  liked_aspects: string[];
+  liked_aspects: (string | { name: string })[];
 }
 
 export interface Review extends ReviewData {
   id: number;
   created_at: string;
   updated_at: string;
+  user?: {
+    id: number;
+    username: string;
+  };
 }
 
 export interface UserProfile {
@@ -72,12 +76,61 @@ export interface Band {
   profile_picture_url?: string;
   reviews_count: number;
   user_owned: boolean;
-  owner: {
+  owner?: {
     id: number;
     username: string;
-  };
+  } | null;
+  reviews?: Review[];
   created_at: string;
   updated_at: string;
+}
+
+export interface SpotifyArtist {
+  name: string;
+  id: string;
+}
+
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  artists: SpotifyArtist[];
+  album: {
+    name: string;
+    images: Array<{
+      url: string;
+      height: number;
+      width: number;
+    }>;
+  };
+  external_urls: {
+    spotify: string;
+  };
+  duration_ms: number;
+}
+
+export interface RecentlyPlayedTrack {
+  id: string;
+  name: string;
+  artists: (string | SpotifyArtist)[];
+  album: {
+    name: string;
+    images: Array<{
+      url: string;
+      height: number;
+      width: number;
+    }>;
+  };
+  external_urls: {
+    spotify: string;
+  };
+  duration_ms: number;
+  played_at: string;
+  preview_url?: string | null;
+}
+
+export interface SpotifyStatus {
+  connected: boolean;
+  user_id?: string;
 }
 
 class ApiClient {
@@ -104,7 +157,7 @@ class ApiClient {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -290,6 +343,69 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to fetch user reviews');
+    }
+
+    return response.json();
+  }
+
+  async getSpotifyConnectUrl(): Promise<{ auth_url: string }> {
+    const response = await fetch('/api/spotify/connect-url', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get Spotify connect URL');
+    }
+
+    return response.json();
+  }
+
+  async getSpotifyStatus(): Promise<SpotifyStatus> {
+    const response = await fetch('/api/spotify/status', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get Spotify status');
+    }
+
+    return response.json();
+  }
+
+  async disconnectSpotify(): Promise<void> {
+    const response = await fetch('/api/spotify/disconnect', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to disconnect Spotify');
+    }
+  }
+
+  async getRecentlyPlayed(): Promise<RecentlyPlayedTrack[] | { tracks: RecentlyPlayedTrack[] }> {
+    const response = await fetch('/api/recently-played', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch recently played tracks');
     }
 
     return response.json();

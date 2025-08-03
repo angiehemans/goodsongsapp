@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Container,
   Title,
@@ -15,8 +15,10 @@ import {
   MultiSelect,
   Group,
   Alert,
+  Loader,
+  Center,
 } from '@mantine/core';
-import { IconArrowLeft, IconAlertCircle } from '@tabler/icons-react';
+import { IconArrowLeft, IconAlertCircle, IconBrandSpotify } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
@@ -33,9 +35,10 @@ const aspectOptions = [
   { value: 'Creativity', label: 'Creativity' },
 ];
 
-export default function CreateReviewPage() {
+function CreateReviewForm() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +51,24 @@ export default function CreateReviewPage() {
     overall_rating: 0,
     liked_aspects: [],
   });
+
+  // Prefill form from URL parameters when component mounts
+  useEffect(() => {
+    const songName = searchParams.get('song_name');
+    const bandName = searchParams.get('band_name');
+    const artworkUrl = searchParams.get('artwork_url');
+    const songLink = searchParams.get('song_link');
+
+    if (songName || bandName || artworkUrl || songLink) {
+      setFormData(prev => ({
+        ...prev,
+        song_name: songName || prev.song_name,
+        band_name: bandName || prev.band_name,
+        artwork_url: artworkUrl || prev.artwork_url,
+        song_link: songLink || prev.song_link,
+      }));
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +119,18 @@ export default function CreateReviewPage() {
           <Text size="sm" c="dimmed" mb="lg">
             Share your thoughts about a song and help others discover great music!
           </Text>
+
+          {(searchParams.get('song_name') || searchParams.get('band_name')) && (
+            <Alert 
+              icon={<IconBrandSpotify size="1rem" />} 
+              title="Prefilled from Spotify" 
+              color="green" 
+              variant="light"
+              mb="lg"
+            >
+              This form has been prefilled with track information from your recently played songs.
+            </Alert>
+          )}
 
           {error && (
             <Alert 
@@ -158,8 +191,8 @@ export default function CreateReviewPage() {
                 label="What did you like about this song?"
                 placeholder="Select aspects you enjoyed"
                 data={aspectOptions}
-                value={formData.liked_aspects}
-                onChange={(values) => setFormData({ ...formData, liked_aspects: values })}
+                value={formData.liked_aspects.map(aspect => typeof aspect === 'string' ? aspect : aspect.name)}
+                onChange={(values) => setFormData({ ...formData, liked_aspects: values as (string | { name: string })[] })}
               />
 
               <Textarea
@@ -192,5 +225,19 @@ export default function CreateReviewPage() {
         </Paper>
       </Stack>
     </Container>
+  );
+}
+
+export default function CreateReviewPage() {
+  return (
+    <Suspense fallback={
+      <Container>
+        <Center py="xl">
+          <Loader />
+        </Center>
+      </Container>
+    }>
+      <CreateReviewForm />
+    </Suspense>
   );
 }
