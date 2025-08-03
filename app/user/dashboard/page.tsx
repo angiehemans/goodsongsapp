@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, memo, Suspense, lazy } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Container,
@@ -18,24 +18,117 @@ import {
   Loader,
   Rating,
   Divider,
+  Skeleton,
 } from '@mantine/core';
 import { IconMusic, IconPlaylist, IconUsers, IconLogout, IconPlus, IconBrandSpotify } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
 import { apiClient, Band, Review } from '@/lib/api';
-import { SpotifyConnection } from '@/components/SpotifyConnection/SpotifyConnection';
+
+// Lazy load heavy components
+const SpotifyConnection = lazy(() => 
+  import('@/components/SpotifyConnection/SpotifyConnection').then(mod => ({ 
+    default: mod.SpotifyConnection 
+  }))
+);
+
+// Memoized components for better performance
+const StatsCard = memo(({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) => (
+  <Card p="lg" radius="md">
+    <Group>
+      {icon}
+      <div>
+        <Text size="xl" fw={700}>{value}</Text>
+        <Text size="sm" c="dimmed">{label}</Text>
+      </div>
+    </Group>
+  </Card>
+));
+
+const BandCard = memo(({ band }: { band: Band }) => (
+  <Grid.Col key={band.id} span={{ base: 12, sm: 6, md: 4 }}>
+    <Card component={Link} href={`/bands/${band.slug}`} p="md" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Group>
+        {band.profile_picture_url ? (
+          <img
+            src={band.profile_picture_url}
+            alt={band.name}
+            style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
+          />
+        ) : (
+          <Avatar size={48} color="grape.6">
+            {band.name.charAt(0).toUpperCase()}
+          </Avatar>
+        )}
+        <Stack gap="xs" flex={1}>
+          <Title order={5}>{band.name}</Title>
+          <Group gap="xs">
+            <Badge size="sm" variant="light" color="grape">
+              {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''}
+            </Badge>
+            {band.location && (
+              <Text size="xs" c="dimmed">{band.location}</Text>
+            )}
+          </Group>
+        </Stack>
+      </Group>
+    </Card>
+  </Grid.Col>
+));
+
+const ReviewCard = memo(({ review }: { review: Review }) => (
+  <Card key={review.id} p="md">
+    <Group justify="space-between" align="flex-start">
+      <Group>
+        {review.artwork_url && (
+          <img
+            src={review.artwork_url}
+            alt={`${review.song_name} artwork`}
+            style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
+          />
+        )}
+        <Stack gap="xs">
+          <div>
+            <Title order={5}>{review.song_name}</Title>
+            <Text size="sm" c="dimmed">{review.band_name}</Text>
+          </div>
+          <Text size="sm" lineClamp={2}>
+            {review.review_text}
+          </Text>
+          {review.liked_aspects.length > 0 && (
+            <Group gap="xs">
+              {review.liked_aspects.slice(0, 3).map((aspect, index) => (
+                <Badge key={index} size="sm" variant="light" color="grape">
+                  {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
+                </Badge>
+              ))}
+              {review.liked_aspects.length > 3 && (
+                <Text size="xs" c="dimmed">+{review.liked_aspects.length - 3} more</Text>
+              )}
+            </Group>
+          )}
+        </Stack>
+      </Group>
+      <Group align="center" gap="xs">
+        <Rating value={review.overall_rating} readOnly size="sm" />
+        <Text size="sm" c="dimmed">
+          {review.overall_rating}/5
+        </Text>
+      </Group>
+    </Group>
+  </Card>
+));
 
 export default function DashboardPage() {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [bands, setBands] = useState<Band[]>([]);
-  const [bandsLoading, setBandsLoading] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
-  const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
   const [spotifyConnected, setSpotifyConnected] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -43,83 +136,76 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    const fetchBands = async () => {
-      if (!user) {
-        return;
-      }
-      
-      try {
-        setBandsLoading(true);
-        const userBands = await apiClient.getUserBands();
-        setBands(userBands);
-      } catch (error) {
-        console.error('Failed to fetch bands:', error);
+  // Fetch core data in parallel for better performance
+  const fetchCoreData = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+    
+    setDataLoading(true);
+    
+    try {
+      // Fetch bands and reviews in parallel
+      const [bandsResult, reviewsResult] = await Promise.allSettled([
+        apiClient.getUserBands(),
+        apiClient.getUserReviews()
+      ]);
+
+      // Handle bands result
+      if (bandsResult.status === 'fulfilled') {
+        setBands(bandsResult.value);
+      } else {
         notifications.show({
           title: 'Error loading bands',
           message: 'Could not load your bands. Please try again.',
           color: 'red',
         });
-      } finally {
-        setBandsLoading(false);
       }
-    };
 
-    if (user) {
-      fetchBands();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      if (!user) {
-        return;
-      }
-      
-      try {
-        setReviewsLoading(true);
-        const userReviews = await apiClient.getUserReviews();
-        setReviews(userReviews);
-      } catch (error) {
-        console.error('Failed to fetch reviews:', error);
-        // Silently fail for now since this endpoint might not exist yet
+      // Handle reviews result
+      if (reviewsResult.status === 'fulfilled') {
+        setReviews(reviewsResult.value);
+      } else {
+        // Silently fail for reviews as endpoint might not exist yet
         setReviews([]);
-      } finally {
-        setReviewsLoading(false);
       }
-    };
-
-    if (user) {
-      fetchReviews();
+    } finally {
+      setDataLoading(false);
     }
   }, [user]);
 
-  useEffect(() => {
-    const fetchRecentlyPlayed = async () => {
-      if (!user || !spotifyConnected) {
-        return;
-      }
-      
-      try {
-        setRecentlyPlayedLoading(true);
-        const tracks = await apiClient.getRecentlyPlayed();
-        
-        // Ensure tracks is an array, handle different response formats
-        const tracksArray = Array.isArray(tracks) ? tracks : ((tracks as any)?.tracks || (tracks as any)?.items || []);
-        
-        setRecentlyPlayed(tracksArray);
-      } catch (error) {
-        console.error('Failed to fetch recently played tracks:', error);
-        setRecentlyPlayed([]);
-      } finally {
-        setRecentlyPlayedLoading(false);
-      }
-    };
-
-    if (user && spotifyConnected) {
-      fetchRecentlyPlayed();
+  // Fetch Spotify data separately (non-blocking)
+  const fetchSpotifyData = useCallback(async () => {
+    if (!user || !spotifyConnected) {
+      return;
+    }
+    
+    setRecentlyPlayedLoading(true);
+    
+    try {
+      const tracks = await apiClient.getRecentlyPlayed();
+      const tracksArray = Array.isArray(tracks) ? tracks : ((tracks as any)?.tracks || (tracks as any)?.items || []);
+      setRecentlyPlayed(tracksArray);
+    } catch (error) {
+      setRecentlyPlayed([]);
+    } finally {
+      setRecentlyPlayedLoading(false);
     }
   }, [user, spotifyConnected]);
+
+  // Load core data immediately when user is available
+  useEffect(() => {
+    if (user) {
+      fetchCoreData();
+    }
+  }, [user, fetchCoreData]);
+
+  // Load Spotify data when connection status changes
+  useEffect(() => {
+    if (user && spotifyConnected) {
+      fetchSpotifyData();
+    }
+  }, [user, spotifyConnected, fetchSpotifyData]);
 
   const handleLogout = () => {
     logout();
@@ -186,44 +272,41 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <Grid>
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Card p="lg" radius="md">
-              <Group>
-                <IconMusic size={32} color="var(--mantine-color-grape-6)" />
-                <div>
-                  <Text size="xl" fw={700}>{reviews.length}</Text>
-                  <Text size="sm" c="dimmed">Reviews Written</Text>
-                </div>
-              </Group>
-            </Card>
+            <StatsCard
+              icon={<IconMusic size={32} color="var(--mantine-color-grape-6)" />}
+              value={reviews.length}
+              label="Reviews Written"
+            />
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Card p="lg" radius="md">
-              <Group>
-                <IconPlaylist size={32} color="var(--mantine-color-grape-6)" />
-                <div>
-                  <Text size="xl" fw={700}>{bands.length}</Text>
-                  <Text size="sm" c="dimmed">Bands Created</Text>
-                </div>
-              </Group>
-            </Card>
+            <StatsCard
+              icon={<IconPlaylist size={32} color="var(--mantine-color-grape-6)" />}
+              value={bands.length}
+              label="Bands Created"
+            />
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 4 }}>
-            <Card p="lg" radius="md">
-              <Group>
-                <IconUsers size={32} color="var(--mantine-color-grape-6)" />
-                <div>
-                  <Text size="xl" fw={700}>0</Text>
-                  <Text size="sm" c="dimmed">Following</Text>
-                </div>
-              </Group>
-            </Card>
+            <StatsCard
+              icon={<IconUsers size={32} color="var(--mantine-color-grape-6)" />}
+              value={0}
+              label="Following"
+            />
           </Grid.Col>
         </Grid>
 
-        {/* Spotify Connection */}
-        <SpotifyConnection onConnectionChange={setSpotifyConnected} />
+        {/* Spotify Connection - Lazy loaded */}
+        <Suspense fallback={
+          <Paper p="md" radius="md">
+            <Group>
+              <Skeleton height={20} width={20} radius="xl" />
+              <Skeleton height={20} width={200} />
+            </Group>
+          </Paper>
+        }>
+          <SpotifyConnection onConnectionChange={setSpotifyConnected} />
+        </Suspense>
 
         {/* Quick Actions */}
         <Paper p="lg" radius="md">
@@ -260,7 +343,7 @@ export default function DashboardPage() {
             </Button>
           </Group>
           
-          {bandsLoading ? (
+          {dataLoading ? (
             <Center py="md">
               <Loader size="sm" />
             </Center>
@@ -283,34 +366,7 @@ export default function DashboardPage() {
           ) : (
             <Grid>
               {bands.map((band) => (
-                <Grid.Col key={band.id} span={{ base: 12, sm: 6, md: 4 }}>
-                  <Card component={Link} href={`/bands/${band.slug}`} p="md" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <Group>
-                      {band.profile_picture_url ? (
-                        <img
-                          src={band.profile_picture_url}
-                          alt={band.name}
-                          style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <Avatar size={48} color="grape.6">
-                          {band.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                      )}
-                      <Stack gap="xs" flex={1}>
-                        <Title order={5}>{band.name}</Title>
-                        <Group gap="xs">
-                          <Badge size="sm" variant="light" color="grape">
-                            {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''}
-                          </Badge>
-                          {band.location && (
-                            <Text size="xs" c="dimmed">{band.location}</Text>
-                          )}
-                        </Group>
-                      </Stack>
-                    </Group>
-                  </Card>
-                </Grid.Col>
+                <BandCard key={band.id} band={band} />
               ))}
             </Grid>
           )}
@@ -331,7 +387,7 @@ export default function DashboardPage() {
             </Button>
           </Group>
           
-          {reviewsLoading ? (
+          {dataLoading ? (
             <Center py="md">
               <Loader size="sm" />
             </Center>
@@ -354,46 +410,7 @@ export default function DashboardPage() {
           ) : (
             <Stack>
               {reviews.slice(0, 5).map((review) => (
-                <Card key={review.id} p="md">
-                  <Group justify="space-between" align="flex-start">
-                    <Group>
-                      {review.artwork_url && (
-                        <img
-                          src={review.artwork_url}
-                          alt={`${review.song_name} artwork`}
-                          style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
-                        />
-                      )}
-                      <Stack gap="xs">
-                        <div>
-                          <Title order={5}>{review.song_name}</Title>
-                          <Text size="sm" c="dimmed">{review.band_name}</Text>
-                        </div>
-                        <Text size="sm" lineClamp={2}>
-                          {review.review_text}
-                        </Text>
-                        {review.liked_aspects.length > 0 && (
-                          <Group gap="xs">
-                            {review.liked_aspects.slice(0, 3).map((aspect, index) => (
-                              <Badge key={index} size="sm" variant="light" color="grape">
-                                {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
-                              </Badge>
-                            ))}
-                            {review.liked_aspects.length > 3 && (
-                              <Text size="xs" c="dimmed">+{review.liked_aspects.length - 3} more</Text>
-                            )}
-                          </Group>
-                        )}
-                      </Stack>
-                    </Group>
-                    <Group align="center" gap="xs">
-                      <Rating value={review.overall_rating} readOnly size="sm" />
-                      <Text size="sm" c="dimmed">
-                        {review.overall_rating}/5
-                      </Text>
-                    </Group>
-                  </Group>
-                </Card>
+                <ReviewCard key={review.id} review={review} />
               ))}
               
               {reviews.length > 5 && (
