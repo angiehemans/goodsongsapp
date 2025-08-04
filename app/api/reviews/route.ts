@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
     const token = authHeader.substring(7);
 
     // Forward the request to your backend API
@@ -26,19 +27,28 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+      const errorText = await response.text();
+      let errorData;
+      
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || 'Failed to create review' };
+      }
+
       return NextResponse.json(
-        { error: data.error || 'Failed to create review' },
+        { error: errorData.error || errorData.errors || 'Failed to create review' },
         { status: response.status }
       );
     }
 
+    const data = await response.json();
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
+    console.error('Review creation error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
