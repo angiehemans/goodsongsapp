@@ -47,7 +47,7 @@ async function getBand(slug: string): Promise<Band> {
   try {
     // For server components, we need to use the full URL to the Next.js API route
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'
+      ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
       : 'http://localhost:3001';
       
     const response = await fetch(`${baseUrl}/api/bands/${slug}`, {

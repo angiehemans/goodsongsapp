@@ -18,8 +18,6 @@ import { UserProfile, Review } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 export async function generateMetadata({
   params,
 }: {
@@ -43,7 +41,12 @@ export async function generateMetadata({
 
 async function getUserProfile(username: string): Promise<UserProfile> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${username}`, {
+    // For server components, we need to use the full URL to the Next.js API route
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
+      : 'http://localhost:3001';
+      
+    const response = await fetch(`${baseUrl}/api/users/${username}`, {
       headers: {
         'Content-Type': 'application/json',
       },
