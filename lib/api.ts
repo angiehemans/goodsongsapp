@@ -145,13 +145,17 @@ export interface SpotifyStatus {
 }
 
 class ApiClient {
+  private getApiUrl(): string {
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  }
+
   private getAuthHeader(): HeadersInit {
     const token = localStorage.getItem('auth_token');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
   async signup(data: SignupData): Promise<AuthResponse> {
-    const response = await fetch('/api/signup', {
+    const response = await fetch(`${this.getApiUrl()}/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -168,7 +172,7 @@ class ApiClient {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch('/api/login', {
+    const response = await fetch(`${this.getApiUrl()}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -185,7 +189,7 @@ class ApiClient {
   }
 
   async getProfile(): Promise<User> {
-    const response = await fetch('/api/profile', {
+    const response = await fetch(`${this.getApiUrl()}/profile`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -213,7 +217,7 @@ class ApiClient {
   }
 
   async createReview(data: ReviewData): Promise<any> {
-    const response = await fetch('/api/reviews', {
+    const response = await fetch(`${this.getApiUrl()}/reviews`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -231,8 +235,7 @@ class ApiClient {
   }
 
   async getUserProfile(username: string): Promise<UserProfile> {
-    // Use the Next.js API route which will forward to the backend
-    const response = await fetch(`/api/users/${username}`, {
+    const response = await fetch(`${this.getApiUrl()}/users/${username}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -278,7 +281,7 @@ class ApiClient {
         formData.append('band[profile_picture]', data.profile_picture);
       }
 
-      const response = await fetch('/api/bands', {
+      const response = await fetch(`${this.getApiUrl()}/bands`, {
         method: 'POST',
         headers: {
           ...this.getAuthHeader(),
@@ -295,7 +298,7 @@ class ApiClient {
     }
     
     // Use JSON for non-file uploads
-    const response = await fetch('/api/bands', {
+    const response = await fetch(`${this.getApiUrl()}/bands`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -313,7 +316,7 @@ class ApiClient {
   }
 
   async getBand(slug: string): Promise<Band> {
-    const response = await fetch(`/api/bands/${slug}`, {
+    const response = await fetch(`${this.getApiUrl()}/bands/${slug}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -328,7 +331,7 @@ class ApiClient {
   }
 
   async getUserBands(): Promise<Band[]> {
-    const response = await fetch('/api/bands/user', {
+    const response = await fetch(`${this.getApiUrl()}/bands/user`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -344,7 +347,7 @@ class ApiClient {
   }
 
   async getUserReviews(): Promise<Review[]> {
-    const response = await fetch('/api/reviews/user', {
+    const response = await fetch(`${this.getApiUrl()}/reviews/user`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -360,7 +363,7 @@ class ApiClient {
   }
 
   async getSpotifyConnectUrl(): Promise<{ auth_url: string }> {
-    const response = await fetch('/api/spotify/connect-url', {
+    const response = await fetch(`${this.getApiUrl()}/spotify/connect-url`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -376,7 +379,7 @@ class ApiClient {
   }
 
   async getSpotifyStatus(): Promise<SpotifyStatus> {
-    const response = await fetch('/api/spotify/status', {
+    const response = await fetch(`${this.getApiUrl()}/spotify/status`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -392,7 +395,7 @@ class ApiClient {
   }
 
   async disconnectSpotify(): Promise<void> {
-    const response = await fetch('/api/spotify/disconnect', {
+    const response = await fetch(`${this.getApiUrl()}/spotify/disconnect`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -407,7 +410,7 @@ class ApiClient {
   }
 
   async getRecentlyPlayed(): Promise<RecentlyPlayedTrack[] | { tracks: RecentlyPlayedTrack[] }> {
-    const response = await fetch('/api/recently-played', {
+    const response = await fetch(`${this.getApiUrl()}/recently-played`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -423,7 +426,7 @@ class ApiClient {
   }
 
   async updateProfile(data: ProfileUpdateData | FormData): Promise<User> {
-    const response = await fetch('/api/profile', {
+    const response = await fetch(`${this.getApiUrl()}/profile`, {
       method: 'PATCH',
       headers: {
         ...this.getAuthHeader(),
