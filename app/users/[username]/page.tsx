@@ -106,11 +106,15 @@ export default async function UserProfilePage({
       <Stack>
         {/* User Header */}
         <Paper p="lg" radius="md">
-          <Group>
-            <Avatar size="xl" color="grape.6">
-              {profile.username.charAt(0).toUpperCase()}
+          <Group align="flex-start">
+            <Avatar 
+              size="xl" 
+              src={profile.profile_image_url}
+              color="grape.6"
+            >
+              {!profile.profile_image_url && profile.username.charAt(0).toUpperCase()}
             </Avatar>
-            <Stack gap="xs">
+            <Stack gap="xs" flex={1}>
               <Title order={1}>@{profile.username}</Title>
               <Group gap="xs">
                 <IconMusic size={16} />
@@ -118,6 +122,11 @@ export default async function UserProfilePage({
                   {profile.reviews.length} review{profile.reviews.length !== 1 ? 's' : ''}
                 </Text>
               </Group>
+              {profile.about_me && (
+                <Text mt="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                  {profile.about_me}
+                </Text>
+              )}
             </Stack>
           </Group>
         </Paper>

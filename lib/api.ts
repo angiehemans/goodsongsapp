@@ -1,9 +1,18 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export interface User {
   id: number;
   email: string;
   username: string;
+  about_me?: string;
+  profile_image_url?: string;
+  reviews_count?: number;
+  bands_count?: number;
+  spotify_connected?: boolean;
+}
+
+export interface ProfileUpdateData {
+  about_me?: string;
+  profile_image?: File;
 }
 
 export interface AuthResponse {
@@ -47,6 +56,8 @@ export interface UserProfile {
   id: number;
   email: string;
   username: string;
+  about_me?: string;
+  profile_image_url?: string;
   reviews: Review[];
   bands?: Band[];
 }
@@ -140,7 +151,7 @@ class ApiClient {
   }
 
   async signup(data: SignupData): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/signup`, {
+    const response = await fetch('/api/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -157,7 +168,7 @@ class ApiClient {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,7 +185,7 @@ class ApiClient {
   }
 
   async getProfile(): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/profile`, {
+    const response = await fetch('/api/profile', {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
@@ -202,7 +213,7 @@ class ApiClient {
   }
 
   async createReview(data: ReviewData): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/reviews`, {
+    const response = await fetch('/api/reviews', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -406,6 +417,24 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to fetch recently played tracks');
+    }
+
+    return response.json();
+  }
+
+  async updateProfile(data: ProfileUpdateData | FormData): Promise<User> {
+    const response = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: {
+        ...this.getAuthHeader(),
+        ...(data instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update profile');
     }
 
     return response.json();

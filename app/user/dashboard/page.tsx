@@ -33,6 +33,12 @@ const SpotifyConnection = lazy(() =>
   }))
 );
 
+const ProfileSettings = lazy(() => 
+  import('@/components/ProfileSettings/ProfileSettings').then(mod => ({ 
+    default: mod.ProfileSettings 
+  }))
+);
+
 // Memoized components for better performance
 const StatsCard = memo(({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) => (
   <Card p="lg" radius="md">
@@ -238,22 +244,29 @@ export default function DashboardPage() {
             <Group>
               <Avatar 
                 size="lg" 
+                src={user.profile_image_url}
                 color="grape.6"
                 component={Link}
                 href={`/users/${user.username}`}
                 style={{ cursor: 'pointer' }}
               >
-                {user.username.charAt(0).toUpperCase()}
+                {!user.profile_image_url && user.username.charAt(0).toUpperCase()}
               </Avatar>
               <div>
                 <Title order={2}>Welcome back, {user.username}!</Title>
                 <Text size="sm" c="dimmed">{user.email}</Text>
+                {user.about_me && (
+                  <Text size="sm" lineClamp={2} mt="xs">
+                    {user.about_me}
+                  </Text>
+                )}
                 <Text 
                   size="xs" 
                   c="grape.6" 
                   component={Link} 
                   href={`/users/${user.username}`}
                   style={{ textDecoration: 'none' }}
+                  mt="xs"
                 >
                   View your profile →
                 </Text>
@@ -295,6 +308,31 @@ export default function DashboardPage() {
             />
           </Grid.Col>
         </Grid>
+
+        {/* Profile Settings - Lazy loaded */}
+        <Suspense fallback={
+          <Paper p="lg" radius="md">
+            <Stack>
+              <Group>
+                <Skeleton height={20} width={120} />
+              </Group>
+              <Group>
+                <Skeleton height={80} width={80} radius="xl" />
+                <Stack flex={1}>
+                  <Skeleton height={20} width="60%" />
+                  <Skeleton height={20} width="40%" />
+                </Stack>
+              </Group>
+              <Skeleton height={80} />
+              <Group justify="flex-end">
+                <Skeleton height={36} width={80} />
+                <Skeleton height={36} width={120} />
+              </Group>
+            </Stack>
+          </Paper>
+        }>
+          <ProfileSettings />
+        </Suspense>
 
         {/* Spotify Connection - Lazy loaded */}
         <Suspense fallback={
