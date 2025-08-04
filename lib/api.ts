@@ -450,7 +450,7 @@ class ApiClient {
       }
     }
 
-    const response = await fetch(`${this.getApiUrl()}/update-profile`, {
+    const response = await fetch(`${this.getApiUrl()}/profile/update`, {
       method: 'POST',  // Send as POST...
       headers: {
         ...this.getAuthHeader(),
