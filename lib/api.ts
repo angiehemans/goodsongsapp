@@ -426,17 +426,44 @@ class ApiClient {
   }
 
   async updateProfile(data: ProfileUpdateData | FormData): Promise<User> {
+    // Use POST with _method parameter to simulate PATCH (Rails method override)
+    const formData = new FormData();
+    formData.append('_method', 'patch');
+    
+    if (data instanceof FormData) {
+      // If already FormData, extract the values and add them to our new FormData
+      const entries = Array.from(data.entries());
+      for (const [key, value] of entries) {
+        if (key !== '_method') { // Don't duplicate _method if it exists
+          formData.append(key, value);
+        }
+      }
+    } else {
+      // If it's ProfileUpdateData object, convert to FormData
+      if (data.about_me !== undefined) {
+        formData.append('about_me', data.about_me);
+      }
+      if (data.profile_image) {
+        formData.append('profile_image', data.profile_image);
+      }
+    }
+
     const response = await fetch(`${this.getApiUrl()}/profile`, {
-      method: 'PATCH',
+      method: 'POST',
       headers: {
         ...this.getAuthHeader(),
-        ...(data instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+        // Don't set Content-Type, let browser set it for FormData
       },
-      body: data instanceof FormData ? data : JSON.stringify(data),
+      body: formData,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      let error;
+      try {
+        error = await response.json();
+      } catch {
+        throw new Error(`Profile update failed with status ${response.status}`);
+      }
       throw new Error(error.error || 'Failed to update profile');
     }
 
