@@ -11,7 +11,7 @@ import {
   Text,
   Anchor,
   Container,
-  Center,
+
   Stack,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -63,8 +63,8 @@ export default function LoginPage() {
   };
 
   return (
-    <Container size={420} my={40}>
-      <Center>
+    <Container size={400} my={40}>
+
         <Stack>
           <Title ta="center" c="goodsongs.6">
             Welcome to Goodsongs
@@ -97,11 +97,10 @@ export default function LoginPage() {
 
                 <Button 
                   fullWidth 
-                  variant="outline"
                   mt="xl" 
                   loading={loading}
                   type="submit"
-                  color="goodsongs.6"
+                  color="grape.9"
                 >
                   Sign in
                 </Button>
@@ -109,7 +108,7 @@ export default function LoginPage() {
             </form>
           </Paper>
         </Stack>
-      </Center>
+
     </Container>
   );
 }

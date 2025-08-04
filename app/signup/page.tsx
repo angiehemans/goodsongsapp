@@ -11,7 +11,6 @@ import {
   Text,
   Anchor,
   Container,
-  Center,
   Stack,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -63,8 +62,8 @@ export default function SignupPage() {
   };
 
   return (
-    <Container size={420} my={40}>
-      <Center>
+    <Container size={400} my={40}>
+    
         <Stack>
           <Title ta="center" c="goodsongs.6">
             Join Goodsongs
@@ -113,11 +112,11 @@ export default function SignupPage() {
 
                 <Button 
                   fullWidth 
-                  variant="outline"
+                  
                   mt="xl" 
                   loading={loading}
                   type="submit"
-                  color="goodsongs.6"
+                  color="grape.9"
                 >
                   Create account
                 </Button>
@@ -125,7 +124,7 @@ export default function SignupPage() {
             </form>
           </Paper>
         </Stack>
-      </Center>
+      
     </Container>
   );
 }

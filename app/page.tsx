@@ -1,5 +1,3 @@
-'use client';
-
 import { 
   Container, 
   Title, 
@@ -10,6 +8,7 @@ import {
   Group, 
   Box, 
   Grid,
+  GridCol,
   Card,
   ThemeIcon,
   Avatar,
@@ -29,27 +28,8 @@ import {
   IconChevronRight
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function HomePage() {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && user) {
-      router.push('/user/dashboard');
-    }
-  }, [user, isLoading, router]);
-
-  if (isLoading) {
-    return (
-      <Container>
-        <Text>Loading...</Text>
-      </Container>
-    );
-  }
 
   return (
     <Box>
@@ -90,7 +70,7 @@ export default function HomePage() {
       <Box bg="linear-gradient(135deg, var(--mantine-color-grape-1) 0%, var(--mantine-color-violet-1) 100%)" py={80}>
         <Container size="lg">
           <Grid align="center">
-            <Grid.Col span={{ base: 12, md: 6 }}>
+            <GridCol span={{ base: 12, md: 6 }}>
               <Stack gap="xl">
                 <Title order={1} size="3.5rem" c="grape.9" lh={1.1}>
                   Your Music,
@@ -122,8 +102,8 @@ export default function HomePage() {
                   </Button>
                 </Group>
               </Stack>
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 6 }}>
+            </GridCol>
+            <GridCol span={{ base: 12, md: 6 }}>
               <Center>
                 <Box pos="relative">
                   <ThemeIcon size={200} radius="xl" color="grape.1" variant="light">
@@ -141,7 +121,7 @@ export default function HomePage() {
                   </Box>
                 </Box>
               </Center>
-            </Grid.Col>
+            </GridCol>
           </Grid>
         </Container>
       </Box>
