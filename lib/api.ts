@@ -365,7 +365,20 @@ class ApiClient {
   }
 
   async getSpotifyConnectUrl(): Promise<{ auth_url: string }> {
-    return this.makeRequest('/spotify/connect');
+    // Use Next.js API route which handles the backend redirect properly
+    const response = await fetch('/api/spotify/connect', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get Spotify connect URL');
+    }
+
+    return response.json();
   }
 
   async getSpotifyStatus(): Promise<SpotifyStatus> {

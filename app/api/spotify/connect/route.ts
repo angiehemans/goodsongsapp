@@ -20,9 +20,27 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
+      redirect: 'manual', // Don't follow redirects automatically
     });
 
-    const data = await response.json();
+    // If backend returns a redirect (which contains the Spotify auth URL)
+    if (response.status >= 300 && response.status < 400) {
+      const redirectUrl = response.headers.get('location');
+      if (redirectUrl) {
+        return NextResponse.json({ auth_url: redirectUrl });
+      }
+    }
+
+    // Try to parse as JSON if it's not a redirect
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid response from backend API' },
+        { status: 502 }
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
