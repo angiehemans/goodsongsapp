@@ -365,66 +365,19 @@ class ApiClient {
   }
 
   async getSpotifyConnectUrl(): Promise<{ auth_url: string }> {
-    const response = await fetch(`${this.getApiUrl()}/spotify/connect`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get Spotify connect URL');
-    }
-
-    return response.json();
+    return this.makeRequest('/spotify/connect');
   }
 
   async getSpotifyStatus(): Promise<SpotifyStatus> {
-    const response = await fetch(`${this.getApiUrl()}/spotify/status`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get Spotify status');
-    }
-
-    return response.json();
+    return this.makeRequest('/spotify/status');
   }
 
   async disconnectSpotify(): Promise<void> {
-    const response = await fetch(`${this.getApiUrl()}/spotify/disconnect`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to disconnect Spotify');
-    }
+    await this.makeRequest('/spotify/disconnect', { method: 'DELETE' });
   }
 
   async getRecentlyPlayed(): Promise<RecentlyPlayedTrack[] | { tracks: RecentlyPlayedTrack[] }> {
-    const response = await fetch(`${this.getApiUrl()}/recently-played`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch recently played tracks');
-    }
-
-    return response.json();
+    return this.makeRequest('/recently-played');
   }
 
   async updateProfile(data: ProfileUpdateData | FormData): Promise<User> {
