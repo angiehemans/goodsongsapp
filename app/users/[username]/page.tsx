@@ -17,6 +17,7 @@ import { IconAlertCircle, IconCalendar, IconMusic } from '@tabler/icons-react';
 import { UserProfile, Review } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { fixImageUrl } from '@/lib/utils';
 
 export async function generateMetadata({
   params,
@@ -109,7 +110,7 @@ export default async function UserProfilePage({
           <Group align="flex-start">
             <Avatar 
               size="xl" 
-              src={profile.profile_image_url}
+              src={fixImageUrl(profile.profile_image_url)}
               color="grape.6"
             >
               {!profile.profile_image_url && profile.username.charAt(0).toUpperCase()}

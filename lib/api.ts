@@ -154,54 +154,76 @@ class ApiClient {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
-  async signup(data: SignupData): Promise<AuthResponse> {
-    const response = await fetch(`${this.getApiUrl()}/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Signup failed');
-    }
-
-    return response.json();
-  }
-
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${this.getApiUrl()}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
-    }
-
-    return response.json();
-  }
-
-  async getProfile(): Promise<User> {
-    const response = await fetch(`${this.getApiUrl()}/profile`, {
+  private async makeRequest<T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
+        ...options.headers,
       },
+      ...options,
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch profile');
+      let error;
+      try {
+        error = await response.json();
+      } catch {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      throw new Error(error.error || error.errors || 'Request failed');
     }
 
     return response.json();
+  }
+
+  private async makeFormRequest<T = any>(
+    endpoint: string,
+    formData: FormData
+  ): Promise<T> {
+    const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        ...this.getAuthHeader(),
+        // Don't set Content-Type for FormData
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let error;
+      try {
+        error = await response.json();
+      } catch {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      throw new Error(error.error || error.errors || 'Request failed');
+    }
+
+    return response.json();
+  }
+
+  async signup(data: SignupData): Promise<AuthResponse> {
+    return this.makeRequest('/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, // Override auth header for signup
+      body: JSON.stringify(data),
+    });
+  }
+
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    return this.makeRequest('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, // Override auth header for login
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async getProfile(): Promise<User> {
+    return this.makeRequest('/profile');
   }
 
   setAuthToken(token: string) {
@@ -217,36 +239,16 @@ class ApiClient {
   }
 
   async createReview(data: ReviewData): Promise<any> {
-    const response = await fetch(`${this.getApiUrl()}/reviews`, {
+    return this.makeRequest('/reviews', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
       body: JSON.stringify({ review: data }),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to create review');
-    }
-
-    return response.json();
   }
 
   async getUserProfile(username: string): Promise<UserProfile> {
-    const response = await fetch(`${this.getApiUrl()}/users/${username}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    return this.makeRequest(`/users/${username}`, {
+      headers: { 'Content-Type': 'application/json' }, // Override auth header for public profiles
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch user profile');
-    }
-
-    return response.json();
   }
 
   async createBand(data: BandData): Promise<Band> {
@@ -450,20 +452,7 @@ class ApiClient {
       }
     }
 
-    const response = await fetch(`${this.getApiUrl()}/update-profile`, {
-      method: 'POST',  // Send as POST...
-      headers: {
-        ...this.getAuthHeader(),
-        // Don't set Content-Type, let browser handle FormData
-      },
-      body: formData  // ...but Rails will treat it as PATCH due to _method
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
+    return this.makeFormRequest('/update-profile', formData);
   }
 }
 

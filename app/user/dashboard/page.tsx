@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
 import { apiClient, Band, Review } from '@/lib/api';
+import { fixImageUrl } from '@/lib/utils';
 
 // Lazy load heavy components
 const SpotifyConnection = lazy(() => 
@@ -58,7 +59,7 @@ const BandCard = memo(({ band }: { band: Band }) => (
       <Group>
         {band.profile_picture_url ? (
           <img
-            src={band.profile_picture_url}
+            src={fixImageUrl(band.profile_picture_url)}
             alt={band.name}
             style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
           />
@@ -244,7 +245,7 @@ export default function DashboardPage() {
             <Group>
               <Avatar 
                 size="lg" 
-                src={user.profile_image_url}
+                src={fixImageUrl(user.profile_image_url)}
                 color="grape.6"
                 component={Link}
                 href={`/users/${user.username}`}

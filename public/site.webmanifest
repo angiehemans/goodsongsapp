@@ -1,0 +1,17 @@
+{
+  "name": "Goodsongs",
+  "short_name": "Goodsongs",
+  "description": "Your music discovery platform - Discover and share amazing music with the community",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#420154",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

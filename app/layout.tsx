@@ -7,7 +7,47 @@ import { AuthProvider } from '@/hooks/useAuth';
 
 export const metadata: Metadata = {
   title: "Goodsongs",
-  description: "Your music discovery platform",
+  description: "Your music discovery platform - Discover and share amazing music with the community",
+  icons: {
+    icon: [
+      {
+        url: '/favicon.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+      {
+        url: '/favicon.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
+      {
+        url: '/favicon.png',
+        sizes: '16x16',
+        type: 'image/png',
+      },
+    ],
+    shortcut: '/favicon.png',
+    apple: [
+      {
+        url: '/favicon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
+  },
+  manifest: '/site.webmanifest',
+  openGraph: {
+    title: 'Goodsongs',
+    description: 'Your music discovery platform - Discover and share amazing music with the community',
+    url: 'https://www.goodsongs.app',
+    siteName: 'Goodsongs',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Goodsongs',
+    description: 'Your music discovery platform - Discover and share amazing music with the community',
+  },
 };
 
 export default function RootLayout({

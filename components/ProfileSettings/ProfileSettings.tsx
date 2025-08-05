@@ -19,6 +19,7 @@ import { IconCamera, IconCheck, IconAlertCircle } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
 import { apiClient, ProfileUpdateData } from '@/lib/api';
+import { fixImageUrl } from '@/lib/utils';
 
 interface ProfileSettingsProps {
   onProfileUpdate?: () => void;
@@ -123,7 +124,7 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
     }
   };
 
-  const currentImageUrl = previewUrl || user?.profile_image_url;
+  const currentImageUrl = previewUrl || fixImageUrl(user?.profile_image_url);
 
   return (
     <Paper p="lg" radius="md">

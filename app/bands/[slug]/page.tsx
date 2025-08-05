@@ -20,6 +20,7 @@ import { Band } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { fixImageUrl } from '@/lib/utils';
 
 
 export async function generateMetadata({
@@ -120,7 +121,7 @@ export default async function BandProfilePage({
           <Group align="flex-start">
             {band.profile_picture_url ? (
               <img
-                src={band.profile_picture_url}
+                src={fixImageUrl(band.profile_picture_url)}
                 alt={`${band.name} profile`}
                 style={{ width: 120, height: 120, borderRadius: 12, objectFit: 'cover' }}
               />
