@@ -365,7 +365,7 @@ class ApiClient {
   }
 
   async getSpotifyConnectUrl(): Promise<{ auth_url: string }> {
-    const response = await fetch(`${this.getApiUrl()}/spotify/connect-url`, {
+    const response = await fetch(`${this.getApiUrl()}/spotify/connect`, {
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
