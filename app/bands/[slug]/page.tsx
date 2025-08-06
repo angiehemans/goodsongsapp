@@ -12,7 +12,6 @@ import {
   Button,
   SimpleGrid,
   Card,
-  Rating,
   Divider,
 } from '@mantine/core';
 import { IconAlertCircle, IconMapPin, IconMusic, IconBrandSpotify, IconBrandApple, IconBrandYoutube, IconPlus, IconCalendar } from '@tabler/icons-react';
@@ -256,12 +255,6 @@ export default async function BandProfilePage({
                             </Text>
                           </Group>
                         </Stack>
-                      </Group>
-                      <Group align="center" gap="xs">
-                        <Rating value={review.overall_rating} readOnly size="sm" />
-                        <Text size="sm" c="dimmed">
-                          {review.overall_rating}/5
-                        </Text>
                       </Group>
                     </Group>
 

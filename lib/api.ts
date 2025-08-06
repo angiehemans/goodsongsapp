@@ -38,7 +38,6 @@ export interface ReviewData {
   song_name: string;
   artwork_url: string;
   review_text: string;
-  overall_rating: number;
   liked_aspects: (string | { name: string })[];
 }
 

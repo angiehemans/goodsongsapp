@@ -7,7 +7,6 @@ import {
   Paper,
   Group,
   Card,
-  Rating,
   Badge,
   Divider,
   Alert,
@@ -169,12 +168,6 @@ export default async function UserProfilePage({
                           </div>
                         </Group>
                       </Stack>
-                      <Group align="center" gap="xs">
-                        <Rating value={review.overall_rating} readOnly size="sm" />
-                        <Text size="sm" c="dimmed">
-                          {review.overall_rating}/5
-                        </Text>
-                      </Group>
                     </Group>
 
                     <Divider />

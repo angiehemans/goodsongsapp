@@ -12,7 +12,6 @@ import {
   Card,
   ThemeIcon,
   Avatar,
-  Rating,
   Badge,
   SimpleGrid,
   Paper
@@ -218,7 +217,6 @@ export default function HomePage() {
                 <Avatar size="md" color="blue">MJ</Avatar>
                 <div>
                   <Text fw={600}>musicjunkie92</Text>
-                  <Rating value={5} readOnly size="sm" />
                 </div>
               </Group>
               <Title order={4} mb="xs">Bohemian Rhapsody - Queen</Title>
@@ -237,7 +235,6 @@ export default function HomePage() {
                 <Avatar size="md" color="green">AL</Avatar>
                 <div>
                   <Text fw={600}>alexlistens</Text>
-                  <Rating value={4} readOnly size="sm" />
                 </div>
               </Group>
               <Title order={4} mb="xs">Blinding Lights - The Weeknd</Title>

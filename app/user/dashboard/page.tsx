@@ -16,7 +16,6 @@ import {
   Badge,
   Center,
   Loader,
-  Rating,
   Divider,
   Skeleton,
 } from '@mantine/core';
@@ -116,12 +115,6 @@ const ReviewCard = memo(({ review }: { review: Review }) => (
             </Group>
           )}
         </Stack>
-      </Group>
-      <Group align="center" gap="xs">
-        <Rating value={review.overall_rating} readOnly size="sm" />
-        <Text size="sm" c="dimmed">
-          {review.overall_rating}/5
-        </Text>
       </Group>
     </Group>
   </Card>

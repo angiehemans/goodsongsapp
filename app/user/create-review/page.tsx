@@ -11,7 +11,6 @@ import {
   Stack,
   TextInput,
   Textarea,
-  Rating,
   MultiSelect,
   Group,
   Alert,
@@ -48,7 +47,6 @@ function CreateReviewForm() {
     song_name: '',
     artwork_url: '',
     review_text: '',
-    overall_rating: 0,
     liked_aspects: [],
   });
 
@@ -178,14 +176,6 @@ function CreateReviewForm() {
                 onChange={(e) => setFormData({ ...formData, artwork_url: e.target.value })}
               />
 
-              <div>
-                <Text size="sm" fw={500} mb="xs">Overall Rating</Text>
-                <Rating
-                  value={formData.overall_rating}
-                  onChange={(value) => setFormData({ ...formData, overall_rating: value })}
-                  size="lg"
-                />
-              </div>
 
               <MultiSelect
                 label="What did you like about this song?"
