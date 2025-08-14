@@ -4,7 +4,6 @@ import './globals.css';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
-import Head from 'next/head';
 import { AuthProvider } from '@/hooks/useAuth';
 import { Providers } from './providers';
 import classes from './styles.module.css';
@@ -60,11 +59,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <Head>
+      <head>
         <link rel="preload" href="https://use.typekit.net/tcv5kdi.css" />
         <link rel="stylesheet" href="https://use.typekit.net/tcv5kdi.css" />
         <link rel="preconnect" href="https://use.typekit.net/tcv5kdi.css" />
-      </Head>
+      </head>
       <body className={classes.background}>
         <Providers>
           <AuthProvider>{children}</AuthProvider>

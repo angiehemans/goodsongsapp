@@ -1,5 +1,3 @@
-'use client';
-
 import { generateColors } from '@mantine/colors-generator';
 import { createTheme } from '@mantine/core';
 
