@@ -1,26 +1,35 @@
-import {
-  Container,
-  Title,
-  Text,
-  Stack,
-  Avatar,
-  Paper,
-  Group,
-  Badge,
-  Alert,
-  Center,
-  Button,
-  SimpleGrid,
-  Card,
-  Divider,
-} from '@mantine/core';
-import { IconAlertCircle, IconMapPin, IconMusic, IconBrandSpotify, IconBrandApple, IconBrandYoutube, IconPlus, IconCalendar } from '@tabler/icons-react';
-import { Band } from '@/lib/api';
-import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import {
+  IconAlertCircle,
+  IconBrandApple,
+  IconBrandSpotify,
+  IconBrandYoutube,
+  IconCalendar,
+  IconMapPin,
+  IconMusic,
+  IconPlus,
+} from '@tabler/icons-react';
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Center,
+  Container,
+  Divider,
+  Flex,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { Band } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
-
 
 export async function generateMetadata({
   params,
@@ -28,12 +37,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  
+
   try {
     const band = await getBand(slug);
     return {
       title: `${band.name} - Goodsongs`,
-      description: band.about || `Check out ${band.name} on Goodsongs. ${band.reviews_count} review${band.reviews_count !== 1 ? 's' : ''} and counting.`,
+      description:
+        band.about ||
+        `Check out ${band.name} on Goodsongs. ${band.reviews_count} review${band.reviews_count !== 1 ? 's' : ''} and counting.`,
     };
   } catch {
     return {
@@ -46,10 +57,11 @@ export async function generateMetadata({
 async function getBand(slug: string): Promise<Band> {
   try {
     // For server components, we need to use the full URL to the Next.js API route
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
-      : 'http://localhost:3001';
-      
+    const baseUrl =
+      process.env.NODE_ENV === 'production'
+        ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
+        : 'http://localhost:3001';
+
     const response = await fetch(`${baseUrl}/api/bands/${slug}`, {
       headers: {
         'Content-Type': 'application/json',
@@ -71,26 +83,17 @@ async function getBand(slug: string): Promise<Band> {
   }
 }
 
-export default async function BandProfilePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function BandProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  
+
   let band: Band;
-  
+
   try {
     band = await getBand(slug);
   } catch (error) {
     return (
       <Container>
-        <Alert 
-          icon={<IconAlertCircle size="1rem" />} 
-          title="Error" 
-          color="red" 
-          mt="xl"
-        >
+        <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red" mt="xl">
           Failed to load band profile. Please try again later.
         </Alert>
       </Container>
@@ -101,16 +104,21 @@ export default async function BandProfilePage({
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   const streamingLinks = [
     { url: band.spotify_link, icon: IconBrandSpotify, label: 'Spotify', color: '#1DB954' },
     { url: band.apple_music_link, icon: IconBrandApple, label: 'Apple Music', color: '#000000' },
-    { url: band.youtube_music_link, icon: IconBrandYoutube, label: 'YouTube Music', color: '#FF0000' },
+    {
+      url: band.youtube_music_link,
+      icon: IconBrandYoutube,
+      label: 'YouTube Music',
+      color: '#FF0000',
+    },
     { url: band.bandcamp_link, icon: IconMusic, label: 'Bandcamp', color: '#629aa0' },
-  ].filter(link => link.url);
+  ].filter((link) => link.url);
 
   return (
     <Container size="md" py="xl">
@@ -129,7 +137,7 @@ export default async function BandProfilePage({
                 {band.name.charAt(0).toUpperCase()}
               </Avatar>
             )}
-            
+
             <Stack flex={1} gap="xs">
               <Group justify="space-between" align="flex-start">
                 <div>
@@ -141,7 +149,7 @@ export default async function BandProfilePage({
                     </Group>
                   )}
                 </div>
-                
+
                 <Badge variant="light" color="grape">
                   {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''}
                 </Badge>
@@ -157,7 +165,9 @@ export default async function BandProfilePage({
         {/* About Section */}
         {band.about && (
           <Paper p="lg" radius="md">
-            <Title order={3} mb="md">About</Title>
+            <Title order={3} mb="md">
+              About
+            </Title>
             <Text style={{ whiteSpace: 'pre-wrap' }}>{band.about}</Text>
           </Paper>
         )}
@@ -165,7 +175,9 @@ export default async function BandProfilePage({
         {/* Streaming Links */}
         {streamingLinks.length > 0 && (
           <Paper p="lg" radius="md">
-            <Title order={3} mb="md">Listen On</Title>
+            <Title order={3} mb="md">
+              Listen On
+            </Title>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
               {streamingLinks.map((link, index) => {
                 const Icon = link.icon;
@@ -201,7 +213,7 @@ export default async function BandProfilePage({
               Write a Review
             </Button>
           </Group>
-          
+
           {!band.reviews || band.reviews.length === 0 ? (
             <Center py="xl">
               <Stack align="center">
@@ -209,11 +221,7 @@ export default async function BandProfilePage({
                 <Text c="dimmed" ta="center">
                   No reviews yet. Be the first to review {band.name}!
                 </Text>
-                <Button
-                  component={Link}
-                  href="/user/create-review"
-                  variant="filled"
-                >
+                <Button component={Link} href="/user/create-review" variant="filled">
                   Write the First Review
                 </Button>
               </Stack>
@@ -223,7 +231,7 @@ export default async function BandProfilePage({
               <Text size="sm" c="dimmed" mb="md">
                 {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''} for this band
               </Text>
-              
+
               {band.reviews.map((review) => (
                 <Card key={review.id} p="lg">
                   <Stack>
@@ -240,13 +248,17 @@ export default async function BandProfilePage({
                         <Stack gap="xs">
                           <div>
                             <Title order={4}>{review.song_name}</Title>
-                            <Text size="sm" c="dimmed">{review.band_name}</Text>
+                            <Text size="sm" c="dimmed">
+                              {review.band_name}
+                            </Text>
                           </div>
                           <Group gap="xs">
-                            <Text size="sm" fw={500}>by</Text>
-                            <Text 
-                              size="sm" 
-                              component={Link} 
+                            <Text size="sm" fw={500}>
+                              by
+                            </Text>
+                            <Text
+                              size="sm"
+                              component={Link}
                               href={`/users/${review.user?.username || 'unknown'}`}
                               c="grape.6"
                               style={{ textDecoration: 'none' }}
@@ -266,7 +278,9 @@ export default async function BandProfilePage({
                     {/* Liked Aspects */}
                     {review.liked_aspects.length > 0 && (
                       <Group>
-                        <Text size="sm" fw={500}>Liked:</Text>
+                        <Text size="sm" fw={500}>
+                          Liked:
+                        </Text>
                         <Group gap="xs">
                           {review.liked_aspects.map((aspect, index) => (
                             <Badge key={index} variant="light" color="grape">
@@ -285,7 +299,7 @@ export default async function BandProfilePage({
                           {formatDate(review.created_at)}
                         </Text>
                       </Group>
-                      
+
                       {review.song_link && (
                         <Button
                           component="a"
@@ -306,6 +320,13 @@ export default async function BandProfilePage({
           )}
         </Paper>
       </Stack>
+      <Flex align="center" justify="center" p="lg">
+        <Link href="/user/dashboard" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+          <Title order={2} c="blue.8">
+            GoodSongs
+          </Title>
+        </Link>
+      </Flex>
     </Container>
   );
 }

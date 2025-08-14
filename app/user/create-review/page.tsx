@@ -1,27 +1,28 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { IconAlertCircle, IconArrowLeft, IconBrandSpotify } from '@tabler/icons-react';
 import {
-  Container,
-  Title,
-  Text,
+  Alert,
   Button,
+  Center,
+  Container,
+  Group,
+  Loader,
+  MultiSelect,
   Paper,
   Stack,
-  TextInput,
+  Text,
   Textarea,
-  MultiSelect,
-  Group,
-  Alert,
-  Loader,
-  Center,
+  TextInput,
+  Title,
 } from '@mantine/core';
-import { IconArrowLeft, IconAlertCircle, IconBrandSpotify } from '@tabler/icons-react';
-import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
+import { useAuth } from '@/hooks/useAuth';
 import { apiClient, ReviewData } from '@/lib/api';
+import classes from './reviews.module.css';
 
 const aspectOptions = [
   { value: 'Vocals', label: 'Vocals' },
@@ -58,7 +59,7 @@ function CreateReviewForm() {
     const songLink = searchParams.get('song_link');
 
     if (songName || bandName || artworkUrl || songLink) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         song_name: songName || prev.song_name,
         band_name: bandName || prev.band_name,
@@ -113,16 +114,18 @@ function CreateReviewForm() {
         </Group>
 
         <Paper withBorder p="lg" radius="md">
-          <Title order={2} mb="md">Create a Review</Title>
+          <Title order={2} mb="md">
+            Create a Review
+          </Title>
           <Text size="sm" c="dimmed" mb="lg">
             Share your thoughts about a song and help others discover great music!
           </Text>
 
           {(searchParams.get('song_name') || searchParams.get('band_name')) && (
-            <Alert 
-              icon={<IconBrandSpotify size="1rem" />} 
-              title="Prefilled from Spotify" 
-              color="green" 
+            <Alert
+              icon={<IconBrandSpotify size="1rem" />}
+              title="Prefilled from Spotify"
+              color="green"
               variant="light"
               mb="lg"
             >
@@ -131,12 +134,7 @@ function CreateReviewForm() {
           )}
 
           {error && (
-            <Alert 
-              icon={<IconAlertCircle size="1rem" />} 
-              title="Error" 
-              color="red" 
-              mb="md"
-            >
+            <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red" mb="md">
               {error}
             </Alert>
           )}
@@ -176,13 +174,22 @@ function CreateReviewForm() {
                 onChange={(e) => setFormData({ ...formData, artwork_url: e.target.value })}
               />
 
-
               <MultiSelect
                 label="What did you like about this song?"
                 placeholder="Select aspects you enjoyed"
                 data={aspectOptions}
-                value={formData.liked_aspects.map(aspect => typeof aspect === 'string' ? aspect : aspect.name)}
-                onChange={(values) => setFormData({ ...formData, liked_aspects: values as (string | { name: string })[] })}
+                value={formData.liked_aspects.map((aspect) =>
+                  typeof aspect === 'string' ? aspect : aspect.name
+                )}
+                onChange={(values) =>
+                  setFormData({
+                    ...formData,
+                    liked_aspects: values as (string | { name: string })[],
+                  })
+                }
+                classNames={{
+                  option: classes.option,
+                }}
               />
 
               <Textarea
@@ -195,11 +202,7 @@ function CreateReviewForm() {
               />
 
               <Group justify="flex-end">
-                <Button
-                  component={Link}
-                  href="/user/dashboard"
-                  variant="outline"
-                >
+                <Button component={Link} href="/user/dashboard" variant="outline">
                   Cancel
                 </Button>
                 <Button
@@ -220,13 +223,15 @@ function CreateReviewForm() {
 
 export default function CreateReviewPage() {
   return (
-    <Suspense fallback={
-      <Container>
-        <Center py="xl">
-          <Loader />
-        </Center>
-      </Container>
-    }>
+    <Suspense
+      fallback={
+        <Container>
+          <Center py="xl">
+            <Loader />
+          </Center>
+        </Container>
+      }
+    >
       <CreateReviewForm />
     </Suspense>
   );
