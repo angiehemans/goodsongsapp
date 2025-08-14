@@ -1,13 +1,16 @@
-import type { Metadata } from "next";
-import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css";
-import classes from './styles.module.css'
-import { Providers } from './providers';
+import type { Metadata } from 'next';
+
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+
 import { AuthProvider } from '@/hooks/useAuth';
+import { Providers } from './providers';
+import classes from './styles.module.css';
 
 export const metadata: Metadata = {
-  title: "Goodsongs",
-  description: "Your music discovery platform - Discover and share amazing music with the community",
+  title: 'Goodsongs',
+  description:
+    'Your music discovery platform - Discover and share amazing music with the community',
   icons: {
     icon: [
       {
@@ -38,7 +41,8 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   openGraph: {
     title: 'Goodsongs',
-    description: 'Your music discovery platform - Discover and share amazing music with the community',
+    description:
+      'Your music discovery platform - Discover and share amazing music with the community',
     url: 'https://www.goodsongs.app',
     siteName: 'Goodsongs',
     type: 'website',
@@ -46,22 +50,20 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary',
     title: 'Goodsongs',
-    description: 'Your music discovery platform - Discover and share amazing music with the community',
+    description:
+      'Your music discovery platform - Discover and share amazing music with the community',
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://use.typekit.net/tcv5kdi.css" />
+      </head>
       <body className={classes.background}>
         <Providers>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </Providers>
       </body>
     </html>
