@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="stylesheet" href="https://use.typekit.net/tcv5kdi.css" />
+        <link rel="preload" href="https://use.typekit.net/tcv5kdi.css" />
       </head>
       <body className={classes.background}>
         <Providers>
