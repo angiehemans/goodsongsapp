@@ -59,6 +59,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <style>@import url("https://use.typekit.net/tcv5kdi.css");</style>
+      </head>
       <body className={classes.background}>
         <Providers>
           <AuthProvider>{children}</AuthProvider>
