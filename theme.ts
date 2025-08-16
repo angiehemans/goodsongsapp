@@ -3,7 +3,7 @@ import { createTheme } from '@mantine/core';
 
 export const theme = createTheme({
   fontFamily: 'Inter, sans-serif',
-  headings: { fontFamily: 'Aesthet Nova, serif' },
+  headings: { fontFamily: 'aesthet-nova, serif' },
   colors: {
     blue: generateColors('#0124B0'),
     grape: [
@@ -67,7 +67,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -84,7 +84,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -101,7 +101,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -118,7 +118,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -131,7 +131,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--mantine-color-grape-0)',
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
           color: 'var(--mantine-color-grape-8)',
         },
         option: {
@@ -152,7 +152,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -167,7 +167,7 @@ export const theme = createTheme({
       defaultProps: {
         style: {
           borderWidth: '2px',
-          fontFamily: 'Aesthet Nova, sans-serif',
+          fontFamily: 'aesthet-nova, sans-serif',
         },
       },
     },

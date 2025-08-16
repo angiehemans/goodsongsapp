@@ -1,35 +1,34 @@
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Button, 
-  Stack, 
-  Center, 
-  Group, 
-  Box, 
-  Grid,
-  GridCol,
-  Card,
-  ThemeIcon,
+import Link from 'next/link';
+import {
+  IconBrandSpotify,
+  IconChevronRight,
+  IconHeart,
+  IconMusic,
+  IconSearch,
+  IconShare,
+  IconStar,
+  IconUsers,
+} from '@tabler/icons-react';
+import {
   Avatar,
   Badge,
+  Box,
+  Button,
+  Card,
+  Center,
+  Container,
+  Grid,
+  GridCol,
+  Group,
+  Paper,
   SimpleGrid,
-  Paper
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
 } from '@mantine/core';
-import { 
-  IconMusic, 
-  IconBrandSpotify, 
-  IconUsers, 
-  IconStar, 
-  IconSearch,
-  IconHeart,
-  IconShare,
-  IconChevronRight
-} from '@tabler/icons-react';
-import Link from 'next/link';
 
 export default function HomePage() {
-
   return (
     <Box>
       {/* Top Menu Bar */}
@@ -43,30 +42,22 @@ export default function HomePage() {
               </Title>
             </Group>
             <Group>
-              <Button
-                component={Link}
-                href="/login"
-                variant="outline"
-                size="md"
-                color="grape"
-              >
+              <Button component={Link} href="/login" variant="outline" size="md" color="grape">
                 Sign In
               </Button>
-              <Button
-                component={Link}
-                href="/signup"
-                size="md"
-                color="grape.9"
-              >
+              <Button component={Link} href="/signup" size="md" color="grape.9">
                 Get Started
               </Button>
             </Group>
           </Group>
         </Container>
       </Box>
-      
+
       {/* Hero Section */}
-      <Box bg="linear-gradient(135deg, var(--mantine-color-grape-1) 0%, var(--mantine-color-violet-1) 100%)" py={80}>
+      <Box
+        bg="linear-gradient(135deg, var(--mantine-color-grape-1) 0%, var(--mantine-color-violet-1) 100%)"
+        py={80}
+      >
         <Container size="lg">
           <Grid align="center">
             <GridCol span={{ base: 12, md: 6 }}>
@@ -74,11 +65,13 @@ export default function HomePage() {
                 <Title order={1} size="3.5rem" c="grape.9" lh={1.1}>
                   Your Music,
                   <br />
-                  <Text span c="violet.8" inherit>Amplified</Text>
+                  <Text span c="violet.8" inherit>
+                    Amplified
+                  </Text>
                 </Title>
                 <Text size="xl" c="dimmed" lh={1.6}>
-                  Connect your Spotify, discover new bands, write reviews, and build your musical identity. 
-                  Join a community of music lovers sharing their favorite songs.
+                  Connect your Spotify, discover new bands, write reviews, and build your musical
+                  identity. Join a community of music lovers sharing their favorite songs.
                 </Text>
                 <Group>
                   <Button
@@ -90,13 +83,7 @@ export default function HomePage() {
                   >
                     Start Discovering
                   </Button>
-                  <Button
-                    component={Link}
-                    href="/login"
-                    size="lg"
-                    variant="outline"
-                    color="grape"
-                  >
+                  <Button component={Link} href="/login" size="lg" variant="outline" color="grape">
                     Sign In
                   </Button>
                 </Group>
@@ -132,68 +119,111 @@ export default function HomePage() {
             Everything you need to explore music
           </Title>
           <Text size="lg" ta="center" c="dimmed" maw={600}>
-            From discovering new artists to sharing your favorite tracks, Goodsongs brings all your music experiences together in one place.
+            From discovering new artists to sharing your favorite tracks, Goodsongs brings all your
+            music experiences together in one place.
           </Text>
         </Stack>
 
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-          <Card padding="xl" radius="md" style={{ border: '2px solid var(--mantine-color-grape-2)' }}>
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-grape-2)' }}
+          >
             <ThemeIcon size={60} radius="xl" color="green" mb="md">
               <IconBrandSpotify size={30} />
             </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">Spotify Integration</Title>
+            <Title order={3} size="xl" mb="sm">
+              Spotify Integration
+            </Title>
             <Text c="dimmed" lh={1.6}>
-              Connect your Spotify account to see your recently played tracks and get personalized recommendations based on your listening history.
+              Connect your Spotify account to see your recently played tracks and get personalized
+              recommendations based on your listening history.
             </Text>
           </Card>
 
-          <Card padding="xl" radius="md" style={{ border: '2px solid var(--mantine-color-violet-2)' }}>
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-violet-2)' }}
+          >
             <ThemeIcon size={60} radius="xl" color="violet.6" mb="md">
               <IconStar size={30} />
             </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">Write Reviews</Title>
+            <Title order={3} size="xl" mb="sm">
+              Write Reviews
+            </Title>
             <Text c="dimmed" lh={1.6}>
-              Share your thoughts on your favorite songs. Rate tracks, highlight what you love, and help others discover great music.
+              Share your thoughts on your favorite songs. Rate tracks, highlight what you love, and
+              help others discover great music.
             </Text>
           </Card>
 
-          <Card padding="xl" radius="md" style={{ border: '2px solid var(--mantine-color-grape-2)' }}>
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-grape-2)' }}
+          >
             <ThemeIcon size={60} radius="xl" color="grape.6" mb="md">
               <IconUsers size={30} />
             </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">Create Bands</Title>
+            <Title order={3} size="xl" mb="sm">
+              Create Bands
+            </Title>
             <Text c="dimmed" lh={1.6}>
-              Showcase your musical projects, connect with other artists, and build your band's presence across multiple platforms.
+              Showcase your musical projects, connect with other artists, and build your band's
+              presence across multiple platforms.
             </Text>
           </Card>
 
-          <Card padding="xl" radius="md" style={{ border: '2px solid var(--mantine-color-blue-2)' }}>
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-blue-2)' }}
+          >
             <ThemeIcon size={60} radius="xl" color="blue.6" mb="md">
               <IconSearch size={30} />
             </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">Discover Music</Title>
+            <Title order={3} size="xl" mb="sm">
+              Discover Music
+            </Title>
             <Text c="dimmed" lh={1.6}>
-              Explore new artists and songs through community reviews, trending tracks, and personalized recommendations.
+              Explore new artists and songs through community reviews, trending tracks, and
+              personalized recommendations.
             </Text>
           </Card>
 
-          <Card padding="xl" radius="md" style={{ border: '2px solid var(--mantine-color-pink-2)' }}>
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-pink-2)' }}
+          >
             <ThemeIcon size={60} radius="xl" color="pink.6" mb="md">
               <IconHeart size={30} />
             </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">Build Your Profile</Title>
+            <Title order={3} size="xl" mb="sm">
+              Build Your Profile
+            </Title>
             <Text c="dimmed" lh={1.6}>
-              Create a musical identity that reflects your taste. Show off your reviews, bands, and favorite discoveries.
+              Create a musical identity that reflects your taste. Show off your reviews, bands, and
+              favorite discoveries.
             </Text>
           </Card>
 
-          <Card padding="xl" radius="md" style={{ border: '2px solid var(--mantine-color-orange-2)' }}>
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-orange-2)' }}
+          >
             <ThemeIcon size={60} radius="xl" color="orange.6" mb="md">
               <IconShare size={30} />
             </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">Share & Connect</Title>
+            <Title order={3} size="xl" mb="sm">
+              Share & Connect
+            </Title>
             <Text c="dimmed" lh={1.6}>
-              Connect with fellow music lovers, share your discoveries, and build a community around your musical passions.
+              Connect with fellow music lovers, share your discoveries, and build a community around
+              your musical passions.
             </Text>
           </Card>
         </SimpleGrid>
@@ -214,37 +244,59 @@ export default function HomePage() {
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
             <Paper p="xl" radius="md" style={{ border: '2px solid var(--mantine-color-grape-3)' }}>
               <Group mb="md">
-                <Avatar size="md" color="blue">MJ</Avatar>
+                <Avatar size="md" color="blue">
+                  MJ
+                </Avatar>
                 <div>
                   <Text fw={600}>musicjunkie92</Text>
                 </div>
               </Group>
-              <Title order={4} mb="xs">Bohemian Rhapsody - Queen</Title>
+              <Title order={4} mb="xs">
+                Bohemian Rhapsody - Queen
+              </Title>
               <Text c="dimmed" mb="md">
-                "This song is an absolute masterpiece. The way it transitions between different musical styles is incredible. Freddie's vocals are otherworldly..."
+                "This song is an absolute masterpiece. The way it transitions between different
+                musical styles is incredible. Freddie's vocals are otherworldly..."
               </Text>
               <Group gap="xs">
-                <Badge size="sm" variant="light" color="grape">Vocals</Badge>
-                <Badge size="sm" variant="light" color="violet">Creativity</Badge>
-                <Badge size="sm" variant="light" color="blue">Production</Badge>
+                <Badge size="sm" variant="light" color="grape">
+                  Vocals
+                </Badge>
+                <Badge size="sm" variant="light" color="violet">
+                  Creativity
+                </Badge>
+                <Badge size="sm" variant="light" color="blue">
+                  Production
+                </Badge>
               </Group>
             </Paper>
 
             <Paper p="xl" radius="md" style={{ border: '2px solid var(--mantine-color-violet-3)' }}>
               <Group mb="md">
-                <Avatar size="md" color="green">AL</Avatar>
+                <Avatar size="md" color="green">
+                  AL
+                </Avatar>
                 <div>
                   <Text fw={600}>alexlistens</Text>
                 </div>
               </Group>
-              <Title order={4} mb="xs">Blinding Lights - The Weeknd</Title>
+              <Title order={4} mb="xs">
+                Blinding Lights - The Weeknd
+              </Title>
               <Text c="dimmed" mb="md">
-                "Perfect blend of retro and modern. The synths take me back to the 80s but with a fresh twist. Can't stop playing this on repeat!"
+                "Perfect blend of retro and modern. The synths take me back to the 80s but with a
+                fresh twist. Can't stop playing this on repeat!"
               </Text>
               <Group gap="xs">
-                <Badge size="sm" variant="light" color="green">Beat</Badge>
-                <Badge size="sm" variant="light" color="orange">Energy</Badge>
-                <Badge size="sm" variant="light" color="pink">Melody</Badge>
+                <Badge size="sm" variant="light" color="green">
+                  Beat
+                </Badge>
+                <Badge size="sm" variant="light" color="orange">
+                  Energy
+                </Badge>
+                <Badge size="sm" variant="light" color="pink">
+                  Melody
+                </Badge>
               </Group>
             </Paper>
           </SimpleGrid>
@@ -253,7 +305,11 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <Container size="lg" py={80}>
-        <Paper p={60} radius="xl" bg="linear-gradient(135deg, var(--mantine-color-grape-6) 0%, var(--mantine-color-violet-6) 100%)">
+        <Paper
+          p={60}
+          radius="xl"
+          bg="linear-gradient(135deg, var(--mantine-color-grape-6) 0%, var(--mantine-color-violet-6) 100%)"
+        >
           <Stack align="center" gap="xl">
             <Title order={2} size="2.5rem" ta="center" c="white">
               Ready to amplify your music experience?
@@ -283,7 +339,9 @@ export default function HomePage() {
           <Group justify="space-between" align="center">
             <Group align="center">
               <IconMusic size={24} color="white" />
-              <Text c="white" fw={600}>Goodsongs</Text>
+              <Text c="white" fw={600}>
+                Goodsongs
+              </Text>
             </Group>
             <Text c="grape.3" size="sm">
               © 2024 Goodsongs. Made for music lovers, by music lovers.
