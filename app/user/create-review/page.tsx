@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconAlertCircle, IconArrowLeft, IconBrandSpotify } from '@tabler/icons-react';
+import { IconAlertCircle, IconArrowLeft, IconBrandSpotify, IconMusic } from '@tabler/icons-react';
 import {
   Alert,
   Button,
@@ -78,8 +78,8 @@ function CreateReviewForm() {
       await apiClient.createReview(formData);
 
       notifications.show({
-        title: 'Review created!',
-        message: 'Your review has been successfully submitted.',
+        title: 'Recommendation created!',
+        message: 'Your recommendation has been successfully submitted.',
         color: 'green',
       });
 
@@ -94,7 +94,7 @@ function CreateReviewForm() {
   if (!user) {
     return (
       <Container>
-        <Text>Please log in to create a review.</Text>
+        <Text>Please log in to create a recommendation.</Text>
       </Container>
     );
   }
@@ -102,23 +102,27 @@ function CreateReviewForm() {
   return (
     <Container size="md" py="xl">
       <Stack>
-        <Group>
-          <Button
-            component={Link}
-            href="/user/dashboard"
-            variant="subtle"
-            leftSection={<IconArrowLeft size={16} />}
-          >
-            Back to Dashboard
-          </Button>
-        </Group>
+        {/* Header */}
+        <Paper p="lg" radius="md">
+          <Group justify="space-between" align="center">
+            <Group>
+              <IconMusic size={32} color="var(--mantine-color-grape-6)" />
+              <Title order={1}>New Recommendation</Title>
+            </Group>
+            <Button
+              component={Link}
+              href="/user/dashboard"
+              leftSection={<IconArrowLeft size={16} />}
+              variant="outline"
+            >
+              Back to Dashboard
+            </Button>
+          </Group>
+        </Paper>
 
-        <Paper withBorder p="lg" radius="md">
-          <Title order={2} mb="md">
-            Create a Review
-          </Title>
+        <Paper p="lg" radius="md">
           <Text size="sm" c="dimmed" mb="lg">
-            Share your thoughts about a song and help others discover great music!
+            Share your favorite songs and help others discover great music!
           </Text>
 
           {(searchParams.get('song_name') || searchParams.get('band_name')) && (
@@ -193,8 +197,8 @@ function CreateReviewForm() {
               />
 
               <Textarea
-                label="Your Review"
-                placeholder="Share your thoughts about this song..."
+                label="Your Recommendation"
+                placeholder="Share why you love this song..."
                 minRows={4}
                 required
                 value={formData.review_text}
@@ -210,7 +214,7 @@ function CreateReviewForm() {
                   loading={isSubmitting}
                   disabled={!formData.song_name || !formData.band_name || !formData.review_text}
                 >
-                  Create Review
+                  Create Recommendation
                 </Button>
               </Group>
             </Stack>

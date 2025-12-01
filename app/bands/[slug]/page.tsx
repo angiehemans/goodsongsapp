@@ -3,33 +3,33 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   IconAlertCircle,
-  IconBrandApple,
+  IconArrowNarrowRight,
   IconBrandSpotify,
-  IconBrandYoutube,
-  IconCalendar,
-  IconMapPin,
-  IconMusic,
-  IconPlus,
+  IconMenu2,
 } from '@tabler/icons-react';
 import {
   Alert,
   Avatar,
+  BackgroundImage,
   Badge,
+  Box,
   Button,
   Card,
-  Center,
+  Checkbox,
   Container,
   Divider,
   Flex,
   Group,
-  Paper,
-  SimpleGrid,
+  Image,
   Stack,
   Text,
+  TextInput,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
-import { Band } from '@/lib/api';
+import { Band, Review } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
+import styles from './page.module.css';
 
 export async function generateMetadata({
   params,
@@ -44,7 +44,7 @@ export async function generateMetadata({
       title: `${band.name} - Goodsongs`,
       description:
         band.about ||
-        `Check out ${band.name} on Goodsongs. ${band.reviews_count} review${band.reviews_count !== 1 ? 's' : ''} and counting.`,
+        `Check out ${band.name} on Goodsongs. ${band.reviews_count} recommendation${band.reviews_count !== 1 ? 's' : ''} and counting.`,
     };
   } catch {
     return {
@@ -56,7 +56,6 @@ export async function generateMetadata({
 
 async function getBand(slug: string): Promise<Band> {
   try {
-    // For server components, we need to use the full URL to the Next.js API route
     const baseUrl =
       process.env.NODE_ENV === 'production'
         ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
@@ -83,6 +82,26 @@ async function getBand(slug: string): Promise<Band> {
   }
 }
 
+// Placeholder data for sections without API endpoints
+const placeholderShows = [
+  {
+    id: 1,
+    date: 'Nov 17, 2025',
+    city: 'Sacramento, CA',
+    venue: 'The Press Club',
+    price: '$20',
+    moreInfoUrl: '#',
+  },
+  {
+    id: 2,
+    date: 'Nov 18, 2025',
+    city: 'Portland, OR',
+    venue: 'The Hawthorne Theater',
+    price: '$20',
+    moreInfoUrl: '#',
+  },
+];
+
 export default async function BandProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -100,233 +119,372 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
     );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const streamingLinks = [
-    { url: band.spotify_link, icon: IconBrandSpotify, label: 'Spotify', color: '#1DB954' },
-    { url: band.apple_music_link, icon: IconBrandApple, label: 'Apple Music', color: '#000000' },
-    {
-      url: band.youtube_music_link,
-      icon: IconBrandYoutube,
-      label: 'YouTube Music',
-      color: '#FF0000',
-    },
-    { url: band.bandcamp_link, icon: IconMusic, label: 'Bandcamp', color: '#629aa0' },
-  ].filter((link) => link.url);
-
   return (
-    <Container size="md" py="xl">
-      <Stack>
-        {/* Band Header */}
-        <Paper p="lg" radius="md">
-          <Group align="flex-start">
-            {band.profile_picture_url ? (
-              <img
-                src={fixImageUrl(band.profile_picture_url)}
-                alt={`${band.name} profile`}
-                style={{ width: 120, height: 120, borderRadius: 12, objectFit: 'cover' }}
-              />
-            ) : (
-              <Avatar size={120} color="grape.6">
-                {band.name.charAt(0).toUpperCase()}
-              </Avatar>
-            )}
-
-            <Stack flex={1} gap="xs">
-              <Group justify="space-between" align="flex-start">
-                <div>
-                  <Title order={1}>{band.name}</Title>
-                  {band.location && (
-                    <Group gap="xs" mt="xs">
-                      <IconMapPin size={16} />
-                      <Text c="dimmed">{band.location}</Text>
-                    </Group>
-                  )}
-                </div>
-
-                <Badge variant="light" color="grape">
-                  {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''}
-                </Badge>
-              </Group>
-
-              <Text size="sm" c="dimmed">
-                Created by @{band.owner?.username || 'Unknown'} • {formatDate(band.created_at)}
-              </Text>
-            </Stack>
-          </Group>
-        </Paper>
-
-        {/* About Section */}
-        {band.about && (
-          <Paper p="lg" radius="md">
-            <Title order={3} mb="md">
-              About
-            </Title>
-            <Text style={{ whiteSpace: 'pre-wrap' }}>{band.about}</Text>
-          </Paper>
-        )}
-
-        {/* Streaming Links */}
-        {streamingLinks.length > 0 && (
-          <Paper p="lg" radius="md">
-            <Title order={3} mb="md">
-              Listen On
-            </Title>
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
-              {streamingLinks.map((link, index) => {
-                const Icon = link.icon;
-                return (
-                  <Button
-                    key={index}
-                    component="a"
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="outline"
-                    leftSection={<Icon size={18} />}
-                    style={{ color: link.color, borderColor: link.color }}
-                  >
-                    {link.label}
-                  </Button>
-                );
-              })}
-            </SimpleGrid>
-          </Paper>
-        )}
-
-        {/* Reviews Section */}
-        <Paper p="lg" radius="md">
-          <Group justify="space-between" align="center" mb="md">
-            <Title order={3}>Reviews</Title>
-            <Button
-              component={Link}
-              href="/user/create-review"
-              variant="outline"
-              leftSection={<IconPlus size={16} />}
-            >
-              Write a Review
-            </Button>
-          </Group>
-
-          {!band.reviews || band.reviews.length === 0 ? (
-            <Center py="xl">
-              <Stack align="center">
-                <IconMusic size={48} color="var(--mantine-color-dimmed)" />
-                <Text c="dimmed" ta="center">
-                  No reviews yet. Be the first to review {band.name}!
-                </Text>
-                <Button component={Link} href="/user/create-review" variant="filled">
-                  Write the First Review
+    <Box className={styles.pageBackground}>
+      <Container p={0} className={styles.container}>
+        {/* Header */}
+        <Flex justify="center" align="center" py="md" pos="relative">
+          <UnstyledButton pos="absolute" right={20}>
+            <IconMenu2 size={24} color="var(--mantine-color-blue-8)" />
+          </UnstyledButton>
+          <Title order={1} size="36px" c="blue.8" ta="center">
+            {band.name}
+          </Title>
+        </Flex>
+        <Stack gap={36} align="center" pb="xl">
+          {/* Hero Image & Follow Button */}
+          {band.profile_picture_url ? (
+            <BackgroundImage src={fixImageUrl(band.profile_picture_url)!}>
+              <Flex direction="column" h={220} p={20} align="center" justify="flex-end" w="100%">
+                <Button
+                  w={{ base: '100%', sm: 300 }}
+                  variant="filled"
+                  color="blue.1"
+                  c="blue.8"
+                  radius={4}
+                  h={36}
+                >
+                  Follow
                 </Button>
-              </Stack>
-            </Center>
+              </Flex>
+            </BackgroundImage>
           ) : (
-            <Stack>
-              <Text size="sm" c="dimmed" mb="md">
-                {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''} for this band
-              </Text>
+            <Flex w="100%" p={20} justify="center">
+              <Button
+                w={{ base: '100%', sm: 300 }}
+                variant="filled"
+                color="blue.1"
+                c="blue.8"
+                radius={4}
+                h={36}
+              >
+                Follow
+              </Button>
+            </Flex>
+          )}
 
-              {band.reviews.map((review) => (
-                <Card key={review.id} p="lg">
-                  <Stack>
-                    {/* Review Header */}
-                    <Group justify="space-between" align="flex-start">
-                      <Group>
-                        {review.artwork_url && (
-                          <img
-                            src={review.artwork_url}
-                            alt={`${review.song_name} artwork`}
-                            style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }}
-                          />
-                        )}
-                        <Stack gap="xs">
-                          <div>
-                            <Title order={4}>{review.song_name}</Title>
-                            <Text size="sm" c="dimmed">
-                              {review.band_name}
-                            </Text>
-                          </div>
-                          <Group gap="xs">
-                            <Text size="sm" fw={500}>
-                              by
-                            </Text>
-                            <Text
-                              size="sm"
-                              component={Link}
-                              href={`/users/${review.user?.username || 'unknown'}`}
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
-                            >
-                              @{review.user?.username || 'Unknown User'}
-                            </Text>
-                          </Group>
-                        </Stack>
-                      </Group>
-                    </Group>
-
-                    <Divider />
-
-                    {/* Review Content */}
-                    <Text>{review.review_text}</Text>
-
-                    {/* Liked Aspects */}
-                    {review.liked_aspects.length > 0 && (
-                      <Group>
-                        <Text size="sm" fw={500}>
-                          Liked:
-                        </Text>
-                        <Group gap="xs">
-                          {review.liked_aspects.map((aspect, index) => (
-                            <Badge key={index} variant="light" color="grape">
-                              {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
-                            </Badge>
-                          ))}
-                        </Group>
-                      </Group>
-                    )}
-
-                    {/* Review Footer */}
-                    <Group justify="space-between" align="center">
-                      <Group gap="xs">
-                        <IconCalendar size={14} />
-                        <Text size="xs" c="dimmed">
-                          {formatDate(review.created_at)}
-                        </Text>
-                      </Group>
-
-                      {review.song_link && (
-                        <Button
-                          component="a"
-                          href={review.song_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          variant="subtle"
-                          size="xs"
-                        >
-                          Listen
-                        </Button>
-                      )}
-                    </Group>
-                  </Stack>
-                </Card>
-              ))}
+          {/* Listen Section */}
+          {band.spotify_link && (
+            <Stack align="center" w="100%" px={20}>
+              <Title order={2} size="24px" c="blue.8">
+                Listen
+              </Title>
+              <Box className={styles.spotifyEmbed}>
+                <iframe
+                  src={getSpotifyEmbedUrl(band.spotify_link)}
+                  width="100%"
+                  height="155"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style={{ borderRadius: 13, border: 'none' }}
+                />
+              </Box>
             </Stack>
           )}
-        </Paper>
+
+          {/* Shows Section */}
+          {/* <Stack align="center" w="100%" px={20}>
+            <Title order={2} size="24px" c="blue.8">
+              Shows
+            </Title>
+            <Stack w="100%" gap={0}>
+              {placeholderShows.map((show) => (
+                <Box key={show.id} py="md">
+                  <Flex justify="space-between" align="center" mb="md">
+                    <Text fw={600} size="16px" c="blue.8">
+                      {show.date}
+                    </Text>
+                    <Text size="16px" c="gray.6">
+                      {show.city}
+                    </Text>
+                  </Flex>
+                  <Text size="20px" c="blue.8" ta="center" mb="md">
+                    {show.venue}
+                  </Text>
+                  <Flex justify="space-between" align="center">
+                    <Badge
+                      variant="filled"
+                      color="blue.1"
+                      c="blue.8"
+                      radius={13}
+                      px={10}
+                      py={6}
+                      styles={{ root: { border: 'none', textTransform: 'none' } }}
+                    >
+                      {show.price}
+                    </Badge>
+                    <UnstyledButton component="a" href={show.moreInfoUrl}>
+                      <Group gap={4}>
+                        <Text size="16px" c="blue.4">
+                          More Info
+                        </Text>
+                        <IconArrowNarrowRight size={24} color="var(--mantine-color-blue-4)" />
+                      </Group>
+                    </UnstyledButton>
+                  </Flex>
+                  <Divider mt="md" color="blue.3" size={2} />
+                </Box>
+              ))}
+              <Flex justify="center" mt="sm">
+                <UnstyledButton>
+                  <Group gap={4}>
+                    <Text size="16px" c="blue.4">
+                      More Shows
+                    </Text>
+                    <IconArrowNarrowRight size={24} color="var(--mantine-color-blue-4)" />
+                  </Group>
+                </UnstyledButton>
+              </Flex>
+            </Stack>
+          </Stack> */}
+
+          {/* Mailing List Section */}
+          {/* <Stack align="center" w="100%" px={20}>
+            <Title order={2} size="24px" c="blue.8">
+              Join Mailing list
+            </Title>
+            <Stack w="100%" gap="md" mt="sm">
+              <TextInput
+                label="Name"
+                placeholder="Your name"
+                styles={{
+                  label: { color: 'var(--mantine-color-blue-4)', marginBottom: 8 },
+                  input: {
+                    borderColor: 'var(--mantine-color-blue-4)',
+                    borderWidth: 2,
+                    backgroundColor: 'white',
+                    color: 'var(--mantine-color-blue-8)',
+                  },
+                }}
+              />
+              <TextInput
+                label="Email"
+                placeholder="your@email.com"
+                styles={{
+                  label: { color: 'var(--mantine-color-blue-4)', marginBottom: 8 },
+                  input: {
+                    borderColor: 'var(--mantine-color-blue-4)',
+                    borderWidth: 2,
+                    backgroundColor: 'white',
+                    color: 'var(--mantine-color-blue-8)',
+                  },
+                }}
+              />
+              <Checkbox
+                label={`I agree to be emailed by ${band.name}`}
+                color="blue.8"
+                styles={{
+                  label: { color: 'var(--mantine-color-blue-4)' },
+                }}
+              />
+            </Stack>
+          </Stack> */}
+
+          {/* About Section */}
+          {band.about && (
+            <Stack align="center" w="100%" px={20}>
+              <Title order={2} size="24px" c="blue.8">
+                About
+              </Title>
+              <Text size="16px" lh="22px" c="blue.8" style={{ whiteSpace: 'pre-wrap' }}>
+                {band.about}
+              </Text>
+            </Stack>
+          )}
+
+          {/* Recommendations Section */}
+          <Stack align="center" w="100%" px={20}>
+            <Title order={2} size="24px" c="blue.8">
+              Recommendations
+            </Title>
+            {band.reviews && band.reviews.length > 0 ? (
+              <Stack w="100%" gap="md">
+                {band.reviews.slice(0, 2).map((review) => (
+                  <ReviewCard key={review.id} review={review} bandName={band.name} />
+                ))}
+              </Stack>
+            ) : (
+              <Text c="dimmed" ta="center">
+                No recommendations yet. Be the first to recommend {band.name}!
+              </Text>
+            )}
+          </Stack>
+
+          {/* Merch Section */}
+          {/* <Stack align="center" w="100%" px={20}>
+            <Title order={2} size="24px" c="blue.8">
+              Merch
+            </Title>
+            <Box w="100%">
+              <Flex gap={20} mb="sm">
+                <Box className={styles.merchItem}>
+                  <Box className={styles.merchImagePlaceholder} />
+                </Box>
+                <Box className={styles.merchItem}>
+                  <Box className={styles.merchImagePlaceholder} />
+                </Box>
+              </Flex>
+              <Flex justify="space-between" mb="lg">
+                <Text size="16px" c="gray.6">
+                  Unisex T-Shirt
+                </Text>
+                <Text size="16px" c="blue.8">
+                  $25
+                </Text>
+                <Text size="16px" c="gray.6">
+                  Vinyl Record
+                </Text>
+                <Text size="16px" c="blue.8">
+                  $20
+                </Text>
+              </Flex>
+              <Flex gap={20} mb="sm">
+                <Box className={styles.merchItem}>
+                  <Box className={styles.merchImagePlaceholder} />
+                </Box>
+                <Box className={styles.merchItem}>
+                  <Box className={styles.merchImagePlaceholder} />
+                </Box>
+              </Flex>
+              <Flex justify="space-between">
+                <Text size="16px" c="gray.6">
+                  Hoodie
+                </Text>
+                <Text size="16px" c="blue.8">
+                  $40
+                </Text>
+                <Text size="16px" c="gray.6">
+                  Button Pack
+                </Text>
+                <Text size="16px" c="blue.8">
+                  $15
+                </Text>
+              </Flex>
+            </Box>
+          </Stack> */}
+
+          {/* Footer */}
+          <Stack align="center" w="100%" px={20} pb="xl">
+            <Flex direction="column" align="center" gap={10}>
+              <Text size="16px" c="blue.3" ta="center">
+                Built With
+              </Text>
+              <Link
+                href="/user/dashboard"
+                style={{
+                  textDecoration: 'none',
+                  alignItems: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <Image radius="sm" src="/logo.svg" w={40} />
+                <Title order={2} size="28px" c="blue.8" ta="center">
+                  GoodSongs
+                </Title>
+              </Link>
+            </Flex>
+
+            <Button
+              w={{ base: '100%', sm: 300 }}
+              variant="filled"
+              color="blue.1"
+              c="blue.8"
+              radius={4}
+              h={36}
+              component={Link}
+              href="/signup"
+            >
+              Create Your Account!
+            </Button>
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
+  );
+}
+
+// Helper function to convert Spotify URL to embed URL
+function getSpotifyEmbedUrl(spotifyUrl: string): string {
+  // Convert regular Spotify URL to embed URL
+  // e.g., https://open.spotify.com/artist/xyz -> https://open.spotify.com/embed/artist/xyz
+  if (spotifyUrl.includes('open.spotify.com')) {
+    return spotifyUrl.replace('open.spotify.com/', 'open.spotify.com/embed/');
+  }
+  return spotifyUrl;
+}
+
+// Recommendation Card Component
+function ReviewCard({ review, bandName }: { review: Review; bandName: string }) {
+  return (
+    <Card p="sm" radius={4} className={styles.reviewCard}>
+      <Stack gap="sm">
+        {/* Song Info Header */}
+        <Flex justify="space-between" align="flex-start">
+          <Group gap="sm">
+            {review.artwork_url && (
+              <img
+                src={review.artwork_url}
+                alt={`${review.song_name} artwork`}
+                style={{ width: 48, height: 48, borderRadius: 4, objectFit: 'cover' }}
+              />
+            )}
+            <Stack gap={2}>
+              <Text size="16px" fw={500} c="gray.9">
+                {review.song_name}
+              </Text>
+              <Text size="14px" c="gray.5">
+                {bandName}
+              </Text>
+            </Stack>
+          </Group>
+          <IconBrandSpotify size={24} color="var(--mantine-color-blue-8)" />
+        </Flex>
+
+        {/* Review Text */}
+        <Text size="16px" lh="26px" c="gray.9">
+          {review.review_text}
+        </Text>
+
+        {/* Tags */}
+        {review.liked_aspects && review.liked_aspects.length > 0 && (
+          <Group gap="xs">
+            {review.liked_aspects.slice(0, 2).map((aspect, index) => (
+              <Badge
+                key={index}
+                variant="filled"
+                color="blue.2"
+                c="blue.8"
+                radius={12}
+                px={10}
+                py={7}
+                styles={{ root: { textTransform: 'none' } }}
+              >
+                {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
+              </Badge>
+            ))}
+          </Group>
+        )}
+
+        {/* Overall Rating */}
+        <Text size="16px" c="gray.6">
+          Overall Rating: Loved it!
+        </Text>
+
+        <Divider color="blue.2" size={2} />
+
+        {/* User Info */}
+        <Flex justify="space-between" align="center">
+          <Group gap="sm">
+            <Avatar size={36} color="grape" radius="xl">
+              {review.user?.username?.charAt(0).toUpperCase() || '?'}
+            </Avatar>
+            <Text size="16px" c="gray.9">
+              @{review.user?.username || 'unknown'}
+            </Text>
+          </Group>
+        </Flex>
       </Stack>
-      <Flex align="center" justify="center" p="lg">
-        <Link href="/user/dashboard" style={{ textDecoration: 'none', cursor: 'pointer' }}>
-          <Title order={2} c="blue.8">
-            GoodSongs
-          </Title>
-        </Link>
-      </Flex>
-    </Container>
+    </Card>
   );
 }

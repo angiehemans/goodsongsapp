@@ -331,6 +331,71 @@ class ApiClient {
     return response.json();
   }
 
+  async updateBand(slug: string, data: BandData): Promise<Band> {
+    const hasFile = data.profile_picture instanceof File;
+
+    if (hasFile) {
+      const formData = new FormData();
+      formData.append('_method', 'PATCH');
+      formData.append('band[name]', data.name);
+      if (data.slug) {
+        formData.append('band[slug]', data.slug);
+      }
+      if (data.location) {
+        formData.append('band[location]', data.location);
+      }
+      if (data.about) {
+        formData.append('band[about]', data.about);
+      }
+      if (data.spotify_link) {
+        formData.append('band[spotify_link]', data.spotify_link);
+      }
+      if (data.bandcamp_link) {
+        formData.append('band[bandcamp_link]', data.bandcamp_link);
+      }
+      if (data.apple_music_link) {
+        formData.append('band[apple_music_link]', data.apple_music_link);
+      }
+      if (data.youtube_music_link) {
+        formData.append('band[youtube_music_link]', data.youtube_music_link);
+      }
+      if (data.profile_picture) {
+        formData.append('band[profile_picture]', data.profile_picture);
+      }
+
+      const response = await fetch(`${this.getApiUrl()}/bands/${slug}`, {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update band');
+      }
+
+      return response.json();
+    }
+
+    const response = await fetch(`${this.getApiUrl()}/bands/${slug}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ band: data }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update band');
+    }
+
+    return response.json();
+  }
+
   async getUserBands(): Promise<Band[]> {
     const response = await fetch(`${this.getApiUrl()}/bands/user`, {
       headers: {

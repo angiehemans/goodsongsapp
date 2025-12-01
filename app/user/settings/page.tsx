@@ -1,36 +1,28 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Container,
-  Title,
-  Paper,
-  Stack,
-  Group,
-  Skeleton,
-  Button,
-} from '@mantine/core';
-import { IconArrowLeft, IconSettings } from '@tabler/icons-react';
+import { lazy, Suspense, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { IconArrowLeft, IconLogout, IconSettings } from '@tabler/icons-react';
+import { Button, Container, Divider, Group, Paper, Skeleton, Stack, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/hooks/useAuth';
-import { lazy } from 'react';
 
 // Lazy load components
-const SpotifyConnection = lazy(() => 
-  import('@/components/SpotifyConnection/SpotifyConnection').then(mod => ({ 
-    default: mod.SpotifyConnection 
+const SpotifyConnection = lazy(() =>
+  import('@/components/SpotifyConnection/SpotifyConnection').then((mod) => ({
+    default: mod.SpotifyConnection,
   }))
 );
 
-const ProfileSettings = lazy(() => 
-  import('@/components/ProfileSettings/ProfileSettings').then(mod => ({ 
-    default: mod.ProfileSettings 
+const ProfileSettings = lazy(() =>
+  import('@/components/ProfileSettings/ProfileSettings').then((mod) => ({
+    default: mod.ProfileSettings,
   }))
 );
 
 export default function SettingsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -38,6 +30,16 @@ export default function SettingsPage() {
       router.push('/login');
     }
   }, [user, isLoading, router]);
+
+  const handleLogout = () => {
+    logout();
+    notifications.show({
+      title: 'Logged out',
+      message: 'See you next time!',
+      color: 'blue',
+    });
+    router.push('/login');
+  };
 
   if (isLoading) {
     return (
@@ -56,7 +58,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <Container size="lg" py="xl">
+    <Container py="xl">
       <Stack>
         {/* Header */}
         <Paper p="lg" radius="md">
@@ -77,41 +79,63 @@ export default function SettingsPage() {
         </Paper>
 
         {/* Profile Settings */}
-        <Suspense fallback={
-          <Paper p="lg" radius="md">
-            <Stack>
-              <Group>
-                <Skeleton height={20} width={120} />
-              </Group>
-              <Group>
-                <Skeleton height={80} width={80} radius="xl" />
-                <Stack flex={1}>
-                  <Skeleton height={20} width="60%" />
-                  <Skeleton height={20} width="40%" />
-                </Stack>
-              </Group>
-              <Skeleton height={80} />
-              <Group justify="flex-end">
-                <Skeleton height={36} width={80} />
-                <Skeleton height={36} width={120} />
-              </Group>
-            </Stack>
-          </Paper>
-        }>
+        <Suspense
+          fallback={
+            <Paper p="lg" radius="md">
+              <Stack>
+                <Group>
+                  <Skeleton height={20} width={120} />
+                </Group>
+                <Group>
+                  <Skeleton height={80} width={80} radius="xl" />
+                  <Stack flex={1}>
+                    <Skeleton height={20} width="60%" />
+                    <Skeleton height={20} width="40%" />
+                  </Stack>
+                </Group>
+                <Skeleton height={80} />
+                <Group justify="flex-end">
+                  <Skeleton height={36} width={80} />
+                  <Skeleton height={36} width={120} />
+                </Group>
+              </Stack>
+            </Paper>
+          }
+        >
           <ProfileSettings />
         </Suspense>
 
         {/* Spotify Connection */}
-        <Suspense fallback={
-          <Paper p="md" radius="md">
-            <Group>
-              <Skeleton height={20} width={20} radius="xl" />
-              <Skeleton height={20} width={200} />
-            </Group>
-          </Paper>
-        }>
+        <Suspense
+          fallback={
+            <Paper p="md" radius="md">
+              <Group>
+                <Skeleton height={20} width={20} radius="xl" />
+                <Skeleton height={20} width={200} />
+              </Group>
+            </Paper>
+          }
+        >
           <SpotifyConnection />
         </Suspense>
+
+        {/* Logout Section */}
+        <Divider my="md" />
+        <Paper p="lg" radius="md">
+          <Group justify="space-between" align="center">
+            <div>
+              <Title order={4}>Sign Out</Title>
+            </div>
+            <Button
+              leftSection={<IconLogout size={16} />}
+              variant="outline"
+              color="red"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </Group>
+        </Paper>
       </Stack>
     </Container>
   );

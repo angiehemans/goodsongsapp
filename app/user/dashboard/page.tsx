@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   IconBrandSpotify,
-  IconLogout,
+  IconEdit,
   IconMusic,
   IconPlaylist,
   IconPlus,
@@ -56,44 +56,55 @@ const StatsCard = memo(
 
 const BandCard = memo(({ band }: { band: Band }) => (
   <Grid.Col key={band.id} span={{ base: 12, sm: 6, md: 4 }}>
-    <Card
-      component={Link}
-      href={`/bands/${band.slug}`}
-      p="md"
-      style={{ textDecoration: 'none', color: 'inherit' }}
-    >
-      <Group>
-        {band.profile_picture_url ? (
-          <img
-            src={fixImageUrl(band.profile_picture_url)}
-            alt={band.name}
-            style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
-          />
-        ) : (
-          <Avatar size={48} color="grape.6">
-            {band.name.charAt(0).toUpperCase()}
-          </Avatar>
-        )}
-        <Stack gap="xs" flex={1}>
-          <Title order={5}>{band.name}</Title>
-          <Group gap="xs">
-            <Badge size="sm" variant="light" color="grape">
-              {band.reviews_count} review{band.reviews_count !== 1 ? 's' : ''}
-            </Badge>
-            {band.location && (
-              <Text size="xs" c="dimmed">
-                {band.location}
-              </Text>
+    <Card p="md">
+      <Group justify="space-between" align="flex-start">
+        <Link
+          href={`/bands/${band.slug}`}
+          style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}
+        >
+          <Group>
+            {band.profile_picture_url ? (
+              <img
+                src={fixImageUrl(band.profile_picture_url)}
+                alt={band.name}
+                style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
+              />
+            ) : (
+              <Avatar size={48} color="grape.6">
+                {band.name.charAt(0).toUpperCase()}
+              </Avatar>
             )}
+            <Stack gap="xs" flex={1}>
+              <Title order={5}>{band.name}</Title>
+              <Group gap="xs">
+                <Badge size="sm" variant="light" color="grape">
+                  {band.reviews_count} recommendation{band.reviews_count !== 1 ? 's' : ''}
+                </Badge>
+                {band.location && (
+                  <Text size="xs" c="dimmed">
+                    {band.location}
+                  </Text>
+                )}
+              </Group>
+            </Stack>
           </Group>
-        </Stack>
+        </Link>
+        <ActionIcon
+          component={Link}
+          href={`/user/edit-band/${band.slug}`}
+          variant="subtle"
+          color="gray"
+          size="sm"
+        >
+          <IconEdit size={16} />
+        </ActionIcon>
       </Group>
     </Card>
   </Grid.Col>
 ));
 
 export default function DashboardPage() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [bands, setBands] = useState<Band[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -202,16 +213,6 @@ export default function DashboardPage() {
     }
   }, [user, spotifyConnected, fetchSpotifyData]);
 
-  const handleLogout = () => {
-    logout();
-    notifications.show({
-      title: 'Logged out',
-      message: 'See you next time!',
-      color: 'blue',
-    });
-    router.push('/login');
-  };
-
   if (isLoading) {
     return (
       <Container>
@@ -233,7 +234,7 @@ export default function DashboardPage() {
       >
         {/* Header */}
         <Paper p="lg" radius="md">
-          <Group justify="space-between">
+          <Group justify="space-between" align="flex-start">
             <Group>
               <Avatar
                 size="lg"
@@ -267,9 +268,24 @@ export default function DashboardPage() {
                 </Text>
               </div>
             </Group>
-            <Button leftSection={<IconLogout size={16} />} variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
+            <Group>
+              <Button
+                component={Link}
+                href="/user/create-review"
+                leftSection={<IconPlus size={16} />}
+              >
+                New Recommendation
+              </Button>
+              <ActionIcon
+                component={Link}
+                href="/user/settings"
+                variant="subtle"
+                size="lg"
+                color="gray"
+              >
+                <IconSettings size={24} />
+              </ActionIcon>
+            </Group>
           </Group>
         </Paper>
 
@@ -279,7 +295,7 @@ export default function DashboardPage() {
             <StatsCard
               icon={<IconMusic size={32} color="var(--mantine-color-grape-6)" />}
               value={reviews.length}
-              label="Reviews Written"
+              label="Recommendations"
             />
           </Grid.Col>
 
@@ -299,86 +315,12 @@ export default function DashboardPage() {
             />
           </Grid.Col>
         </Grid>
-
-        {/* Quick Actions */}
-        <Paper p="lg" radius="md">
-          <Title order={3} mb="md">
-            Quick Actions
-          </Title>
-          <Group>
-            <Button component={Link} href="/user/create-review" variant="filled">
-              Create Review
-            </Button>
-            <Button
-              component={Link}
-              href="/user/create-band"
-              variant="filled"
-              color="grape.7"
-              leftSection={<IconPlus size={16} />}
-            >
-              Create Band
-            </Button>
-            <Button variant="outline">Discover Music</Button>
-            <Button
-              component={Link}
-              href="/user/settings"
-              variant="outline"
-              leftSection={<IconSettings size={16} />}
-            >
-              Settings
-            </Button>
-          </Group>
-        </Paper>
-
-        {/* My Bands */}
-        <Paper p="lg" radius="md">
-          <Group justify="space-between" align="center" mb="md">
-            <Title order={3}>My Bands</Title>
-            <Button
-              component={Link}
-              href="/user/create-band"
-              size="sm"
-              variant="outline"
-              leftSection={<IconPlus size={14} />}
-            >
-              Add Band
-            </Button>
-          </Group>
-
-          {dataLoading ? (
-            <Center py="md">
-              <Loader size="sm" />
-            </Center>
-          ) : bands.length === 0 ? (
-            <Center py="xl">
-              <Stack align="center">
-                <IconMusic size={48} color="var(--mantine-color-dimmed)" />
-                <Text c="dimmed" ta="center">
-                  No bands yet. Create your first band to showcase your music!
-                </Text>
-                <Button
-                  component={Link}
-                  href="/user/create-band"
-                  leftSection={<IconPlus size={16} />}
-                >
-                  Create Your First Band
-                </Button>
-              </Stack>
-            </Center>
-          ) : (
-            <Grid>
-              {bands.map((band) => (
-                <BandCard key={band.id} band={band} />
-              ))}
-            </Grid>
-          )}
-        </Paper>
       </Container>
-      {/* Recent Reviews */}
+      {/* Recent Recommendations */}
       <Container px={0} pb="md">
         <Group justify="space-between" align="center" mb="md">
           <Title order={3} c="blue.8">
-            Your Good Songs
+            My Recommendations
           </Title>
           <ActionIcon
             component={Link}
@@ -401,14 +343,14 @@ export default function DashboardPage() {
             <Stack align="center">
               <IconMusic size={48} color="var(--mantine-color-dimmed)" />
               <Text c="dimmed" ta="center">
-                No reviews yet. Share your thoughts about your favorite songs!
+                No recommendations yet. Share your favorite songs!
               </Text>
               <Button
                 component={Link}
                 href="/user/create-review"
                 leftSection={<IconPlus size={16} />}
               >
-                Write Your First Review
+                Write Your First Recommendation
               </Button>
             </Stack>
           </Center>
@@ -423,7 +365,7 @@ export default function DashboardPage() {
                 <Divider />
                 <Group justify="center">
                   <Text size="sm" c="dimmed">
-                    Showing 5 of {reviews.length} reviews
+                    Showing 5 of {reviews.length} recommendations
                   </Text>
                   <Button
                     component={Link}
@@ -431,7 +373,7 @@ export default function DashboardPage() {
                     variant="subtle"
                     size="sm"
                   >
-                    View All Reviews
+                    View All Recommendations
                   </Button>
                 </Group>
               </>
@@ -445,7 +387,7 @@ export default function DashboardPage() {
         <Container px={0} pb="lg">
           <Group justify="space-between" align="center" mb="md">
             <Title order={3} c="blue.8">
-              Recently Played on Spotify
+              Recently Played Songs
             </Title>
             <Badge variant="light" color="green" leftSection={<IconMusic size={12} />}>
               From Spotify
@@ -559,6 +501,52 @@ export default function DashboardPage() {
           )}
         </Container>
       )}
+
+      {/* My Bands */}
+      <Container px={0} pb="lg">
+        <Paper p="lg" radius="md">
+          <Group justify="space-between" align="center" mb="md">
+            <Title order={3}>My Bands</Title>
+            <Button
+              component={Link}
+              href="/user/create-band"
+              size="sm"
+              variant="outline"
+              leftSection={<IconPlus size={14} />}
+            >
+              Add Band
+            </Button>
+          </Group>
+
+          {dataLoading ? (
+            <Center py="md">
+              <Loader size="sm" />
+            </Center>
+          ) : bands.length === 0 ? (
+            <Center py="xl">
+              <Stack align="center">
+                <IconMusic size={48} color="var(--mantine-color-dimmed)" />
+                <Text c="dimmed" ta="center">
+                  No bands yet. Create your first band to showcase your music!
+                </Text>
+                <Button
+                  component={Link}
+                  href="/user/create-band"
+                  leftSection={<IconPlus size={16} />}
+                >
+                  Create Your First Band
+                </Button>
+              </Stack>
+            </Center>
+          ) : (
+            <Grid>
+              {bands.map((band) => (
+                <BandCard key={band.id} band={band} />
+              ))}
+            </Grid>
+          )}
+        </Paper>
+      </Container>
     </Container>
   );
 }

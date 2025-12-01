@@ -15,26 +15,37 @@ function SpotifyCallbackContent() {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
 
+    // Check if we're in a popup window
+    const isPopup = window.opener && window.opener !== window;
+
     if (error) {
       setStatus('error');
-      setMessage(error === 'access_denied' 
-        ? 'Spotify access was denied. You can try connecting again later.' 
+      setMessage(error === 'access_denied'
+        ? 'Spotify access was denied. You can try connecting again later.'
         : `Spotify OAuth error: ${error}`
       );
-      // Redirect back to dashboard after showing error
+      // Close popup or redirect after showing error
       setTimeout(() => {
-        router.push('/user/dashboard');
-      }, 3000);
+        if (isPopup) {
+          window.close();
+        } else {
+          router.push('/user/dashboard');
+        }
+      }, 2000);
       return;
     }
 
     if (code) {
       setStatus('success');
-      setMessage('Successfully connected to Spotify! Redirecting to dashboard...');
-      // Redirect back to dashboard after successful connection
+      setMessage('Successfully connected to Spotify! This window will close...');
+      // Close popup or redirect after successful connection
       setTimeout(() => {
-        router.push('/user/dashboard');
-      }, 2000);
+        if (isPopup) {
+          window.close();
+        } else {
+          router.push('/user/dashboard');
+        }
+      }, 1500);
       return;
     }
 
@@ -42,9 +53,13 @@ function SpotifyCallbackContent() {
     setStatus('error');
     setMessage('Invalid callback parameters');
     setTimeout(() => {
-      router.push('/user/dashboard');
-    }, 3000);
-  }, [searchParams]);
+      if (isPopup) {
+        window.close();
+      } else {
+        router.push('/user/dashboard');
+      }
+    }, 2000);
+  }, [searchParams, router]);
 
   return (
     <Container size="sm" py="xl">

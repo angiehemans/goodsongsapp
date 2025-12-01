@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Container,
   Title,
@@ -16,18 +16,27 @@ import {
   FileInput,
   Grid,
   Tooltip,
+  Loader,
+  Center,
+  Avatar,
 } from '@mantine/core';
-import { IconArrowLeft, IconAlertCircle, IconUpload, IconMusic, IconInfoCircle } from '@tabler/icons-react';
+import { IconArrowLeft, IconAlertCircle, IconUpload, IconMusic, IconInfoCircle, IconEdit } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
-import { apiClient, BandData } from '@/lib/api';
+import { apiClient, BandData, Band } from '@/lib/api';
+import { fixImageUrl } from '@/lib/utils';
 
-export default function CreateBandPage() {
-  const { user } = useAuth();
+export default function EditBandPage() {
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingBand, setIsLoadingBand] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [band, setBand] = useState<Band | null>(null);
 
   const [formData, setFormData] = useState<BandData>({
     name: '',
@@ -41,21 +50,64 @@ export default function CreateBandPage() {
     profile_picture: undefined,
   });
 
+  // Fetch band data
+  useEffect(() => {
+    async function fetchBand() {
+      if (!slug) return;
+
+      try {
+        const bandData = await apiClient.getBand(slug);
+        setBand(bandData);
+        setFormData({
+          name: bandData.name,
+          slug: bandData.slug,
+          location: bandData.location || '',
+          about: bandData.about || '',
+          spotify_link: bandData.spotify_link || '',
+          bandcamp_link: bandData.bandcamp_link || '',
+          apple_music_link: bandData.apple_music_link || '',
+          youtube_music_link: bandData.youtube_music_link || '',
+          profile_picture: undefined,
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load band');
+      } finally {
+        setIsLoadingBand(false);
+      }
+    }
+
+    fetchBand();
+  }, [slug]);
+
+  // Check ownership
+  useEffect(() => {
+    if (!authLoading && !isLoadingBand && band && user) {
+      if (!band.user_owned) {
+        notifications.show({
+          title: 'Access denied',
+          message: 'You can only edit bands you own.',
+          color: 'red',
+        });
+        router.push('/user/dashboard');
+      }
+    }
+  }, [authLoading, isLoadingBand, band, user, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const band = await apiClient.createBand(formData);
+      const updatedBand = await apiClient.updateBand(slug, formData);
 
       notifications.show({
-        title: 'Band created!',
-        message: `${band.name} has been successfully created.`,
+        title: 'Band updated!',
+        message: `${updatedBand.name} has been successfully updated.`,
         color: 'green',
       });
 
-      router.push(`/bands/${band.slug}`);
+      router.push(`/bands/${updatedBand.slug}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -63,10 +115,30 @@ export default function CreateBandPage() {
     }
   };
 
+  if (authLoading || isLoadingBand) {
+    return (
+      <Container size="md" py="xl">
+        <Center>
+          <Loader />
+        </Center>
+      </Container>
+    );
+  }
+
   if (!user) {
     return (
       <Container>
-        <Text>Please log in to create a band.</Text>
+        <Text>Please log in to edit a band.</Text>
+      </Container>
+    );
+  }
+
+  if (error && !band) {
+    return (
+      <Container size="md" py="xl">
+        <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red">
+          {error}
+        </Alert>
       </Container>
     );
   }
@@ -74,31 +146,50 @@ export default function CreateBandPage() {
   return (
     <Container size="md" py="xl">
       <Stack>
-        <Group>
-          <Button
-            component={Link}
-            href="/user/dashboard"
-            variant="subtle"
-            leftSection={<IconArrowLeft size={16} />}
-          >
-            Back to Dashboard
-          </Button>
-        </Group>
+        {/* Header */}
+        <Paper p="lg" radius="md">
+          <Group justify="space-between" align="center">
+            <Group>
+              <IconEdit size={32} color="var(--mantine-color-grape-6)" />
+              <Title order={1}>Edit Band</Title>
+            </Group>
+            <Button
+              component={Link}
+              href="/user/dashboard"
+              leftSection={<IconArrowLeft size={16} />}
+              variant="outline"
+            >
+              Back to Dashboard
+            </Button>
+          </Group>
+        </Paper>
 
         <Paper p="lg" radius="md">
-          <Stack align="center" mb="lg">
-            <IconMusic size={48} color="var(--mantine-color-grape-6)" />
-            <Title order={2}>Create a Band</Title>
-            <Text size="sm" c="dimmed" ta="center">
-              Share your music project with the world. Create a band profile to showcase your work and connect with fans.
-            </Text>
-          </Stack>
+          <Group mb="lg">
+            {band?.profile_picture_url ? (
+              <img
+                src={fixImageUrl(band.profile_picture_url)}
+                alt={band.name}
+                style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover' }}
+              />
+            ) : (
+              <Avatar size={64} color="grape.6">
+                {band?.name.charAt(0).toUpperCase()}
+              </Avatar>
+            )}
+            <div>
+              <Title order={3}>{band?.name}</Title>
+              <Text size="sm" c="dimmed">
+                Update your band's profile information.
+              </Text>
+            </div>
+          </Group>
 
           {error && (
-            <Alert 
-              icon={<IconAlertCircle size="1rem" />} 
-              title="Error" 
-              color="red" 
+            <Alert
+              icon={<IconAlertCircle size="1rem" />}
+              title="Error"
+              color="red"
               mb="md"
             >
               {error}
@@ -122,7 +213,7 @@ export default function CreateBandPage() {
                     label={
                       <Group gap={4}>
                         <span>Custom Slug</span>
-                        <Tooltip label="Leave blank to auto-generate from name" withArrow>
+                        <Tooltip label="This is the URL-friendly name for your band" withArrow>
                           <IconInfoCircle size={14} style={{ opacity: 0.5, cursor: 'help' }} />
                         </Tooltip>
                       </Group>
@@ -151,7 +242,8 @@ export default function CreateBandPage() {
 
               <FileInput
                 label="Profile Picture"
-                placeholder="Upload band photo"
+                placeholder="Upload new band photo"
+                description={band?.profile_picture_url ? "Leave empty to keep current photo" : undefined}
                 leftSection={<IconUpload size={16} />}
                 accept="image/*"
                 value={formData.profile_picture}
@@ -214,7 +306,7 @@ export default function CreateBandPage() {
                   loading={isSubmitting}
                   disabled={!formData.name.trim()}
                 >
-                  Create Band
+                  Save Changes
                 </Button>
               </Group>
             </Stack>

@@ -31,7 +31,7 @@ export async function generateMetadata({
     const profile = await getUserProfile(username);
     return {
       title: `@${profile.username} - Goodsongs`,
-      description: `View @${profile.username}'s music reviews on Goodsongs. ${profile.reviews.length} review${profile.reviews.length !== 1 ? 's' : ''} shared.`,
+      description: `View @${profile.username}'s music recommendations on Goodsongs. ${profile.reviews.length} recommendation${profile.reviews.length !== 1 ? 's' : ''} shared.`,
     };
   } catch {
     return {
@@ -94,7 +94,7 @@ export default async function UserProfilePage({
   return (
     <>
       {/* Main Content */}
-      <Container size="md" p={0} className={styles.container}>
+      <Container p={0} className={styles.container}>
         <Container fluid p="md" className={styles.header}>
           <Container size="md" p={0}>
             <Link href="/user/dashboard" className={styles.headerLink}>
@@ -128,15 +128,15 @@ export default async function UserProfilePage({
                 tt="capitalize"
                 bd="2px solid var(--mantine-color-blue-2)"
               >
-                {profile.reviews.length} review{profile.reviews.length !== 1 ? 's' : ''}
+                {profile.reviews.length} recommendation{profile.reviews.length !== 1 ? 's' : ''}
               </Badge>
             </Group>
           </Flex>
 
-          {/* Reviews Section */}
+          {/* Recommendations Section */}
           <Flex direction="column" px="md" pb="lg">
             <Title order={2} mb="md" c="blue.8" fw={500}>
-              Reviews
+              Recommendations
             </Title>
 
             {profile.reviews.length === 0 ? (
@@ -145,7 +145,7 @@ export default async function UserProfilePage({
                   <Stack align="center">
                     <IconMusic size={48} color="var(--mantine-color-dimmed)" />
                     <Text c="dimmed" ta="center">
-                      @{profile.username} hasn't written any reviews yet.
+                      @{profile.username} hasn't shared any recommendations yet.
                     </Text>
                   </Stack>
                 </Center>

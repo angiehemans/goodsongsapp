@@ -1,6 +1,7 @@
 .container {
   border-left: 2px solid var(--mantine-color-grape-3);
   border-right: 2px solid var(--mantine-color-grape-3);
+  min-height: 100vh;
 }
 
 @media (max-width: 768px) {

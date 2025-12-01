@@ -70,7 +70,7 @@ export default function HomePage() {
                   </Text>
                 </Title>
                 <Text size="xl" c="dimmed" lh={1.6}>
-                  Connect your Spotify, discover new bands, write reviews, and build your musical
+                  Connect your Spotify, discover new bands, share recommendations, and build your musical
                   identity. Join a community of music lovers sharing their favorite songs.
                 </Text>
                 <Group>
@@ -151,10 +151,10 @@ export default function HomePage() {
               <IconStar size={30} />
             </ThemeIcon>
             <Title order={3} size="xl" mb="sm">
-              Write Reviews
+              Share Recommendations
             </Title>
             <Text c="dimmed" lh={1.6}>
-              Share your thoughts on your favorite songs. Rate tracks, highlight what you love, and
+              Share your favorite songs with the community. Highlight what you love and
               help others discover great music.
             </Text>
           </Card>
@@ -188,8 +188,8 @@ export default function HomePage() {
               Discover Music
             </Title>
             <Text c="dimmed" lh={1.6}>
-              Explore new artists and songs through community reviews, trending tracks, and
-              personalized recommendations.
+              Explore new artists and songs through community recommendations, trending tracks, and
+              personalized suggestions.
             </Text>
           </Card>
 
@@ -205,7 +205,7 @@ export default function HomePage() {
               Build Your Profile
             </Title>
             <Text c="dimmed" lh={1.6}>
-              Create a musical identity that reflects your taste. Show off your reviews, bands, and
+              Create a musical identity that reflects your taste. Show off your recommendations, bands, and
               favorite discoveries.
             </Text>
           </Card>
@@ -229,7 +229,7 @@ export default function HomePage() {
         </SimpleGrid>
       </Container>
 
-      {/* Sample Reviews Section */}
+      {/* Sample Recommendations Section */}
       <Box bg="grape.0" py={80}>
         <Container size="lg">
           <Stack align="center" gap="xl" mb={60}>
@@ -237,7 +237,7 @@ export default function HomePage() {
               See what others are saying
             </Title>
             <Text size="lg" ta="center" c="dimmed" maw={600}>
-              Join thousands of music enthusiasts sharing their favorite discoveries
+              Join thousands of music enthusiasts sharing their favorite songs
             </Text>
           </Stack>
 
