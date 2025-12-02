@@ -36,11 +36,27 @@ const aspectOptions = [
 ];
 
 function CreateReviewForm() {
-  const { user } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect band accounts - they cannot create reviews
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+      return;
+    }
+    if (!isLoading && user && !isOnboardingComplete) {
+      router.push('/onboarding');
+      return;
+    }
+    if (!isLoading && user && isBand) {
+      router.push('/user/band-dashboard');
+      return;
+    }
+  }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
   const [formData, setFormData] = useState<ReviewData>({
     song_link: '',
@@ -91,12 +107,18 @@ function CreateReviewForm() {
     }
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <Container>
-        <Text>Please log in to create a recommendation.</Text>
+        <Center py="xl">
+          <Loader />
+        </Center>
       </Container>
     );
+  }
+
+  if (!user || isBand) {
+    return null;
   }
 
   return (

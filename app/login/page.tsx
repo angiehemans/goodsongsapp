@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Paper,
@@ -27,8 +27,21 @@ interface LoginFormValues {
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user, isLoading, isOnboardingComplete, isBand } = useAuth();
   const router = useRouter();
+
+  // Redirect based on auth and onboarding status
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (!isOnboardingComplete) {
+        router.push('/onboarding');
+      } else if (isBand) {
+        router.push('/user/band-dashboard');
+      } else {
+        router.push('/user/dashboard');
+      }
+    }
+  }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
   const form = useForm<LoginFormValues>({
     initialValues: {
@@ -50,14 +63,13 @@ export default function LoginPage() {
         message: 'Welcome back!',
         color: 'green',
       });
-      router.push('/user/dashboard');
+      // Redirect will be handled by useEffect based on user's onboarding status
     } catch (error) {
       notifications.show({
         title: 'Error',
         message: error instanceof Error ? error.message : 'Login failed',
         color: 'red',
       });
-    } finally {
       setLoading(false);
     }
   };

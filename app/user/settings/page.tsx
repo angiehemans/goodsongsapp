@@ -22,14 +22,21 @@ const ProfileSettings = lazy(() =>
 );
 
 export default function SettingsPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logout, isOnboardingComplete, isBand, isFan } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
+      return;
     }
-  }, [user, isLoading, router]);
+    if (!isLoading && user && !isOnboardingComplete) {
+      router.push('/onboarding');
+      return;
+    }
+  }, [user, isLoading, isOnboardingComplete, router]);
+
+  const dashboardUrl = isBand ? '/user/band-dashboard' : '/user/dashboard';
 
   const handleLogout = () => {
     logout();
@@ -69,7 +76,7 @@ export default function SettingsPage() {
             </Group>
             <Button
               component={Link}
-              href="/user/dashboard"
+              href={dashboardUrl}
               leftSection={<IconArrowLeft size={16} />}
               variant="outline"
             >
@@ -105,19 +112,21 @@ export default function SettingsPage() {
           <ProfileSettings />
         </Suspense>
 
-        {/* Spotify Connection */}
-        <Suspense
-          fallback={
-            <Paper p="md" radius="md">
-              <Group>
-                <Skeleton height={20} width={20} radius="xl" />
-                <Skeleton height={20} width={200} />
-              </Group>
-            </Paper>
-          }
-        >
-          <SpotifyConnection />
-        </Suspense>
+        {/* Spotify Connection - Only for fan accounts */}
+        {isFan && (
+          <Suspense
+            fallback={
+              <Paper p="md" radius="md">
+                <Group>
+                  <Skeleton height={20} width={20} radius="xl" />
+                  <Skeleton height={20} width={200} />
+                </Group>
+              </Paper>
+            }
+          >
+            <SpotifyConnection />
+          </Suspense>
+        )}
 
         {/* Logout Section */}
         <Divider my="md" />

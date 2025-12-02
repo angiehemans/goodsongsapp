@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  Center,
   Container,
   Title,
   Text,
@@ -16,6 +17,7 @@ import {
   FileInput,
   Grid,
   Tooltip,
+  Loader,
 } from '@mantine/core';
 import { IconArrowLeft, IconAlertCircle, IconUpload, IconMusic, IconInfoCircle } from '@tabler/icons-react';
 import Link from 'next/link';
@@ -23,14 +25,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
 import { apiClient, BandData } from '@/lib/api';
 
-export default function CreateBandPage() {
-  const { user } = useAuth();
+function CreateBandForm() {
+  const { user, isBand } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get prefilled name from query params (used during onboarding)
+  const prefilledName = searchParams.get('name') || '';
+
   const [formData, setFormData] = useState<BandData>({
-    name: '',
+    name: prefilledName,
     slug: '',
     location: '',
     about: '',
@@ -40,6 +46,13 @@ export default function CreateBandPage() {
     youtube_music_link: '',
     profile_picture: undefined,
   });
+
+  // Update form if prefilled name changes
+  useEffect(() => {
+    if (prefilledName && !formData.name) {
+      setFormData(prev => ({ ...prev, name: prefilledName }));
+    }
+  }, [prefilledName, formData.name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,13 +68,20 @@ export default function CreateBandPage() {
         color: 'green',
       });
 
-      router.push(`/bands/${band.slug}`);
+      // Band accounts go to their dashboard, fan accounts go to band page
+      if (isBand) {
+        router.push('/user/band-dashboard');
+      } else {
+        router.push(`/bands/${band.slug}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const dashboardUrl = isBand ? '/user/band-dashboard' : '/user/dashboard';
 
   if (!user) {
     return (
@@ -77,7 +97,7 @@ export default function CreateBandPage() {
         <Group>
           <Button
             component={Link}
-            href="/user/dashboard"
+            href={dashboardUrl}
             variant="subtle"
             leftSection={<IconArrowLeft size={16} />}
           >
@@ -204,7 +224,7 @@ export default function CreateBandPage() {
               <Group justify="flex-end" mt="xl">
                 <Button
                   component={Link}
-                  href="/user/dashboard"
+                  href={dashboardUrl}
                   variant="outline"
                 >
                   Cancel
@@ -222,5 +242,21 @@ export default function CreateBandPage() {
         </Paper>
       </Stack>
     </Container>
+  );
+}
+
+export default function CreateBandPage() {
+  return (
+    <Suspense
+      fallback={
+        <Container size="md" py="xl">
+          <Center>
+            <Loader />
+          </Center>
+        </Container>
+      }
+    >
+      <CreateBandForm />
+    </Suspense>
   );
 }

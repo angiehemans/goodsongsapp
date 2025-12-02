@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { apiClient, User } from '@/lib/api';
+import { apiClient, User, AccountType } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isOnboardingComplete: boolean;
+  isFan: boolean;
+  isBand: boolean;
+  accountType: AccountType | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, username: string, password: string, passwordConfirmation: string) => Promise<void>;
+  signup: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -44,10 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchUser();
   };
 
-  const signup = async (email: string, username: string, password: string, passwordConfirmation: string) => {
+  const signup = async (email: string, password: string, passwordConfirmation: string) => {
     const response = await apiClient.signup({
       email,
-      username,
       password,
       password_confirmation: passwordConfirmation,
     });
@@ -64,8 +67,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchUser();
   };
 
+  const isOnboardingComplete = user?.onboarding_completed ?? false;
+  const accountType = user?.account_type ?? null;
+  const isFan = accountType === 'fan';
+  const isBand = accountType === 'band';
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      isOnboardingComplete,
+      isFan,
+      isBand,
+      accountType,
+      login,
+      signup,
+      logout,
+      refreshUser
+    }}>
       {children}
     </AuthContext.Provider>
   );

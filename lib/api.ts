@@ -1,13 +1,18 @@
 
+export type AccountType = 'fan' | 'band';
+
 export interface User {
   id: number;
   email: string;
-  username: string;
+  username?: string;
   about_me?: string;
   profile_image_url?: string;
   reviews_count?: number;
   bands_count?: number;
   spotify_connected?: boolean;
+  account_type?: AccountType;
+  onboarding_completed?: boolean;
+  primary_band?: Band;
 }
 
 export interface ProfileUpdateData {
@@ -27,7 +32,6 @@ export interface LoginCredentials {
 
 export interface SignupData {
   email: string;
-  username: string;
   password: string;
   password_confirmation: string;
 }
@@ -143,6 +147,38 @@ export interface SpotifyStatus {
   user_id?: string;
 }
 
+export interface OnboardingStatus {
+  onboarding_completed: boolean;
+  account_type?: AccountType;
+}
+
+export interface SetAccountTypeData {
+  account_type: AccountType;
+}
+
+export interface SetAccountTypeResponse {
+  message: string;
+  account_type: AccountType;
+  next_step: string;
+}
+
+export interface CompleteFanProfileData {
+  username: string;
+  about_me?: string;
+  profile_image?: File;
+}
+
+export interface CompleteBandProfileData {
+  name: string;
+  about?: string;
+  location?: string;
+  spotify_link?: string;
+  bandcamp_link?: string;
+  apple_music_link?: string;
+  youtube_music_link?: string;
+  profile_picture?: File;
+}
+
 class ApiClient {
   private getApiUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -223,6 +259,56 @@ class ApiClient {
 
   async getProfile(): Promise<User> {
     return this.makeRequest('/profile');
+  }
+
+  async getOnboardingStatus(): Promise<OnboardingStatus> {
+    return this.makeRequest('/onboarding/status');
+  }
+
+  async setAccountType(data: SetAccountTypeData): Promise<SetAccountTypeResponse> {
+    return this.makeRequest('/onboarding/account-type', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async completeFanProfile(data: CompleteFanProfileData): Promise<User> {
+    const formData = new FormData();
+    formData.append('username', data.username);
+    if (data.about_me) {
+      formData.append('about_me', data.about_me);
+    }
+    if (data.profile_image) {
+      formData.append('profile_image', data.profile_image);
+    }
+    return this.makeFormRequest('/onboarding/complete-fan-profile', formData);
+  }
+
+  async completeBandProfile(data: CompleteBandProfileData): Promise<User> {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.about) {
+      formData.append('about', data.about);
+    }
+    if (data.location) {
+      formData.append('location', data.location);
+    }
+    if (data.spotify_link) {
+      formData.append('spotify_link', data.spotify_link);
+    }
+    if (data.bandcamp_link) {
+      formData.append('bandcamp_link', data.bandcamp_link);
+    }
+    if (data.apple_music_link) {
+      formData.append('apple_music_link', data.apple_music_link);
+    }
+    if (data.youtube_music_link) {
+      formData.append('youtube_music_link', data.youtube_music_link);
+    }
+    if (data.profile_picture) {
+      formData.append('profile_picture', data.profile_picture);
+    }
+    return this.makeFormRequest('/onboarding/complete-band-profile', formData);
   }
 
   setAuthToken(token: string) {

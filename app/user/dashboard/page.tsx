@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   IconBrandSpotify,
-  IconEdit,
   IconMusic,
-  IconPlaylist,
   IconPlus,
   IconSettings,
   IconUsers,
@@ -29,10 +27,9 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, Band, Review } from '@/lib/api';
+import { apiClient, Review } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
 
 // Memoized components for better performance
@@ -54,59 +51,9 @@ const StatsCard = memo(
   )
 );
 
-const BandCard = memo(({ band }: { band: Band }) => (
-  <Grid.Col key={band.id} span={{ base: 12, sm: 6, md: 4 }}>
-    <Card p="md">
-      <Group justify="space-between" align="flex-start">
-        <Link
-          href={`/bands/${band.slug}`}
-          style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}
-        >
-          <Group>
-            {band.profile_picture_url ? (
-              <img
-                src={fixImageUrl(band.profile_picture_url)}
-                alt={band.name}
-                style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
-              />
-            ) : (
-              <Avatar size={48} color="grape.6">
-                {band.name.charAt(0).toUpperCase()}
-              </Avatar>
-            )}
-            <Stack gap="xs" flex={1}>
-              <Title order={5}>{band.name}</Title>
-              <Group gap="xs">
-                <Badge size="sm" variant="light" color="grape">
-                  {band.reviews_count} recommendation{band.reviews_count !== 1 ? 's' : ''}
-                </Badge>
-                {band.location && (
-                  <Text size="xs" c="dimmed">
-                    {band.location}
-                  </Text>
-                )}
-              </Group>
-            </Stack>
-          </Group>
-        </Link>
-        <ActionIcon
-          component={Link}
-          href={`/user/edit-band/${band.slug}`}
-          variant="subtle"
-          color="gray"
-          size="sm"
-        >
-          <IconEdit size={16} />
-        </ActionIcon>
-      </Group>
-    </Card>
-  </Grid.Col>
-));
-
 export default function DashboardPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
   const router = useRouter();
-  const [bands, setBands] = useState<Band[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
   const [spotifyConnected, setSpotifyConnected] = useState(false);
@@ -116,10 +63,21 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
+      return;
     }
-  }, [user, isLoading, router]);
 
-  // Fetch core data in parallel for better performance
+    if (!isLoading && user && !isOnboardingComplete) {
+      router.push('/onboarding');
+      return;
+    }
+
+    if (!isLoading && user && isBand) {
+      router.push('/user/band-dashboard');
+      return;
+    }
+  }, [user, isLoading, isOnboardingComplete, isBand, router]);
+
+  // Fetch user reviews
   const fetchCoreData = useCallback(async () => {
     if (!user) {
       return;
@@ -128,30 +86,11 @@ export default function DashboardPage() {
     setDataLoading(true);
 
     try {
-      // Fetch bands and reviews in parallel
-      const [bandsResult, reviewsResult] = await Promise.allSettled([
-        apiClient.getUserBands(),
-        apiClient.getUserReviews(),
-      ]);
-
-      // Handle bands result
-      if (bandsResult.status === 'fulfilled') {
-        setBands(bandsResult.value);
-      } else {
-        notifications.show({
-          title: 'Error loading bands',
-          message: 'Could not load your bands. Please try again.',
-          color: 'red',
-        });
-      }
-
-      // Handle reviews result
-      if (reviewsResult.status === 'fulfilled') {
-        setReviews(reviewsResult.value);
-      } else {
-        // Silently fail for reviews as endpoint might not exist yet
-        setReviews([]);
-      }
+      const userReviews = await apiClient.getUserReviews();
+      setReviews(userReviews);
+    } catch {
+      // Silently fail for reviews as endpoint might not exist yet
+      setReviews([]);
     } finally {
       setDataLoading(false);
     }
@@ -226,7 +165,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Container>
+    <Container size="sm">
       <Container
         px={0}
         py="md"
@@ -236,18 +175,28 @@ export default function DashboardPage() {
         <Paper p="lg" radius="md">
           <Group justify="space-between" align="flex-start">
             <Group>
-              <Avatar
-                size="lg"
-                src={fixImageUrl(user.profile_image_url)}
-                color="grape.6"
-                component={Link}
-                href={`/users/${user.username}`}
-                style={{ cursor: 'pointer' }}
-              >
-                {!user.profile_image_url && user.username.charAt(0).toUpperCase()}
-              </Avatar>
+              {user.username ? (
+                <Avatar
+                  size="lg"
+                  src={fixImageUrl(user.profile_image_url)}
+                  color="grape.6"
+                  component={Link}
+                  href={`/users/${user.username}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {!user.profile_image_url && user.username.charAt(0).toUpperCase()}
+                </Avatar>
+              ) : (
+                <Avatar
+                  size="lg"
+                  src={fixImageUrl(user.profile_image_url)}
+                  color="grape.6"
+                >
+                  {!user.profile_image_url && user.email.charAt(0).toUpperCase()}
+                </Avatar>
+              )}
               <div>
-                <Title order={2}>Welcome back, {user.username}!</Title>
+                <Title order={2}>Welcome back{user.username ? `, ${user.username}` : ''}!</Title>
                 <Text size="sm" c="dimmed">
                   {user.email}
                 </Text>
@@ -256,16 +205,18 @@ export default function DashboardPage() {
                     {user.about_me}
                   </Text>
                 )}
-                <Text
-                  size="xs"
-                  c="grape.6"
-                  component={Link}
-                  href={`/users/${user.username}`}
-                  style={{ textDecoration: 'none' }}
-                  mt="xs"
-                >
-                  View your profile →
-                </Text>
+                {user.username && (
+                  <Text
+                    size="xs"
+                    c="grape.6"
+                    component={Link}
+                    href={`/users/${user.username}`}
+                    style={{ textDecoration: 'none' }}
+                    mt="xs"
+                  >
+                    View your profile →
+                  </Text>
+                )}
               </div>
             </Group>
             <Group>
@@ -291,7 +242,7 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         <Grid>
-          <Grid.Col span={{ base: 12, sm: 4 }}>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
             <StatsCard
               icon={<IconMusic size={32} color="var(--mantine-color-grape-6)" />}
               value={reviews.length}
@@ -299,15 +250,7 @@ export default function DashboardPage() {
             />
           </Grid.Col>
 
-          <Grid.Col span={{ base: 12, sm: 4 }}>
-            <StatsCard
-              icon={<IconPlaylist size={32} color="var(--mantine-color-grape-6)" />}
-              value={bands.length}
-              label="Bands Created"
-            />
-          </Grid.Col>
-
-          <Grid.Col span={{ base: 12, sm: 4 }}>
+          <Grid.Col span={{ base: 12, sm: 6 }}>
             <StatsCard
               icon={<IconUsers size={32} color="var(--mantine-color-grape-6)" />}
               value={0}
@@ -501,52 +444,6 @@ export default function DashboardPage() {
           )}
         </Container>
       )}
-
-      {/* My Bands */}
-      <Container px={0} pb="lg">
-        <Paper p="lg" radius="md">
-          <Group justify="space-between" align="center" mb="md">
-            <Title order={3}>My Bands</Title>
-            <Button
-              component={Link}
-              href="/user/create-band"
-              size="sm"
-              variant="outline"
-              leftSection={<IconPlus size={14} />}
-            >
-              Add Band
-            </Button>
-          </Group>
-
-          {dataLoading ? (
-            <Center py="md">
-              <Loader size="sm" />
-            </Center>
-          ) : bands.length === 0 ? (
-            <Center py="xl">
-              <Stack align="center">
-                <IconMusic size={48} color="var(--mantine-color-dimmed)" />
-                <Text c="dimmed" ta="center">
-                  No bands yet. Create your first band to showcase your music!
-                </Text>
-                <Button
-                  component={Link}
-                  href="/user/create-band"
-                  leftSection={<IconPlus size={16} />}
-                >
-                  Create Your First Band
-                </Button>
-              </Stack>
-            </Center>
-          ) : (
-            <Grid>
-              {bands.map((band) => (
-                <BandCard key={band.id} band={band} />
-              ))}
-            </Grid>
-          )}
-        </Paper>
-      </Container>
     </Container>
   );
 }
