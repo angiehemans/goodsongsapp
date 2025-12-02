@@ -65,7 +65,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <Container py="xl">
+    <Container py="xl" size="sm">
       <Stack>
         {/* Header */}
         <Paper p="lg" radius="md">

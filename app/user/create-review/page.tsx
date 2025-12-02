@@ -122,7 +122,7 @@ function CreateReviewForm() {
   }
 
   return (
-    <Container size="md" py="xl">
+    <Container size="sm" py="xl">
       <Stack>
         {/* Header */}
         <Paper p="lg" radius="md">

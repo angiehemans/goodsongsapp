@@ -4,22 +4,16 @@ import { notFound } from 'next/navigation';
 import {
   IconAlertCircle,
   IconArrowNarrowRight,
-  IconBrandSpotify,
   IconMenu2,
 } from '@tabler/icons-react';
 import {
   Alert,
-  Avatar,
   BackgroundImage,
-  Badge,
   Box,
   Button,
-  Card,
   Checkbox,
   Container,
-  Divider,
   Flex,
-  Group,
   Image,
   Stack,
   Text,
@@ -27,7 +21,8 @@ import {
   Title,
   UnstyledButton,
 } from '@mantine/core';
-import { Band, Review } from '@/lib/api';
+import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
+import { Band } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
 import styles from './page.module.css';
 
@@ -121,7 +116,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
 
   return (
     <Box className={styles.pageBackground}>
-      <Container p={0} className={styles.container}>
+      <Container size="sm" p={0} className={styles.container}>
         {/* Header */}
         <Flex justify="center" align="center" py="md" pos="relative">
           <UnstyledButton pos="absolute" right={20}>
@@ -300,7 +295,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
             {band.reviews && band.reviews.length > 0 ? (
               <Stack w="100%" gap="md">
                 {band.reviews.slice(0, 2).map((review) => (
-                  <ReviewCard key={review.id} review={review} bandName={band.name} />
+                  <ReviewCard key={review.id} review={review} variant="band-page" bandName={band.name} />
                 ))}
               </Stack>
             ) : (
@@ -412,79 +407,4 @@ function getSpotifyEmbedUrl(spotifyUrl: string): string {
     return spotifyUrl.replace('open.spotify.com/', 'open.spotify.com/embed/');
   }
   return spotifyUrl;
-}
-
-// Recommendation Card Component
-function ReviewCard({ review, bandName }: { review: Review; bandName: string }) {
-  return (
-    <Card p="sm" radius={4} className={styles.reviewCard}>
-      <Stack gap="sm">
-        {/* Song Info Header */}
-        <Flex justify="space-between" align="flex-start">
-          <Group gap="sm">
-            {review.artwork_url && (
-              <img
-                src={review.artwork_url}
-                alt={`${review.song_name} artwork`}
-                style={{ width: 48, height: 48, borderRadius: 4, objectFit: 'cover' }}
-              />
-            )}
-            <Stack gap={2}>
-              <Text size="16px" fw={500} c="gray.9">
-                {review.song_name}
-              </Text>
-              <Text size="14px" c="gray.5">
-                {bandName}
-              </Text>
-            </Stack>
-          </Group>
-          <IconBrandSpotify size={24} color="var(--mantine-color-blue-8)" />
-        </Flex>
-
-        {/* Review Text */}
-        <Text size="16px" lh="26px" c="gray.9">
-          {review.review_text}
-        </Text>
-
-        {/* Tags */}
-        {review.liked_aspects && review.liked_aspects.length > 0 && (
-          <Group gap="xs">
-            {review.liked_aspects.slice(0, 2).map((aspect, index) => (
-              <Badge
-                key={index}
-                variant="filled"
-                color="blue.2"
-                c="blue.8"
-                radius={12}
-                px={10}
-                py={7}
-                styles={{ root: { textTransform: 'none' } }}
-              >
-                {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
-              </Badge>
-            ))}
-          </Group>
-        )}
-
-        {/* Overall Rating */}
-        <Text size="16px" c="gray.6">
-          Overall Rating: Loved it!
-        </Text>
-
-        <Divider color="blue.2" size={2} />
-
-        {/* User Info */}
-        <Flex justify="space-between" align="center">
-          <Group gap="sm">
-            <Avatar size={36} color="grape" radius="xl">
-              {review.user?.username?.charAt(0).toUpperCase() || '?'}
-            </Avatar>
-            <Text size="16px" c="gray.9">
-              @{review.user?.username || 'unknown'}
-            </Text>
-          </Group>
-        </Flex>
-      </Stack>
-    </Card>
-  );
 }

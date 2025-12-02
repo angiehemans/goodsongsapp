@@ -8,6 +8,7 @@ import {
   IconMusic,
   IconPlus,
   IconSettings,
+  IconShield,
   IconUsers,
 } from '@tabler/icons-react';
 import {
@@ -52,7 +53,7 @@ const StatsCard = memo(
 );
 
 export default function DashboardPage() {
-  const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand, isAdmin } = useAuth();
   const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
@@ -61,27 +62,20 @@ export default function DashboardPage() {
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
 
   useEffect(() => {
-    console.log('Dashboard useEffect:', { isLoading, hasUser: !!user, isOnboardingComplete, isBand });
-
     if (!isLoading && !user) {
-      console.log('Dashboard: redirecting to /login (no user)');
       router.push('/login');
       return;
     }
 
     if (!isLoading && user && !isOnboardingComplete) {
-      console.log('Dashboard: redirecting to /onboarding (not complete)');
       router.push('/onboarding');
       return;
     }
 
     if (!isLoading && user && isBand) {
-      console.log('Dashboard: redirecting to /user/band-dashboard (is band)');
       router.push('/user/band-dashboard');
       return;
     }
-
-    console.log('Dashboard: no redirect needed, rendering page');
   }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
   // Fetch user reviews
@@ -234,6 +228,17 @@ export default function DashboardPage() {
               >
                 New Recommendation
               </Button>
+              {isAdmin && (
+                <ActionIcon
+                  component={Link}
+                  href="/admin"
+                  variant="subtle"
+                  size="lg"
+                  color="red"
+                >
+                  <IconShield size={24} />
+                </ActionIcon>
+              )}
               <ActionIcon
                 component={Link}
                 href="/user/settings"

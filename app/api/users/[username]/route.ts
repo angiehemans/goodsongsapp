@@ -25,6 +25,14 @@ export async function GET(
       );
     }
 
+    // If user is disabled, return 404
+    if (data.disabled === true) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('API route error:', error);

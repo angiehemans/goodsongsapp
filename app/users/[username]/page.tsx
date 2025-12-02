@@ -29,6 +29,12 @@ export async function generateMetadata({
 
   try {
     const profile = await getUserProfile(username);
+    if (!profile) {
+      return {
+        title: 'User Not Found - Goodsongs',
+        description: 'The requested user profile could not be found.',
+      };
+    }
     return {
       title: `@${profile.username} - Goodsongs`,
       description: `View @${profile.username}'s music recommendations on Goodsongs. ${profile.reviews.length} recommendation${profile.reviews.length !== 1 ? 's' : ''} shared.`,
@@ -41,33 +47,28 @@ export async function generateMetadata({
   }
 }
 
-async function getUserProfile(username: string): Promise<UserProfile> {
-  try {
-    // For server components, we need to use the full URL to the Next.js API route
-    const baseUrl =
-      process.env.NODE_ENV === 'production'
-        ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
-        : 'http://localhost:3001';
+async function getUserProfile(username: string): Promise<UserProfile | null> {
+  // For server components, we need to use the full URL to the Next.js API route
+  const baseUrl =
+    process.env.NODE_ENV === 'production'
+      ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
+      : 'http://localhost:3001';
 
-    const response = await fetch(`${baseUrl}/api/users/${username}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store', // Always fetch fresh data
-    });
+  const response = await fetch(`${baseUrl}/api/users/${username}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store', // Always fetch fresh data
+  });
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        notFound();
-      }
-      throw new Error('Failed to fetch user profile');
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
     }
-
-    return response.json();
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    throw error;
+    throw new Error('Failed to fetch user profile');
   }
+
+  return response.json();
 }
 
 export default async function UserProfilePage({
@@ -77,7 +78,7 @@ export default async function UserProfilePage({
 }) {
   const { username } = await params;
 
-  let profile: UserProfile;
+  let profile: UserProfile | null;
 
   try {
     profile = await getUserProfile(username);
@@ -91,10 +92,14 @@ export default async function UserProfilePage({
     );
   }
 
+  if (!profile) {
+    notFound();
+  }
+
   return (
     <>
       {/* Main Content */}
-      <Container p={0} className={styles.container}>
+      <Container p={0} size="sm" className={styles.container}>
         <Container fluid p="md" className={styles.header}>
           <Container size="md" p={0}>
             <Link href="/user/dashboard" className={styles.headerLink}>

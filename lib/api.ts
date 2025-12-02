@@ -1,10 +1,11 @@
 
-export type AccountType = 'fan' | 'band';
+export type AccountType = 'fan' | 'band' | 'admin';
 
 // Helper to normalize account_type from API (can be number or string)
 export function normalizeAccountType(accountType: AccountType | number | undefined | null): AccountType | null {
   if (accountType === 'fan' || accountType === 0) return 'fan';
   if (accountType === 'band' || accountType === 1) return 'band';
+  if (accountType === 'admin' || accountType === 2) return 'admin';
   return null;
 }
 
@@ -20,6 +21,8 @@ export interface User {
   account_type?: AccountType | number;  // API returns 0 for fan, 1 for band
   onboarding_completed?: boolean;
   primary_band?: Band;
+  admin?: boolean;  // Separate admin flag
+  disabled?: boolean;  // Whether the account is disabled
 }
 
 export interface ProfileUpdateData {
@@ -59,6 +62,16 @@ export interface Review extends ReviewData {
   user?: {
     id: number;
     username: string;
+  };
+  author?: {
+    id: number;
+    username: string;
+    profile_image_url?: string;
+  };
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
   };
 }
 
@@ -514,8 +527,14 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch user reviews');
+      let errorMessage = 'Failed to fetch user reviews';
+      try {
+        const error = await response.json();
+        errorMessage = error.error || errorMessage;
+      } catch {
+        // Response wasn't JSON
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -576,6 +595,29 @@ class ApiClient {
     }
 
     return this.makeFormRequest('/update-profile', formData);
+  }
+
+  // Admin endpoints
+  async getAllUsers(): Promise<User[]> {
+    // Note: This endpoint may need to be implemented on the backend
+    return this.makeRequest('/admin/users');
+  }
+
+  async getAllBands(): Promise<Band[]> {
+    // Use the public bands endpoint which returns all bands
+    return this.makeRequest('/bands');
+  }
+
+  async getAdminUserDetail(userId: string): Promise<{ user: UserProfile; reviews: Review[] }> {
+    // Fetch user details with their reviews for admin view
+    return this.makeRequest(`/admin/users/${userId}`);
+  }
+
+  async toggleUserDisabled(userId: number): Promise<User> {
+    // Toggle user disabled status (admin only)
+    return this.makeRequest(`/admin/users/${userId}/toggle-disabled`, {
+      method: 'PATCH',
+    });
   }
 }
 

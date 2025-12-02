@@ -9,6 +9,7 @@ interface AuthContextType {
   isOnboardingComplete: boolean;
   isFan: boolean;
   isBand: boolean;
+  isAdmin: boolean;
   accountType: AccountType | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
@@ -34,12 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUser = async () => {
     try {
       const userData = await apiClient.getProfile();
-      console.log('useAuth: fetched user data:', userData);
-      console.log('useAuth: account_type raw value:', userData.account_type, 'type:', typeof userData.account_type);
-      console.log('useAuth: onboarding_completed:', userData.onboarding_completed);
       setUser(userData);
     } catch (error) {
-      console.error('useAuth: failed to fetch user:', error);
       apiClient.removeAuthToken();
     } finally {
       setIsLoading(false);
@@ -78,21 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const accountType: AccountType | null =
     rawAccountType === 'fan' || rawAccountType === 0 ? 'fan' :
     rawAccountType === 'band' || rawAccountType === 1 ? 'band' :
+    rawAccountType === 'admin' || rawAccountType === 2 ? 'admin' :
     null;
 
   const isFan = accountType === 'fan';
   const isBand = accountType === 'band';
-
-  // Debug logging
-  console.log('useAuth computed values:', {
-    isLoading,
-    hasUser: !!user,
-    isOnboardingComplete,
-    rawAccountType,
-    accountType,
-    isFan,
-    isBand
-  });
+  // Admin is a separate flag, not an account type
+  const isAdmin = user?.admin === true;
 
   return (
     <AuthContext.Provider value={{
@@ -101,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isOnboardingComplete,
       isFan,
       isBand,
+      isAdmin,
       accountType,
       login,
       signup,
