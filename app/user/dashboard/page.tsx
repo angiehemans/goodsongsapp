@@ -61,20 +61,27 @@ export default function DashboardPage() {
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
 
   useEffect(() => {
+    console.log('Dashboard useEffect:', { isLoading, hasUser: !!user, isOnboardingComplete, isBand });
+
     if (!isLoading && !user) {
+      console.log('Dashboard: redirecting to /login (no user)');
       router.push('/login');
       return;
     }
 
     if (!isLoading && user && !isOnboardingComplete) {
+      console.log('Dashboard: redirecting to /onboarding (not complete)');
       router.push('/onboarding');
       return;
     }
 
     if (!isLoading && user && isBand) {
+      console.log('Dashboard: redirecting to /user/band-dashboard (is band)');
       router.push('/user/band-dashboard');
       return;
     }
+
+    console.log('Dashboard: no redirect needed, rendering page');
   }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
   // Fetch user reviews

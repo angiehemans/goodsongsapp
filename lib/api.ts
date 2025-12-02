@@ -1,6 +1,13 @@
 
 export type AccountType = 'fan' | 'band';
 
+// Helper to normalize account_type from API (can be number or string)
+export function normalizeAccountType(accountType: AccountType | number | undefined | null): AccountType | null {
+  if (accountType === 'fan' || accountType === 0) return 'fan';
+  if (accountType === 'band' || accountType === 1) return 'band';
+  return null;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -10,7 +17,7 @@ export interface User {
   reviews_count?: number;
   bands_count?: number;
   spotify_connected?: boolean;
-  account_type?: AccountType;
+  account_type?: AccountType | number;  // API returns 0 for fan, 1 for band
   onboarding_completed?: boolean;
   primary_band?: Band;
 }

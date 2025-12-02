@@ -16,7 +16,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { IconUsers, IconMicrophone2 } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, AccountType } from '@/lib/api';
+import { apiClient, AccountType, normalizeAccountType } from '@/lib/api';
 
 export default function OnboardingPage() {
   const { user, isLoading, refreshUser, isOnboardingComplete, isBand } = useAuth();
@@ -41,10 +41,10 @@ export default function OnboardingPage() {
   // Only redirect if account_type is explicitly 'fan' or 'band' (not null/undefined/empty)
   useEffect(() => {
     if (!isLoading && user && !isOnboardingComplete) {
-      const accountType = user.account_type;
-      if (accountType === 'fan') {
+      const normalizedType = normalizeAccountType(user.account_type);
+      if (normalizedType === 'fan') {
         router.push('/onboarding/fan-profile');
-      } else if (accountType === 'band') {
+      } else if (normalizedType === 'band') {
         router.push('/onboarding/band-profile');
       }
       // If account_type is null/undefined, stay on this page to let user choose
@@ -89,7 +89,8 @@ export default function OnboardingPage() {
   }
 
   // If account type already selected (fan or band), show loading while redirecting
-  if ((user.account_type === 'fan' || user.account_type === 'band') && !isOnboardingComplete) {
+  const normalizedUserType = normalizeAccountType(user.account_type);
+  if ((normalizedUserType === 'fan' || normalizedUserType === 'band') && !isOnboardingComplete) {
     return (
       <Container size={600} my={40}>
         <Center py="xl">

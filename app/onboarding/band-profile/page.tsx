@@ -20,7 +20,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { IconUpload, IconMicrophone2 } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient } from '@/lib/api';
+import { apiClient, normalizeAccountType } from '@/lib/api';
 
 export default function BandProfilePage() {
   const { user, isLoading, refreshUser, isOnboardingComplete, isFan } = useAuth();
@@ -53,9 +53,10 @@ export default function BandProfilePage() {
   // Redirect if user hasn't selected account type yet, or selected fan
   useEffect(() => {
     if (!isLoading && user) {
-      if (!user.account_type) {
+      const normalizedType = normalizeAccountType(user.account_type);
+      if (!normalizedType) {
         router.push('/onboarding');
-      } else if (user.account_type === 'fan') {
+      } else if (normalizedType === 'fan') {
         router.push('/onboarding/fan-profile');
       }
     }
@@ -127,7 +128,7 @@ export default function BandProfilePage() {
     );
   }
 
-  if (!user || user.account_type !== 'band') {
+  if (!user || normalizeAccountType(user.account_type) !== 'band') {
     return null;
   }
 
