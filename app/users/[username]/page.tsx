@@ -99,40 +99,55 @@ export default async function UserProfilePage({
   return (
     <>
       {/* Main Content */}
-      <Container p={0} size="sm" className={styles.container}>
+      <Container p={0} fluid className={styles.container}>
         <Container fluid p="md" className={styles.header}>
           <Container size="md" p={0}>
             <Link href="/user/dashboard" className={styles.headerLink}>
-              <Title order={2} c="blue.8">
-                GoodSongs
+              <Title order={2} c="blue.9">
+                goodsongs
               </Title>
             </Link>
           </Container>
         </Container>
-        <Stack>
+        <Flex className={styles.content}>
           {/* User Header */}
-          <Flex p="md" direction="column" gap="sm" className={styles.userBackground}>
-            <Group align="flex-start">
-              <Avatar size="xl" src={fixImageUrl(profile.profile_image_url)} color="grape.6">
-                {!profile.profile_image_url && profile.username.charAt(0).toUpperCase()}
-              </Avatar>
+          <Flex p="md" miw={300} direction="column" gap="sm" className={styles.userBackground}>
+            <Group align="center">
+              {profile.profile_image_url ? (
+                <div className={styles.profilePhotoWrapper}>
+                  <div className={styles.profilePhotoBlend}>
+                    <img
+                      src={fixImageUrl(profile.profile_image_url)}
+                      alt={profile.username}
+                      className={styles.profilePhoto}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <Avatar size="72px" color="grape.6">
+                  {profile.username.charAt(0).toUpperCase()}
+                </Avatar>
+              )}
               <Stack gap="xs" flex={1}>
-                <Title order={2} c="blue.8" fw={500}>
+                <Title order={2} c="blue.8" fw={500} lh={1}>
                   @{profile.username}
                 </Title>
-                {profile.about_me && (
-                  <Text style={{ whiteSpace: 'pre-wrap' }}>{profile.about_me}</Text>
+                {(profile.city || profile.region || profile.location) && (
+                  <Text c="blue.7" size="md" lh={1}>
+                    {profile.city || profile.region
+                      ? [profile.city, profile.region].filter(Boolean).join(', ')
+                      : profile.location}
+                  </Text>
                 )}
               </Stack>
             </Group>
+            {profile.about_me && (
+              <Text c="gray.7" style={{ whiteSpace: 'pre-wrap' }}>
+                {profile.about_me}
+              </Text>
+            )}
             <Group gap="xs">
-              <Badge
-                color="blue"
-                variant="light"
-                fw="500"
-                tt="capitalize"
-                bd="2px solid var(--mantine-color-blue-2)"
-              >
+              <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
                 {profile.reviews.length} recommendation{profile.reviews.length !== 1 ? 's' : ''}
               </Badge>
             </Group>
@@ -140,7 +155,7 @@ export default async function UserProfilePage({
 
           {/* Recommendations Section */}
           <Flex direction="column" px="md" pb="lg">
-            <Title order={2} mb="md" c="blue.8" fw={500}>
+            <Title order={2} my="sm" c="blue.8" fw={500}>
               Recommendations
             </Title>
 
@@ -163,7 +178,7 @@ export default async function UserProfilePage({
               </Stack>
             )}
           </Flex>
-        </Stack>
+        </Flex>
       </Container>
     </>
   );

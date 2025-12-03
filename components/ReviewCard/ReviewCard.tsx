@@ -113,7 +113,7 @@ export function ReviewCard({ review, variant = 'default', bandName }: ReviewCard
 
   // Default variant
   return (
-    <Card key={review.id} p="md">
+    <Card key={review.id} p="md" bd="0" bg="grape.0">
       <Flex direction="column" gap="sm">
         <Flex gap="sm">
           {review.artwork_url ? (

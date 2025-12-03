@@ -202,9 +202,11 @@ export default function BandDashboardPage() {
                       {band.name}
                     </Link>
                   </Title>
-                  {band.location && (
+                  {(band.city || band.region || band.location) && (
                     <Text size="sm" c="dimmed">
-                      {band.location}
+                      {band.city || band.region
+                        ? [band.city, band.region].filter(Boolean).join(', ')
+                        : band.location}
                     </Text>
                   )}
                   {band.about && (

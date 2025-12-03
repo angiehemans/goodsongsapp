@@ -14,6 +14,8 @@ export interface User {
   email: string;
   username?: string;
   about_me?: string;
+  city?: string;
+  region?: string;
   profile_image_url?: string;
   reviews_count?: number;
   bands_count?: number;
@@ -28,6 +30,8 @@ export interface User {
 export interface ProfileUpdateData {
   about_me?: string;
   profile_image?: File;
+  city?: string;
+  region?: string;
 }
 
 export interface AuthResponse {
@@ -80,6 +84,9 @@ export interface UserProfile {
   email: string;
   username: string;
   about_me?: string;
+  city?: string;
+  region?: string;
+  location?: string;  // Combined "City, Region" from API
   profile_image_url?: string;
   reviews: Review[];
   bands?: Band[];
@@ -89,6 +96,8 @@ export interface BandData {
   name: string;
   slug?: string;
   location?: string;
+  city?: string;
+  region?: string;
   about?: string;
   spotify_link?: string;
   bandcamp_link?: string;
@@ -102,6 +111,8 @@ export interface Band {
   slug: string;
   name: string;
   location?: string;
+  city?: string;
+  region?: string;
   about?: string;
   spotify_link?: string;
   bandcamp_link?: string;
@@ -186,12 +197,16 @@ export interface CompleteFanProfileData {
   username: string;
   about_me?: string;
   profile_image?: File;
+  city?: string;
+  region?: string;
 }
 
 export interface CompleteBandProfileData {
   name: string;
   about?: string;
   location?: string;
+  city?: string;
+  region?: string;
   spotify_link?: string;
   bandcamp_link?: string;
   apple_music_link?: string;
@@ -301,6 +316,12 @@ class ApiClient {
     if (data.profile_image) {
       formData.append('profile_image', data.profile_image);
     }
+    if (data.city) {
+      formData.append('city', data.city);
+    }
+    if (data.region) {
+      formData.append('region', data.region);
+    }
     return this.makeFormRequest('/onboarding/complete-fan-profile', formData);
   }
 
@@ -312,6 +333,12 @@ class ApiClient {
     }
     if (data.location) {
       formData.append('location', data.location);
+    }
+    if (data.city) {
+      formData.append('city', data.city);
+    }
+    if (data.region) {
+      formData.append('region', data.region);
     }
     if (data.spotify_link) {
       formData.append('spotify_link', data.spotify_link);
@@ -368,6 +395,12 @@ class ApiClient {
       }
       if (data.location) {
         formData.append('band[location]', data.location);
+      }
+      if (data.city) {
+        formData.append('band[city]', data.city);
+      }
+      if (data.region) {
+        formData.append('band[region]', data.region);
       }
       if (data.about) {
         formData.append('band[about]', data.about);
@@ -449,6 +482,12 @@ class ApiClient {
       }
       if (data.location) {
         formData.append('band[location]', data.location);
+      }
+      if (data.city) {
+        formData.append('band[city]', data.city);
+      }
+      if (data.region) {
+        formData.append('band[region]', data.region);
       }
       if (data.about) {
         formData.append('band[about]', data.about);
@@ -591,6 +630,12 @@ class ApiClient {
       }
       if (data.profile_image) {
         formData.append('profile_image', data.profile_image);
+      }
+      if (data.city) {
+        formData.append('city', data.city);
+      }
+      if (data.region) {
+        formData.append('region', data.region);
       }
     }
 

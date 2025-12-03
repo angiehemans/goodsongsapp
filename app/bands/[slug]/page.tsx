@@ -118,13 +118,20 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
     <Box className={styles.pageBackground}>
       <Container size="sm" p={0} className={styles.container}>
         {/* Header */}
-        <Flex justify="center" align="center" py="md" pos="relative">
-          <UnstyledButton pos="absolute" right={20}>
+        <Flex justify="center" align="center" py="md" pos="relative" direction="column" gap={4}>
+          <UnstyledButton pos="absolute" right={20} top={20}>
             <IconMenu2 size={24} color="var(--mantine-color-blue-8)" />
           </UnstyledButton>
           <Title order={1} size="36px" c="blue.8" ta="center">
             {band.name}
           </Title>
+          {(band.city || band.region || band.location) && (
+            <Text size="md" c="blue.6" ta="center">
+              {band.city || band.region
+                ? [band.city, band.region].filter(Boolean).join(', ')
+                : band.location}
+            </Text>
+          )}
         </Flex>
         <Stack gap={36} align="center" pb="xl">
           {/* Hero Image & Follow Button */}

@@ -18,6 +18,18 @@ export const theme = createTheme({
       '#580D6C', // 8
       '#420154', // 9 - darkest
     ],
+    grey: [
+      '#F9F9FA',
+      '#F6F5F6',
+      '#ECEAED',
+      '#DAD7DC',
+      '#C2BCC5',
+      '#968E9A',
+      '#7A717D',
+      '#514755',
+      '#352C38',
+      '#1B151D',
+    ],
   },
   primaryColor: 'grape',
   primaryShade: 9,

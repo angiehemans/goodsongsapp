@@ -18,7 +18,7 @@ import {
   Avatar,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconUpload, IconMicrophone2 } from '@tabler/icons-react';
+import { IconMapPin, IconUpload, IconMicrophone2 } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, normalizeAccountType } from '@/lib/api';
 
@@ -28,7 +28,8 @@ export default function BandProfilePage() {
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState('');
   const [about, setAbout] = useState('');
-  const [location, setLocation] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
   const [spotifyLink, setSpotifyLink] = useState('');
   const [bandcampLink, setBandcampLink] = useState('');
   const [appleMusicLink, setAppleMusicLink] = useState('');
@@ -90,7 +91,8 @@ export default function BandProfilePage() {
       await apiClient.completeBandProfile({
         name: name.trim(),
         about: about.trim() || undefined,
-        location: location.trim() || undefined,
+        city: city.trim() || undefined,
+        region: region.trim() || undefined,
         spotify_link: spotifyLink.trim() || undefined,
         bandcamp_link: bandcampLink.trim() || undefined,
         apple_music_link: appleMusicLink.trim() || undefined,
@@ -179,13 +181,25 @@ export default function BandProfilePage() {
               />
 
               {/* Location */}
-              <TextInput
-                label="Location"
-                placeholder="Austin, Texas"
-                description="Where is your band based?"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
+              <Grid>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="City"
+                    placeholder="Austin"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    leftSection={<IconMapPin size={16} />}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="State / Region"
+                    placeholder="Texas"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                  />
+                </Grid.Col>
+              </Grid>
 
               {/* About */}
               <Textarea

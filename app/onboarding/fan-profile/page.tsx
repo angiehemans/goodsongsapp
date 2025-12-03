@@ -18,7 +18,7 @@ import {
   Group,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconUpload, IconUser } from '@tabler/icons-react';
+import { IconMapPin, IconUpload, IconUser } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, normalizeAccountType } from '@/lib/api';
 
@@ -28,6 +28,8 @@ export default function FanProfilePage() {
   const [submitting, setSubmitting] = useState(false);
   const [username, setUsername] = useState('');
   const [aboutMe, setAboutMe] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -86,6 +88,8 @@ export default function FanProfilePage() {
         username: username.trim(),
         about_me: aboutMe.trim() || undefined,
         profile_image: profileImage || undefined,
+        city: city.trim() || undefined,
+        region: region.trim() || undefined,
       });
 
       await refreshUser();
@@ -177,6 +181,23 @@ export default function FanProfilePage() {
                 value={aboutMe}
                 onChange={(e) => setAboutMe(e.target.value)}
               />
+
+              {/* Location */}
+              <Group grow>
+                <TextInput
+                  label="City"
+                  placeholder="Los Angeles"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  leftSection={<IconMapPin size={16} />}
+                />
+                <TextInput
+                  label="State / Region"
+                  placeholder="California"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                />
+              </Group>
 
               <Button
                 type="submit"
