@@ -1,4 +1,13 @@
-.bandPageCard {
-  background-color: var(--mantine-color-grape-2) !important;
-  border: none !important;
+.artwork {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.artworkPlaceholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: var(--mantine-color-grape-3);
 }

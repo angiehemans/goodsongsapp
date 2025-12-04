@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import { IconAlertCircle, IconMusic } from '@tabler/icons-react';
 import {
   Alert,
-  Avatar,
   Badge,
   Center,
   Container,
@@ -15,9 +14,9 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { Review, UserProfile } from '@/lib/api';
-import { fixImageUrl } from '@/lib/utils';
 import styles from './page.module.css';
 
 export async function generateMetadata({
@@ -113,27 +112,18 @@ export default async function UserProfilePage({
           {/* User Header */}
           <Flex p="md" miw={300} direction="column" gap="sm" className={styles.userBackground}>
             <Group align="center">
-              {profile.profile_image_url ? (
-                <div className={styles.profilePhotoWrapper}>
-                  <div className={styles.profilePhotoBlend}>
-                    <img
-                      src={fixImageUrl(profile.profile_image_url)}
-                      alt={profile.username}
-                      className={styles.profilePhoto}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <Avatar size="72px" color="grape.6">
-                  {profile.username.charAt(0).toUpperCase()}
-                </Avatar>
-              )}
+              <ProfilePhoto
+                src={profile.profile_image_url}
+                alt={profile.username}
+                size={72}
+                fallback={profile.username}
+              />
               <Stack gap="xs" flex={1}>
                 <Title order={2} c="blue.8" fw={500} lh={1}>
                   @{profile.username}
                 </Title>
                 {(profile.city || profile.region || profile.location) && (
-                  <Text c="blue.7" size="md" lh={1}>
+                  <Text c="blue.7" size="sm" lh={1}>
                     {profile.city || profile.region
                       ? [profile.city, profile.region].filter(Boolean).join(', ')
                       : profile.location}
@@ -142,7 +132,7 @@ export default async function UserProfilePage({
               </Stack>
             </Group>
             {profile.about_me && (
-              <Text c="gray.7" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text c="gray.7" size="sm" style={{ whiteSpace: 'pre-wrap' }}>
                 {profile.about_me}
               </Text>
             )}

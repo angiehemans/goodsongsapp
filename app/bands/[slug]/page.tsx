@@ -1,23 +1,17 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  IconAlertCircle,
-  IconArrowNarrowRight,
-  IconMenu2,
-} from '@tabler/icons-react';
+import { IconAlertCircle, IconMenu2 } from '@tabler/icons-react';
 import {
   Alert,
   BackgroundImage,
   Box,
   Button,
-  Checkbox,
   Container,
   Flex,
   Image,
   Stack,
   Text,
-  TextInput,
   Title,
   UnstyledButton,
 } from '@mantine/core';
@@ -76,26 +70,6 @@ async function getBand(slug: string): Promise<Band> {
     throw error;
   }
 }
-
-// Placeholder data for sections without API endpoints
-const placeholderShows = [
-  {
-    id: 1,
-    date: 'Nov 17, 2025',
-    city: 'Sacramento, CA',
-    venue: 'The Press Club',
-    price: '$20',
-    moreInfoUrl: '#',
-  },
-  {
-    id: 2,
-    date: 'Nov 18, 2025',
-    city: 'Portland, OR',
-    venue: 'The Hawthorne Theater',
-    price: '$20',
-    moreInfoUrl: '#',
-  },
-];
 
 export default async function BandProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -302,7 +276,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
             {band.reviews && band.reviews.length > 0 ? (
               <Stack w="100%" gap="md">
                 {band.reviews.slice(0, 2).map((review) => (
-                  <ReviewCard key={review.id} review={review} variant="band-page" bandName={band.name} />
+                  <ReviewCard key={review.id} review={review} />
                 ))}
               </Stack>
             ) : (
