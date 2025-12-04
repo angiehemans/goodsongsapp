@@ -1,15 +1,9 @@
 'use client';
 
 import { lazy, Suspense, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { IconLogout } from '@tabler/icons-react';
 import {
-  IconArrowLeft,
-  IconLogout,
-  IconShield,
-} from '@tabler/icons-react';
-import {
-  ActionIcon,
   Button,
   Center,
   Container,
@@ -22,6 +16,7 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { Header } from '@/components/Header/Header';
 import { UserSidebar } from '@/components/UserSidebar/UserSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './page.module.css';
@@ -34,8 +29,7 @@ const SpotifyConnection = lazy(() =>
 );
 
 export default function SettingsPage() {
-  const { user, isLoading, logout, isOnboardingComplete, isBand, isFan, isAdmin } =
-    useAuth();
+  const { user, isLoading, logout, isOnboardingComplete, isBand, isFan } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -48,8 +42,6 @@ export default function SettingsPage() {
       return;
     }
   }, [user, isLoading, isOnboardingComplete, router]);
-
-  const dashboardUrl = isBand ? '/user/band-dashboard' : '/user/dashboard';
 
   const handleLogout = () => {
     logout();
@@ -77,34 +69,7 @@ export default function SettingsPage() {
 
   return (
     <Container p={0} fluid className={styles.container}>
-      {/* Header */}
-      <Container fluid p="md" className={styles.header}>
-        <Container size="md" p={0}>
-          <Group justify="space-between" align="center">
-            <Link href={dashboardUrl} className={styles.headerLink}>
-              <Title order={2} c="blue.9">
-                goodsongs
-              </Title>
-            </Link>
-            <Group gap="xs">
-              {isAdmin && (
-                <ActionIcon component={Link} href="/admin" variant="subtle" size="lg" color="red">
-                  <IconShield size={24} />
-                </ActionIcon>
-              )}
-              <ActionIcon
-                component={Link}
-                href={dashboardUrl}
-                variant="subtle"
-                size="lg"
-                color="gray"
-              >
-                <IconArrowLeft size={24} />
-              </ActionIcon>
-            </Group>
-          </Group>
-        </Container>
-      </Container>
+      <Header showBackArrow />
 
       <Flex className={styles.content}>
         {/* User Sidebar */}

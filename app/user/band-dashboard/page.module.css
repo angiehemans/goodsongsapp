@@ -13,7 +13,7 @@
   }
 }
 
-.userBackground {
+.sidebarLoading {
   background-image: url(/userbg2.png);
   background-size: contain;
   background-position: center;
@@ -21,7 +21,12 @@
 }
 
 @media (max-width: 768px) {
-  .userBackground {
+  .sidebarLoading {
     width: 100%;
   }
+}
+
+.musicPlayer {
+  max-width: 700px;
+  margin-top: var(--mantine-spacing-md);
 }

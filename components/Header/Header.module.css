@@ -1,0 +1,9 @@
+.header {
+  background-color: var(--mantine-color-grape-0);
+  border-bottom: 2px solid var(--mantine-color-grape-3);
+}
+
+.headerLink {
+  text-decoration: none;
+  cursor: pointer;
+}

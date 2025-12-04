@@ -3,15 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { IconBrandSpotify, IconMusic, IconPlus } from '@tabler/icons-react';
 import {
-  IconBrandSpotify,
-  IconMusic,
-  IconPlus,
-  IconSettings,
-  IconShield,
-} from '@tabler/icons-react';
-import {
-  ActionIcon,
   Badge,
   Button,
   Card,
@@ -28,6 +21,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { Header } from '@/components/Header/Header';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { UserSidebar } from '@/components/UserSidebar/UserSidebar';
@@ -36,7 +30,7 @@ import { apiClient, Review } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function DashboardPage() {
-  const { user, isLoading, isOnboardingComplete, isBand, isAdmin } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
   const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
@@ -174,32 +168,7 @@ export default function DashboardPage() {
 
   return (
     <Container p={0} fluid className={styles.container}>
-      {/* Header */}
-      <Container fluid p="md" className={styles.header}>
-        <Group justify="space-between" align="center">
-          <Link href="/user/dashboard" className={styles.headerLink}>
-            <Title order={2} c="blue.9">
-              goodsongs
-            </Title>
-          </Link>
-          <Group gap="xs">
-            {isAdmin && (
-              <ActionIcon component={Link} href="/admin" variant="subtle" size="lg" color="red">
-                <IconShield size={24} />
-              </ActionIcon>
-            )}
-            <ActionIcon
-              component={Link}
-              href="/user/settings"
-              variant="subtle"
-              size="lg"
-              color="gray"
-            >
-              <IconSettings size={24} />
-            </ActionIcon>
-          </Group>
-        </Group>
-      </Container>
+      <Header />
 
       <Flex className={styles.content}>
         {/* User Sidebar */}

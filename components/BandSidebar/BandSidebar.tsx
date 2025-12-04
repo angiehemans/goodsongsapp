@@ -2,12 +2,22 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconCamera, IconCheck, IconEdit, IconX } from '@tabler/icons-react';
+import {
+  IconBrandApple,
+  IconBrandBandcamp,
+  IconBrandSpotify,
+  IconBrandYoutube,
+  IconCamera,
+  IconCheck,
+  IconEdit,
+  IconX,
+} from '@tabler/icons-react';
 import {
   ActionIcon,
   Avatar,
   Badge,
   Button,
+  Divider,
   FileButton,
   Flex,
   Group,
@@ -20,41 +30,47 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
-import { useAuth } from '@/hooks/useAuth';
-import { apiClient } from '@/lib/api';
+import { apiClient, Band } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
-import styles from './UserSidebar.module.css';
+import styles from './BandSidebar.module.css';
 
-interface UserSidebarProps {
-  /** Badge text to show (e.g., "5 recommendations" or "Fan Account") */
+interface BandSidebarProps {
+  band: Band;
+  /** Badge text to show (e.g., "5 recommendations") */
   badgeText?: string;
   /** Additional action buttons to render in view mode */
   actionButtons?: React.ReactNode;
-  /** Callback when profile is successfully saved */
-  onProfileSaved?: () => void;
+  /** Callback when band is successfully saved */
+  onBandSaved?: (updatedBand: Band) => void;
 }
 
-export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSidebarProps) {
-  const { user, refreshUser } = useAuth();
-
+export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: BandSidebarProps) {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
-  const [editAboutMe, setEditAboutMe] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editSlug, setEditSlug] = useState('');
+  const [editAbout, setEditAbout] = useState('');
   const [editCity, setEditCity] = useState('');
   const [editRegion, setEditRegion] = useState('');
+  const [editSpotifyLink, setEditSpotifyLink] = useState('');
+  const [editBandcampLink, setEditBandcampLink] = useState('');
+  const [editAppleMusicLink, setEditAppleMusicLink] = useState('');
+  const [editYoutubeMusicLink, setEditYoutubeMusicLink] = useState('');
   const [editProfileImage, setEditProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const resetRef = useRef<() => void>(null);
 
-  if (!user) {
-    return null;
-  }
-
   const handleStartEdit = () => {
-    setEditAboutMe(user.about_me || '');
-    setEditCity(user.city || '');
-    setEditRegion(user.region || '');
+    setEditName(band.name || '');
+    setEditSlug(band.slug || '');
+    setEditAbout(band.about || '');
+    setEditCity(band.city || '');
+    setEditRegion(band.region || '');
+    setEditSpotifyLink(band.spotify_link || '');
+    setEditBandcampLink(band.bandcamp_link || '');
+    setEditAppleMusicLink(band.apple_music_link || '');
+    setEditYoutubeMusicLink(band.youtube_music_link || '');
     setEditProfileImage(null);
     setPreviewUrl(null);
     setIsEditing(true);
@@ -91,28 +107,33 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
   };
 
   const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      notifications.show({
+        title: 'Name required',
+        message: 'Please enter a band name.',
+        color: 'red',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const formData = new FormData();
-      if (editAboutMe !== user.about_me) {
-        formData.append('about_me', editAboutMe);
-      }
-      if (editCity !== user.city) {
-        formData.append('city', editCity);
-      }
-      if (editRegion !== user.region) {
-        formData.append('region', editRegion);
-      }
-      if (editProfileImage) {
-        formData.append('profile_image', editProfileImage);
-      }
-
-      await apiClient.updateProfile(formData);
-      await refreshUser();
+      const updatedBand = await apiClient.updateBand(band.slug, {
+        name: editName,
+        slug: editSlug,
+        about: editAbout,
+        city: editCity,
+        region: editRegion,
+        spotify_link: editSpotifyLink,
+        bandcamp_link: editBandcampLink,
+        apple_music_link: editAppleMusicLink,
+        youtube_music_link: editYoutubeMusicLink,
+        profile_picture: editProfileImage || undefined,
+      });
 
       notifications.show({
-        title: 'Profile Updated',
-        message: 'Your profile has been updated successfully.',
+        title: 'Band Updated',
+        message: 'Your band profile has been updated successfully.',
         color: 'green',
       });
 
@@ -120,12 +141,12 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
       setEditProfileImage(null);
       setPreviewUrl(null);
       resetRef.current?.();
-      onProfileSaved?.();
+      onBandSaved?.(updatedBand);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error('Failed to update band:', error);
       notifications.show({
         title: 'Error',
-        message: 'Failed to update profile. Please try again.',
+        message: 'Failed to update band profile. Please try again.',
         color: 'red',
       });
     } finally {
@@ -140,11 +161,11 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
           {/* Profile Image with camera overlay */}
           <Group align="center">
             <div style={{ position: 'relative' }}>
-              {previewUrl || user.profile_image_url ? (
+              {previewUrl || band.profile_picture_url ? (
                 <div className={styles.profilePhotoWrapper}>
                   <div className={styles.profilePhotoBlend}>
                     <img
-                      src={previewUrl || fixImageUrl(user.profile_image_url)}
+                      src={previewUrl || fixImageUrl(band.profile_picture_url)}
                       alt="Profile preview"
                       className={styles.profilePhoto}
                     />
@@ -152,7 +173,7 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
                 </div>
               ) : (
                 <Avatar size="72px" color="grape.6">
-                  {user.username?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                  {editName.charAt(0).toUpperCase() || 'B'}
                 </Avatar>
               )}
               <FileButton
@@ -184,34 +205,88 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
                 New image selected: {editProfileImage.name}
               </Text>
             )}
-            <Title order={2} c="blue.8" fw={500} lh={1}>
-              @{user.username || 'username'}
-            </Title>
           </Group>
+
+          {/* Band Name */}
+          <TextInput
+            label="Band Name"
+            placeholder="Your Band Name"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            required
+          />
+
+          {/* Slug */}
+          <TextInput
+            label="Custom URL"
+            description="goodsongs.app/bands/your-custom-url"
+            placeholder="your-band-name"
+            value={editSlug}
+            onChange={(e) => setEditSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+          />
+
+          {/* About */}
           <Textarea
-            label="About Me"
-            placeholder="Tell us about yourself..."
-            value={editAboutMe}
-            onChange={(e) => setEditAboutMe(e.target.value)}
+            label="About"
+            placeholder="Tell fans about your band..."
+            value={editAbout}
+            onChange={(e) => setEditAbout(e.target.value)}
             minRows={3}
             autosize
           />
+
+          {/* Location */}
           <Flex direction="column" gap="sm">
             <TextInput
               label="City"
               placeholder="Los Angeles"
               value={editCity}
               onChange={(e) => setEditCity(e.target.value)}
-              flex={1}
             />
             <TextInput
               label="State / Region"
               placeholder="California"
               value={editRegion}
               onChange={(e) => setEditRegion(e.target.value)}
-              flex={1}
             />
           </Flex>
+
+          {/* Streaming Links */}
+          <Divider label="Streaming Links" labelPosition="center" />
+
+          <TextInput
+            label="Spotify"
+            placeholder="https://open.spotify.com/artist/..."
+            value={editSpotifyLink}
+            onChange={(e) => setEditSpotifyLink(e.target.value)}
+            leftSection={<IconBrandSpotify size={16} />}
+          />
+
+          <TextInput
+            label="Bandcamp"
+            placeholder="https://yourband.bandcamp.com"
+            value={editBandcampLink}
+            onChange={(e) => setEditBandcampLink(e.target.value)}
+            leftSection={<IconBrandBandcamp size={16} />}
+          />
+
+          <TextInput
+            label="Apple Music"
+            placeholder="https://music.apple.com/artist/..."
+            value={editAppleMusicLink}
+            onChange={(e) => setEditAppleMusicLink(e.target.value)}
+            leftSection={<IconBrandApple size={16} />}
+          />
+
+          <TextInput
+            label="YouTube Music"
+            placeholder="https://music.youtube.com/channel/..."
+            value={editYoutubeMusicLink}
+            onChange={(e) => setEditYoutubeMusicLink(e.target.value)}
+            leftSection={<IconBrandYoutube size={16} />}
+          />
+
+          {/* Action Buttons */}
           <Group gap="xs" mt="sm">
             <Button
               onClick={handleSaveProfile}
@@ -242,24 +317,26 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
       {/* View Mode */}
       <Group align="center">
         <ProfilePhoto
-          src={user.profile_image_url}
-          alt={user.username || 'Profile'}
+          src={band.profile_picture_url}
+          alt={band.name}
           size={72}
-          fallback={user.username || user.email}
-          href={user.username ? `/users/${user.username}` : undefined}
+          fallback={band.name}
+          href={`/bands/${band.slug}`}
         />
         <Stack gap="xs" flex={1}>
           <Title order={2} c="blue.8" fw={500} lh={1}>
-            {user.username ? `@${user.username}` : 'Welcome!'}
+            {band.name}
           </Title>
-          {(user.city || user.region) && (
+          {(band.city || band.region || band.location) && (
             <Text c="blue.7" size="sm" lh={1}>
-              {[user.city, user.region].filter(Boolean).join(', ')}
+              {band.city || band.region
+                ? [band.city, band.region].filter(Boolean).join(', ')
+                : band.location}
             </Text>
           )}
         </Stack>
       </Group>
-      {user.about_me && (
+      {band.about && (
         <Spoiler
           maxHeight={60}
           showLabel="Read more"
@@ -272,7 +349,7 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
           }}
         >
           <Text size="sm" c="gray.7" style={{ whiteSpace: 'pre-wrap' }}>
-            {user.about_me}
+            {band.about}
           </Text>
         </Spoiler>
       )}
@@ -289,14 +366,12 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
         leftSection={<IconEdit size={16} />}
         mt="sm"
       >
-        Edit Profile
+        Edit Band
       </Button>
       {actionButtons}
-      {user.username && (
-        <Button component={Link} href={`/users/${user.username}`} variant="light" size="sm">
-          View Public Profile
-        </Button>
-      )}
+      <Button component={Link} href={`/bands/${band.slug}`} variant="light" size="sm">
+        View Public Profile
+      </Button>
     </Flex>
   );
 }

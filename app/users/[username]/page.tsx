@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { IconAlertCircle, IconMusic } from '@tabler/icons-react';
 import {
@@ -10,10 +9,12 @@ import {
   Flex,
   Group,
   Paper,
+  Spoiler,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
+import { Header } from '@/components/Header/Header';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { Review, UserProfile } from '@/lib/api';
@@ -99,18 +100,10 @@ export default async function UserProfilePage({
     <>
       {/* Main Content */}
       <Container p={0} fluid className={styles.container}>
-        <Container fluid p="md" className={styles.header}>
-          <Container size="md" p={0}>
-            <Link href="/user/dashboard" className={styles.headerLink}>
-              <Title order={2} c="blue.9">
-                goodsongs
-              </Title>
-            </Link>
-          </Container>
-        </Container>
+        <Header minimal />
         <Flex className={styles.content}>
           {/* User Header */}
-          <Flex p="md" miw={300} direction="column" gap="sm" className={styles.userBackground}>
+          <Flex p="md" direction="column" gap="sm" className={styles.userBackground}>
             <Group align="center">
               <ProfilePhoto
                 src={profile.profile_image_url}
@@ -132,9 +125,21 @@ export default async function UserProfilePage({
               </Stack>
             </Group>
             {profile.about_me && (
-              <Text c="gray.7" size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                {profile.about_me}
-              </Text>
+              <Spoiler
+                maxHeight={60}
+                showLabel="Read more"
+                hideLabel="Show less"
+                styles={{
+                  control: {
+                    fontSize: 'var(--mantine-font-size-sm)',
+                    color: 'var(--mantine-color-grape-4)',
+                  },
+                }}
+              >
+                <Text c="gray.7" size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                  {profile.about_me}
+                </Text>
+              </Spoiler>
             )}
             <Group gap="xs">
               <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
