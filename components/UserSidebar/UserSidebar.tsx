@@ -337,7 +337,7 @@ export function UserSidebar({
           New Recommendation
         </Button>
       )}
-      <Flex pt="sm" className={styles.userMenu}>
+      <div className={styles.userMenu}>
         {actionButtons}
         <Flex direction="column" w="100%">
           <Button
@@ -424,7 +424,7 @@ export function UserSidebar({
             </Button>
           )}
         </Flex>
-      </Flex>
+      </div>
     </Flex>
   );
 }
