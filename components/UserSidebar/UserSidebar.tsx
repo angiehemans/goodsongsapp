@@ -19,6 +19,7 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { FollowersList } from '@/components/FollowersList/FollowersList';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
@@ -32,9 +33,19 @@ interface UserSidebarProps {
   actionButtons?: React.ReactNode;
   /** Callback when profile is successfully saved */
   onProfileSaved?: () => void;
+  /** Number of followers */
+  followersCount?: number;
+  /** Number of users being followed */
+  followingCount?: number;
 }
 
-export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSidebarProps) {
+export function UserSidebar({
+  badgeText,
+  actionButtons,
+  onProfileSaved,
+  followersCount = 0,
+  followingCount = 0,
+}: UserSidebarProps) {
   const { user, refreshUser } = useAuth();
 
   // Edit mode state
@@ -283,6 +294,7 @@ export function UserSidebar({ badgeText, actionButtons, onProfileSaved }: UserSi
           </Badge>
         </Group>
       )}
+      <FollowersList followersCount={followersCount} followingCount={followingCount} />
       <Button
         onClick={handleStartEdit}
         variant="light"

@@ -90,6 +90,49 @@ export interface UserProfile {
   profile_image_url?: string;
   reviews: Review[];
   bands?: Band[];
+  is_following?: boolean;  // Whether the current user follows this user
+  followers_count?: number;
+  following_count?: number;
+}
+
+export interface FollowUser {
+  id: number;
+  username: string;
+  profile_image_url?: string;
+  about_me?: string;
+  city?: string;
+  region?: string;
+}
+
+export interface FollowingFeedItem {
+  id: number;
+  song_name: string;
+  band_name: string;
+  artwork_url?: string;
+  song_link?: string;
+  review_text: string;
+  liked_aspects?: (string | { name: string })[];
+  created_at: string;
+  author: {
+    id: number;
+    username: string;
+    profile_image_url?: string;
+  };
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+  };
+}
+
+export interface FollowingFeedResponse {
+  reviews: FollowingFeedItem[];
+  meta: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
 }
 
 export interface BandData {
@@ -121,6 +164,7 @@ export interface Band {
   profile_picture_url?: string;
   reviews_count: number;
   user_owned: boolean;
+  disabled?: boolean;
   owner?: {
     id: number;
     username: string;
@@ -642,27 +686,112 @@ class ApiClient {
     return this.makeFormRequest('/update-profile', formData);
   }
 
+  // Public discover endpoints (no auth required)
+  async discoverUsers(page: number = 1): Promise<{
+    users: UserProfile[];
+    meta: { current_page: number; total_pages: number; total_count: number; per_page: number };
+  }> {
+    return this.makeRequest(`/discover/users?page=${page}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async discoverBands(page: number = 1): Promise<{
+    bands: Band[];
+    meta: { current_page: number; total_pages: number; total_count: number; per_page: number };
+  }> {
+    return this.makeRequest(`/discover/bands?page=${page}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async discoverReviews(page: number = 1): Promise<{
+    reviews: Review[];
+    meta: { current_page: number; total_pages: number; total_count: number; per_page: number };
+  }> {
+    return this.makeRequest(`/discover/reviews?page=${page}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // Admin endpoints
   async getAllUsers(): Promise<User[]> {
-    // Note: This endpoint may need to be implemented on the backend
     return this.makeRequest('/admin/users');
   }
 
-  async getAllBands(): Promise<Band[]> {
-    // Use the public bands endpoint which returns all bands
-    return this.makeRequest('/bands');
-  }
-
   async getAdminUserDetail(userId: string): Promise<{ user: UserProfile; reviews: Review[] }> {
-    // Fetch user details with their reviews for admin view
     return this.makeRequest(`/admin/users/${userId}`);
   }
 
   async toggleUserDisabled(userId: number): Promise<User> {
-    // Toggle user disabled status (admin only)
     return this.makeRequest(`/admin/users/${userId}/toggle-disabled`, {
       method: 'PATCH',
     });
+  }
+
+  async deleteUser(userId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getAdminBands(): Promise<Band[]> {
+    return this.makeRequest('/admin/bands');
+  }
+
+  async toggleBandDisabled(bandId: number): Promise<Band> {
+    return this.makeRequest(`/admin/bands/${bandId}/toggle-disabled`, {
+      method: 'PATCH',
+    });
+  }
+
+  async deleteBand(bandId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/admin/bands/${bandId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getAdminReviews(): Promise<Review[]> {
+    return this.makeRequest('/admin/reviews');
+  }
+
+  async deleteReview(reviewId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/admin/reviews/${reviewId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Follow endpoints
+  async followUser(userId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/users/${userId}/follow`, {
+      method: 'POST',
+    });
+  }
+
+  async unfollowUser(userId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/users/${userId}/follow`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getFollowing(): Promise<FollowUser[]> {
+    return this.makeRequest('/following');
+  }
+
+  async getFollowers(): Promise<FollowUser[]> {
+    return this.makeRequest('/followers');
+  }
+
+  async getUserFollowing(userId: number): Promise<FollowUser[]> {
+    return this.makeRequest(`/users/${userId}/following`);
+  }
+
+  async getUserFollowers(userId: number): Promise<FollowUser[]> {
+    return this.makeRequest(`/users/${userId}/followers`);
+  }
+
+  async getFollowingFeed(page: number = 1): Promise<FollowingFeedResponse> {
+    return this.makeRequest(`/feed/following?page=${page}`);
   }
 }
 

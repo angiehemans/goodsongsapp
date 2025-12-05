@@ -1,0 +1,12 @@
+.container {
+  background-image: url(/userbg2.png);
+  background-size: contain;
+  background-position: center;
+  width: 300px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+  }
+}

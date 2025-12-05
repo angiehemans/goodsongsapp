@@ -16,11 +16,14 @@ import {
   Group,
   Loader,
   Paper,
+  SegmentedControl,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { FollowersList } from '@/components/FollowersList/FollowersList';
+import { FollowingFeed } from '@/components/FollowingFeed/FollowingFeed';
 import { Header } from '@/components/Header/Header';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
@@ -37,6 +40,9 @@ export default function DashboardPage() {
   const [spotifyConnected, setSpotifyConnected] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
+  const [feedView, setFeedView] = useState<string>('my');
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   // Drawer state for new recommendation
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false);
@@ -83,12 +89,28 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  // Fetch follower/following counts
+  const fetchFollowCounts = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [followers, following] = await Promise.all([
+        apiClient.getFollowers(),
+        apiClient.getFollowing(),
+      ]);
+      setFollowersCount(followers.length);
+      setFollowingCount(following.length);
+    } catch {
+      // Silently fail
+    }
+  }, [user]);
+
   // Load core data immediately when user is available
   useEffect(() => {
     if (user) {
       fetchCoreData();
+      fetchFollowCounts();
     }
-  }, [user, fetchCoreData]);
+  }, [user, fetchCoreData, fetchFollowCounts]);
 
   // Check Spotify connection status
   const checkSpotifyConnection = useCallback(async () => {
@@ -174,6 +196,8 @@ export default function DashboardPage() {
         {/* User Sidebar */}
         <UserSidebar
           badgeText={`${reviews.length} recommendation${reviews.length !== 1 ? 's' : ''}`}
+          followersCount={followersCount}
+          followingCount={followingCount}
           actionButtons={
             <Button
               onClick={() => handleOpenNewRecommendation()}
@@ -185,177 +209,195 @@ export default function DashboardPage() {
         />
 
         {/* Main Content */}
-        <Flex direction="column" px="md" pb="lg">
-          {/* My Recommendations */}
-          <Title order={2} my="sm" c="blue.8" fw={500}>
-            My Recommendations
-          </Title>
+        <Flex direction="column" px="md" pb="lg" flex={1}>
+          {/* Feed Selector */}
+          <Group justify="space-between" align="center" my="sm">
+            <SegmentedControl
+              value={feedView}
+              onChange={setFeedView}
+              data={[
+                { label: 'My Recommendations', value: 'my' },
+                { label: 'Following Feed', value: 'following' },
+              ]}
+            />
+          </Group>
 
-          {dataLoading ? (
-            <Center py="md">
-              <Loader size="sm" />
-            </Center>
-          ) : reviews.length === 0 ? (
-            <Paper p="lg" radius="md">
-              <Center py="xl">
-                <Stack align="center">
-                  <IconMusic size={48} color="var(--mantine-color-dimmed)" />
-                  <Text c="dimmed" ta="center">
-                    No recommendations yet. Share your favorite songs!
-                  </Text>
-                  <Button
-                    onClick={() => handleOpenNewRecommendation()}
-                    leftSection={<IconPlus size={16} />}
-                  >
-                    Write Your First Recommendation
-                  </Button>
-                </Stack>
-              </Center>
-            </Paper>
+          {feedView === 'following' ? (
+            <FollowingFeed title="From People You Follow" />
           ) : (
-            <Stack>
-              {reviews.slice(0, 5).map((review) => (
-                <ReviewCard key={review.id} review={review} />
-              ))}
-
-              {reviews.length > 5 && (
-                <>
-                  <Divider />
-                  <Group justify="center">
-                    <Text size="sm" c="dimmed">
-                      Showing 5 of {reviews.length} recommendations
-                    </Text>
-                    <Button
-                      component={Link}
-                      href={`/users/${user?.username}`}
-                      variant="subtle"
-                      size="sm"
-                    >
-                      View All Recommendations
-                    </Button>
-                  </Group>
-                </>
-              )}
-            </Stack>
-          )}
-
-          {/* Recently Played from Spotify */}
-          {spotifyConnected && (
             <>
-              <Group justify="space-between" align="center" mt="xl" mb="md">
-                <Title order={2} c="blue.8" fw={500}>
-                  Recently Played Songs
-                </Title>
-                <Badge variant="light" color="green" leftSection={<IconMusic size={12} />}>
-                  From Spotify
-                </Badge>
-              </Group>
+              {/* My Recommendations */}
+              <Title order={2} mb="sm" c="blue.8" fw={500}>
+                My Recommendations
+              </Title>
 
-              {recentlyPlayedLoading ? (
+              {dataLoading ? (
                 <Center py="md">
                   <Loader size="sm" />
                 </Center>
-              ) : !Array.isArray(recentlyPlayed) || recentlyPlayed.length === 0 ? (
-                <Center py="xl">
-                  <Stack align="center">
-                    <IconMusic size={48} color="var(--mantine-color-dimmed)" />
-                    <Text c="dimmed" ta="center">
-                      No recently played tracks found. Start listening on Spotify!
-                    </Text>
-                  </Stack>
-                </Center>
+              ) : reviews.length === 0 ? (
+                <Paper p="lg" radius="md">
+                  <Center py="xl">
+                    <Stack align="center">
+                      <IconMusic size={48} color="var(--mantine-color-dimmed)" />
+                      <Text c="dimmed" ta="center">
+                        No recommendations yet. Share your favorite songs!
+                      </Text>
+                      <Button
+                        onClick={() => handleOpenNewRecommendation()}
+                        leftSection={<IconPlus size={16} />}
+                      >
+                        Write Your First Recommendation
+                      </Button>
+                    </Stack>
+                  </Center>
+                </Paper>
               ) : (
                 <Stack>
-                  {(Array.isArray(recentlyPlayed) ? recentlyPlayed : [])
-                    .slice(0, 10)
-                    .map((track, index) => (
-                      <Card key={`${track.id}-${index}`} p="md">
-                        <Group justify="space-between" align="flex-start">
-                          <Group>
-                            {track.album?.images?.[0] && (
-                              <img
-                                src={track.album.images[0].url}
-                                alt={`${track.name} album art`}
-                                style={{
-                                  width: 48,
-                                  height: 48,
-                                  borderRadius: 8,
-                                  objectFit: 'cover',
-                                }}
-                              />
-                            )}
-                            <Stack gap="xs">
-                              <div>
-                                <Title order={5}>{track.name}</Title>
-                                <Text size="sm" c="dimmed">
-                                  {Array.isArray(track.artists)
-                                    ? track.artists
-                                        .map((artist: any) =>
-                                          typeof artist === 'string' ? artist : artist.name
-                                        )
-                                        .join(', ')
-                                    : track.artists}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {track.album?.name}
-                                </Text>
-                              </div>
-                              <Text size="xs" c="dimmed">
-                                Played {new Date(track.played_at).toLocaleString()}
-                              </Text>
-                            </Stack>
-                          </Group>
-                          <Group gap="xs">
-                            <Button
-                              component="a"
-                              href={track.external_urls?.spotify}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              variant="subtle"
-                              size="xs"
-                              color="green"
-                              leftSection={<IconBrandSpotify size={14} />}
-                            >
-                              Open in Spotify
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                handleOpenNewRecommendation({
-                                  song_name: track.name || '',
-                                  band_name: Array.isArray(track.artists)
-                                    ? track.artists
-                                        .map((artist: any) =>
-                                          typeof artist === 'string' ? artist : artist.name
-                                        )
-                                        .join(', ')
-                                    : track.artists || '',
-                                  artwork_url: track.album?.images?.[0]?.url || '',
-                                  song_link: track.external_urls?.spotify || '',
-                                })
-                              }
-                              variant="filled"
-                              size="xs"
-                              color="grape"
-                              leftSection={<IconPlus size={14} />}
-                            >
-                              Recommend
-                            </Button>
-                          </Group>
-                        </Group>
-                      </Card>
-                    ))}
+                  {reviews.slice(0, 5).map((review) => (
+                    <ReviewCard key={review.id} review={review} />
+                  ))}
 
-                  {Array.isArray(recentlyPlayed) && recentlyPlayed.length > 10 && (
+                  {reviews.length > 5 && (
                     <>
                       <Divider />
                       <Group justify="center">
                         <Text size="sm" c="dimmed">
-                          Showing 10 of {recentlyPlayed.length} recently played tracks
+                          Showing 5 of {reviews.length} recommendations
                         </Text>
+                        <Button
+                          component={Link}
+                          href={`/users/${user?.username}`}
+                          variant="subtle"
+                          size="sm"
+                        >
+                          View All Recommendations
+                        </Button>
                       </Group>
                     </>
                   )}
                 </Stack>
+              )}
+
+              {/* Recently Played from Spotify */}
+              {spotifyConnected && (
+                <>
+                  <Group justify="space-between" align="center" mt="xl" mb="md">
+                    <Title order={2} c="blue.8" fw={500}>
+                      Recently Played Songs
+                    </Title>
+                    <Badge variant="light" color="green" leftSection={<IconMusic size={12} />}>
+                      From Spotify
+                    </Badge>
+                  </Group>
+
+                  {recentlyPlayedLoading ? (
+                    <Center py="md">
+                      <Loader size="sm" />
+                    </Center>
+                  ) : !Array.isArray(recentlyPlayed) || recentlyPlayed.length === 0 ? (
+                    <Center py="xl">
+                      <Stack align="center">
+                        <IconMusic size={48} color="var(--mantine-color-dimmed)" />
+                        <Text c="dimmed" ta="center">
+                          No recently played tracks found. Start listening on Spotify!
+                        </Text>
+                      </Stack>
+                    </Center>
+                  ) : (
+                    <Stack>
+                      {(Array.isArray(recentlyPlayed) ? recentlyPlayed : [])
+                        .slice(0, 10)
+                        .map((track, index) => (
+                          <Card key={`${track.id}-${index}`} p="md">
+                            <Group justify="space-between" align="flex-start">
+                              <Group>
+                                {track.album?.images?.[0] && (
+                                  <img
+                                    src={track.album.images[0].url}
+                                    alt={`${track.name} album art`}
+                                    style={{
+                                      width: 48,
+                                      height: 48,
+                                      borderRadius: 8,
+                                      objectFit: 'cover',
+                                    }}
+                                  />
+                                )}
+                                <Stack gap="xs">
+                                  <div>
+                                    <Title order={5}>{track.name}</Title>
+                                    <Text size="sm" c="dimmed">
+                                      {Array.isArray(track.artists)
+                                        ? track.artists
+                                            .map((artist: any) =>
+                                              typeof artist === 'string' ? artist : artist.name
+                                            )
+                                            .join(', ')
+                                        : track.artists}
+                                    </Text>
+                                    <Text size="xs" c="dimmed">
+                                      {track.album?.name}
+                                    </Text>
+                                  </div>
+                                  <Text size="xs" c="dimmed">
+                                    Played {new Date(track.played_at).toLocaleString()}
+                                  </Text>
+                                </Stack>
+                              </Group>
+                              <Group gap="xs">
+                                <Button
+                                  component="a"
+                                  href={track.external_urls?.spotify}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  variant="subtle"
+                                  size="xs"
+                                  color="green"
+                                  leftSection={<IconBrandSpotify size={14} />}
+                                >
+                                  Open in Spotify
+                                </Button>
+                                <Button
+                                  onClick={() =>
+                                    handleOpenNewRecommendation({
+                                      song_name: track.name || '',
+                                      band_name: Array.isArray(track.artists)
+                                        ? track.artists
+                                            .map((artist: any) =>
+                                              typeof artist === 'string' ? artist : artist.name
+                                            )
+                                            .join(', ')
+                                        : track.artists || '',
+                                      artwork_url: track.album?.images?.[0]?.url || '',
+                                      song_link: track.external_urls?.spotify || '',
+                                    })
+                                  }
+                                  variant="filled"
+                                  size="xs"
+                                  color="grape"
+                                  leftSection={<IconPlus size={14} />}
+                                >
+                                  Recommend
+                                </Button>
+                              </Group>
+                            </Group>
+                          </Card>
+                        ))}
+
+                      {Array.isArray(recentlyPlayed) && recentlyPlayed.length > 10 && (
+                        <>
+                          <Divider />
+                          <Group justify="center">
+                            <Text size="sm" c="dimmed">
+                              Showing 10 of {recentlyPlayed.length} recently played tracks
+                            </Text>
+                          </Group>
+                        </>
+                      )}
+                    </Stack>
+                  )}
+                </>
               )}
             </>
           )}

@@ -1,22 +1,10 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { IconAlertCircle, IconMusic } from '@tabler/icons-react';
-import {
-  Alert,
-  Badge,
-  Center,
-  Container,
-  Flex,
-  Group,
-  Paper,
-  Spoiler,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Center, Container, Flex, Paper, Stack, Text, Title } from '@mantine/core';
 import { Header } from '@/components/Header/Header';
-import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
+import { UserProfileSidebar } from '@/components/UserProfileSidebar/UserProfileSidebar';
 import { Review, UserProfile } from '@/lib/api';
 import styles from './page.module.css';
 
@@ -102,51 +90,8 @@ export default async function UserProfilePage({
       <Container p={0} fluid className={styles.container}>
         <Header minimal />
         <Flex className={styles.content}>
-          {/* User Header */}
-          <Flex p="md" direction="column" gap="sm" className={styles.userBackground}>
-            <Group align="center">
-              <ProfilePhoto
-                src={profile.profile_image_url}
-                alt={profile.username}
-                size={72}
-                fallback={profile.username}
-              />
-              <Stack gap="xs" flex={1}>
-                <Title order={2} c="blue.8" fw={500} lh={1}>
-                  @{profile.username}
-                </Title>
-                {(profile.city || profile.region || profile.location) && (
-                  <Text c="blue.7" size="sm" lh={1}>
-                    {profile.city || profile.region
-                      ? [profile.city, profile.region].filter(Boolean).join(', ')
-                      : profile.location}
-                  </Text>
-                )}
-              </Stack>
-            </Group>
-            {profile.about_me && (
-              <Spoiler
-                maxHeight={60}
-                showLabel="Read more"
-                hideLabel="Show less"
-                styles={{
-                  control: {
-                    fontSize: 'var(--mantine-font-size-sm)',
-                    color: 'var(--mantine-color-grape-4)',
-                  },
-                }}
-              >
-                <Text c="gray.7" size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                  {profile.about_me}
-                </Text>
-              </Spoiler>
-            )}
-            <Group gap="xs">
-              <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
-                {profile.reviews.length} recommendation{profile.reviews.length !== 1 ? 's' : ''}
-              </Badge>
-            </Group>
-          </Flex>
+          {/* User Sidebar */}
+          <UserProfileSidebar profile={profile} />
 
           {/* Recommendations Section */}
           <Flex direction="column" px="md" pb="lg">
