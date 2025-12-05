@@ -17,7 +17,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
     <Card p="md" bd="0" bg="grape.0" maw={700}>
       <Stack gap="sm">
         {/* Author Info */}
-        <Group gap="sm">
+        <Group gap="sm" pb="sm" className={styles.userInfo}>
           <ProfilePhoto
             src={authorProfileImage}
             alt={authorUsername || 'Unknown user'}

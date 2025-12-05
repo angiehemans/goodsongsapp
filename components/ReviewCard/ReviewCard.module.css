@@ -11,3 +11,7 @@
   border-radius: 8px;
   background-color: var(--mantine-color-grape-3);
 }
+
+.userInfo {
+  border-bottom: 2px solid var(--mantine-color-grape-3);
+}
