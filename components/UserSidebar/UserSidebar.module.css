@@ -7,7 +7,7 @@
 
 @media (max-width: 768px) {
   .container {
-    width: 100%;
+    display: none;
   }
 }
 
@@ -32,4 +32,72 @@
   height: 100%;
   object-fit: cover;
   filter: grayscale(100%) contrast(1.1);
+}
+
+.userMenu {
+  border-top: 2px solid var(--mantine-color-grape-3);
+}
+
+/* Mobile Bottom Navigation */
+.mobileNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--mantine-color-grape-0);
+  border-top: 2px solid var(--mantine-color-grape-3);
+  padding: 8px 0;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  .mobileNav {
+    display: flex;
+  }
+}
+
+.mobileNavInner {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.mobileNavButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-radius: var(--mantine-radius-sm);
+  text-decoration: none;
+  color: var(--mantine-color-grape-6);
+  transition: background-color 150ms ease, color 150ms ease;
+  min-width: 56px;
+}
+
+.mobileNavButton:hover {
+  background-color: var(--mantine-color-grape-1);
+}
+
+.mobileNavButtonActive {
+  color: var(--mantine-color-grape-9);
+  background-color: var(--mantine-color-grape-2);
+}
+
+.mobileNavButtonAdmin {
+  color: var(--mantine-color-red-6);
+}
+
+.mobileNavButtonAdmin.mobileNavButtonActive {
+  background-color: var(--mantine-color-red-1);
+}
+
+.mobileNavLabel {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
 }

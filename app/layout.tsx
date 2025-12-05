@@ -4,6 +4,8 @@ import './globals.css';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
+import { MobileNav } from '@/components/UserSidebar/UserSidebar';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { AuthProvider } from '@/hooks/useAuth';
 import { Providers } from './providers';
 import classes from './styles.module.css';
@@ -61,7 +63,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={classes.background}>
         <Providers>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              {children}
+              <MobileNav />
+            </NotificationProvider>
+          </AuthProvider>
         </Providers>
       </body>
     </html>

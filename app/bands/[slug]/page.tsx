@@ -93,7 +93,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
 
   return (
     <Container p={0} fluid className={styles.container}>
-      <Header minimal />
+      <Header />
       <Flex className={styles.content}>
         {/* Band Sidebar */}
         <Flex p="md" direction="column" gap="sm" className={styles.bandBackground}>

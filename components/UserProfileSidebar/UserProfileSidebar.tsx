@@ -1,22 +1,63 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Badge, Flex, Group, Spoiler, Stack, Text, Title } from '@mantine/core';
 import { FollowButton } from '@/components/FollowButton/FollowButton';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
-import { UserProfile } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { apiClient, UserProfile } from '@/lib/api';
 import styles from './UserProfileSidebar.module.css';
 
 interface UserProfileSidebarProps {
   profile: UserProfile;
   showFollowButton?: boolean;
-  isOwnProfile?: boolean;
 }
 
 export function UserProfileSidebar({
   profile,
   showFollowButton = true,
-  isOwnProfile = false,
 }: UserProfileSidebarProps) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+  const [hasCheckedFollow, setHasCheckedFollow] = useState(false);
+
+  const isOwnProfile = user?.id === profile.id;
+
+  // Check follow status when user is available (client-side with auth token)
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (isAuthLoading) return;
+
+    // If no user logged in, nothing to check
+    if (!user) {
+      setHasCheckedFollow(true);
+      return;
+    }
+
+    // If viewing own profile, no need to check
+    if (user.id === profile.id) {
+      setHasCheckedFollow(true);
+      return;
+    }
+
+    // Check follow status
+    const checkFollowStatus = async () => {
+      try {
+        const following = await apiClient.getFollowing();
+        const followingArray = Array.isArray(following) ? following : [];
+        const isCurrentlyFollowing = followingArray.some((f) => f.id === profile.id);
+        setIsFollowing(isCurrentlyFollowing);
+      } catch (error) {
+        console.error('Failed to check follow status:', error);
+        // Fall back to server-provided value if check fails
+        setIsFollowing(profile.is_following || false);
+      } finally {
+        setHasCheckedFollow(true);
+      }
+    };
+
+    checkFollowStatus();
+  }, [user, isAuthLoading, profile.id, profile.is_following]);
   return (
     <Flex p="md" direction="column" gap="sm" className={styles.container}>
       <Group align="center">
@@ -66,10 +107,11 @@ export function UserProfileSidebar({
           </Badge>
         )}
       </Group>
-      {showFollowButton && !isOwnProfile && (
+      {showFollowButton && !isOwnProfile && user && hasCheckedFollow && isFollowing !== null && (
         <FollowButton
           userId={profile.id}
-          initialIsFollowing={profile.is_following || false}
+          initialIsFollowing={isFollowing}
+          onFollowChange={setIsFollowing}
           mt="sm"
         />
       )}

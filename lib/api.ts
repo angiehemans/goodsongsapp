@@ -135,6 +135,36 @@ export interface FollowingFeedResponse {
   };
 }
 
+export interface NotificationActor {
+  id: number;
+  username: string;
+  profile_image_url?: string;
+}
+
+export interface Notification {
+  id: number;
+  notification_type?: 'new_follower' | 'new_review';
+  type?: 'new_follower' | 'new_review';  // Alternative field name from API
+  message: string;
+  read: boolean;
+  created_at: string;
+  actor: NotificationActor;
+  // For new_review notifications
+  song_name?: string;
+  band_name?: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unread_count: number;
+  meta: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
+}
+
 export interface BandData {
   name: string;
   slug?: string;
@@ -792,6 +822,27 @@ class ApiClient {
 
   async getFollowingFeed(page: number = 1): Promise<FollowingFeedResponse> {
     return this.makeRequest(`/feed/following?page=${page}`);
+  }
+
+  // Notification endpoints
+  async getNotifications(page: number = 1): Promise<NotificationsResponse> {
+    return this.makeRequest(`/notifications?page=${page}`);
+  }
+
+  async getUnreadNotificationCount(): Promise<{ unread_count: number }> {
+    return this.makeRequest('/notifications/unread_count');
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<Notification> {
+    return this.makeRequest(`/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async markAllNotificationsAsRead(): Promise<{ message: string }> {
+    return this.makeRequest('/notifications/read_all', {
+      method: 'PATCH',
+    });
   }
 }
 

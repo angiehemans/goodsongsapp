@@ -2,7 +2,20 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconCamera, IconCheck, IconEdit, IconX } from '@tabler/icons-react';
+import { usePathname } from 'next/navigation';
+import {
+  IconBell,
+  IconCamera,
+  IconCheck,
+  IconCompass,
+  IconEdit,
+  IconHome,
+  IconPlus,
+  IconSettings,
+  IconShield,
+  IconUser,
+  IconX,
+} from '@tabler/icons-react';
 import {
   ActionIcon,
   Avatar,
@@ -11,6 +24,7 @@ import {
   FileButton,
   Flex,
   Group,
+  Indicator,
   Spoiler,
   Stack,
   Text,
@@ -21,6 +35,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { FollowersList } from '@/components/FollowersList/FollowersList';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
@@ -37,6 +52,8 @@ interface UserSidebarProps {
   followersCount?: number;
   /** Number of users being followed */
   followingCount?: number;
+  /** Callback when new recommendation button is clicked */
+  onNewRecommendation?: () => void;
 }
 
 export function UserSidebar({
@@ -45,8 +62,22 @@ export function UserSidebar({
   onProfileSaved,
   followersCount = 0,
   followingCount = 0,
+  onNewRecommendation,
 }: UserSidebarProps) {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isBand, isAdmin } = useAuth();
+  const { unreadCount } = useNotifications();
+  const pathname = usePathname();
+
+  // Helper to check if a nav item is active
+  const isActive = (href: string) => {
+    if (href === '/user/dashboard' || href === '/user/band-dashboard') {
+      return pathname === '/user/dashboard' || pathname === '/user/band-dashboard';
+    }
+    if (href.startsWith('/users/')) {
+      return pathname === href;
+    }
+    return pathname?.startsWith(href);
+  };
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -287,28 +318,199 @@ export function UserSidebar({
           </Text>
         </Spoiler>
       )}
-      {badgeText && (
+      {/* {badgeText && (
         <Group gap="xs">
           <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
             {badgeText}
           </Badge>
         </Group>
-      )}
+      )} */}
       <FollowersList followersCount={followersCount} followingCount={followingCount} />
-      <Button
-        onClick={handleStartEdit}
-        variant="light"
-        leftSection={<IconEdit size={16} />}
-        mt="sm"
-      >
+      <Button onClick={handleStartEdit} variant="light" leftSection={<IconEdit size={16} />}>
         Edit Profile
       </Button>
-      {actionButtons}
-      {user.username && (
-        <Button component={Link} href={`/users/${user.username}`} variant="light" size="sm">
-          View Public Profile
+      {onNewRecommendation && (
+        <Button
+          onClick={onNewRecommendation}
+          leftSection={<IconPlus size={16} />}
+        >
+          New Recommendation
         </Button>
       )}
+      <Flex pt="sm" className={styles.userMenu}>
+        {actionButtons}
+        <Flex direction="column" w="100%">
+          <Button
+            component={Link}
+            href={isBand ? '/user/band-dashboard' : '/user/dashboard'}
+            variant={
+              isActive(isBand ? '/user/band-dashboard' : '/user/dashboard') ? 'light' : 'subtle'
+            }
+            size="sm"
+            leftSection={<IconHome size={16} />}
+            fullWidth
+            justify="flex-start"
+          >
+            Home
+          </Button>
+          <Button
+            component={Link}
+            href="/user/notifications"
+            variant={isActive('/user/notifications') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={
+              <Indicator
+                label={unreadCount > 99 ? '99+' : unreadCount}
+                size={14}
+                disabled={unreadCount === 0}
+                color="red"
+                offset={-2}
+              >
+                <IconBell size={16} />
+              </Indicator>
+            }
+            fullWidth
+            justify="flex-start"
+          >
+            Notifications
+          </Button>
+          <Button
+            component={Link}
+            href="/discover"
+            variant={isActive('/discover') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={<IconCompass size={16} />}
+            fullWidth
+            justify="flex-start"
+          >
+            Discover
+          </Button>
+          {user.username && (
+            <Button
+              component={Link}
+              href={`/users/${user.username}`}
+              variant={isActive(`/users/${user.username}`) ? 'light' : 'subtle'}
+              size="sm"
+              leftSection={<IconUser size={16} />}
+              fullWidth
+              justify="flex-start"
+            >
+              Profile
+            </Button>
+          )}
+          <Button
+            component={Link}
+            href="/user/settings"
+            variant={isActive('/user/settings') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={<IconSettings size={16} />}
+            fullWidth
+            justify="flex-start"
+          >
+            Settings
+          </Button>
+          {isAdmin && (
+            <Button
+              component={Link}
+              href="/admin"
+              variant={isActive('/admin') ? 'light' : 'subtle'}
+              size="sm"
+              color="red"
+              leftSection={<IconShield size={16} />}
+              fullWidth
+              justify="flex-start"
+            >
+              Admin
+            </Button>
+          )}
+        </Flex>
+      </Flex>
     </Flex>
+  );
+}
+
+// Mobile Bottom Navigation - rendered separately
+export function MobileNav() {
+  const { user, isBand, isAdmin } = useAuth();
+  const { unreadCount } = useNotifications();
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === '/user/dashboard' || href === '/user/band-dashboard') {
+      return pathname === '/user/dashboard' || pathname === '/user/band-dashboard';
+    }
+    if (href.startsWith('/users/')) {
+      return pathname === href;
+    }
+    return pathname?.startsWith(href);
+  };
+
+  if (!user) return null;
+
+  return (
+    <div className={styles.mobileNav}>
+      <div className={styles.mobileNavInner}>
+        <Link
+          href={isBand ? '/user/band-dashboard' : '/user/dashboard'}
+          className={`${styles.mobileNavButton} ${isActive(isBand ? '/user/band-dashboard' : '/user/dashboard') ? styles.mobileNavButtonActive : ''}`}
+        >
+          <IconHome size={20} />
+          <span className={styles.mobileNavLabel}>Home</span>
+        </Link>
+
+        <Link
+          href="/discover"
+          className={`${styles.mobileNavButton} ${isActive('/discover') ? styles.mobileNavButtonActive : ''}`}
+        >
+          <IconCompass size={20} />
+          <span className={styles.mobileNavLabel}>Discover</span>
+        </Link>
+
+        <Link
+          href="/user/notifications"
+          className={`${styles.mobileNavButton} ${isActive('/user/notifications') ? styles.mobileNavButtonActive : ''}`}
+        >
+          <Indicator
+            label={unreadCount > 99 ? '99+' : unreadCount}
+            size={14}
+            disabled={unreadCount === 0}
+            color="red"
+            offset={2}
+            styles={{ root: { lineHeight: 0 } }}
+          >
+            <IconBell size={20} />
+          </Indicator>
+          <span className={styles.mobileNavLabel}>Alerts</span>
+        </Link>
+
+        {user.username && (
+          <Link
+            href={`/users/${user.username}`}
+            className={`${styles.mobileNavButton} ${isActive(`/users/${user.username}`) ? styles.mobileNavButtonActive : ''}`}
+          >
+            <IconUser size={20} />
+            <span className={styles.mobileNavLabel}>Profile</span>
+          </Link>
+        )}
+
+        <Link
+          href="/user/settings"
+          className={`${styles.mobileNavButton} ${isActive('/user/settings') ? styles.mobileNavButtonActive : ''}`}
+        >
+          <IconSettings size={20} />
+          <span className={styles.mobileNavLabel}>Settings</span>
+        </Link>
+
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={`${styles.mobileNavButton} ${styles.mobileNavButtonAdmin} ${isActive('/admin') ? styles.mobileNavButtonActive : ''}`}
+          >
+            <IconShield size={20} />
+            <span className={styles.mobileNavLabel}>Admin</span>
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }

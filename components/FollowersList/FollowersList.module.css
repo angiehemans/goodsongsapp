@@ -1,6 +1,6 @@
-.statsContainer {
+/* .statsContainer {
   padding: var(--mantine-spacing-xs) 0;
-}
+} */
 
 .statButton {
   transition: opacity 0.15s ease;
