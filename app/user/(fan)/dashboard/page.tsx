@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  IconBrandSpotify,
   IconChevronLeft,
   IconChevronRight,
   IconMusic,
@@ -10,7 +9,6 @@ import {
 } from '@tabler/icons-react';
 import {
   ActionIcon,
-  Badge,
   Box,
   Button,
   Card,
@@ -25,6 +23,7 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { FollowingFeed } from '@/components/FollowingFeed/FollowingFeed';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
+import { SpotifyConnection } from '@/components/SpotifyConnection/SpotifyConnection';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
 
@@ -32,6 +31,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
   const [spotifyConnected, setSpotifyConnected] = useState(false);
+  const [spotifyLoading, setSpotifyLoading] = useState(true);
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
   const recentlyPlayedRef = useRef<HTMLDivElement>(null);
 
@@ -47,13 +47,24 @@ export default function DashboardPage() {
   // Check Spotify connection status
   const checkSpotifyConnection = useCallback(async () => {
     if (!user) return;
+    setSpotifyLoading(true);
     try {
       const status = await apiClient.getSpotifyStatus();
       setSpotifyConnected(status.connected);
     } catch {
       setSpotifyConnected(false);
+    } finally {
+      setSpotifyLoading(false);
     }
   }, [user]);
+
+  // Handle Spotify connection change from the SpotifyConnection component
+  const handleSpotifyConnectionChange = (connected: boolean) => {
+    setSpotifyConnected(connected);
+    if (connected) {
+      fetchSpotifyData();
+    }
+  };
 
   // Fetch Spotify data
   const fetchSpotifyData = useCallback(async () => {
@@ -98,17 +109,20 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Recently Played from Spotify */}
-      {spotifyConnected && (
+      {/* Spotify Section */}
+      {spotifyLoading ? (
+        <Center py="md">
+          <Loader size="sm" />
+        </Center>
+      ) : !spotifyConnected ? (
+        <SpotifyConnection onConnectionChange={handleSpotifyConnectionChange} />
+      ) : (
         <>
           <Group justify="space-between" align="center" my="md" maw={700}>
             <Group gap="xs">
               <Title order={2} c="blue.8" fw={500}>
                 Recently Played
               </Title>
-              <Badge variant="light" color="green" leftSection={<IconBrandSpotify size={12} />}>
-                Spotify
-              </Badge>
             </Group>
             {Array.isArray(recentlyPlayed) && recentlyPlayed.length > 0 && (
               <Group gap={4}>
@@ -169,7 +183,7 @@ export default function DashboardPage() {
                     key={`${track.id}-${index}`}
                     p="xs"
                     withBorder
-                    style={{ minWidth: 140, maxWidth: 140, flexShrink: 0 }}
+                    style={{ width: 144, flexShrink: 0 }}
                   >
                     <Card.Section>
                       {track.album?.images?.[0] ? (

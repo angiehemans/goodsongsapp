@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button, Group, Text, Alert, Loader, Paper } from '@mantine/core';
-import { IconBrandSpotify, IconCheck, IconAlertCircle } from '@tabler/icons-react';
-import { apiClient, SpotifyStatus } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import { IconAlertCircle, IconBrandSpotify, IconCheck } from '@tabler/icons-react';
+import { Alert, Button, Group, Loader, Paper, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { apiClient, SpotifyStatus } from '@/lib/api';
 
 interface SpotifyConnectionProps {
   onConnectionChange?: (connected: boolean) => void;
@@ -39,19 +39,21 @@ export function SpotifyConnection({ onConnectionChange }: SpotifyConnectionProps
   const handleConnect = async () => {
     try {
       setConnecting(true);
-      
+
       // Get auth URL via AJAX with JWT token in headers (secure)
       const { auth_url } = await apiClient.getSpotifyConnectUrl();
-      
+
       // Open Spotify OAuth in a new window/tab instead of redirecting
       const authWindow = window.open(
         auth_url,
         'spotify-auth',
         'width=600,height=700,scrollbars=yes,resizable=yes'
       );
-      
+
       if (!authWindow) {
-        throw new Error('Unable to open authentication window. Please disable popup blockers and try again.');
+        throw new Error(
+          'Unable to open authentication window. Please disable popup blockers and try again.'
+        );
       }
 
       // Monitor the auth window and refresh status when it closes
@@ -65,12 +67,14 @@ export function SpotifyConnection({ onConnectionChange }: SpotifyConnectionProps
           }, 1000);
         }
       }, 1000);
-      
     } catch (error) {
       console.error('Failed to get Spotify connect URL:', error);
       notifications.show({
         title: 'Connection Failed',
-        message: error instanceof Error ? error.message : 'Failed to get Spotify connection URL. Please try again.',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to get Spotify connection URL. Please try again.',
         color: 'red',
       });
       setConnecting(false);
@@ -83,7 +87,7 @@ export function SpotifyConnection({ onConnectionChange }: SpotifyConnectionProps
       await apiClient.disconnectSpotify();
       setStatus({ connected: false });
       onConnectionChange?.(false);
-      
+
       notifications.show({
         title: 'Disconnected',
         message: 'Successfully disconnected from Spotify',
@@ -146,6 +150,8 @@ export function SpotifyConnection({ onConnectionChange }: SpotifyConnectionProps
       color="grape"
       variant="light"
       withCloseButton={false}
+      maw={700}
+      my="md"
     >
       <Group justify="space-between" align="center">
         <Text size="sm">

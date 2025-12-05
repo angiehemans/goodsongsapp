@@ -7,7 +7,8 @@
 
 @media (max-width: 768px) {
   .container {
-    display: none;
+    width: 100%;
+    background-image: none;
   }
 }
 
@@ -36,6 +37,12 @@
 
 .userMenu {
   border-top: 2px solid var(--mantine-color-grape-3);
+}
+
+@media (max-width: 768px) {
+  .userMenu {
+    display: none;
+  }
 }
 
 /* Mobile Bottom Navigation */
