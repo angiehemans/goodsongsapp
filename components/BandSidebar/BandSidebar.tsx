@@ -161,11 +161,11 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
           {/* Profile Image with camera overlay */}
           <Group align="center">
             <div style={{ position: 'relative' }}>
-              {previewUrl || band.profile_picture_url ? (
+              {previewUrl || band.profile_picture_url || band.spotify_image_url ? (
                 <div className={styles.profilePhotoWrapper}>
                   <div className={styles.profilePhotoBlend}>
                     <img
-                      src={previewUrl || fixImageUrl(band.profile_picture_url)}
+                      src={previewUrl || fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
                       alt="Profile preview"
                       className={styles.profilePhoto}
                     />
@@ -317,7 +317,7 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
       {/* View Mode */}
       <Group align="center">
         <ProfilePhoto
-          src={band.profile_picture_url}
+          src={band.profile_picture_url || band.spotify_image_url}
           alt={band.name}
           size={72}
           fallback={band.name}

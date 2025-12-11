@@ -61,6 +61,7 @@ function CreateReviewForm() {
   const [formData, setFormData] = useState<ReviewData>({
     song_link: '',
     band_name: '',
+    band_spotify_url: '',
     song_name: '',
     artwork_url: '',
     review_text: '',
@@ -71,14 +72,16 @@ function CreateReviewForm() {
   useEffect(() => {
     const songName = searchParams.get('song_name');
     const bandName = searchParams.get('band_name');
+    const bandSpotifyUrl = searchParams.get('band_spotify_url');
     const artworkUrl = searchParams.get('artwork_url');
     const songLink = searchParams.get('song_link');
 
-    if (songName || bandName || artworkUrl || songLink) {
+    if (songName || bandName || artworkUrl || songLink || bandSpotifyUrl) {
       setFormData((prev) => ({
         ...prev,
         song_name: songName || prev.song_name,
         band_name: bandName || prev.band_name,
+        band_spotify_url: bandSpotifyUrl || prev.band_spotify_url,
         artwork_url: artworkUrl || prev.artwork_url,
         song_link: songLink || prev.song_link,
       }));

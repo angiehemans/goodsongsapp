@@ -50,6 +50,7 @@ export function RecommendationForm({
   const [formData, setFormData] = useState<ReviewData>({
     song_link: initialValues?.song_link || '',
     band_name: initialValues?.band_name || '',
+    band_spotify_url: initialValues?.band_spotify_url || '',
     song_name: initialValues?.song_name || '',
     artwork_url: initialValues?.artwork_url || '',
     review_text: initialValues?.review_text || '',
@@ -74,6 +75,7 @@ export function RecommendationForm({
       setFormData({
         song_link: '',
         band_name: '',
+        band_spotify_url: '',
         song_name: '',
         artwork_url: '',
         review_text: '',

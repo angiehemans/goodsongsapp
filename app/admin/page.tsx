@@ -457,7 +457,7 @@ export default function AdminDashboardPage() {
                           <Group gap="sm">
                             <Avatar
                               size="sm"
-                              src={fixImageUrl(band.profile_picture_url)}
+                              src={fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
                               color="grape"
                             >
                               {band.name?.charAt(0).toUpperCase() || 'B'}

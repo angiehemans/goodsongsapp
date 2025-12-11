@@ -53,6 +53,7 @@ export interface SignupData {
 export interface ReviewData {
   song_link: string;
   band_name: string;
+  band_spotify_url?: string;
   song_name: string;
   artwork_url: string;
   review_text: string;
@@ -88,7 +89,8 @@ export interface UserProfile {
   region?: string;
   location?: string;  // Combined "City, Region" from API
   profile_image_url?: string;
-  reviews: Review[];
+  reviews?: Review[];
+  reviews_count?: number;
   bands?: Band[];
   is_following?: boolean;  // Whether the current user follows this user
   followers_count?: number;
@@ -192,6 +194,7 @@ export interface Band {
   apple_music_link?: string;
   youtube_music_link?: string;
   profile_picture_url?: string;
+  spotify_image_url?: string;
   reviews_count: number;
   user_owned: boolean;
   disabled?: boolean;
@@ -206,7 +209,8 @@ export interface Band {
 
 export interface SpotifyArtist {
   name: string;
-  id: string;
+  id?: string;
+  spotify_url?: string;
 }
 
 export interface SpotifyTrack {
@@ -230,7 +234,7 @@ export interface SpotifyTrack {
 export interface RecentlyPlayedTrack {
   id: string;
   name: string;
-  artists: (string | SpotifyArtist)[];
+  artists: SpotifyArtist[];
   album: {
     name: string;
     images: Array<{

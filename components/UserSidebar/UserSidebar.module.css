@@ -1,8 +1,20 @@
 .container {
-  background-image: url(/userbg2.png);
-  background-size: contain;
-  background-position: center;
+  position: relative;
   width: 300px;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(/cloud-bg2.png);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+  z-index: -1;
 }
 
 @media (max-width: 768px) {
@@ -82,7 +94,9 @@
   border-radius: var(--mantine-radius-sm);
   text-decoration: none;
   color: var(--mantine-color-grape-6);
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
   min-width: 56px;
 }
 

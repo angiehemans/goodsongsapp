@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [formPrefill, setFormPrefill] = useState<{
     song_name?: string;
     band_name?: string;
+    band_spotify_url?: string;
     artwork_url?: string;
     song_link?: string;
   } | null>(null);
@@ -232,6 +233,10 @@ export default function DashboardPage() {
                                   )
                                   .join(', ')
                               : track.artists || '',
+                            band_spotify_url:
+                              Array.isArray(track.artists) && track.artists[0]?.spotify_url
+                                ? track.artists[0].spotify_url
+                                : '',
                             artwork_url: track.album?.images?.[0]?.url || '',
                             song_link: track.external_urls?.spotify || '',
                           })

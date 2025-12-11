@@ -6,11 +6,11 @@ import { IconBell, IconCheck, IconChecks, IconMusic, IconUserPlus } from '@table
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Center,
   Group,
   Loader,
-  Paper,
   Stack,
   Text,
   Title,
@@ -194,26 +194,26 @@ export default function NotificationsPage() {
   };
 
   return (
-    <>
-      <Group justify="space-between" align="center" my="sm">
+    <Box maw={700}>
+      <Group justify="space-between" align="center" mb="md">
         <Group gap="sm">
           <Title order={2} c="blue.8" fw={500}>
             Notifications
           </Title>
           {localUnreadCount > 0 && (
-            <Badge color="red" variant="filled" size="lg">
-              {localUnreadCount} unread
+            <Badge color="red" variant="filled" size="sm" radius="xl">
+              {localUnreadCount}
             </Badge>
           )}
         </Group>
         {localUnreadCount > 0 && (
           <Button
-            variant="light"
-            size="sm"
-            leftSection={<IconChecks size={16} />}
+            variant="subtle"
+            size="xs"
+            leftSection={<IconChecks size={14} />}
             onClick={handleMarkAllAsRead}
           >
-            Mark all as read
+            Mark all read
           </Button>
         )}
       </Group>
@@ -223,105 +223,152 @@ export default function NotificationsPage() {
           <Loader size="lg" />
         </Center>
       ) : notificationsList.length === 0 ? (
-        <Paper p="xl" radius="md" withBorder>
-          <Center py="xl">
-            <Stack align="center" gap="md">
-              <IconBell size={48} color="var(--mantine-color-dimmed)" />
-              <Text c="dimmed" ta="center">
-                No notifications yet
-              </Text>
-              <Text size="sm" c="dimmed" ta="center">
-                When someone follows you or reviews your band, you'll see it here.
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
-      ) : (
-        <Stack gap="xs">
-          {notificationsList.map((notification) => (
-            <Paper
-              key={notification.id}
-              p="md"
-              radius="md"
-              withBorder
+        <Center py="xl">
+          <Stack align="center" gap="md">
+            <Box
               style={{
-                backgroundColor: notification.read
-                  ? undefined
-                  : 'var(--mantine-color-blue-light)',
-                borderColor: notification.read
-                  ? undefined
-                  : 'var(--mantine-color-blue-4)',
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                backgroundColor: 'var(--mantine-color-gray-1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Group justify="space-between" align="flex-start" wrap="nowrap">
-                <Group gap="md" wrap="nowrap" style={{ flex: 1 }}>
-                  <Link href={`/users/${notification.actor.username}`}>
-                    <ProfilePhoto
-                      src={notification.actor.profile_image_url}
-                      fallback={notification.actor.username}
-                      size={48}
-                    />
-                  </Link>
+              <IconBell size={36} color="var(--mantine-color-gray-5)" />
+            </Box>
+            <Text c="dimmed" ta="center" fw={500}>
+              No notifications yet
+            </Text>
+            <Text size="sm" c="dimmed" ta="center" maw={300}>
+              When someone follows you or interacts with your content, you'll see it here.
+            </Text>
+          </Stack>
+        </Center>
+      ) : (
+        <Stack gap={0}>
+          {notificationsList.map((notification, index) => (
+            <Box
+              key={notification.id}
+              component={Link}
+              href={getNotificationLink(notification)}
+              py="md"
+              px="sm"
+              style={{
+                display: 'block',
+                textDecoration: 'none',
+                color: 'inherit',
+                borderBottom:
+                  index < notificationsList.length - 1
+                    ? '1px solid var(--mantine-color-gray-2)'
+                    : 'none',
+                backgroundColor: notification.read
+                  ? 'transparent'
+                  : 'var(--mantine-color-grape-0)',
+                borderRadius: 'var(--mantine-radius-md)',
+                marginBottom: index < notificationsList.length - 1 ? 4 : 0,
+                transition: 'background-color 150ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = notification.read
+                  ? 'var(--mantine-color-gray-0)'
+                  : 'var(--mantine-color-grape-1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = notification.read
+                  ? 'transparent'
+                  : 'var(--mantine-color-grape-0)';
+              }}
+            >
+              <Group gap="md" wrap="nowrap" align="flex-start">
+                <Box pos="relative">
+                  <ProfilePhoto
+                    src={notification.actor.profile_image_url}
+                    fallback={notification.actor.username}
+                    size={44}
+                  />
+                  <Box
+                    style={{
+                      position: 'absolute',
+                      bottom: -4,
+                      right: -4,
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor:
+                        getNotificationType(notification) === 'new_follower'
+                          ? 'var(--mantine-color-grape-6)'
+                          : 'var(--mantine-color-blue-6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid white',
+                    }}
+                  >
+                    {getNotificationType(notification) === 'new_follower' ? (
+                      <IconUserPlus size={12} color="white" />
+                    ) : (
+                      <IconMusic size={12} color="white" />
+                    )}
+                  </Box>
+                </Box>
 
-                  <Stack gap={4} style={{ flex: 1 }}>
-                    <Group gap="xs">
-                      <Badge
-                        variant="light"
-                        color={getNotificationColor(notification)}
-                        size="sm"
-                        leftSection={getNotificationIcon(getNotificationType(notification))}
-                      >
-                        {getNotificationLabel(notification)}
-                      </Badge>
-                      <Text size="xs" c="dimmed">
-                        {formatTimeAgo(notification.created_at)}
+                <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="sm" fw={notification.read ? 400 : 600} lineClamp={2}>
+                    <Text span fw={600} c="dark">
+                      @{notification.actor.username}
+                    </Text>{' '}
+                    <Text span c={notification.read ? 'dimmed' : 'dark'}>
+                      {getNotificationType(notification) === 'new_follower'
+                        ? 'started following you'
+                        : 'posted a new recommendation'}
+                    </Text>
+                  </Text>
+
+                  {getNotificationType(notification) === 'new_review' &&
+                    (notification.song_name || notification.band_name) && (
+                      <Text size="xs" c="dimmed" lineClamp={1}>
+                        {notification.song_name && `"${notification.song_name}"`}
+                        {notification.song_name && notification.band_name && ' by '}
+                        {notification.band_name}
                       </Text>
-                    </Group>
+                    )}
 
-                    <Link
-                      href={getNotificationLink(notification)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
-                    >
-                      <Text size="sm" fw={notification.read ? 400 : 500}>
-                        {notification.message}
-                      </Text>
-                    </Link>
-
-                    {getNotificationType(notification) === 'new_review' &&
-                      (notification.song_name || notification.band_name) && (
-                        <Text size="xs" c="dimmed">
-                          {notification.song_name && `"${notification.song_name}"`}
-                          {notification.song_name && notification.band_name && ' by '}
-                          {notification.band_name}
-                        </Text>
-                      )}
-                  </Stack>
-                </Group>
+                  <Text size="xs" c="dimmed">
+                    {formatTimeAgo(notification.created_at)}
+                  </Text>
+                </Stack>
 
                 {!notification.read && (
                   <Tooltip label="Mark as read">
                     <ActionIcon
                       variant="subtle"
-                      color="blue"
-                      onClick={() => handleMarkAsRead(notification.id)}
+                      color="grape"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMarkAsRead(notification.id);
+                      }}
                     >
-                      <IconCheck size={18} />
+                      <IconCheck size={16} />
                     </ActionIcon>
                   </Tooltip>
                 )}
               </Group>
-            </Paper>
+            </Box>
           ))}
 
           {currentPage < totalPages && (
-            <Center mt="md">
-              <Button variant="light" onClick={handleLoadMore} loading={loadingMore}>
+            <Center mt="lg">
+              <Button variant="light" size="sm" onClick={handleLoadMore} loading={loadingMore}>
                 Load More
               </Button>
             </Center>
           )}
         </Stack>
       )}
-    </>
+    </Box>
   );
 }

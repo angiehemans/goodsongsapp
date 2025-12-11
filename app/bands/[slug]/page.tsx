@@ -99,7 +99,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
         <Flex p="md" direction="column" gap="sm" className={styles.bandBackground}>
           <Group align="center">
             <ProfilePhoto
-              src={band.profile_picture_url}
+              src={band.profile_picture_url || band.spotify_image_url}
               alt={band.name}
               size={72}
               fallback={band.name}

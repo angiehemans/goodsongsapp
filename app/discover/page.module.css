@@ -2,23 +2,72 @@
   min-height: 100vh;
 }
 
-.searchInput {
-  width: 250px;
+.content {
+  min-height: 100vh;
+  flex-direction: row;
 }
 
-@media (max-width: 576px) {
-  .searchInput {
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+  }
+}
+
+.sidebar {
+  width: 300px;
+  position: relative;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(/cloud-bg2.png);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
     width: 100%;
   }
 }
 
+.menu {
+  flex-direction: column;
+}
+
+.menuButton {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .menu {
+    flex-direction: row;
+  }
+
+  .menuButton {
+    flex: 1;
+    justify-content: center !important;
+  }
+}
+
 .card {
-  height: 100%;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
   cursor: pointer;
+  border-radius: 4px;
+  font-family: var(--mantine-font-family-headings);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--mantine-shadow-md);
+  background-color: var(--mantine-color-grape-2);
 }

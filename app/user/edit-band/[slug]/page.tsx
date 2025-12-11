@@ -166,9 +166,9 @@ export default function EditBandPage() {
 
         <Paper p="lg" radius="md">
           <Group mb="lg">
-            {band?.profile_picture_url ? (
+            {band?.profile_picture_url || band?.spotify_image_url ? (
               <img
-                src={fixImageUrl(band.profile_picture_url)}
+                src={fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
                 alt={band.name}
                 style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover' }}
               />

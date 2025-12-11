@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { IconMessage, IconMusic, IconSearch, IconUsers } from '@tabler/icons-react';
 import {
   Badge,
+  Box,
   Button,
-  Card,
   Center,
   Container,
-  Grid,
-  Group,
+  Flex,
   Loader,
-  SegmentedControl,
   Stack,
   Text,
   TextInput,
@@ -188,57 +186,60 @@ export default function DiscoverPage() {
     <Container p={0} fluid className={styles.container}>
       <Header logoHref="/user/dashboard" />
 
-      <Container size="lg" py="md">
-        <Stack gap="md">
-          <Title order={1} c="blue.8">
+      <Flex className={styles.content}>
+        {/* Sidebar */}
+        <Box className={styles.sidebar} p="md">
+          <Title order={2} c="blue.8" fw={500} mb="md">
             Discover
           </Title>
 
-          <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
-            <SegmentedControl
-              value={activeTab}
-              onChange={setActiveTab}
-              data={[
-                {
-                  label: (
-                    <Group gap="xs">
-                      <IconUsers size={16} />
-                      <span>Users</span>
-                    </Group>
-                  ),
-                  value: 'users',
-                },
-                {
-                  label: (
-                    <Group gap="xs">
-                      <IconMusic size={16} />
-                      <span>Bands</span>
-                    </Group>
-                  ),
-                  value: 'bands',
-                },
-                {
-                  label: (
-                    <Group gap="xs">
-                      <IconMessage size={16} />
-                      <span>Reviews</span>
-                    </Group>
-                  ),
-                  value: 'reviews',
-                },
-              ]}
-            />
+          <Flex className={styles.menu} gap={4}>
+            <Button
+              variant={activeTab === 'users' ? 'light' : 'subtle'}
+              size="sm"
+              leftSection={<IconUsers size={16} />}
+              className={styles.menuButton}
+              justify="flex-start"
+              onClick={() => setActiveTab('users')}
+            >
+              Users
+            </Button>
+            <Button
+              variant={activeTab === 'bands' ? 'light' : 'subtle'}
+              size="sm"
+              leftSection={<IconMusic size={16} />}
+              className={styles.menuButton}
+              justify="flex-start"
+              onClick={() => setActiveTab('bands')}
+            >
+              Bands
+            </Button>
+            <Button
+              variant={activeTab === 'reviews' ? 'light' : 'subtle'}
+              size="sm"
+              leftSection={<IconMessage size={16} />}
+              className={styles.menuButton}
+              justify="flex-start"
+              onClick={() => setActiveTab('reviews')}
+            >
+              Reviews
+            </Button>
+          </Flex>
+        </Box>
 
+        {/* Main Content */}
+        <Flex direction="column" px="md" pb="lg" flex={1}>
+          <Box maw={700} w="100%">
             <TextInput
               placeholder="Search..."
               leftSection={<IconSearch size={16} />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
+              my="md"
             />
-          </Group>
 
-          {initialLoading ? (
+            {initialLoading ? (
             <Center py="xl">
               <Loader size="lg" />
             </Center>
@@ -263,47 +264,42 @@ export default function DiscoverPage() {
                   </Stack>
                 </Center>
               ) : (
-                <Stack gap="md">
-                  <Grid>
-                    {filteredUsers
-                      .filter((user) => user.username)
-                      .map((user) => (
-                        <Grid.Col key={user.id} span={{ base: 12, xs: 6, sm: 4, md: 3 }}>
-                          <Card
-                            component={Link}
-                            href={`/users/${user.username}`}
-                            padding="md"
-                            radius="md"
-                            className={styles.card}
-                          >
-                            <Stack align="center" gap="sm">
-                              <ProfilePhoto
-                                src={user.profile_image_url}
-                                alt={user.username || 'User'}
-                                size={80}
-                                fallback={user.username || 'U'}
-                              />
-                              <Stack gap={4} align="center">
-                                <Text fw={500} ta="center">
-                                  @{user.username}
-                                </Text>
-                                {(user.city || user.region) && (
-                                  <Text size="xs" c="dimmed" ta="center">
-                                    {[user.city, user.region].filter(Boolean).join(', ')}
-                                  </Text>
-                                )}
-                              </Stack>
-                              {user.reviews && user.reviews.length > 0 && (
-                                <Badge size="sm" variant="light" color="grape">
-                                  {user.reviews.length} recommendation
-                                  {user.reviews.length !== 1 ? 's' : ''}
-                                </Badge>
-                              )}
-                            </Stack>
-                          </Card>
-                        </Grid.Col>
-                      ))}
-                  </Grid>
+                <Stack gap={0}>
+                  {filteredUsers
+                    .filter((user) => user.username)
+                    .map((user) => (
+                      <Flex
+                        key={user.id}
+                        component={Link}
+                        href={`/users/${user.username}`}
+                        className={styles.card}
+                        align="center"
+                        gap="md"
+                        p="xs"
+                      >
+                        <ProfilePhoto
+                          src={user.profile_image_url}
+                          alt={user.username || 'User'}
+                          size={40}
+                          fallback={user.username || 'U'}
+                        />
+                        <Stack gap={2} style={{ flex: 1 }}>
+                          <Text fw={500} className={styles.user}>
+                            @{user.username}
+                          </Text>
+                          {(user.location || user.city || user.region) && (
+                            <Text size="xs" c="dimmed">
+                              {user.location || [user.city, user.region].filter(Boolean).join(', ')}
+                            </Text>
+                          )}
+                        </Stack>
+                        {(user.reviews_count ?? 0) > 0 && (
+                          <Badge size="sm" variant="light" color="grape">
+                            {user.reviews_count} rec{user.reviews_count !== 1 ? 's' : ''}
+                          </Badge>
+                        )}
+                      </Flex>
+                    ))}
 
                   {!debouncedSearch && usersMeta && usersPage < usersMeta.total_pages && (
                     <Center>
@@ -327,47 +323,43 @@ export default function DiscoverPage() {
                   </Stack>
                 </Center>
               ) : (
-                <Stack gap="md">
-                  <Grid>
-                    {filteredBands
-                      .filter((band) => band.name && band.slug)
-                      .map((band) => (
-                        <Grid.Col key={band.id} span={{ base: 12, xs: 6, sm: 4, md: 3 }}>
-                          <Card
-                            component={Link}
-                            href={`/bands/${band.slug}`}
-                            padding="md"
-                            radius="md"
-                            className={styles.card}
-                          >
-                            <Stack align="center" gap="sm">
-                              <ProfilePhoto
-                                src={band.profile_picture_url}
-                                alt={band.name || 'Band'}
-                                size={80}
-                                fallback={band.name || 'B'}
-                              />
-                              <Stack gap={4} align="center">
-                                <Text fw={500} ta="center">
-                                  {band.name}
-                                </Text>
-                                {(band.city || band.region) && (
-                                  <Text size="xs" c="dimmed" ta="center">
-                                    {[band.city, band.region].filter(Boolean).join(', ')}
-                                  </Text>
-                                )}
-                              </Stack>
-                              {band.reviews && band.reviews.length > 0 && (
-                                <Badge size="sm" variant="light" color="grape">
-                                  {band.reviews.length} recommendation
-                                  {band.reviews.length !== 1 ? 's' : ''}
-                                </Badge>
-                              )}
-                            </Stack>
-                          </Card>
-                        </Grid.Col>
-                      ))}
-                  </Grid>
+                <Stack gap={0}>
+                  {filteredBands
+                    .filter((band) => band.name && band.slug)
+                    .map((band) => (
+                      <Flex
+                        key={band.id}
+                        component={Link}
+                        href={`/bands/${band.slug}`}
+                        className={styles.card}
+                        align="center"
+                        gap="md"
+                        p="xs"
+                      >
+                        <ProfilePhoto
+                          src={band.profile_picture_url || band.spotify_image_url}
+                          alt={band.name || 'Band'}
+                          size={40}
+                          fallback={band.name || 'B'}
+                        />
+                        <Stack gap={2} style={{ flex: 1 }}>
+                          <Text fw={500} className={styles.user}>
+                            {band.name}
+                          </Text>
+                          {(band.location || band.city || band.region) && (
+                            <Text size="xs" c="dimmed">
+                              {band.location || [band.city, band.region].filter(Boolean).join(', ')}
+                            </Text>
+                          )}
+                        </Stack>
+                        {(band.reviews_count > 0 || (band.reviews && band.reviews.length > 0)) && (
+                          <Badge size="sm" variant="light" color="grape">
+                            {band.reviews_count || band.reviews?.length} rec
+                            {(band.reviews_count || band.reviews?.length) !== 1 ? 's' : ''}
+                          </Badge>
+                        )}
+                      </Flex>
+                    ))}
 
                   {!debouncedSearch && bandsMeta && bandsPage < bandsMeta.total_pages && (
                     <Center>
@@ -413,8 +405,9 @@ export default function DiscoverPage() {
               )}
             </div>
           )}
-        </Stack>
-      </Container>
+          </Box>
+        </Flex>
+      </Flex>
     </Container>
   );
 }
