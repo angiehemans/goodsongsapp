@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   IconBrandSpotify,
@@ -10,7 +11,6 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import {
-  Avatar,
   Badge,
   Box,
   Button,
@@ -27,20 +27,23 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
+import styles from './page.module.css';
 
 export default function HomePage() {
   return (
     <Box>
       {/* Top Menu Bar */}
-      <Box bg="grape.0" p="md" style={{ borderBottom: '2px solid var(--mantine-color-grape-3)' }}>
+      <Box className={styles.header} p="md">
         <Container size="lg">
           <Group justify="space-between" align="center">
-            <Group align="center">
-              <IconMusic size={32} color="var(--mantine-color-grape-9)" />
-              <Title order={2} c="grape.9">
-                Goodsongs
-              </Title>
-            </Group>
+            <Link href="/" className={styles.headerLink}>
+              <Group gap="xs" align="center">
+                <Image src="/logo.svg" alt="goodsongs" width={28} height={28} />
+                <Title order={2} c="blue.9">
+                  goodsongs
+                </Title>
+              </Group>
+            </Link>
             <Group>
               <Button component={Link} href="/login" variant="outline" size="md" color="grape">
                 Sign In
@@ -54,10 +57,7 @@ export default function HomePage() {
       </Box>
 
       {/* Hero Section */}
-      <Box
-        bg="linear-gradient(135deg, var(--mantine-color-grape-1) 0%, var(--mantine-color-violet-1) 100%)"
-        py={80}
-      >
+      <Box className={styles.hero} py={80}>
         <Container size="lg">
           <Grid align="center">
             <GridCol span={{ base: 12, md: 6 }}>
@@ -69,9 +69,9 @@ export default function HomePage() {
                     Amplified
                   </Text>
                 </Title>
-                <Text size="xl" c="dimmed" lh={1.6}>
-                  Connect your Spotify, discover new bands, share recommendations, and build your musical
-                  identity. Join a community of music lovers sharing their favorite songs.
+                <Text size="xl" lh={1.6}>
+                  Connect your Spotify, discover new bands, share recommendations, and build your
+                  musical identity. Join a community of music lovers sharing their favorite songs.
                 </Text>
                 <Group>
                   <Button
@@ -90,23 +90,7 @@ export default function HomePage() {
               </Stack>
             </GridCol>
             <GridCol span={{ base: 12, md: 6 }}>
-              <Center>
-                <Box pos="relative">
-                  <ThemeIcon size={200} radius="xl" color="grape.1" variant="light">
-                    <IconMusic size={100} color="var(--mantine-color-grape-7)" />
-                  </ThemeIcon>
-                  <Box pos="absolute" top={-20} right={-20}>
-                    <ThemeIcon size={60} radius="xl" color="green">
-                      <IconBrandSpotify size={30} />
-                    </ThemeIcon>
-                  </Box>
-                  <Box pos="absolute" bottom={-10} left={-10}>
-                    <ThemeIcon size={50} radius="xl" color="violet.6">
-                      <IconStar size={25} />
-                    </ThemeIcon>
-                  </Box>
-                </Box>
-              </Center>
+              <Center></Center>
             </GridCol>
           </Grid>
         </Container>
@@ -154,8 +138,8 @@ export default function HomePage() {
               Share Recommendations
             </Title>
             <Text c="dimmed" lh={1.6}>
-              Share your favorite songs with the community. Highlight what you love and
-              help others discover great music.
+              Share your favorite songs with the community. Highlight what you love and help others
+              discover great music.
             </Text>
           </Card>
 
@@ -205,8 +189,8 @@ export default function HomePage() {
               Build Your Profile
             </Title>
             <Text c="dimmed" lh={1.6}>
-              Create a musical identity that reflects your taste. Show off your recommendations, bands, and
-              favorite discoveries.
+              Create a musical identity that reflects your taste. Show off your recommendations,
+              bands, and favorite discoveries.
             </Text>
           </Card>
 
@@ -242,63 +226,115 @@ export default function HomePage() {
           </Stack>
 
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
-            <Paper p="xl" radius="md" style={{ border: '2px solid var(--mantine-color-grape-3)' }}>
-              <Group mb="md">
-                <Avatar size="md" color="blue">
-                  MJ
-                </Avatar>
-                <div>
-                  <Text fw={600}>musicjunkie92</Text>
-                </div>
-              </Group>
-              <Title order={4} mb="xs">
-                Bohemian Rhapsody - Queen
-              </Title>
-              <Text c="dimmed" mb="md">
-                "This song is an absolute masterpiece. The way it transitions between different
-                musical styles is incredible. Freddie's vocals are otherworldly..."
-              </Text>
-              <Group gap="xs">
-                <Badge size="sm" variant="light" color="grape">
-                  Vocals
-                </Badge>
-                <Badge size="sm" variant="light" color="violet">
-                  Creativity
-                </Badge>
-                <Badge size="sm" variant="light" color="blue">
-                  Production
-                </Badge>
-              </Group>
-            </Paper>
+            {/* Sample Review 1 */}
+            <Card p="md" bd="0" bg="grape.2" radius="md">
+              <Stack gap="sm">
+                <Group gap="sm" pb="sm" className={styles.userInfo}>
+                  <Box
+                    className={styles.avatar}
+                    style={{ backgroundColor: 'var(--mantine-color-blue-6)' }}
+                  >
+                    MJ
+                  </Box>
+                  <Text size="sm" fw={500} c="grape.6">
+                    @musicjunkie92
+                  </Text>
+                </Group>
 
-            <Paper p="xl" radius="md" style={{ border: '2px solid var(--mantine-color-violet-3)' }}>
-              <Group mb="md">
-                <Avatar size="md" color="green">
-                  AL
-                </Avatar>
-                <div>
-                  <Text fw={600}>alexlistens</Text>
-                </div>
-              </Group>
-              <Title order={4} mb="xs">
-                Blinding Lights - The Weeknd
-              </Title>
-              <Text c="dimmed" mb="md">
-                "Perfect blend of retro and modern. The synths take me back to the 80s but with a
-                fresh twist. Can't stop playing this on repeat!"
-              </Text>
-              <Group gap="xs">
-                <Badge size="sm" variant="light" color="green">
-                  Beat
-                </Badge>
-                <Badge size="sm" variant="light" color="orange">
-                  Energy
-                </Badge>
-                <Badge size="sm" variant="light" color="pink">
-                  Melody
-                </Badge>
-              </Group>
-            </Paper>
+                <Group gap="sm" justify="space-between" align="flex-start">
+                  <Group gap="sm">
+                    <Box
+                      className={styles.artwork}
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(135deg, var(--mantine-color-grape-4), var(--mantine-color-violet-5))',
+                      }}
+                    />
+                    <Stack gap={2}>
+                      <Text size="md" fw={500} c="gray.9">
+                        Bohemian Rhapsody
+                      </Text>
+                      <Text size="sm" c="grape.6">
+                        Queen
+                      </Text>
+                    </Stack>
+                  </Group>
+                  <IconBrandSpotify size={24} color="var(--mantine-color-green-6)" />
+                </Group>
+
+                <Text size="sm" c="dark">
+                  This song is an absolute masterpiece. The way it transitions between different
+                  musical styles is incredible. Freddie's vocals are otherworldly...
+                </Text>
+
+                <Group gap="xs">
+                  <Badge size="sm" variant="light" color="grape">
+                    Vocals
+                  </Badge>
+                  <Badge size="sm" variant="light" color="grape">
+                    Creativity
+                  </Badge>
+                  <Badge size="sm" variant="light" color="grape">
+                    Production
+                  </Badge>
+                </Group>
+              </Stack>
+            </Card>
+
+            {/* Sample Review 2 */}
+            <Card p="md" bd="0" bg="grape.2" radius="md">
+              <Stack gap="sm">
+                <Group gap="sm" pb="sm" className={styles.userInfo}>
+                  <Box
+                    className={styles.avatar}
+                    style={{ backgroundColor: 'var(--mantine-color-green-6)' }}
+                  >
+                    AL
+                  </Box>
+                  <Text size="sm" fw={500} c="grape.6">
+                    @alexlistens
+                  </Text>
+                </Group>
+
+                <Group gap="sm" justify="space-between" align="flex-start">
+                  <Group gap="sm">
+                    <Box
+                      className={styles.artwork}
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(135deg, var(--mantine-color-orange-4), var(--mantine-color-red-5))',
+                      }}
+                    />
+                    <Stack gap={2}>
+                      <Text size="md" fw={500} c="gray.9">
+                        Blinding Lights
+                      </Text>
+                      <Text size="sm" c="grape.6">
+                        The Weeknd
+                      </Text>
+                    </Stack>
+                  </Group>
+                  <IconBrandSpotify size={24} color="var(--mantine-color-green-6)" />
+                </Group>
+
+                <Text size="sm" c="dark">
+                  Perfect blend of retro and modern. The synths take me back to the 80s but with a
+                  fresh twist. Can't stop playing this on repeat!
+                </Text>
+
+                <Group gap="xs">
+                  <Badge size="sm" variant="light" color="grape">
+                    Beat
+                  </Badge>
+                  <Badge size="sm" variant="light" color="grape">
+                    Energy
+                  </Badge>
+                  <Badge size="sm" variant="light" color="grape">
+                    Melody
+                  </Badge>
+                </Group>
+              </Stack>
+            </Card>
           </SimpleGrid>
         </Container>
       </Box>

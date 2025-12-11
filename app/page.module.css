@@ -1,0 +1,49 @@
+.header {
+  background-color: var(--mantine-color-grape-0);
+  border-bottom: 2px solid var(--mantine-color-grape-3);
+}
+
+.headerLink {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hero {
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(/clouds-landscape.webp);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+  z-index: -1;
+}
+
+.userInfo {
+  border-bottom: 2px solid var(--mantine-color-grape-3);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.artwork {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+}
