@@ -23,9 +23,10 @@ export async function generateMetadata({
         description: 'The requested user profile could not be found.',
       };
     }
+    const reviewsCount = profile.reviews?.length ?? profile.reviews_count ?? 0;
     return {
       title: `@${profile.username} - Goodsongs`,
-      description: `View @${profile.username}'s music recommendations on Goodsongs. ${profile.reviews.length} recommendation${profile.reviews.length !== 1 ? 's' : ''} shared.`,
+      description: `View @${profile.username}'s music recommendations on Goodsongs. ${reviewsCount} recommendation${reviewsCount !== 1 ? 's' : ''} shared.`,
     };
   } catch {
     return {
