@@ -100,7 +100,7 @@ export default async function UserProfilePage({
               Recommendations
             </Title>
 
-            {profile.reviews.length === 0 ? (
+            {!profile.reviews || profile.reviews.length === 0 ? (
               <Paper p="lg" radius="md">
                 <Center py="xl">
                   <Stack align="center">
