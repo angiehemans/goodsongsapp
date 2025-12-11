@@ -99,7 +99,8 @@ export function UserProfileSidebar({
       )}
       <Group gap="xs">
         <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
-          {profile.reviews.length} recommendation{profile.reviews.length !== 1 ? 's' : ''}
+          {profile.reviews?.length ?? profile.reviews_count ?? 0} recommendation
+          {(profile.reviews?.length ?? profile.reviews_count ?? 0) !== 1 ? 's' : ''}
         </Badge>
         {profile.followers_count !== undefined && (
           <Badge color="blue" variant="light" fw="500" tt="capitalize" bg="blue.1">
