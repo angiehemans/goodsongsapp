@@ -2,6 +2,13 @@
   min-height: 100vh;
 }
 
+@media (max-width: 768px) {
+  .container {
+    /* Add padding at bottom for mobile nav */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+}
+
 .userInfo {
   border-bottom: 2px solid var(--mantine-color-grape-3);
 }

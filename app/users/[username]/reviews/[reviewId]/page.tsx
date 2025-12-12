@@ -108,7 +108,7 @@ export default function SingleReviewPage() {
   if (loading) {
     return (
       <Container p={0} fluid className={styles.container}>
-        <Header />
+        <Header showBackButton />
         <Center py="xl">
           <Loader size="lg" />
         </Center>
@@ -119,7 +119,7 @@ export default function SingleReviewPage() {
   if (error || !review) {
     return (
       <Container p={0} fluid className={styles.container}>
-        <Header />
+        <Header showBackButton />
         <Container size="sm" py="xl">
           <Center>
             <Stack align="center" gap="md">
@@ -146,7 +146,7 @@ export default function SingleReviewPage() {
 
   return (
     <Container p={0} fluid className={styles.container}>
-      <Header />
+      <Header showBackButton />
 
       <Container size="sm" py="md">
         <Stack gap="md">

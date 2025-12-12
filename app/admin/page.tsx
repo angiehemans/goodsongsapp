@@ -12,6 +12,7 @@ import {
 import {
   Avatar,
   Badge,
+  Box,
   Button,
   Card,
   Center,
@@ -29,9 +30,11 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
+import { Header } from '@/components/Header/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Band, Review, User } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
+import styles from './page.module.css';
 
 export default function AdminDashboardPage() {
   const { user, isLoading, isOnboardingComplete, isAdmin } = useAuth();
@@ -193,11 +196,12 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <Container>
+      <Box className={styles.container}>
+        <Header showBackButton />
         <Center py="xl">
           <Loader size="lg" />
         </Center>
-      </Container>
+      </Box>
     );
   }
 
@@ -219,68 +223,70 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="xl">
-        {/* Header */}
-        <Paper p="lg" radius="md">
-          <Group justify="space-between" align="center">
-            <div>
-              <Title order={2}>Admin Dashboard</Title>
-              <Text size="sm" c="dimmed">
-                Manage users, bands, and reviews
-              </Text>
-            </div>
-            <Badge color="red" size="lg">
-              Admin
-            </Badge>
-          </Group>
-        </Paper>
+    <Box className={styles.container}>
+      <Header showBackButton />
+      <Container size="lg" className={styles.content}>
+        <Stack gap="xl">
+          {/* Page Header */}
+          <Paper p="lg" radius="md">
+            <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+              <div>
+                <Title order={2}>Admin Dashboard</Title>
+                <Text size="sm" c="dimmed">
+                  Manage users, bands, and reviews
+                </Text>
+              </div>
+              <Badge color="red" size="lg">
+                Admin
+              </Badge>
+            </Group>
+          </Paper>
 
-        {/* Stats */}
-        <Group grow>
-          <Card p="lg" radius="md">
-            <Group>
-              <IconUsers size={32} color="var(--mantine-color-blue-6)" />
-              <div>
-                <Text size="xl" fw={700}>
-                  {users.length}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  Total Users
-                </Text>
-              </div>
-            </Group>
-          </Card>
-          <Card p="lg" radius="md">
-            <Group>
-              <IconMicrophone2 size={32} color="var(--mantine-color-grape-6)" />
-              <div>
-                <Text size="xl" fw={700}>
-                  {bands.length}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  Total Bands
-                </Text>
-              </div>
-            </Group>
-          </Card>
-          <Card p="lg" radius="md">
-            <Group>
-              <IconMessage size={32} color="var(--mantine-color-teal-6)" />
-              <div>
-                <Text size="xl" fw={700}>
-                  {reviews.length}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  Total Reviews
-                </Text>
-              </div>
-            </Group>
-          </Card>
-        </Group>
+          {/* Stats */}
+          <div className={styles.statsGrid}>
+            <Card p="lg" radius="md">
+              <Group>
+                <IconUsers size={32} color="var(--mantine-color-blue-6)" />
+                <div>
+                  <Text size="xl" fw={700}>
+                    {users.length}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Total Users
+                  </Text>
+                </div>
+              </Group>
+            </Card>
+            <Card p="lg" radius="md">
+              <Group>
+                <IconMicrophone2 size={32} color="var(--mantine-color-grape-6)" />
+                <div>
+                  <Text size="xl" fw={700}>
+                    {bands.length}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Total Bands
+                  </Text>
+                </div>
+              </Group>
+            </Card>
+            <Card p="lg" radius="md">
+              <Group>
+                <IconMessage size={32} color="var(--mantine-color-teal-6)" />
+                <div>
+                  <Text size="xl" fw={700}>
+                    {reviews.length}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Total Reviews
+                  </Text>
+                </div>
+              </Group>
+            </Card>
+          </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onChange={setActiveTab}>
+          {/* Tabs */}
+          <Tabs value={activeTab} onChange={setActiveTab} className={styles.tabs}>
           <Tabs.List>
             <Tabs.Tab value="users" leftSection={<IconUsers size={16} />}>
               Users ({users.length})
@@ -312,110 +318,112 @@ export default function AdminDashboardPage() {
               </Paper>
             ) : (
               <Paper radius="md" withBorder>
-                <Table striped highlightOnHover>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>User</Table.Th>
-                      <Table.Th>Email</Table.Th>
-                      <Table.Th>Account Type</Table.Th>
-                      <Table.Th>Reviews</Table.Th>
-                      <Table.Th>Onboarding</Table.Th>
-                      <Table.Th>Status</Table.Th>
-                      <Table.Th>Actions</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {users.map((u) => (
-                      <Table.Tr key={u.id}>
-                        <Table.Td>
-                          <Group gap="sm">
-                            <Avatar
-                              size="sm"
-                              src={fixImageUrl(u.profile_image_url)}
-                              color="grape"
-                            >
-                              {u.username?.charAt(0).toUpperCase() || u.email.charAt(0).toUpperCase()}
-                            </Avatar>
-                            {u.username ? (
-                              <Text
-                                component={Link}
-                                href={`/users/${u.username}`}
-                                size="sm"
-                                c="grape.6"
-                                style={{ textDecoration: 'none' }}
-                              >
-                                {u.username}
-                              </Text>
-                            ) : (
-                              <Text size="sm" c="dimmed">
-                                No username
-                              </Text>
-                            )}
-                          </Group>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm">{u.email}</Text>
-                        </Table.Td>
-                        <Table.Td>{getAccountTypeBadge(u.account_type)}</Table.Td>
-                        <Table.Td>
-                          <Badge variant="light" color="grape">
-                            {u.reviews_count || 0}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td>
-                          {u.onboarding_completed ? (
-                            <Badge color="green" variant="light">
-                              Complete
-                            </Badge>
-                          ) : (
-                            <Badge color="yellow" variant="light">
-                              Incomplete
-                            </Badge>
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          {u.admin ? (
-                            <Badge color="blue" variant="light">
-                              Admin
-                            </Badge>
-                          ) : (
-                            <Switch
-                              checked={!u.disabled}
-                              onChange={() => handleToggleUserDisabled(u.id, u.username)}
-                              disabled={togglingUserId === u.id}
-                              label={u.disabled ? 'Disabled' : 'Active'}
-                              color="green"
-                              size="sm"
-                            />
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          <Group gap="xs">
-                            <Button
-                              component={Link}
-                              href={`/admin/users/${u.id}`}
-                              variant="light"
-                              size="xs"
-                            >
-                              View
-                            </Button>
-                            {!u.admin && u.id !== user.id && (
-                              <Button
-                                variant="light"
-                                color="red"
-                                size="xs"
-                                leftSection={<IconTrash size={14} />}
-                                onClick={() => handleDeleteClick('user', u.id, u.username || u.email)}
-                              >
-                                Delete
-                              </Button>
-                            )}
-                          </Group>
-                        </Table.Td>
+                <div className={styles.tableWrapper}>
+                  <Table striped highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>User</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Email</Table.Th>
+                        <Table.Th>Account Type</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Reviews</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Onboarding</Table.Th>
+                        <Table.Th>Status</Table.Th>
+                        <Table.Th>Actions</Table.Th>
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {users.map((u) => (
+                        <Table.Tr key={u.id}>
+                          <Table.Td>
+                            <Group gap="sm">
+                              <Avatar
+                                size="sm"
+                                src={fixImageUrl(u.profile_image_url)}
+                                color="grape"
+                              >
+                                {u.username?.charAt(0).toUpperCase() || u.email.charAt(0).toUpperCase()}
+                              </Avatar>
+                              {u.username ? (
+                                <Text
+                                  component={Link}
+                                  href={`/users/${u.username}`}
+                                  size="sm"
+                                  c="grape.6"
+                                  style={{ textDecoration: 'none' }}
+                                >
+                                  {u.username}
+                                </Text>
+                              ) : (
+                                <Text size="sm" c="dimmed">
+                                  No username
+                                </Text>
+                              )}
+                            </Group>
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            <Text size="sm">{u.email}</Text>
+                          </Table.Td>
+                          <Table.Td>{getAccountTypeBadge(u.account_type)}</Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            <Badge variant="light" color="grape">
+                              {u.reviews_count || 0}
+                            </Badge>
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            {u.onboarding_completed ? (
+                              <Badge color="green" variant="light">
+                                Complete
+                              </Badge>
+                            ) : (
+                              <Badge color="yellow" variant="light">
+                                Incomplete
+                              </Badge>
+                            )}
+                          </Table.Td>
+                          <Table.Td>
+                            {u.admin ? (
+                              <Badge color="blue" variant="light">
+                                Admin
+                              </Badge>
+                            ) : (
+                              <Switch
+                                checked={!u.disabled}
+                                onChange={() => handleToggleUserDisabled(u.id, u.username)}
+                                disabled={togglingUserId === u.id}
+                                label={u.disabled ? 'Disabled' : 'Active'}
+                                color="green"
+                                size="sm"
+                              />
+                            )}
+                          </Table.Td>
+                          <Table.Td>
+                            <Group gap="xs">
+                              <Button
+                                component={Link}
+                                href={`/admin/users/${u.id}`}
+                                variant="light"
+                                size="xs"
+                              >
+                                View
+                              </Button>
+                              {!u.admin && u.id !== user.id && (
+                                <Button
+                                  variant="light"
+                                  color="red"
+                                  size="xs"
+                                  leftSection={<IconTrash size={14} />}
+                                  onClick={() => handleDeleteClick('user', u.id, u.username || u.email)}
+                                >
+                                  Delete
+                                </Button>
+                              )}
+                            </Group>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </div>
               </Paper>
             )}
           </Tabs.Panel>
@@ -439,98 +447,100 @@ export default function AdminDashboardPage() {
               </Paper>
             ) : (
               <Paper radius="md" withBorder>
-                <Table striped highlightOnHover>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Band</Table.Th>
-                      <Table.Th>Location</Table.Th>
-                      <Table.Th>Owner</Table.Th>
-                      <Table.Th>Reviews</Table.Th>
-                      <Table.Th>Status</Table.Th>
-                      <Table.Th>Actions</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {bands.map((band) => (
-                      <Table.Tr key={band.id} style={{ opacity: band.disabled ? 0.6 : 1 }}>
-                        <Table.Td>
-                          <Group gap="sm">
-                            <Avatar
-                              size="sm"
-                              src={fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
-                              color="grape"
-                            >
-                              {band.name?.charAt(0).toUpperCase() || 'B'}
-                            </Avatar>
-                            {band.disabled ? (
-                              <Text size="sm" c="dimmed">
-                                {band.name}
-                              </Text>
-                            ) : (
+                <div className={styles.tableWrapper}>
+                  <Table striped highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Band</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Location</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Owner</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Reviews</Table.Th>
+                        <Table.Th>Status</Table.Th>
+                        <Table.Th>Actions</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {bands.map((band) => (
+                        <Table.Tr key={band.id} style={{ opacity: band.disabled ? 0.6 : 1 }}>
+                          <Table.Td>
+                            <Group gap="sm">
+                              <Avatar
+                                size="sm"
+                                src={fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
+                                color="grape"
+                              >
+                                {band.name?.charAt(0).toUpperCase() || 'B'}
+                              </Avatar>
+                              {band.disabled ? (
+                                <Text size="sm" c="dimmed">
+                                  {band.name}
+                                </Text>
+                              ) : (
+                                <Text
+                                  component={Link}
+                                  href={`/bands/${band.slug}`}
+                                  size="sm"
+                                  c="grape.6"
+                                  style={{ textDecoration: 'none' }}
+                                >
+                                  {band.name}
+                                </Text>
+                              )}
+                            </Group>
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            <Text size="sm" c="dimmed">
+                              {[band.city, band.region].filter(Boolean).join(', ') || band.location || 'Not specified'}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            {band.owner?.username ? (
                               <Text
                                 component={Link}
-                                href={`/bands/${band.slug}`}
+                                href={`/users/${band.owner.username}`}
                                 size="sm"
                                 c="grape.6"
                                 style={{ textDecoration: 'none' }}
                               >
-                                {band.name}
+                                @{band.owner.username}
+                              </Text>
+                            ) : (
+                              <Text size="sm" c="dimmed">
+                                Unknown
                               </Text>
                             )}
-                          </Group>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm" c="dimmed">
-                            {[band.city, band.region].filter(Boolean).join(', ') || band.location || 'Not specified'}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          {band.owner?.username ? (
-                            <Text
-                              component={Link}
-                              href={`/users/${band.owner.username}`}
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            <Badge variant="light" color="grape">
+                              {band.reviews_count || 0} review{band.reviews_count !== 1 ? 's' : ''}
+                            </Badge>
+                          </Table.Td>
+                          <Table.Td>
+                            <Switch
+                              checked={!band.disabled}
+                              onChange={() => handleToggleBandDisabled(band.id, band.name)}
+                              disabled={togglingBandId === band.id}
+                              label={band.disabled ? 'Disabled' : 'Active'}
+                              color="green"
                               size="sm"
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
+                            />
+                          </Table.Td>
+                          <Table.Td>
+                            <Button
+                              variant="light"
+                              color="red"
+                              size="xs"
+                              leftSection={<IconTrash size={14} />}
+                              onClick={() => handleDeleteClick('band', band.id, band.name)}
                             >
-                              @{band.owner.username}
-                            </Text>
-                          ) : (
-                            <Text size="sm" c="dimmed">
-                              Unknown
-                            </Text>
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          <Badge variant="light" color="grape">
-                            {band.reviews_count || 0} review{band.reviews_count !== 1 ? 's' : ''}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td>
-                          <Switch
-                            checked={!band.disabled}
-                            onChange={() => handleToggleBandDisabled(band.id, band.name)}
-                            disabled={togglingBandId === band.id}
-                            label={band.disabled ? 'Disabled' : 'Active'}
-                            color="green"
-                            size="sm"
-                          />
-                        </Table.Td>
-                        <Table.Td>
-                          <Button
-                            variant="light"
-                            color="red"
-                            size="xs"
-                            leftSection={<IconTrash size={14} />}
-                            onClick={() => handleDeleteClick('band', band.id, band.name)}
-                          >
-                            Delete
-                          </Button>
-                        </Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                              Delete
+                            </Button>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </div>
               </Paper>
             )}
           </Tabs.Panel>
@@ -554,94 +564,97 @@ export default function AdminDashboardPage() {
               </Paper>
             ) : (
               <Paper radius="md" withBorder>
-                <Table striped highlightOnHover>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Song</Table.Th>
-                      <Table.Th>Band</Table.Th>
-                      <Table.Th>Author</Table.Th>
-                      <Table.Th>Review</Table.Th>
-                      <Table.Th>Date</Table.Th>
-                      <Table.Th>Actions</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {reviews.map((review) => (
-                      <Table.Tr key={review.id}>
-                        <Table.Td>
-                          <Group gap="sm">
-                            {review.artwork_url && (
-                              <Avatar size="sm" src={review.artwork_url} radius="sm" />
-                            )}
-                            <Text size="sm" lineClamp={1} maw={150}>
-                              {review.song_name}
-                            </Text>
-                          </Group>
-                        </Table.Td>
-                        <Table.Td>
-                          {review.band ? (
-                            <Text
-                              component={Link}
-                              href={`/bands/${review.band.slug}`}
-                              size="sm"
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
-                            >
-                              {review.band.name}
-                            </Text>
-                          ) : (
-                            <Text size="sm" c="dimmed">
-                              {review.band_name}
-                            </Text>
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          {review.author?.username ? (
-                            <Text
-                              component={Link}
-                              href={`/users/${review.author.username}`}
-                              size="sm"
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
-                            >
-                              @{review.author.username}
-                            </Text>
-                          ) : (
-                            <Text size="sm" c="dimmed">
-                              Unknown
-                            </Text>
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm" lineClamp={2} maw={250}>
-                            {review.review_text}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm" c="dimmed">
-                            {new Date(review.created_at).toLocaleDateString()}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Button
-                            variant="light"
-                            color="red"
-                            size="xs"
-                            leftSection={<IconTrash size={14} />}
-                            onClick={() => handleDeleteClick('review', review.id, `"${review.song_name}"`)}
-                          >
-                            Delete
-                          </Button>
-                        </Table.Td>
+                <div className={styles.tableWrapper}>
+                  <Table striped highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Song</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Band</Table.Th>
+                        <Table.Th>Author</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Review</Table.Th>
+                        <Table.Th className={styles.hideOnMobile}>Date</Table.Th>
+                        <Table.Th>Actions</Table.Th>
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {reviews.map((review) => (
+                        <Table.Tr key={review.id}>
+                          <Table.Td>
+                            <Group gap="sm">
+                              {review.artwork_url && (
+                                <Avatar size="sm" src={review.artwork_url} radius="sm" />
+                              )}
+                              <Text size="sm" lineClamp={1} maw={150}>
+                                {review.song_name}
+                              </Text>
+                            </Group>
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            {review.band ? (
+                              <Text
+                                component={Link}
+                                href={`/bands/${review.band.slug}`}
+                                size="sm"
+                                c="grape.6"
+                                style={{ textDecoration: 'none' }}
+                              >
+                                {review.band.name}
+                              </Text>
+                            ) : (
+                              <Text size="sm" c="dimmed">
+                                {review.band_name}
+                              </Text>
+                            )}
+                          </Table.Td>
+                          <Table.Td>
+                            {review.author?.username ? (
+                              <Text
+                                component={Link}
+                                href={`/users/${review.author.username}`}
+                                size="sm"
+                                c="grape.6"
+                                style={{ textDecoration: 'none' }}
+                              >
+                                @{review.author.username}
+                              </Text>
+                            ) : (
+                              <Text size="sm" c="dimmed">
+                                Unknown
+                              </Text>
+                            )}
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            <Text size="sm" lineClamp={2} maw={250}>
+                              {review.review_text}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td className={styles.hideOnMobile}>
+                            <Text size="sm" c="dimmed">
+                              {new Date(review.created_at).toLocaleDateString()}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Button
+                              variant="light"
+                              color="red"
+                              size="xs"
+                              leftSection={<IconTrash size={14} />}
+                              onClick={() => handleDeleteClick('review', review.id, `"${review.song_name}"`)}
+                            >
+                              Delete
+                            </Button>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </div>
               </Paper>
             )}
           </Tabs.Panel>
         </Tabs>
       </Stack>
+    </Container>
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -683,6 +696,6 @@ export default function AdminDashboardPage() {
           </Group>
         </Stack>
       </Modal>
-    </Container>
+    </Box>
   );
 }

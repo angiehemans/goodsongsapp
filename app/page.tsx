@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   IconBrandSpotify,
@@ -27,34 +26,14 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
+import { Header } from '@/components/Header/Header';
 import styles from './page.module.css';
 
 export default function HomePage() {
   return (
     <Box>
       {/* Top Menu Bar */}
-      <Box className={styles.header} p="md">
-        <Container size="lg">
-          <Group justify="space-between" align="center">
-            <Link href="/" className={styles.headerLink}>
-              <Group gap="xs" align="center">
-                <Image src="/logo.svg" alt="goodsongs" width={28} height={28} />
-                <Title order={2} c="blue.9">
-                  goodsongs
-                </Title>
-              </Group>
-            </Link>
-            <Group>
-              <Button component={Link} href="/login" variant="outline" size="md" color="grape">
-                Sign In
-              </Button>
-              <Button component={Link} href="/signup" size="md" color="grape.9">
-                Get Started
-              </Button>
-            </Group>
-          </Group>
-        </Container>
-      </Box>
+      <Header logoHref="/" showAuthButtons size="lg" />
 
       {/* Hero Section */}
       <Box className={styles.hero} py={80}>

@@ -184,7 +184,7 @@ export default function DiscoverPage() {
 
   return (
     <Container p={0} fluid className={styles.container}>
-      <Header logoHref="/user/dashboard" />
+      <Header logoHref="/user/dashboard" showBackButton />
 
       <Flex className={styles.content}>
         {/* Sidebar */}

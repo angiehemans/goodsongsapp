@@ -7,3 +7,28 @@
   text-decoration: none;
   cursor: pointer;
 }
+
+/* Left and right sections need equal width to keep logo centered */
+.headerLeft,
+.headerRight {
+  flex: 1;
+}
+
+.headerLeft {
+  justify-content: flex-start;
+}
+
+.headerRight {
+  justify-content: flex-end;
+}
+
+/* Hide back button on mobile (bottom nav handles navigation) */
+.backButton {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .backButton {
+    display: flex;
+  }
+}

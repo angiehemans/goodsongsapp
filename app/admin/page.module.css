@@ -1,0 +1,62 @@
+.container {
+  min-height: 100vh;
+  background-color: var(--mantine-color-grape-0);
+}
+
+@media (max-width: 768px) {
+  .container {
+    /* Add padding at bottom for mobile nav */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+}
+
+.content {
+  padding: var(--mantine-spacing-md);
+}
+
+/* Stats grid - stack on mobile */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--mantine-spacing-md);
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Table wrapper for horizontal scroll on mobile */
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableWrapper table {
+  min-width: 700px;
+}
+
+/* Hide certain columns on mobile */
+@media (max-width: 768px) {
+  .hideOnMobile {
+    display: none;
+  }
+
+  .content {
+    padding: var(--mantine-spacing-sm);
+  }
+}
+
+/* Tabs - make scrollable on mobile */
+.tabs :global(.mantine-Tabs-list) {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .tabs :global(.mantine-Tabs-tab) {
+    flex-shrink: 0;
+  }
+}

@@ -89,7 +89,7 @@ export default async function UserProfilePage({
     <>
       {/* Main Content */}
       <Container p={0} fluid className={styles.container}>
-        <Header />
+        <Header showBackButton />
         <Flex className={styles.content}>
           {/* User Sidebar */}
           <UserProfileSidebar profile={profile} />

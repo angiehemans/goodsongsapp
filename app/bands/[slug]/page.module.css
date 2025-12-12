@@ -10,6 +10,8 @@
 @media (max-width: 768px) {
   .content {
     flex-direction: column;
+    /* Add padding at bottom for mobile nav */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 }
 
