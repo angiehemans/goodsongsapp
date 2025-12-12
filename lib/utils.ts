@@ -118,7 +118,7 @@ export function fixImageUrl(url: string | null | undefined): string | undefined 
   
   // If URL starts with http://localhost, replace with the API URL
   if (url.startsWith('http://localhost')) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
     return url.replace('http://localhost', apiUrl);
   }
   

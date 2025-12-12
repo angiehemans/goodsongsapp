@@ -12,4 +12,5 @@ export default withBundleAnalyzer({
   experimental: {
     optimizePackageImports: ['@mantine/core', '@mantine/hooks'],
   },
+  allowedDevOrigins: ['http://127.0.0.1:3001', 'http://localhost:3001'],
 });

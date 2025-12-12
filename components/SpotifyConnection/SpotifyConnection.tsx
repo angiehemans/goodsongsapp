@@ -43,30 +43,8 @@ export function SpotifyConnection({ onConnectionChange }: SpotifyConnectionProps
       // Get auth URL via AJAX with JWT token in headers (secure)
       const { auth_url } = await apiClient.getSpotifyConnectUrl();
 
-      // Open Spotify OAuth in a new window/tab instead of redirecting
-      const authWindow = window.open(
-        auth_url,
-        'spotify-auth',
-        'width=600,height=700,scrollbars=yes,resizable=yes'
-      );
-
-      if (!authWindow) {
-        throw new Error(
-          'Unable to open authentication window. Please disable popup blockers and try again.'
-        );
-      }
-
-      // Monitor the auth window and refresh status when it closes
-      const checkClosed = setInterval(() => {
-        if (authWindow.closed) {
-          clearInterval(checkClosed);
-          setConnecting(false);
-          // Refresh Spotify status after OAuth window closes
-          setTimeout(() => {
-            checkSpotifyStatus();
-          }, 1000);
-        }
-      }, 1000);
+      // Redirect in the same window to avoid popup/localStorage issues
+      window.location.href = auth_url;
     } catch (error) {
       console.error('Failed to get Spotify connect URL:', error);
       notifications.show({

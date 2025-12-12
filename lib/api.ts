@@ -294,7 +294,7 @@ export interface CompleteBandProfileData {
 
 class ApiClient {
   private getApiUrl(): string {
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
   }
 
   private getAuthHeader(): HeadersInit {
