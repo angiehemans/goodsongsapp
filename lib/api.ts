@@ -455,6 +455,12 @@ class ApiClient {
     });
   }
 
+  async getReview(reviewId: number): Promise<Review> {
+    return this.makeRequest(`/reviews/${reviewId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   async getUserProfile(username: string): Promise<UserProfile> {
     return this.makeRequest(`/users/${username}`, {
       headers: { 'Content-Type': 'application/json' }, // Override auth header for public profiles

@@ -15,3 +15,8 @@
 .userInfo {
   border-bottom: 2px solid var(--mantine-color-grape-3);
 }
+
+.authorName,
+.songName {
+  font-family: var(--mantine-font-family-headings);
+}

@@ -12,6 +12,7 @@ interface ReviewCardProps {
 export function ReviewCard({ review }: ReviewCardProps) {
   const authorUsername = review.author?.username || review.user?.username;
   const authorProfileImage = review.author?.profile_image_url;
+  const reviewUrl = authorUsername ? `/users/${authorUsername}/reviews/${review.id}` : '#';
 
   return (
     <Card p="md" bd="0" bg="grape.0" maw={700}>
@@ -33,6 +34,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
               component={Link}
               href={`/users/${authorUsername}`}
               style={{ textDecoration: 'none' }}
+              className={styles.authorName}
             >
               @{authorUsername}
             </Text>
@@ -46,17 +48,27 @@ export function ReviewCard({ review }: ReviewCardProps) {
         {/* Song Info */}
         <Group gap="sm" justify="space-between" align="flex-start">
           <Group gap="sm">
-            {review.artwork_url ? (
-              <img
-                src={review.artwork_url}
-                alt={`${review.song_name} artwork`}
-                className={styles.artwork}
-              />
-            ) : (
-              <div className={styles.artworkPlaceholder} />
-            )}
+            <Link href={reviewUrl} style={{ height: '48px' }}>
+              {review.artwork_url ? (
+                <img
+                  src={review.artwork_url}
+                  alt={`${review.song_name} artwork`}
+                  className={styles.artwork}
+                />
+              ) : (
+                <div className={styles.artworkPlaceholder} />
+              )}
+            </Link>
             <Stack gap={2}>
-              <Text size="md" fw={500} c="gray.9">
+              <Text
+                size="md"
+                fw={500}
+                c="gray.9"
+                component={Link}
+                href={reviewUrl}
+                style={{ textDecoration: 'none' }}
+                className={styles.songName}
+              >
                 {review.song_name}
               </Text>
               {review.band?.slug ? (

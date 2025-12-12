@@ -28,6 +28,7 @@
     "@next/bundle-analyzer": "^15",
     "@tabler/icons-react": "^3.31.0",
     "chroma-js": "^3.1.2",
+    "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
     "next": "^15",
     "react": "19.1.0",
