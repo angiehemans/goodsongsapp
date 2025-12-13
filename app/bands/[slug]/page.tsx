@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { IconAlertCircle, IconMusic } from '@tabler/icons-react';
+import { IconAlertCircle, IconCalendarEvent, IconMusic } from '@tabler/icons-react';
 import {
   Alert,
   Badge,
@@ -14,11 +14,12 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { EventCard } from '@/components/EventCard/EventCard';
 import { Header } from '@/components/Header/Header';
 import { MusicPlayer } from '@/components/MusicPlayer/MusicPlayer';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
-import { Band, Review } from '@/lib/api';
+import { Band, Event, Review } from '@/lib/api';
 import styles from './page.module.css';
 
 export async function generateMetadata({
@@ -44,14 +45,15 @@ export async function generateMetadata({
   }
 }
 
+function getBaseUrl(): string {
+  return process.env.NODE_ENV === 'production'
+    ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
+    : 'http://localhost:3001';
+}
+
 async function getBand(slug: string): Promise<Band> {
   try {
-    const baseUrl =
-      process.env.NODE_ENV === 'production'
-        ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
-        : 'http://localhost:3001';
-
-    const response = await fetch(`${baseUrl}/api/bands/${slug}`, {
+    const response = await fetch(`${getBaseUrl()}/api/bands/${slug}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -72,13 +74,36 @@ async function getBand(slug: string): Promise<Band> {
   }
 }
 
+async function getBandEvents(slug: string): Promise<Event[]> {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
+    const response = await fetch(`${apiUrl}/bands/${slug}/events`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch events:', response.status);
+      return [];
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return [];
+  }
+}
+
 export default async function BandProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   let band: Band;
+  let events: Event[] = [];
 
   try {
-    band = await getBand(slug);
+    [band, events] = await Promise.all([getBand(slug), getBandEvents(slug)]);
   } catch (error) {
     return (
       <Container>
@@ -90,6 +115,8 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
   }
 
   const reviewsCount = band.reviews?.length || band.reviews_count || 0;
+  // Filter to only show upcoming events
+  const upcomingEvents = events.filter((event) => new Date(event.event_date) >= new Date());
 
   return (
     <Container p={0} fluid className={styles.container}>
@@ -141,7 +168,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
           </Group>
         </Flex>
 
-        {/* Recommendations Section */}
+        {/* Main Content */}
         <Flex direction="column" px="md" pb="lg" flex={1}>
           {/* Music Player - Priority: Bandcamp > Spotify > YouTube Music > Apple Music */}
           <MusicPlayer
@@ -151,6 +178,25 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
             appleMusicLink={band.apple_music_link}
             className={styles.musicPlayer}
           />
+
+          {/* Events Section - Above Recommendations */}
+          {upcomingEvents.length > 0 && (
+            <>
+              <Title order={2} my="sm" c="blue.8" fw={500}>
+                <Group gap="xs">
+                  <IconCalendarEvent size={24} />
+                  Upcoming Events
+                </Group>
+              </Title>
+              <Stack gap="md" mb="xl">
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </Stack>
+            </>
+          )}
+
+          {/* Recommendations Section */}
           <Title order={2} my="sm" c="blue.8" fw={500}>
             Recommendations
           </Title>

@@ -207,6 +207,75 @@ export interface Band {
   updated_at: string;
 }
 
+// Venue types
+export interface Venue {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  region: string;
+  latitude?: number;
+  longitude?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VenueData {
+  name: string;
+  address: string;
+  city: string;
+  region: string;
+}
+
+// Event types
+export interface EventBand {
+  id: number;
+  slug: string;
+  name: string;
+  location?: string;
+  profile_picture_url?: string;
+  reviews_count: number;
+  user_owned: boolean;
+}
+
+export interface Event {
+  id: number;
+  name: string;
+  description?: string;
+  event_date: string;
+  ticket_link?: string;
+  image_url?: string;
+  price?: string;
+  age_restriction?: string;
+  venue: Venue;
+  band: EventBand;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventData {
+  name: string;
+  description?: string;
+  event_date: string;
+  ticket_link?: string;
+  price?: string;
+  age_restriction?: string;
+  venue_id?: number;
+  venue_attributes?: {
+    name: string;
+    address: string;
+    city: string;
+    region: string;
+  };
+}
+
+export interface PaginationMeta {
+  current_page: number;
+  total_pages: number;
+  total_count: number;
+  per_page: number;
+}
+
 export interface SpotifyArtist {
   name: string;
   id?: string;
@@ -852,6 +921,106 @@ class ApiClient {
   async markAllNotificationsAsRead(): Promise<{ message: string }> {
     return this.makeRequest('/notifications/read_all', {
       method: 'PATCH',
+    });
+  }
+
+  // Event endpoints
+  async getBandEvents(slug: string): Promise<Event[]> {
+    return this.makeRequest(`/bands/${slug}/events`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async createEvent(slug: string, data: EventData | FormData): Promise<Event> {
+    if (data instanceof FormData) {
+      // For file uploads
+      const response = await fetch(`${this.getApiUrl()}/bands/${slug}/events`, {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create event');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest(`/bands/${slug}/events`, {
+      method: 'POST',
+      body: JSON.stringify({ event: data }),
+    });
+  }
+
+  async getEvent(eventId: number): Promise<Event> {
+    return this.makeRequest(`/events/${eventId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async updateEvent(eventId: number, data: EventData | FormData): Promise<Event> {
+    if (data instanceof FormData) {
+      // For file uploads, use POST with _method override
+      data.append('_method', 'PATCH');
+      const response = await fetch(`${this.getApiUrl()}/events/${eventId}`, {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update event');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest(`/events/${eventId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ event: data }),
+    });
+  }
+
+  async deleteEvent(eventId: number): Promise<void> {
+    await this.makeRequest(`/events/${eventId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async discoverEvents(page: number = 1): Promise<{
+    events: Event[];
+    meta: PaginationMeta;
+  }> {
+    return this.makeRequest(`/discover/events?page=${page}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Venue endpoints
+  async searchVenues(search?: string): Promise<Venue[]> {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return this.makeRequest(`/venues${params}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async getVenue(venueId: number): Promise<Venue> {
+    return this.makeRequest(`/venues/${venueId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async createVenue(data: VenueData): Promise<Venue> {
+    return this.makeRequest('/venues', {
+      method: 'POST',
+      body: JSON.stringify({ venue: data }),
     });
   }
 }

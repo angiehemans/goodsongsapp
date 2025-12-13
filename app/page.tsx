@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import {
   IconBrandSpotify,
+  IconCheck,
   IconChevronRight,
   IconHeart,
+  IconMicrophone2,
   IconMusic,
   IconSearch,
   IconShare,
@@ -19,6 +21,8 @@ import {
   Grid,
   GridCol,
   Group,
+  List,
+  ListItem,
   Paper,
   SimpleGrid,
   Stack,
@@ -317,6 +321,176 @@ export default function HomePage() {
           </SimpleGrid>
         </Container>
       </Box>
+
+      {/* For Bands Pricing Section */}
+      <Container size="lg" py={80}>
+        <Stack align="center" gap="xl" mb={60}>
+          <Group gap="sm">
+            <ThemeIcon size={48} radius="xl" color="grape.6">
+              <IconMicrophone2 size={24} />
+            </ThemeIcon>
+            <Title order={2} size="2.5rem" c="grape.9">
+              For Bands
+            </Title>
+          </Group>
+          <Text size="lg" ta="center" c="dimmed" maw={600}>
+            Whether you're just starting out or touring the world, we have tools to help you connect
+            with your fans.
+          </Text>
+        </Stack>
+
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
+          {/* Free Tier */}
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-grape-3)' }}
+          >
+            <Stack gap="md">
+              <div>
+                <Text size="lg" fw={600} c="grape.7">
+                  Free
+                </Text>
+                <Group align="baseline" gap={4}>
+                  <Text size="2.5rem" fw={700} c="grape.9">
+                    $0
+                  </Text>
+                  <Text c="dimmed">/month</Text>
+                </Group>
+              </div>
+
+              <Text c="dimmed" size="sm">
+                Get started with the essentials
+              </Text>
+
+              <Button component={Link} href="/signup" variant="outline" color="grape" fullWidth>
+                Get Started
+              </Button>
+
+              <List
+                spacing="sm"
+                size="sm"
+                icon={
+                  <ThemeIcon color="grape" size={20} radius="xl">
+                    <IconCheck size={12} />
+                  </ThemeIcon>
+                }
+              >
+                <ListItem>Basic band profile</ListItem>
+                <ListItem>Fan recommendations</ListItem>
+                <ListItem>
+                  <Group gap={6}>
+                    Events calendar
+                    <Badge size="xs" color="grape" variant="light">
+                      Coming Soon
+                    </Badge>
+                  </Group>
+                </ListItem>
+              </List>
+            </Stack>
+          </Card>
+
+          {/* Starter Tier */}
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-violet-4)' }}
+            bg="violet.0"
+          >
+            <Stack gap="md">
+              <div>
+                <Group justify="space-between">
+                  <Text size="lg" fw={600} c="violet.7">
+                    Starter
+                  </Text>
+                  <Badge color="violet" variant="light">
+                    Coming Soon
+                  </Badge>
+                </Group>
+                <Group align="baseline" gap={4}>
+                  <Text size="2.5rem" fw={700} c="violet.9">
+                    $15
+                  </Text>
+                  <Text c="dimmed">/month</Text>
+                </Group>
+              </div>
+
+              <Text c="dimmed" size="sm">
+                Everything in Free, plus more tools to grow
+              </Text>
+
+              <Button variant="filled" color="violet" fullWidth disabled>
+                Coming Soon
+              </Button>
+
+              <List
+                spacing="sm"
+                size="sm"
+                icon={
+                  <ThemeIcon color="violet" size={20} radius="xl">
+                    <IconCheck size={12} />
+                  </ThemeIcon>
+                }
+              >
+                <ListItem>Everything in Free</ListItem>
+                <ListItem>Custom profile templates</ListItem>
+                <ListItem>Merch store integration</ListItem>
+                <ListItem>100 mailing list contacts</ListItem>
+                <ListItem>Social media integration</ListItem>
+              </List>
+            </Stack>
+          </Card>
+
+          {/* Pro Tier */}
+          <Card
+            padding="xl"
+            radius="md"
+            style={{ border: '2px solid var(--mantine-color-grape-5)' }}
+            bg="grape.1"
+          >
+            <Stack gap="md">
+              <div>
+                <Group justify="space-between">
+                  <Text size="lg" fw={600} c="grape.8">
+                    Pro
+                  </Text>
+                  <Badge color="grape">Coming Soon</Badge>
+                </Group>
+                <Group align="baseline" gap={4}>
+                  <Text size="2.5rem" fw={700} c="grape.9">
+                    $45
+                  </Text>
+                  <Text c="dimmed">/month</Text>
+                </Group>
+              </div>
+
+              <Text c="dimmed" size="sm">
+                For serious artists ready to scale
+              </Text>
+
+              <Button variant="filled" color="grape" fullWidth disabled>
+                Coming Soon
+              </Button>
+
+              <List
+                spacing="sm"
+                size="sm"
+                icon={
+                  <ThemeIcon color="grape" size={20} radius="xl">
+                    <IconCheck size={12} />
+                  </ThemeIcon>
+                }
+              >
+                <ListItem>Everything in Starter</ListItem>
+                <ListItem>Unlimited mailing list contacts</ListItem>
+                <ListItem>Fan metrics & analytics</ListItem>
+                <ListItem>Priority support</ListItem>
+                <ListItem>And more...</ListItem>
+              </List>
+            </Stack>
+          </Card>
+        </SimpleGrid>
+      </Container>
 
       {/* CTA Section */}
       <Container size="lg" py={80}>

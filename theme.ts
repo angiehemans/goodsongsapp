@@ -1,5 +1,6 @@
 import { generateColors } from '@mantine/colors-generator';
-import { createTheme } from '@mantine/core';
+import { Combobox, createTheme } from '@mantine/core';
+import { DateTimePicker } from '@mantine/dates';
 
 export const theme = createTheme({
   fontFamily: 'Inter, sans-serif',
@@ -125,6 +126,108 @@ export const theme = createTheme({
       },
     },
     MultiSelect: {
+      styles: {
+        input: {
+          borderWidth: '2px',
+          borderColor: 'var(--mantine-color-grape-6)',
+          backgroundColor: 'var(--mantine-color-grape-0)',
+          fontFamily: 'aesthet-nova, sans-serif',
+          color: 'var(--mantine-color-grape-8)',
+          '&[placeholder]': {
+            color: 'var(--mantine-color-grape-4)',
+          },
+        },
+        label: {
+          color: 'var(--mantine-color-grape-4)',
+        },
+        dropdown: {
+          backgroundColor: 'var(--mantine-color-grape-0)',
+          borderWidth: '2px',
+          borderColor: 'var(--mantine-color-grape-6)',
+          fontFamily: 'aesthet-nova, sans-serif',
+          color: 'var(--mantine-color-grape-8)',
+        },
+        option: {
+          color: 'var(--mantine-color-grape-8)',
+          '&:hover': {
+            backgroundColor: 'var(--mantine-color-grape-2)',
+          },
+        },
+        pill: {
+          backgroundColor: 'var(--mantine-color-grape-2)',
+          color: 'var(--mantine-color-grape-8)',
+        },
+      },
+    },
+    Combobox: {
+      styles: {
+        input: {
+          borderWidth: '2px',
+          borderColor: 'var(--mantine-color-grape-6)',
+          backgroundColor: 'var(--mantine-color-grape-0)',
+          fontFamily: 'aesthet-nova, sans-serif',
+          color: 'var(--mantine-color-grape-8)',
+          '&[placeholder]': {
+            color: 'var(--mantine-color-grape-4)',
+          },
+        },
+        label: {
+          color: 'var(--mantine-color-grape-4)',
+        },
+        dropdown: {
+          backgroundColor: 'var(--mantine-color-grape-0)',
+          borderWidth: '2px',
+          borderColor: 'var(--mantine-color-grape-6)',
+          fontFamily: 'aesthet-nova, sans-serif',
+          color: 'var(--mantine-color-grape-8)',
+        },
+        option: {
+          color: 'var(--mantine-color-grape-8)',
+          '&:hover': {
+            backgroundColor: 'var(--mantine-color-grape-4)',
+          },
+        },
+        pill: {
+          backgroundColor: 'var(--mantine-color-grape-2)',
+          color: 'var(--mantine-color-grape-8)',
+        },
+      },
+    },
+    DateTimePicker: {
+      styles: {
+        input: {
+          borderWidth: '2px',
+          borderColor: 'var(--mantine-color-grape-6)',
+          backgroundColor: 'var(--mantine-color-grape-0)',
+          fontFamily: 'aesthet-nova, sans-serif',
+          color: 'var(--mantine-color-grape-8)',
+          '&[placeholder]': {
+            color: 'var(--mantine-color-grape-4)',
+          },
+        },
+        label: {
+          color: 'var(--mantine-color-grape-4)',
+        },
+        dropdown: {
+          backgroundColor: 'var(--mantine-color-grape-0)',
+          borderWidth: '2px',
+          borderColor: 'var(--mantine-color-grape-6)',
+          fontFamily: 'aesthet-nova, sans-serif',
+          color: 'var(--mantine-color-grape-8)',
+        },
+        option: {
+          color: 'var(--mantine-color-grape-8)',
+          '&:hover': {
+            backgroundColor: 'var(--mantine-color-grape-2)',
+          },
+        },
+        pill: {
+          backgroundColor: 'var(--mantine-color-grape-2)',
+          color: 'var(--mantine-color-grape-8)',
+        },
+      },
+    },
+    Select: {
       styles: {
         input: {
           borderWidth: '2px',

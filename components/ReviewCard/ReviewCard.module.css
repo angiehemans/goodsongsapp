@@ -1,3 +1,9 @@
+.artworkLink {
+  display: block;
+  height: 48px;
+  flex-shrink: 0;
+}
+
 .artwork {
   width: 48px;
   height: 48px;

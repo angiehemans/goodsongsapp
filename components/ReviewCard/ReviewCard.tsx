@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { IconBrandSpotify } from '@tabler/icons-react';
 import { Badge, Card, Group, Spoiler, Stack, Text } from '@mantine/core';
@@ -48,12 +49,15 @@ export function ReviewCard({ review }: ReviewCardProps) {
         {/* Song Info */}
         <Group gap="sm" justify="space-between" align="flex-start">
           <Group gap="sm">
-            <Link href={reviewUrl} style={{ height: '48px' }}>
+            <Link href={reviewUrl} className={styles.artworkLink}>
               {review.artwork_url ? (
-                <img
+                <Image
                   src={review.artwork_url}
                   alt={`${review.song_name} artwork`}
+                  width={48}
+                  height={48}
                   className={styles.artwork}
+                  unoptimized={review.artwork_url.includes('spotify') || review.artwork_url.includes('scdn')}
                 />
               ) : (
                 <div className={styles.artworkPlaceholder} />

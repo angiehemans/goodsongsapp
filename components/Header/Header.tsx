@@ -32,7 +32,7 @@ export function Header({
 
   return (
     <Container fluid p="md" className={styles.header}>
-      <Container size={size === 'fluid' ? undefined : size} p={0}>
+      <Container fluid p={0}>
         <Group justify="space-between" align="center">
           {/* Left section - back button or spacer */}
           <Group className={styles.headerLeft}>

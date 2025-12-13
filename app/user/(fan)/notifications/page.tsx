@@ -17,8 +17,8 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useNotifications } from '@/contexts/NotificationContext';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Notification } from '@/lib/api';
 
@@ -32,42 +32,45 @@ export default function NotificationsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchNotifications = useCallback(async (page: number = 1, append: boolean = false) => {
-    if (!user) return;
+  const fetchNotifications = useCallback(
+    async (page: number = 1, append: boolean = false) => {
+      if (!user) return;
 
-    try {
-      if (page === 1) {
-        setIsLoading(true);
-      } else {
-        setLoadingMore(true);
+      try {
+        if (page === 1) {
+          setIsLoading(true);
+        } else {
+          setLoadingMore(true);
+        }
+
+        const response = await apiClient.getNotifications(page);
+        const newNotifications = response?.notifications || [];
+
+        if (append) {
+          setNotificationsList((prev) => [...prev, ...newNotifications]);
+        } else {
+          setNotificationsList(newNotifications);
+        }
+
+        const newUnreadCount = response?.unread_count || 0;
+        setLocalUnreadCount(newUnreadCount);
+        setUnreadCount(newUnreadCount);
+        setCurrentPage(response?.meta?.current_page || 1);
+        setTotalPages(response?.meta?.total_pages || 1);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to load notifications',
+          color: 'red',
+        });
+      } finally {
+        setIsLoading(false);
+        setLoadingMore(false);
       }
-
-      const response = await apiClient.getNotifications(page);
-      const newNotifications = response?.notifications || [];
-
-      if (append) {
-        setNotificationsList((prev) => [...prev, ...newNotifications]);
-      } else {
-        setNotificationsList(newNotifications);
-      }
-
-      const newUnreadCount = response?.unread_count || 0;
-      setLocalUnreadCount(newUnreadCount);
-      setUnreadCount(newUnreadCount);
-      setCurrentPage(response?.meta?.current_page || 1);
-      setTotalPages(response?.meta?.total_pages || 1);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to load notifications',
-        color: 'red',
-      });
-    } finally {
-      setIsLoading(false);
-      setLoadingMore(false);
-    }
-  }, [user]);
+    },
+    [user]
+  );
 
   // Mark all notifications as read when visiting the page
   const markAllAsReadOnVisit = useCallback(async () => {
@@ -195,7 +198,7 @@ export default function NotificationsPage() {
 
   return (
     <Box maw={700}>
-      <Group justify="space-between" align="center" mb="md">
+      <Group justify="space-between" align="center" mb="md" mt="md">
         <Group gap="sm">
           <Title order={2} c="blue.8" fw={500}>
             Notifications
@@ -263,9 +266,7 @@ export default function NotificationsPage() {
                   index < notificationsList.length - 1
                     ? '1px solid var(--mantine-color-gray-2)'
                     : 'none',
-                backgroundColor: notification.read
-                  ? 'transparent'
-                  : 'var(--mantine-color-grape-0)',
+                backgroundColor: notification.read ? 'transparent' : 'var(--mantine-color-grape-0)',
                 borderRadius: 'var(--mantine-radius-md)',
                 marginBottom: index < notificationsList.length - 1 ? 4 : 0,
                 transition: 'background-color 150ms ease',

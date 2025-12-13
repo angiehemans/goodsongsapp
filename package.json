@@ -22,17 +22,21 @@
   "dependencies": {
     "@mantine/colors-generator": "8.3.9",
     "@mantine/core": "8.3.9",
+    "@mantine/dates": "^8.3.9",
     "@mantine/form": "8.3.9",
     "@mantine/hooks": "8.3.9",
+    "@mantine/modals": "^8.3.9",
     "@mantine/notifications": "8.3.9",
     "@next/bundle-analyzer": "^15",
     "@tabler/icons-react": "^3.31.0",
     "chroma-js": "^3.1.2",
+    "dayjs": "^1.11.19",
     "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
     "next": "^15",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "swr": "^2.3.7"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
