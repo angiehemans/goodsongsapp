@@ -244,7 +244,7 @@ export default function HomePage() {
               Join the Community
             </Title>
             <Text size="lg" c="grape.6" ta="center" maw={450}>
-              Sign up now to sthart sharing your favorite songs!
+              Sign up now to start sharing your favorite songs!
             </Text>
 
             <Group mt="xl" gap="lg">
@@ -287,23 +287,6 @@ export default function HomePage() {
                   Discover
                 </Link>
               </Stack>
-            </Grid.Col>
-
-            <Grid.Col span={{ base: 6, sm: 4 }}>
-              <Text c="grape.0" fw={600} mb="md">
-                Connect
-              </Text>
-              <Group gap="md">
-                <Box className={styles.socialIcon}>
-                  <IconBrandTwitter size={20} />
-                </Box>
-                <Box className={styles.socialIcon}>
-                  <IconBrandInstagram size={20} />
-                </Box>
-                <Box className={styles.socialIcon}>
-                  <IconBrandTiktok size={20} />
-                </Box>
-              </Group>
             </Grid.Col>
           </Grid>
 
