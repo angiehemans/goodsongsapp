@@ -154,9 +154,6 @@ export function LastFmConnection({ onConnectionChange }: LastFmConnectionProps) 
       my="md"
     >
       <Stack gap="sm">
-        <Text size="sm">
-          Connect your Last.fm account to see your recently played songs on your dashboard.
-        </Text>
         <Group align="flex-end">
           <TextInput
             placeholder="Your Last.fm username"
@@ -182,6 +179,12 @@ export function LastFmConnection({ onConnectionChange }: LastFmConnectionProps) 
             Connect
           </Button>
         </Group>
+        <Text size="sm">
+          Last.fm is a service that tracks the music you listen to across all your streaming
+          platforms. GoodSongs uses Last.fm to pull in your recently played songs so you can easily
+          recommend tracks you're actually listening to. To get started, connect your Spotify, Apple
+          Music, or other streaming services to your Last.fm account at last.fm/about/trackmymusic.
+        </Text>
       </Stack>
     </Alert>
   );
