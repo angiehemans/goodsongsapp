@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function DELETE(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Authorization token required' },
@@ -15,7 +15,7 @@ export async function DELETE(request: NextRequest) {
 
     const token = authHeader.substring(7);
 
-    const response = await fetch(`${API_BASE_URL}/spotify/disconnect`, {
+    const response = await fetch(`${API_BASE_URL}/lastfm/disconnect`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export async function DELETE(request: NextRequest) {
     if (!response.ok) {
       const data = await response.json();
       return NextResponse.json(
-        { error: data.error || 'Failed to disconnect Spotify' },
+        { error: data.error || 'Failed to disconnect Last.fm' },
         { status: response.status }
       );
     }

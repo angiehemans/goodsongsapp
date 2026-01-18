@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { IconBrandSpotify } from '@tabler/icons-react';
+import { IconExternalLink } from '@tabler/icons-react';
 import { Badge, Card, Group, Spoiler, Stack, Text } from '@mantine/core';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { Review } from '@/lib/api';
@@ -57,7 +57,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
                   width={48}
                   height={48}
                   className={styles.artwork}
-                  unoptimized={review.artwork_url.includes('spotify') || review.artwork_url.includes('scdn')}
+                  unoptimized={review.artwork_url.includes('spotify') || review.artwork_url.includes('scdn') || review.artwork_url.includes('last.fm') || review.artwork_url.includes('lastfm')}
                 />
               ) : (
                 <div className={styles.artworkPlaceholder} />
@@ -94,7 +94,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
           </Group>
           {review.song_link && (
             <a href={review.song_link} target="_blank" rel="noopener noreferrer">
-              <IconBrandSpotify size={24} color="var(--mantine-color-green-6)" />
+              <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
             </a>
           )}
         </Group>

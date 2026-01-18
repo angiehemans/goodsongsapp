@@ -12,16 +12,6 @@ function DashboardRedirectContent() {
   const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
 
   useEffect(() => {
-    // Check if this is a Spotify OAuth callback in a popup
-    const spotifyParam = searchParams.get('spotify');
-    const isPopup = window.opener && window.opener !== window;
-
-    if (isPopup && spotifyParam === 'connected') {
-      // Close the popup - parent window will detect this and refresh status
-      window.close();
-      return;
-    }
-
     // Wait for auth to load before redirecting
     if (isLoading) return;
 

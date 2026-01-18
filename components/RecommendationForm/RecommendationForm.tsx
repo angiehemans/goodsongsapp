@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { IconAlertCircle, IconBrandSpotify } from '@tabler/icons-react';
+import { IconAlertCircle, IconBrandLastfm } from '@tabler/icons-react';
 import {
   Alert,
   Button,
@@ -50,11 +50,12 @@ export function RecommendationForm({
   const [formData, setFormData] = useState<ReviewData>({
     song_link: initialValues?.song_link || '',
     band_name: initialValues?.band_name || '',
-    band_spotify_url: initialValues?.band_spotify_url || '',
     song_name: initialValues?.song_name || '',
     artwork_url: initialValues?.artwork_url || '',
     review_text: initialValues?.review_text || '',
     liked_aspects: initialValues?.liked_aspects || [],
+    band_lastfm_artist_name: initialValues?.band_lastfm_artist_name,
+    band_musicbrainz_id: initialValues?.band_musicbrainz_id,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,11 +76,12 @@ export function RecommendationForm({
       setFormData({
         song_link: '',
         band_name: '',
-        band_spotify_url: '',
         song_name: '',
         artwork_url: '',
         review_text: '',
         liked_aspects: [],
+        band_lastfm_artist_name: undefined,
+        band_musicbrainz_id: undefined,
       });
 
       onSuccess?.();
@@ -98,9 +100,9 @@ export function RecommendationForm({
 
       {showPrefilledAlert && (initialValues?.song_name || initialValues?.band_name) && (
         <Alert
-          icon={<IconBrandSpotify size="1rem" />}
-          title="Prefilled from Spotify"
-          color="green"
+          icon={<IconBrandLastfm size="1rem" />}
+          title="Prefilled from Last.fm"
+          color="red"
           variant="light"
         >
           This form has been prefilled with track information from your recently played songs.
@@ -117,7 +119,7 @@ export function RecommendationForm({
         <Stack>
           <TextInput
             label="Song Link"
-            placeholder="https://spotify.com/track/123"
+            placeholder="https://www.last.fm/music/Artist/_/Song"
             required
             value={formData.song_link}
             onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}

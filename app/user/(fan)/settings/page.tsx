@@ -8,9 +8,9 @@ import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/hooks/useAuth';
 
 // Lazy load components
-const SpotifyConnection = lazy(() =>
-  import('@/components/SpotifyConnection/SpotifyConnection').then((mod) => ({
-    default: mod.SpotifyConnection,
+const LastFmConnection = lazy(() =>
+  import('@/components/LastFmConnection/LastFmConnection').then((mod) => ({
+    default: mod.LastFmConnection,
   }))
 );
 
@@ -35,21 +35,21 @@ export default function SettingsPage() {
       </Title>
 
       <Stack gap="md">
-        {/* Spotify Connection - Only for fan accounts */}
+        {/* Last.fm Connection - Only for fan accounts */}
         {isFan && (
           <Paper p="lg" radius="md" withBorder>
             <Title order={4} mb="md">
-              Spotify Connection
+              Last.fm Connection
             </Title>
             <Suspense
               fallback={
                 <Group>
                   <Loader size="sm" />
-                  <Text size="sm">Loading Spotify status...</Text>
+                  <Text size="sm">Loading Last.fm status...</Text>
                 </Group>
               }
             >
-              <SpotifyConnection />
+              <LastFmConnection />
             </Suspense>
           </Paper>
         )}

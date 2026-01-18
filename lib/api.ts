@@ -16,15 +16,20 @@ export interface User {
   about_me?: string;
   city?: string;
   region?: string;
+  location?: string;
   profile_image_url?: string;
   reviews_count?: number;
   bands_count?: number;
-  spotify_connected?: boolean;
+  lastfm_connected?: boolean;
+  lastfm_username?: string | null;
   account_type?: AccountType | number;  // API returns 0 for fan, 1 for band
   onboarding_completed?: boolean;
   primary_band?: Band;
   admin?: boolean;  // Separate admin flag
   disabled?: boolean;  // Whether the account is disabled
+  display_name?: string;
+  followers_count?: number;
+  following_count?: number;
 }
 
 export interface ProfileUpdateData {
@@ -53,11 +58,12 @@ export interface SignupData {
 export interface ReviewData {
   song_link: string;
   band_name: string;
-  band_spotify_url?: string;
   song_name: string;
   artwork_url: string;
   review_text: string;
   liked_aspects: (string | { name: string })[];
+  band_lastfm_artist_name?: string;
+  band_musicbrainz_id?: string;
 }
 
 export interface Review extends ReviewData {
@@ -276,53 +282,61 @@ export interface PaginationMeta {
   per_page: number;
 }
 
-export interface SpotifyArtist {
+export interface LastFmArtist {
   name: string;
-  id?: string;
-  spotify_url?: string;
+  mbid?: string;
+  lastfm_url?: string;
 }
 
-export interface SpotifyTrack {
-  id: string;
+export interface LastFmAlbumImage {
+  url: string;
+  size: 'small' | 'medium' | 'large' | 'extralarge';
+}
+
+export interface LastFmTrack {
   name: string;
-  artists: SpotifyArtist[];
+  mbid?: string;
+  artists: LastFmArtist[];
   album: {
     name: string;
-    images: Array<{
-      url: string;
-      height: number;
-      width: number;
-    }>;
+    mbid?: string;
+    images: LastFmAlbumImage[];
   };
-  external_urls: {
-    spotify: string;
-  };
-  duration_ms: number;
+  lastfm_url: string;
 }
 
 export interface RecentlyPlayedTrack {
-  id: string;
   name: string;
-  artists: SpotifyArtist[];
+  mbid?: string;
+  artists: LastFmArtist[];
   album: {
     name: string;
-    images: Array<{
-      url: string;
-      height: number;
-      width: number;
-    }>;
+    mbid?: string;
+    images: LastFmAlbumImage[];
   };
-  external_urls: {
-    spotify: string;
-  };
-  duration_ms: number;
-  played_at: string;
-  preview_url?: string | null;
+  lastfm_url: string;
+  played_at: string | null;
+  now_playing: boolean;
+  loved: boolean;
 }
 
-export interface SpotifyStatus {
+export interface LastFmStatus {
   connected: boolean;
-  user_id?: string;
+  username: string | null;
+  profile?: {
+    name: string;
+    realname?: string;
+    url: string;
+    playcount?: string;
+    image?: string;
+  };
+}
+
+export interface LastFmSearchArtist {
+  name: string;
+  mbid?: string;
+  url: string;
+  image?: string;
 }
 
 export interface OnboardingStatus {
@@ -732,33 +746,30 @@ class ApiClient {
     return response.json();
   }
 
-  async getSpotifyConnectUrl(): Promise<{ auth_url: string }> {
-    // Use Next.js API route which handles the backend redirect properly
-    const response = await fetch('/api/spotify/connect', {
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeader(),
-      },
+  async connectLastFm(username: string): Promise<{ message: string; username: string; profile: LastFmStatus['profile'] }> {
+    return this.makeRequest('/lastfm/connect', {
+      method: 'POST',
+      body: JSON.stringify({ username }),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get Spotify connect URL');
-    }
-
-    return response.json();
   }
 
-  async getSpotifyStatus(): Promise<SpotifyStatus> {
-    return this.makeRequest('/spotify/status');
+  async getLastFmStatus(): Promise<LastFmStatus> {
+    return this.makeRequest('/lastfm/status');
   }
 
-  async disconnectSpotify(): Promise<void> {
-    await this.makeRequest('/spotify/disconnect', { method: 'DELETE' });
+  async disconnectLastFm(): Promise<void> {
+    await this.makeRequest('/lastfm/disconnect', { method: 'DELETE' });
   }
 
-  async getRecentlyPlayed(): Promise<RecentlyPlayedTrack[] | { tracks: RecentlyPlayedTrack[] }> {
-    return this.makeRequest('/recently-played');
+  async getRecentlyPlayed(limit?: number): Promise<{ tracks: RecentlyPlayedTrack[] }> {
+    const params = limit ? `?limit=${limit}` : '';
+    return this.makeRequest(`/recently-played${params}`);
+  }
+
+  async searchLastFmArtists(query: string, limit?: number): Promise<{ artists: LastFmSearchArtist[] }> {
+    const params = new URLSearchParams({ query });
+    if (limit) params.append('limit', limit.toString());
+    return this.makeRequest(`/lastfm/search-artist?${params.toString()}`);
   }
 
   async updateProfile(data: ProfileUpdateData | FormData): Promise<User> {

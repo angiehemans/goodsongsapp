@@ -10,6 +10,30 @@
 
 .hero {
   position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.heroTitle {
+  font-size: clamp(16rem, 25vw, 16rem);
+  line-height: 0.55;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+  text-align: center;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+@media (min-width: 62em) {
+  .heroTitle {
+    line-height: 1;
+  }
 }
 
 .hero::before {
@@ -22,7 +46,7 @@
   background-image: url(/clouds-landscape.webp);
   background-size: cover;
   background-position: center;
-  opacity: 0.5;
+  opacity: 0.25;
   z-index: -1;
 }
 

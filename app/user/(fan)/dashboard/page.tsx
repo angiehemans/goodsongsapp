@@ -22,16 +22,16 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { FollowingFeed } from '@/components/FollowingFeed/FollowingFeed';
+import { LastFmConnection } from '@/components/LastFmConnection/LastFmConnection';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
-import { SpotifyConnection } from '@/components/SpotifyConnection/SpotifyConnection';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient } from '@/lib/api';
+import { apiClient, RecentlyPlayedTrack } from '@/lib/api';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
-  const [spotifyConnected, setSpotifyConnected] = useState(false);
-  const [spotifyLoading, setSpotifyLoading] = useState(true);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>([]);
+  const [lastFmConnected, setLastFmConnected] = useState(false);
+  const [lastFmLoading, setLastFmLoading] = useState(true);
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
   const recentlyPlayedRef = useRef<HTMLDivElement>(null);
 
@@ -40,62 +40,60 @@ export default function DashboardPage() {
   const [formPrefill, setFormPrefill] = useState<{
     song_name?: string;
     band_name?: string;
-    band_spotify_url?: string;
     artwork_url?: string;
     song_link?: string;
+    band_lastfm_artist_name?: string;
+    band_musicbrainz_id?: string;
   } | null>(null);
 
-  // Check Spotify connection status
-  const checkSpotifyConnection = useCallback(async () => {
+  // Check Last.fm connection status
+  const checkLastFmConnection = useCallback(async () => {
     if (!user) return;
-    setSpotifyLoading(true);
+    setLastFmLoading(true);
     try {
-      const status = await apiClient.getSpotifyStatus();
-      setSpotifyConnected(status.connected);
+      const status = await apiClient.getLastFmStatus();
+      setLastFmConnected(status.connected);
     } catch {
-      setSpotifyConnected(false);
+      setLastFmConnected(false);
     } finally {
-      setSpotifyLoading(false);
+      setLastFmLoading(false);
     }
   }, [user]);
 
-  // Handle Spotify connection change from the SpotifyConnection component
-  const handleSpotifyConnectionChange = (connected: boolean) => {
-    setSpotifyConnected(connected);
+  // Handle Last.fm connection change from the LastFmConnection component
+  const handleLastFmConnectionChange = (connected: boolean) => {
+    setLastFmConnected(connected);
     if (connected) {
-      fetchSpotifyData();
+      fetchLastFmData();
     }
   };
 
-  // Fetch Spotify data
-  const fetchSpotifyData = useCallback(async () => {
-    if (!user || !spotifyConnected) return;
+  // Fetch Last.fm data
+  const fetchLastFmData = useCallback(async () => {
+    if (!user || !lastFmConnected) return;
 
     setRecentlyPlayedLoading(true);
     try {
-      const tracks = await apiClient.getRecentlyPlayed();
-      const tracksArray = Array.isArray(tracks)
-        ? tracks
-        : (tracks as any)?.tracks || (tracks as any)?.items || [];
-      setRecentlyPlayed(tracksArray);
+      const response = await apiClient.getRecentlyPlayed();
+      setRecentlyPlayed(response.tracks || []);
     } catch {
       setRecentlyPlayed([]);
     } finally {
       setRecentlyPlayedLoading(false);
     }
-  }, [user, spotifyConnected]);
+  }, [user, lastFmConnected]);
 
   useEffect(() => {
     if (user) {
-      checkSpotifyConnection();
+      checkLastFmConnection();
     }
-  }, [user, checkSpotifyConnection]);
+  }, [user, checkLastFmConnection]);
 
   useEffect(() => {
-    if (user && spotifyConnected) {
-      fetchSpotifyData();
+    if (user && lastFmConnected) {
+      fetchLastFmData();
     }
-  }, [user, spotifyConnected, fetchSpotifyData]);
+  }, [user, lastFmConnected, fetchLastFmData]);
 
   // Drawer handlers
   const handleOpenNewRecommendation = (prefill?: typeof formPrefill) => {
@@ -110,13 +108,13 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Spotify Section */}
-      {spotifyLoading ? (
+      {/* Last.fm Section */}
+      {lastFmLoading ? (
         <Center py="md">
           <Loader size="sm" />
         </Center>
-      ) : !spotifyConnected ? (
-        <SpotifyConnection onConnectionChange={handleSpotifyConnectionChange} />
+      ) : !lastFmConnected ? (
+        <LastFmConnection onConnectionChange={handleLastFmConnectionChange} />
       ) : (
         <>
           <Group justify="space-between" align="center" my="md" maw={700}>
@@ -162,7 +160,7 @@ export default function DashboardPage() {
               <Stack align="center">
                 <IconMusic size={48} color="var(--mantine-color-dimmed)" />
                 <Text c="dimmed" ta="center">
-                  No recently played tracks found. Start listening on Spotify!
+                  No recently played tracks found. Start listening on Last.fm!
                 </Text>
               </Stack>
             </Center>
@@ -179,80 +177,75 @@ export default function DashboardPage() {
               }}
             >
               <Group gap="sm" wrap="nowrap" pb={8}>
-                {recentlyPlayed.slice(0, 12).map((track, index) => (
-                  <Card
-                    key={`${track.id}-${index}`}
-                    p="xs"
-                    withBorder
-                    style={{ width: 144, flexShrink: 0 }}
-                  >
-                    <Card.Section>
-                      {track.album?.images?.[0] ? (
-                        <img
-                          src={track.album.images[0].url}
-                          alt={`${track.name} album art`}
-                          style={{
-                            width: '100%',
-                            aspectRatio: '1',
-                            objectFit: 'cover',
+                {recentlyPlayed.slice(0, 12).map((track, index) => {
+                  // Get the largest available album image
+                  const albumImage = track.album?.images?.find((img) => img.size === 'extralarge')
+                    || track.album?.images?.find((img) => img.size === 'large')
+                    || track.album?.images?.[0];
+                  const artistNames = track.artists?.map((a) => a.name).join(', ') || '';
+
+                  return (
+                    <Card
+                      key={`${track.mbid || track.name}-${index}`}
+                      p="xs"
+                      withBorder
+                      style={{ width: 144, flexShrink: 0 }}
+                    >
+                      <Card.Section>
+                        {albumImage?.url ? (
+                          <img
+                            src={albumImage.url}
+                            alt={`${track.name} album art`}
+                            style={{
+                              width: '100%',
+                              aspectRatio: '1',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        ) : (
+                          <Center
+                            style={{
+                              width: '100%',
+                              aspectRatio: '1',
+                              backgroundColor: 'var(--mantine-color-gray-2)',
+                            }}
+                          >
+                            <IconMusic size={32} color="var(--mantine-color-gray-5)" />
+                          </Center>
+                        )}
+                      </Card.Section>
+                      <Stack gap={4} mt="xs">
+                        <Text size="sm" fw={500} lineClamp={1}>
+                          {track.name}
+                        </Text>
+                        <Text size="xs" c="dimmed" lineClamp={1}>
+                          {artistNames}
+                        </Text>
+                        <Button
+                          onClick={() => {
+                            const primaryArtist = track.artists?.[0];
+                            handleOpenNewRecommendation({
+                              song_name: track.name || '',
+                              band_name: artistNames,
+                              artwork_url: albumImage?.url || '',
+                              song_link: track.lastfm_url || '',
+                              band_lastfm_artist_name: primaryArtist?.name,
+                              band_musicbrainz_id: primaryArtist?.mbid,
+                            });
                           }}
-                        />
-                      ) : (
-                        <Center
-                          style={{
-                            width: '100%',
-                            aspectRatio: '1',
-                            backgroundColor: 'var(--mantine-color-gray-2)',
-                          }}
+                          variant="light"
+                          size="xs"
+                          color="grape"
+                          fullWidth
+                          mt={4}
+                          leftSection={<IconPlus size={14} />}
                         >
-                          <IconMusic size={32} color="var(--mantine-color-gray-5)" />
-                        </Center>
-                      )}
-                    </Card.Section>
-                    <Stack gap={4} mt="xs">
-                      <Text size="sm" fw={500} lineClamp={1}>
-                        {track.name}
-                      </Text>
-                      <Text size="xs" c="dimmed" lineClamp={1}>
-                        {Array.isArray(track.artists)
-                          ? track.artists
-                              .map((artist: any) =>
-                                typeof artist === 'string' ? artist : artist.name
-                              )
-                              .join(', ')
-                          : track.artists}
-                      </Text>
-                      <Button
-                        onClick={() =>
-                          handleOpenNewRecommendation({
-                            song_name: track.name || '',
-                            band_name: Array.isArray(track.artists)
-                              ? track.artists
-                                  .map((artist: any) =>
-                                    typeof artist === 'string' ? artist : artist.name
-                                  )
-                                  .join(', ')
-                              : track.artists || '',
-                            band_spotify_url:
-                              Array.isArray(track.artists) && track.artists[0]?.spotify_url
-                                ? track.artists[0].spotify_url
-                                : '',
-                            artwork_url: track.album?.images?.[0]?.url || '',
-                            song_link: track.external_urls?.spotify || '',
-                          })
-                        }
-                        variant="light"
-                        size="xs"
-                        color="grape"
-                        fullWidth
-                        mt={4}
-                        leftSection={<IconPlus size={14} />}
-                      >
-                        Recommend
-                      </Button>
-                    </Stack>
-                  </Card>
-                ))}
+                          Recommend
+                        </Button>
+                      </Stack>
+                    </Card>
+                  );
+                })}
               </Group>
             </Box>
           )}

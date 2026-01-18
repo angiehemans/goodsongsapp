@@ -1,25 +1,21 @@
 import Link from 'next/link';
 import {
-  IconBrandSpotify,
+  IconBrandLastfm,
   IconCheck,
   IconChevronRight,
   IconHeart,
+  IconMessageCircleHeart,
   IconMicrophone2,
   IconMusic,
   IconSearch,
-  IconShare,
-  IconStar,
-  IconUsers,
 } from '@tabler/icons-react';
 import {
   Badge,
   Box,
   Button,
   Card,
-  Center,
   Container,
-  Grid,
-  GridCol,
+  Flex,
   Group,
   List,
   ListItem,
@@ -30,171 +26,133 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { Header } from '@/components/Header/Header';
 import styles from './page.module.css';
 
 export default function HomePage() {
   return (
     <Box>
-      {/* Top Menu Bar */}
-      <Header logoHref="/" showAuthButtons size="lg" />
+      {/* Hero Section - Full viewport */}
+      <Box className={styles.hero}>
+        <Stack align="center" justify="space-around" gap="xl" h="80vh" w="100%">
+          <Flex direction="column" align="center" gap="md">
+            <Title c="blue.9" className={styles.heroTitle}>
+              goodsongs
+            </Title>
+            <Title order={1} fw={400} c="grape.6">
+              Where bands and fans belong.
+            </Title>
+            <Text maw={500} size="lg">
+              A platform that brings artists and fans together by giving bands the tools to manage
+              their business and fans a community to share music and connect with the artists they
+              love.
+            </Text>
+          </Flex>
 
-      {/* Hero Section */}
-      <Box className={styles.hero} py={80}>
-        <Container size="lg">
-          <Grid align="center">
-            <GridCol span={{ base: 12, md: 6 }}>
-              <Stack gap="xl">
-                <Title order={1} size="3.5rem" c="grape.9" lh={1.1}>
-                  Your Music,
-                  <br />
-                  <Text span c="violet.8" inherit>
-                    Amplified
-                  </Text>
-                </Title>
-                <Text size="xl" lh={1.6}>
-                  Connect your Spotify, discover new bands, share recommendations, and build your
-                  musical identity. Join a community of music lovers sharing their favorite songs.
-                </Text>
-                <Group>
-                  <Button
-                    component={Link}
-                    href="/signup"
-                    size="lg"
-                    color="grape.9"
-                    rightSection={<IconChevronRight size={20} />}
-                  >
-                    Start Discovering
-                  </Button>
-                  <Button component={Link} href="/login" size="lg" variant="outline" color="grape">
-                    Sign In
-                  </Button>
-                </Group>
-              </Stack>
-            </GridCol>
-            <GridCol span={{ base: 12, md: 6 }}>
-              <Center></Center>
-            </GridCol>
-          </Grid>
-        </Container>
+          <Flex gap="md" justify="center">
+            <Button
+              component={Link}
+              href="/signup"
+              size="lg"
+              color="blue.9"
+              rightSection={<IconChevronRight size={20} />}
+            >
+              Start Discovering
+            </Button>
+            <Button component={Link} href="/login" size="lg" variant="outline" color="blue">
+              Sign In
+            </Button>
+          </Flex>
+        </Stack>
       </Box>
 
       {/* Features Section */}
-      <Container size="lg" py={80}>
-        <Stack align="center" gap="xl" mb={60}>
-          <Title order={2} size="2.5rem" ta="center" c="grape.9">
-            Everything you need to explore music
-          </Title>
-          <Text size="lg" ta="center" c="dimmed" maw={600}>
-            From discovering new artists to sharing your favorite tracks, Goodsongs brings all your
-            music experiences together in one place.
-          </Text>
-        </Stack>
-
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-          <Card
-            padding="xl"
-            radius="md"
-            style={{ border: '2px solid var(--mantine-color-grape-2)' }}
-          >
-            <ThemeIcon size={60} radius="xl" color="green" mb="md">
-              <IconBrandSpotify size={30} />
-            </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">
-              Spotify Integration
+      <Box bg="blue.9" py={80}>
+        <Container size="lg">
+          <Stack align="center" gap="xl" mb={60}>
+            <Title order={2} size="2.5rem" ta="center" c="white">
+              Everything fans need to share the music they love.
             </Title>
-            <Text c="dimmed" lh={1.6}>
-              Connect your Spotify account to see your recently played tracks and get personalized
-              recommendations based on your listening history.
+            <Text size="lg" ta="center" c="grape.3" maw={600}>
+              Discover new sounds, connect with the artists behind them, and share your taste with
+              the world.
             </Text>
-          </Card>
+          </Stack>
 
-          <Card
-            padding="xl"
-            radius="md"
-            style={{ border: '2px solid var(--mantine-color-violet-2)' }}
-          >
-            <ThemeIcon size={60} radius="xl" color="violet.6" mb="md">
-              <IconStar size={30} />
-            </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">
-              Share Recommendations
-            </Title>
-            <Text c="dimmed" lh={1.6}>
-              Share your favorite songs with the community. Highlight what you love and help others
-              discover great music.
-            </Text>
-          </Card>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
+            <Card
+              padding="xl"
+              radius="md"
+              bg="blue.2"
+              style={{ border: '2px solid var(--mantine-color-blue-3)' }}
+            >
+              <Group gap="sm" mb="sm">
+                <IconBrandLastfm size={28} color="var(--mantine-color-blue-7)" />
+                <Title order={3} size="1.4rem" c="blue.9">
+                  Last.fm Integration
+                </Title>
+              </Group>
+              <Text lh={1.6}>
+                Connect your Last.fm account to see your recently played tracks and get personalized
+                recommendations based on what you already love.
+              </Text>
+            </Card>
 
-          <Card
-            padding="xl"
-            radius="md"
-            style={{ border: '2px solid var(--mantine-color-grape-2)' }}
-          >
-            <ThemeIcon size={60} radius="xl" color="grape.6" mb="md">
-              <IconUsers size={30} />
-            </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">
-              Create Bands
-            </Title>
-            <Text c="dimmed" lh={1.6}>
-              Showcase your musical projects, connect with other artists, and build your band's
-              presence across multiple platforms.
-            </Text>
-          </Card>
+            <Card
+              padding="xl"
+              radius="md"
+              bg="blue.2"
+              style={{ border: '2px solid var(--mantine-color-blue-3)' }}
+            >
+              <Group gap="sm" mb="sm">
+                <IconMessageCircleHeart size={28} color="var(--mantine-color-blue-7)" />
+                <Title order={3} size="1.4rem" c="blue.9">
+                  Recommend Songs
+                </Title>
+              </Group>
+              <Text lh={1.6}>
+                Share the songs you can't stop playing. Highlight what you love and help others
+                discover their next favorite track.
+              </Text>
+            </Card>
 
-          <Card
-            padding="xl"
-            radius="md"
-            style={{ border: '2px solid var(--mantine-color-blue-2)' }}
-          >
-            <ThemeIcon size={60} radius="xl" color="blue.6" mb="md">
-              <IconSearch size={30} />
-            </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">
-              Discover Music
-            </Title>
-            <Text c="dimmed" lh={1.6}>
-              Explore new artists and songs through community recommendations, trending tracks, and
-              personalized suggestions.
-            </Text>
-          </Card>
+            <Card
+              padding="xl"
+              radius="md"
+              bg="blue.2"
+              style={{ border: '2px solid var(--mantine-color-blue-3)' }}
+            >
+              <Group gap="sm" mb="sm">
+                <IconSearch size={28} color="var(--mantine-color-blue-7)" />
+                <Title order={3} size="1.4rem" c="blue.9">
+                  Discover Music
+                </Title>
+              </Group>
+              <Text lh={1.6}>
+                Find your next obsession through community recommendations, trending tracks, and
+                personalized suggestions.
+              </Text>
+            </Card>
 
-          <Card
-            padding="xl"
-            radius="md"
-            style={{ border: '2px solid var(--mantine-color-pink-2)' }}
-          >
-            <ThemeIcon size={60} radius="xl" color="pink.6" mb="md">
-              <IconHeart size={30} />
-            </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">
-              Build Your Profile
-            </Title>
-            <Text c="dimmed" lh={1.6}>
-              Create a musical identity that reflects your taste. Show off your recommendations,
-              bands, and favorite discoveries.
-            </Text>
-          </Card>
-
-          <Card
-            padding="xl"
-            radius="md"
-            style={{ border: '2px solid var(--mantine-color-orange-2)' }}
-          >
-            <ThemeIcon size={60} radius="xl" color="orange.6" mb="md">
-              <IconShare size={30} />
-            </ThemeIcon>
-            <Title order={3} size="xl" mb="sm">
-              Share & Connect
-            </Title>
-            <Text c="dimmed" lh={1.6}>
-              Connect with fellow music lovers, share your discoveries, and build a community around
-              your musical passions.
-            </Text>
-          </Card>
-        </SimpleGrid>
-      </Container>
+            <Card
+              padding="xl"
+              radius="md"
+              bg="blue.2"
+              style={{ border: '2px solid var(--mantine-color-blue-3)' }}
+            >
+              <Group gap="sm" mb="sm">
+                <IconHeart size={28} color="var(--mantine-color-blue-7)" />
+                <Title order={3} size="1.4rem" c="blue.9">
+                  Build Your Profile
+                </Title>
+              </Group>
+              <Text lh={1.6}>
+                Create a musical identity that reflects your taste. Showcase your recommendations,
+                favorite artists, and discoveries.
+              </Text>
+            </Card>
+          </SimpleGrid>
+        </Container>
+      </Box>
 
       {/* Sample Recommendations Section */}
       <Box bg="grape.0" py={80}>
@@ -242,7 +200,7 @@ export default function HomePage() {
                       </Text>
                     </Stack>
                   </Group>
-                  <IconBrandSpotify size={24} color="var(--mantine-color-green-6)" />
+                  <IconBrandLastfm size={24} color="var(--mantine-color-red-6)" />
                 </Group>
 
                 <Text size="sm" c="dark">
@@ -297,7 +255,7 @@ export default function HomePage() {
                       </Text>
                     </Stack>
                   </Group>
-                  <IconBrandSpotify size={24} color="var(--mantine-color-green-6)" />
+                  <IconBrandLastfm size={24} color="var(--mantine-color-red-6)" />
                 </Group>
 
                 <Text size="sm" c="dark">

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Authorization token required' },
@@ -14,19 +14,22 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
+    const body = await request.json();
 
-    const response = await fetch(`${API_BASE_URL}/spotify/status`, {
+    const response = await fetch(`${API_BASE_URL}/lastfm/connect`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.error || 'Failed to get Spotify status' },
+        { error: data.error || 'Failed to connect Last.fm' },
         { status: response.status }
       );
     }

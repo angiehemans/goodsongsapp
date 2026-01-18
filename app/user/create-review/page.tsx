@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconAlertCircle, IconArrowLeft, IconBrandSpotify, IconMusic } from '@tabler/icons-react';
+import { IconAlertCircle, IconArrowLeft, IconBrandLastfm, IconMusic } from '@tabler/icons-react';
 import {
   Alert,
   Button,
@@ -61,29 +61,32 @@ function CreateReviewForm() {
   const [formData, setFormData] = useState<ReviewData>({
     song_link: '',
     band_name: '',
-    band_spotify_url: '',
     song_name: '',
     artwork_url: '',
     review_text: '',
     liked_aspects: [],
+    band_lastfm_artist_name: undefined,
+    band_musicbrainz_id: undefined,
   });
 
   // Prefill form from URL parameters when component mounts
   useEffect(() => {
     const songName = searchParams.get('song_name');
     const bandName = searchParams.get('band_name');
-    const bandSpotifyUrl = searchParams.get('band_spotify_url');
     const artworkUrl = searchParams.get('artwork_url');
     const songLink = searchParams.get('song_link');
+    const bandLastfmArtistName = searchParams.get('band_lastfm_artist_name');
+    const bandMusicbrainzId = searchParams.get('band_musicbrainz_id');
 
-    if (songName || bandName || artworkUrl || songLink || bandSpotifyUrl) {
+    if (songName || bandName || artworkUrl || songLink || bandLastfmArtistName || bandMusicbrainzId) {
       setFormData((prev) => ({
         ...prev,
         song_name: songName || prev.song_name,
         band_name: bandName || prev.band_name,
-        band_spotify_url: bandSpotifyUrl || prev.band_spotify_url,
         artwork_url: artworkUrl || prev.artwork_url,
         song_link: songLink || prev.song_link,
+        band_lastfm_artist_name: bandLastfmArtistName || prev.band_lastfm_artist_name,
+        band_musicbrainz_id: bandMusicbrainzId || prev.band_musicbrainz_id,
       }));
     }
   }, [searchParams]);
@@ -152,9 +155,9 @@ function CreateReviewForm() {
 
           {(searchParams.get('song_name') || searchParams.get('band_name')) && (
             <Alert
-              icon={<IconBrandSpotify size="1rem" />}
-              title="Prefilled from Spotify"
-              color="green"
+              icon={<IconBrandLastfm size="1rem" />}
+              title="Prefilled from Last.fm"
+              color="red"
               variant="light"
               mb="lg"
             >
@@ -172,7 +175,7 @@ function CreateReviewForm() {
             <Stack>
               <TextInput
                 label="Song Link"
-                placeholder="https://spotify.com/track/123"
+                placeholder="https://www.last.fm/music/Artist/_/Song"
                 required
                 value={formData.song_link}
                 onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}

@@ -130,11 +130,11 @@ export default function OnboardingPage() {
               <Stack gap="xs" style={{ flex: 1 }}>
                 <Title order={3}>I'm a Fan</Title>
                 <Text size="sm" c="dimmed">
-                  Discover new music, connect your Spotify account, and share your favorite song recommendations with the community.
+                  Discover new music, connect your Last.fm account, and share your favorite song recommendations with the community.
                 </Text>
                 <Group gap="xs" mt="xs">
                   <Text size="xs" c="grape.6" fw={500}>
-                    Connect Spotify
+                    Connect Last.fm
                   </Text>
                   <Text size="xs" c="dimmed">•</Text>
                   <Text size="xs" c="grape.6" fw={500}>

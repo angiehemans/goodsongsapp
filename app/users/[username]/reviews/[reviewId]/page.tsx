@@ -6,8 +6,8 @@ import { useParams } from 'next/navigation';
 import {
   IconArrowLeft,
   IconBrandInstagram,
-  IconBrandSpotify,
   IconCheck,
+  IconExternalLink,
   IconLink,
   IconMusic,
   IconPhoto,
@@ -277,11 +277,11 @@ export default function SingleReviewPage() {
                   <a href={review.song_link} target="_blank" rel="noopener noreferrer">
                     <Button
                       variant="filled"
-                      color="green"
-                      leftSection={<IconBrandSpotify size={20} />}
+                      color="grape"
+                      leftSection={<IconExternalLink size={20} />}
                       size="sm"
                     >
-                      Play on Spotify
+                      Listen Now
                     </Button>
                   </a>
                 )}
