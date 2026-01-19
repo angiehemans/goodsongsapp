@@ -130,3 +130,9 @@ dist
 .pnp.*
 
 .DS_Store
+
+# Turborepo
+.turbo
+
+# pnpm
+pnpm-lock.yaml

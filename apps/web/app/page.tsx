@@ -1,11 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import {
-  IconBrandInstagram,
-  IconBrandTiktok,
-  IconBrandTwitter,
   IconCalendarEvent,
   IconChartBar,
   IconHeart,
@@ -15,40 +12,28 @@ import {
   IconSearch,
   IconUsers,
 } from '@tabler/icons-react';
-import {
-  Box,
-  Button,
-  Container,
-  Flex,
-  Grid,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Box, Button, Container, Flex, Grid, Group, Stack, Text, Title } from '@mantine/core';
 import styles from './page.module.css';
 
 export default function HomePage() {
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.visible);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
 
-  const handleWaitlistSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
+    const animatedElements = document.querySelectorAll('[data-animate]');
+    animatedElements.forEach((el) => observer.observe(el));
 
-    setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setEmail('');
-    notifications.show({
-      title: "You're on the list!",
-      message: "We'll notify you when new features launch.",
-      color: 'grape',
-    });
-  };
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Box className={styles.page}>
@@ -77,38 +62,43 @@ export default function HomePage() {
       {/* Hero Section */}
       <Box className={styles.hero}>
         <Container size="xl" className={styles.heroContent}>
-          <Stack align="center" gap={0}>
-            <Title className={styles.heroTitle}>goodsongs</Title>
-
-            <Text size="xl" mt="xl" maw={600} ta="center" c="grape.7">
-              A platform that brings artists and fans together. Share the songs you love. Discover
-              your next obsession. Connect with the music community.
-            </Text>
-            <Group mt="xl" gap="md">
-              <Button component={Link} href="/signup" size="lg" color="blue.9">
-                Start Discovering
-              </Button>
-              <Button component={Link} href="/login" size="lg" variant="outline" color="blue.9">
-                Sign In
-              </Button>
-            </Group>
-          </Stack>
+          <div data-animate className={styles.animateSection}>
+            <Stack align="center" gap={0}>
+              <Title className={styles.heroTitle}>share some</Title>
+              <Title className={styles.heroTitle}>goodsongs</Title>
+              <Text size="lg" mt="xl" maw={600} ta="center" c="grape.7">
+                A platform that brings artists and fans together. Share the songs you love. Discover
+                your next obsession. Connect with the music community.
+              </Text>
+              <Group mt="xl" gap="md">
+                <Button component={Link} href="/signup" size="lg" color="blue.9">
+                  Start Discovering
+                </Button>
+                <Button component={Link} href="/login" size="lg" variant="outline" color="blue.9">
+                  Log In
+                </Button>
+              </Group>
+            </Stack>
+          </div>
         </Container>
       </Box>
 
       {/* For Fans Section */}
       <Box className={styles.sectionLight} py={80}>
         <Container size="lg">
-          <Stack align="center" mb={60}>
-            <Title order={2} size="3rem" ta="center" c="blue.9">
-              For Fans
-            </Title>
-            <Text size="lg" c="grape.6" ta="center" maw={500}>
-              Everything you need to share the music you love and discover what's next.
-            </Text>
-          </Stack>
+          <div data-animate className={styles.animateSection}>
+            <Stack align="center" mb={60}>
+              <Title order={2} size="3rem" ta="center" c="blue.9">
+                For Fans
+              </Title>
+              <Text size="lg" c="grape.6" ta="center" maw={500}>
+                Everything you need to share the music you love and discover what's next.
+              </Text>
+            </Stack>
+          </div>
 
-          <Grid gutter="xl">
+          <div data-animate className={styles.animateSection}>
+            <Grid gutter="xl">
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Box className={styles.featureCard}>
                 <Box className={styles.featureIcon}>
@@ -153,23 +143,27 @@ export default function HomePage() {
                 </Text>
               </Box>
             </Grid.Col>
-          </Grid>
+            </Grid>
+          </div>
         </Container>
       </Box>
 
       {/* For Bands Section - Dark */}
       <Box className={styles.sectionDark} py={80}>
         <Container size="lg">
-          <Stack align="center" mb={60}>
-            <Title order={2} size="3rem" ta="center" c="grape.0">
-              For Bands
-            </Title>
-            <Text size="lg" c="blue.3" ta="center" maw={500}>
-              Tools to manage your music career and connect with fans who love what you do.
-            </Text>
-          </Stack>
+          <div data-animate className={styles.animateSection}>
+            <Stack align="center" mb={60}>
+              <Title order={2} size="3rem" ta="center" c="grape.0">
+                For Bands
+              </Title>
+              <Text size="lg" c="blue.3" ta="center" maw={500}>
+                Tools to manage your music career and connect with fans who love what you do.
+              </Text>
+            </Stack>
+          </div>
 
-          <Grid gutter="xl">
+          <div data-animate className={styles.animateSection}>
+            <Grid gutter="xl">
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Box className={styles.featureCardDark}>
                 <Box className={styles.featureIconDark}>
@@ -226,40 +220,46 @@ export default function HomePage() {
                 </Text>
               </Box>
             </Grid.Col>
-          </Grid>
+            </Grid>
+          </div>
 
-          <Flex justify="center" mt={60}>
-            <Button component={Link} href="/signup" size="lg" color="grape.3" c="blue.9">
-              Create Band Profile
-            </Button>
-          </Flex>
+          <div data-animate className={styles.animateSection}>
+            <Flex justify="center" mt={60}>
+              <Button component={Link} href="/signup" size="lg" color="grape.3" c="blue.9">
+                Create Band Profile
+              </Button>
+            </Flex>
+          </div>
         </Container>
       </Box>
 
       {/* Waitlist/CTA Section */}
       <Box className={styles.sectionLight} py={80}>
         <Container size="sm">
-          <Stack align="center">
-            <Title order={2} size="2.5rem" ta="center" c="blue.9">
-              Join the Community
-            </Title>
-            <Text size="lg" c="grape.6" ta="center" maw={450}>
-              Sign up now to start sharing your favorite songs!
-            </Text>
+          <div data-animate className={styles.animateSection}>
+            <Stack align="center">
+              <Title order={2} size="2.5rem" ta="center" c="blue.9">
+                Join the Community
+              </Title>
+              <Text size="lg" c="grape.6" ta="center" maw={450}>
+                Sign up now to start sharing your favorite songs!
+              </Text>
 
-            <Group mt="xl" gap="lg">
-              <Button component={Link} href="/signup" size="lg" color="blue.9">
-                Get Started Free
-              </Button>
-            </Group>
-          </Stack>
+              <Group mt="xl" gap="lg">
+                <Button component={Link} href="/signup" size="lg" color="blue.9">
+                  Get Started Free
+                </Button>
+              </Group>
+            </Stack>
+          </div>
         </Container>
       </Box>
 
       {/* Footer */}
       <Box component="footer" className={styles.footer}>
         <Container size="lg">
-          <Grid gutter="xl" py={60}>
+          <div data-animate className={styles.animateSection}>
+            <Grid gutter="xl" py={60}>
             <Grid.Col span={{ base: 12, sm: 4 }}>
               <Group gap="sm" mb="md">
                 <IconMusic size={28} color="var(--mantine-color-grape-0)" />
@@ -288,7 +288,8 @@ export default function HomePage() {
                 </Link>
               </Stack>
             </Grid.Col>
-          </Grid>
+            </Grid>
+          </div>
 
           <Box className={styles.footerBottom}>
             <Text c="blue.4" size="sm" ta="center">

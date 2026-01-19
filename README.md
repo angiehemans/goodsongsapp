@@ -1,37 +1,225 @@
-# Mantine Next.js template
+# GoodSongs
 
-This is a template for [Next.js](https://nextjs.org/) app router + [Mantine](https://mantine.dev/).
-If you want to use pages router instead, see [next-pages-template](https://github.com/mantinedev/next-pages-template).
+A platform for music lovers to discover, review, and share songs with friends. GoodSongs connects fans with bands and creates a community around music discovery.
 
-## Features
+## Project Structure
 
-This template comes with the following features:
+This is a monorepo powered by [Turborepo](https://turbo.build/) and [pnpm](https://pnpm.io/).
 
-- [PostCSS](https://postcss.org/) with [mantine-postcss-preset](https://mantine.dev/styles/postcss-preset)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Storybook](https://storybook.js.org/)
-- [Jest](https://jestjs.io/) setup with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
-- ESLint setup with [eslint-config-mantine](https://github.com/mantinedev/eslint-config-mantine)
+```
+goodsongs/
+├── apps/
+│   ├── web/                    # Next.js web application
+│   └── mobile/                 # React Native mobile app (coming soon)
+├── packages/
+│   ├── tokens/                 # Shared design tokens (colors, typography, spacing)
+│   ├── api-client/             # Shared API types, schemas, and utilities
+│   └── config/                 # Shared TypeScript configurations
+```
 
-## npm scripts
+## Apps
 
-### Build and dev scripts
+### Web (`apps/web`)
 
-- `dev` – start dev server
-- `build` – bundle application for production
-- `analyze` – analyzes application bundle with [@next/bundle-analyzer](https://www.npmjs.com/package/@next/bundle-analyzer)
+The main GoodSongs web application built with:
 
-### Testing scripts
+- [Next.js 15](https://nextjs.org/) - React framework with App Router
+- [Mantine 8](https://mantine.dev/) - UI component library
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [SWR](https://swr.vercel.app/) - Data fetching
 
-- `typecheck` – checks TypeScript types
-- `lint` – runs ESLint
-- `prettier:check` – checks files with Prettier
-- `jest` – runs jest tests
-- `jest:watch` – starts jest watch
-- `test` – runs `jest`, `prettier:check`, `lint` and `typecheck` scripts
+**Features:**
+- User authentication (fan and band accounts)
+- Song reviews and recommendations
+- Band profiles and management
+- Event listings
+- Last.fm integration for recently played tracks
+- Social features (follow users, activity feed, notifications)
+- Admin dashboard
 
-### Other scripts
+### Mobile (`apps/mobile`)
 
-- `storybook` – starts storybook dev server
-- `storybook:build` – build production storybook bundle to `storybook-static`
-- `prettier:write` – formats all files with Prettier
+React Native mobile app for Android (coming soon). Will share design tokens and API types with the web app.
+
+## Shared Packages
+
+### `@goodsongs/tokens`
+
+Design system tokens shared across web and mobile:
+- Color palettes (grape, blue, grey)
+- Typography (fonts, sizes, weights)
+- Spacing scale
+- Border radii
+
+### `@goodsongs/api-client`
+
+Shared API layer:
+- TypeScript interfaces for all API entities
+- Zod validation schemas
+- Utility functions
+
+### `@goodsongs/config`
+
+Shared configurations:
+- TypeScript base config
+- Next.js TypeScript config
+- React Native TypeScript config
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 22+ (see `.nvmrc`)
+- pnpm 9+
+
+```bash
+# Install pnpm if you don't have it
+npm install -g pnpm
+```
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/goodsongsapp.git
+cd goodsongsapp
+
+# Install dependencies
+pnpm install
+```
+
+### Environment Setup
+
+Create a `.env.local` file in `apps/web/`:
+
+```bash
+cp apps/web/.env.example apps/web/.env.local
+```
+
+Edit the file with your API URL and other configuration.
+
+## Development
+
+### Run all apps
+
+```bash
+pnpm dev
+```
+
+### Run only the web app
+
+```bash
+pnpm dev --filter=@goodsongs/web
+
+# Or from the web directory
+cd apps/web
+pnpm dev
+```
+
+The web app runs at [http://localhost:3001](http://localhost:3001)
+
+## Building
+
+### Build all packages and apps
+
+```bash
+pnpm build
+```
+
+### Build only the web app
+
+```bash
+pnpm build --filter=@goodsongs/web
+```
+
+## Testing
+
+### Run all tests
+
+```bash
+pnpm test
+```
+
+### Run tests for the web app
+
+```bash
+pnpm test --filter=@goodsongs/web
+```
+
+### Individual test commands (from `apps/web/`)
+
+```bash
+# Type checking
+pnpm typecheck
+
+# Linting
+pnpm lint
+
+# Jest tests
+pnpm jest
+
+# Jest in watch mode
+pnpm jest:watch
+
+# Prettier check
+pnpm prettier:check
+
+# Format with Prettier
+pnpm prettier:write
+```
+
+## Other Commands
+
+### Storybook
+
+```bash
+cd apps/web
+pnpm storybook
+```
+
+Storybook runs at [http://localhost:6006](http://localhost:6006)
+
+### Bundle Analysis
+
+```bash
+cd apps/web
+pnpm analyze
+```
+
+### Clean
+
+Remove all `node_modules` and build artifacts:
+
+```bash
+pnpm clean
+```
+
+## Deployment
+
+### Vercel (Web)
+
+The web app is configured for Vercel deployment. The `vercel.json` at the root handles the monorepo setup automatically.
+
+**Manual Vercel configuration:**
+- Root Directory: `apps/web`
+- Build Command: `pnpm build --filter=@goodsongs/web`
+- Install Command: `pnpm install`
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Monorepo | Turborepo, pnpm workspaces |
+| Web Framework | Next.js 15 (App Router) |
+| UI Library | Mantine 8 |
+| Styling | PostCSS, CSS Modules |
+| Language | TypeScript |
+| Data Fetching | SWR |
+| Validation | Zod |
+| Testing | Jest, React Testing Library |
+| Storybook | Storybook 8 |
+| Linting | ESLint, Stylelint, Prettier |
+
+## License
+
+See [LICENCE](./LICENCE) for details.
