@@ -133,6 +133,3 @@ dist
 
 # Turborepo
 .turbo
-
-# pnpm
-pnpm-lock.yaml
