@@ -1,0 +1,285 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Caprasimo-Regular.ttf",
+      "sha1": "69635154ccd4f68233cdc59173d6d32de5241d56"
+    },
+    {
+      "path": "assets/fonts/Fraunces-Regular.ttf",
+      "sha1": "7670fe0c6d4bdf9a8f15bb0648016926dcc6166c"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-Bold.ttf",
+      "sha1": "1cf04677d863c24dd099a5b648b5e09e658e1ed3"
+    },
+    {
+      "path": "assets/fonts/Baskervville/OFL.txt",
+      "sha1": "9a25cc6ddb228b4e13b2dbef9c3d77d64f6c8046"
+    },
+    {
+      "path": "assets/fonts/Baskervville/Baskervville-VariableFont_wght.ttf",
+      "sha1": "d46c44abc54f8ed61fbe781a483efdda1f26dd5c"
+    },
+    {
+      "path": "assets/fonts/Baskervville/Baskervville-Italic-VariableFont_wght.ttf",
+      "sha1": "623d53707b202beefefc0296f739e8cc1813c91b"
+    },
+    {
+      "path": "assets/fonts/Baskervville/README.txt",
+      "sha1": "40a81d470ab5175344d49455869a48b302c5291e"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-Regular.ttf",
+      "sha1": "10541b0acbb70c2dc784db5a8297840f8e9d1943"
+    },
+    {
+      "path": "assets/fonts/Baskervville-SemiBold.ttf",
+      "sha1": "81af029194cdb7dd49996269df8a8384ebe99f9b"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-BoldItalic.ttf",
+      "sha1": "fa0497a57ee775ee52f711527e4c968b8edfb342"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-Bold.ttf",
+      "sha1": "5aa0a4c2781adb2eafe88e5caa1a33de7173db27"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-Medium.ttf",
+      "sha1": "42f344b079e1938a7aca7d46b7f5be6c063a9fed"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-MediumItalic.ttf",
+      "sha1": "2dd4e0b26ddcfa6af8985ed8429476e4e521c892"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-SemiBoldItalic.ttf",
+      "sha1": "c271617ba868f01f0767bd41a96a147eb09af4fb"
+    },
+    {
+      "path": "assets/fonts/Baskervville/static/Baskervville-Italic.ttf",
+      "sha1": "1b16b780ac96a19344e4fb634798cb0ca018717b"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/EBGaramond-VariableFont_wght.ttf",
+      "sha1": "0021ea0cc2d388538dfed890e3e8f72c8ed568a0"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/OFL.txt",
+      "sha1": "b1ac166b8267aab85172387f0b33ca772babdf7e"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/README.txt",
+      "sha1": "01797af71471465da024099e065fe132e9407473"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-Italic.ttf",
+      "sha1": "f7665540b1c44a07059dc919a8102fdf3a159b9c"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-Medium.ttf",
+      "sha1": "783bae39735e3e4fbc29c96f0c0be1f1f78f0913"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-BoldItalic.ttf",
+      "sha1": "0a2c4e78cc98d24625bf3325a6540d448ab4716f"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-MediumItalic.ttf",
+      "sha1": "9ea2f51786d5c6211174653434c529a27c696b26"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-SemiBoldItalic.ttf",
+      "sha1": "389fe264a4ad5b3e7db61147aeaa2981b74ea550"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-ExtraBold.ttf",
+      "sha1": "af241fae707806edb607ee588ec5d4abbe0d8230"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-Regular.ttf",
+      "sha1": "eeae9f27bb0d1c0b05828b46d03dd46bf4720033"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-SemiBold.ttf",
+      "sha1": "fe3346b0fc4c98e170d8d32f17e0890e25cff071"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/static/EBGaramond-ExtraBoldItalic.ttf",
+      "sha1": "33856796495f050f81dbaa348c1b45eb225338ad"
+    },
+    {
+      "path": "assets/fonts/EB_Garamond/EBGaramond-Italic-VariableFont_wght.ttf",
+      "sha1": "91d134142767b0e78f48cb3d8c9d1eb55d933c34"
+    },
+    {
+      "path": "assets/fonts/Fraunces-SemiBold.ttf",
+      "sha1": "1eaf25e50f2830e42428f0912a57bf8718872bc0"
+    },
+    {
+      "path": "assets/fonts/Fraunces-Bold.ttf",
+      "sha1": "f26fcd8165599f0316c97bd6bcfb060b23c588e5"
+    },
+    {
+      "path": "assets/fonts/Fraunces/Fraunces-Italic-VariableFont_SOFT,WONK,opsz,wght.ttf",
+      "sha1": "0552b0eb9e25b1bfba4e43b8bc8e9f022afeb109"
+    },
+    {
+      "path": "assets/fonts/Fraunces/Fraunces-VariableFont_SOFT,WONK,opsz,wght.ttf",
+      "sha1": "4b74bfd08dd86caaf307a875b6f027198b29f337"
+    },
+    {
+      "path": "assets/fonts/Fraunces/OFL.txt",
+      "sha1": "b7cb77da8f26d520bc919ec10eaa6ffc26e32d9d"
+    },
+    {
+      "path": "assets/fonts/Fraunces/README.txt",
+      "sha1": "6642bb45f08ae6191bf132b3f00ffb854f11204a"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-BoldItalic.ttf",
+      "sha1": "1e0a522e77987c5771749a54e9981884f79d7cae"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-Regular.ttf",
+      "sha1": "7670fe0c6d4bdf9a8f15bb0648016926dcc6166c"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-Bold.ttf",
+      "sha1": "8f913002df0a6c5cb09987cf2d86c6cb7e61143d"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-Thin.ttf",
+      "sha1": "db108763cd8556c7fea3a40d4fd02f2a507042ae"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-Regular.ttf",
+      "sha1": "cdf30181c2aaaa49e3a409537f9801354dbc032f"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-SemiBoldItalic.ttf",
+      "sha1": "fbbeebef3a989f15293164dfc12ba4972bc58f04"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-SemiBold.ttf",
+      "sha1": "c0da2312310fb7db34e822b6de40df1962b37af8"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-Black.ttf",
+      "sha1": "94983205ddf780a5a5ccadd697ef079998140276"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-Black.ttf",
+      "sha1": "3cbac25008cac8bc4ef017f0482cb54b2ffb818f"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-LightItalic.ttf",
+      "sha1": "4897fbff36b9f4a126da58ddd28418887902d2ee"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-Bold.ttf",
+      "sha1": "e07045330eb73d2f85d8a4117051a3fecf9ccf80"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-BoldItalic.ttf",
+      "sha1": "57efa3f8e2535f723812e34cbe24b73bedfb09ad"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-Italic.ttf",
+      "sha1": "c3d93cf6f1789f947b7729a49bc2937eb914814e"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-SemiBold.ttf",
+      "sha1": "ab6270253858cfa3e7f24c77deef6de94d5dc60f"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-Italic.ttf",
+      "sha1": "b0c62bdbd09a896c695d013ed6fbda38f094bc6c"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-ThinItalic.ttf",
+      "sha1": "1551b7a19f019dbeb5e35c6e1816b09457593196"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-BoldItalic.ttf",
+      "sha1": "22e003255613bfc7a2e0e293108506164a44a6d9"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-Light.ttf",
+      "sha1": "11542be49679c217a83d44f5eb8b9df7b27070e6"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-SemiBoldItalic.ttf",
+      "sha1": "8b5d4538f2600acd52b88d7e952b91dce212f2bb"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-BlackItalic.ttf",
+      "sha1": "58e51585ad1715db48471ce7cfaf34b2ab88397a"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-Thin.ttf",
+      "sha1": "98c3439d3d227a4c081cb1de06c3d6102e9957fd"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-Bold.ttf",
+      "sha1": "f26fcd8165599f0316c97bd6bcfb060b23c588e5"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-Italic.ttf",
+      "sha1": "1583b48aa162beb4b4d0ad22684bcbd829b510c8"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-ThinItalic.ttf",
+      "sha1": "d4763412380b2e7c380503bc66f71741ff5dbcaf"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-LightItalic.ttf",
+      "sha1": "024b2e118dd47e2c1f8b6592b2f9f8fe49f52f75"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-BlackItalic.ttf",
+      "sha1": "827464afc8a978a7127ead87a62c727f6253f356"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-SemiBold.ttf",
+      "sha1": "1eaf25e50f2830e42428f0912a57bf8718872bc0"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-LightItalic.ttf",
+      "sha1": "360961f750f0f6dd7f6f0151c910690f75283d3a"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-Black.ttf",
+      "sha1": "8ec8613821cbb1e91f33335f55514131b2d0d6bb"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-SemiBoldItalic.ttf",
+      "sha1": "54cf6970acc7ad0d9256bf3c3e8a004ee091e4fa"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-Light.ttf",
+      "sha1": "ad54a6a9ac46d4653ef1fc2426db12b0a393f8f8"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-Regular.ttf",
+      "sha1": "90cef8da39082ef59c2f8da21b861bfb27aca659"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_SuperSoft-BlackItalic.ttf",
+      "sha1": "546d9fbb708d2653027dbf6f0db155de7b9f4b53"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-ThinItalic.ttf",
+      "sha1": "c6bc7761026814b625d9defe5b6d50a2fcacebd8"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt-Light.ttf",
+      "sha1": "3d19550c65c6962dbfe5e36d4e46fbbada9dff9c"
+    },
+    {
+      "path": "assets/fonts/Fraunces/static/Fraunces_72pt_Soft-Thin.ttf",
+      "sha1": "e40058ef9bf5f2d0f14072aabb9e4e7f0fbca174"
+    }
+  ]
+}

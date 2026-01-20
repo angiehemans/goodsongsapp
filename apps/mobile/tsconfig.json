@@ -1,0 +1,14 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@goodsongs/tokens": ["../../packages/tokens/src"],
+      "@goodsongs/api-client": ["../../packages/api-client/src"]
+    },
+    "types": ["react-native", "node"]
+  },
+  "include": ["src/**/*", "index.js", "App.tsx"],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js"]
+}
