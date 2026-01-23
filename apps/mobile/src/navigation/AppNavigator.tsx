@@ -22,6 +22,11 @@ import {
   UserProfileScreen,
   BandProfileScreen,
   CreateReviewScreen,
+  CreateEventScreen,
+  BandDashboardScreen,
+  MyBandProfileScreen,
+  EditBandScreen,
+  EventDetailsScreen,
 } from '@/screens';
 
 import {
@@ -53,6 +58,8 @@ function AuthNavigator() {
 // Main Tab Navigator (Home, Discover, Profile)
 function MainNavigator() {
   const insets = useSafeAreaInsets();
+  const { accountType } = useAuthStore();
+  const isBandAccount = accountType === 'band';
 
   return (
     <Tab.Navigator
@@ -63,7 +70,7 @@ function MainNavigator() {
 
           switch (route.name) {
             case 'Home':
-              iconName = 'home';
+              iconName = isBandAccount ? 'bar-chart-2' : 'home';
               break;
             case 'Discover':
               iconName = 'compass';
@@ -71,11 +78,14 @@ function MainNavigator() {
             case 'CreateReview':
               iconName = 'plus-circle';
               break;
+            case 'CreateEvent':
+              iconName = 'calendar';
+              break;
             case 'Notifications':
               iconName = 'bell';
               break;
             case 'Profile':
-              iconName = 'user';
+              iconName = isBandAccount ? 'music' : 'user';
               break;
             default:
               iconName = 'circle';
@@ -101,19 +111,27 @@ function MainNavigator() {
     >
       <Tab.Screen
         name="Home"
-        component={FeedScreen}
-        options={{ tabBarLabel: 'Home' }}
+        component={isBandAccount ? BandDashboardScreen : FeedScreen}
+        options={{ tabBarLabel: isBandAccount ? 'Dashboard' : 'Home' }}
       />
       <Tab.Screen
         name="Discover"
         component={DiscoverScreen}
         options={{ tabBarLabel: 'Discover' }}
       />
-      <Tab.Screen
-        name="CreateReview"
-        component={CreateReviewScreen}
-        options={{ tabBarLabel: 'Review' }}
-      />
+      {isBandAccount ? (
+        <Tab.Screen
+          name="CreateEvent"
+          component={CreateEventScreen}
+          options={{ tabBarLabel: 'Event' }}
+        />
+      ) : (
+        <Tab.Screen
+          name="CreateReview"
+          component={CreateReviewScreen}
+          options={{ tabBarLabel: 'Review' }}
+        />
+      )}
       <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
@@ -121,8 +139,8 @@ function MainNavigator() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
-        options={{ tabBarLabel: 'Profile' }}
+        component={isBandAccount ? MyBandProfileScreen : ProfileScreen}
+        options={{ tabBarLabel: isBandAccount ? 'Band' : 'Profile' }}
       />
     </Tab.Navigator>
   );
@@ -164,6 +182,16 @@ export function AppNavigator() {
             <RootStack.Screen
               name="BandProfile"
               component={BandProfileScreen}
+              options={{ presentation: 'card' }}
+            />
+            <RootStack.Screen
+              name="EditBand"
+              component={EditBandScreen}
+              options={{ presentation: 'card' }}
+            />
+            <RootStack.Screen
+              name="EventDetails"
+              component={EventDetailsScreen}
               options={{ presentation: 'card' }}
             />
           </>

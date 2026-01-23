@@ -340,16 +340,9 @@ export function EventForm({ bandSlug, event, opened, onClose, onSaved }: EventFo
     <Drawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Text size="xl" fw={600} c="blue.8">
-          {isEditing ? 'Edit Event' : 'Create Event'}
-        </Text>
-      }
+      title={isEditing ? 'Edit Event' : 'Create Event'}
       position="right"
       size="lg"
-      styles={{
-        body: { paddingTop: 0 },
-      }}
       overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
     >
       <Stack gap="md">

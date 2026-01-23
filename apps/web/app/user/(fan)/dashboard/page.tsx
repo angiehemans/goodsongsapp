@@ -262,16 +262,9 @@ export default function DashboardPage() {
           closeDrawer();
           setFormPrefill(null);
         }}
-        title={
-          <Text size="xl" fw={600} c="blue.8">
-            New Recommendation
-          </Text>
-        }
+        title="New Recommendation"
         position="right"
         size="lg"
-        styles={{
-          body: { paddingTop: 0 },
-        }}
         overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
       >
         <RecommendationForm

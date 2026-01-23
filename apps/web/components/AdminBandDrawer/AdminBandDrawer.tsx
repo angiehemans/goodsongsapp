@@ -247,9 +247,7 @@ export function AdminBandDrawer({
       onClose={onClose}
       title={
         <Group gap="sm">
-          <Text size="xl" fw={600} c="grape.8">
-            Band Details
-          </Text>
+          <span>Band Details</span>
           {bandDetail?.disabled && (
             <Badge color="gray" size="sm">
               Disabled
@@ -259,9 +257,6 @@ export function AdminBandDrawer({
       }
       position="right"
       size="lg"
-      styles={{
-        body: { paddingTop: 0 },
-      }}
       overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
     >
       {loading ? (

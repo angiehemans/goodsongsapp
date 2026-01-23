@@ -22,6 +22,7 @@ export type MainTabParamList = {
   Home: undefined;
   Discover: undefined;
   CreateReview: CreateReviewParams | undefined;
+  CreateEvent: undefined;
   Notifications: undefined;
   Profile: undefined;
 };
@@ -56,8 +57,10 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Settings: undefined;
   EditProfile: undefined;
+  EditBand: { slug: string };
   UserProfile: { username: string };
   BandProfile: { slug: string };
+  EventDetails: { eventId: number };
 };
 
 // Global type declaration for navigation

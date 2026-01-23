@@ -15,43 +15,60 @@ import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState, MusicPlayer } from
 import { theme, colors } from '@/theme';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
+import { useAuthStore } from '@/context/authStore';
 import { Band, Review, Event } from '@goodsongs/api-client';
 
-export function BandProfileScreen({ route, navigation }: any) {
-  const { slug } = route.params;
+export function BandDashboardScreen({ navigation }: any) {
+  const { user } = useAuthStore();
   const [band, setBand] = useState<Band | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchBand = useCallback(async () => {
+  const fetchBandData = useCallback(async () => {
     try {
-      const [bandData, bandEvents] = await Promise.all([
-        apiClient.getBand(slug),
-        apiClient.getBandEvents(slug),
-      ]);
-      setBand(bandData);
-      setEvents(bandEvents || []);
+      // Get user's bands
+      const bands = await apiClient.getUserBands();
+      if (bands.length > 0) {
+        const userBand = bands[0];
+        // Get full band details including reviews
+        const [bandDetails, bandEvents] = await Promise.all([
+          apiClient.getBand(userBand.slug),
+          apiClient.getBandEvents(userBand.slug),
+        ]);
+        setBand(bandDetails);
+        setEvents(bandEvents || []);
+      }
     } catch (error) {
-      console.error('Failed to fetch band:', error);
+      console.error('Failed to fetch band data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [slug]);
+  }, []);
 
   useEffect(() => {
-    fetchBand();
-  }, [fetchBand]);
+    fetchBandData();
+  }, [fetchBandData]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchBand();
+    fetchBandData();
   };
 
   const handleOpenLink = (url: string | undefined) => {
     if (url) {
       Linking.openURL(url);
+    }
+  };
+
+  const handleSettings = () => {
+    navigation.navigate('Settings');
+  };
+
+  const handleEditBand = () => {
+    if (band) {
+      navigation.navigate('EditBand', { slug: band.slug });
     }
   };
 
@@ -70,8 +87,8 @@ export function BandProfileScreen({ route, navigation }: any) {
     (event) => new Date(event.event_date) >= new Date()
   );
 
-  const renderBandHeader = () => (
-    <View style={styles.profileSection}>
+  const renderHeader = () => (
+    <View style={styles.headerSection}>
       {/* Band Info */}
       <View style={styles.profileHeader}>
         <ProfilePhoto
@@ -81,7 +98,7 @@ export function BandProfileScreen({ route, navigation }: any) {
           fallback={band?.name || 'B'}
         />
         <View style={styles.profileInfo}>
-          <Text style={styles.bandName}>{band?.name || slug}</Text>
+          <Text style={styles.bandName}>{band?.name || 'Your Band'}</Text>
           {(band?.location || band?.city) && (
             <View style={styles.locationRow}>
               <Icon name="map-pin" size={14} color={colors.grape[5]} />
@@ -93,6 +110,9 @@ export function BandProfileScreen({ route, navigation }: any) {
             </View>
           )}
         </View>
+        <TouchableOpacity style={styles.editButton} onPress={handleEditBand}>
+          <Icon name="edit-2" size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       {/* Streaming Links */}
@@ -132,9 +152,7 @@ export function BandProfileScreen({ route, navigation }: any) {
       </View>
 
       {/* About */}
-      {band?.about && (
-        <Text style={styles.about}>{band.about}</Text>
-      )}
+      {band?.about && <Text style={styles.about}>{band.about}</Text>}
 
       {/* Music Player Embed */}
       {(band?.bandcamp_embed || band?.spotify_link || band?.youtube_music_link || band?.apple_music_link) && (
@@ -150,15 +168,12 @@ export function BandProfileScreen({ route, navigation }: any) {
 
       {/* Stats Badges */}
       <View style={styles.badgesRow}>
-        <Badge text={`${band?.reviews_count || 0} recommendation${(band?.reviews_count || 0) !== 1 ? 's' : ''}`} />
-        {band?.genres && band.genres.length > 0 && (
-          band.genres.slice(0, 2).map((genre, index) => (
-            <Badge key={index} text={genre} />
-          ))
-        )}
+        <Badge
+          text={`${band?.reviews_count || 0} recommendation${(band?.reviews_count || 0) !== 1 ? 's' : ''}`}
+        />
       </View>
 
-      {/* Upcoming Events */}
+      {/* Upcoming Events Section */}
       {upcomingEvents.length > 0 && (
         <>
           <Text style={styles.sectionTitle}>Upcoming Events</Text>
@@ -173,7 +188,7 @@ export function BandProfileScreen({ route, navigation }: any) {
                 <Text style={styles.eventDate}>{formatEventDate(event.event_date)}</Text>
                 {event.venue && (
                   <Text style={styles.eventVenue}>
-                    {event.venue.name}{event.venue.city ? `, ${event.venue.city}` : ''}
+                    {event.venue.name}, {event.venue.city}
                   </Text>
                 )}
               </View>
@@ -202,13 +217,30 @@ export function BandProfileScreen({ route, navigation }: any) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <Header
-          title=""
-          showBackButton
-          onBackPress={() => navigation.goBack()}
+          title="Dashboard"
+          rightIcon="settings"
+          onRightPress={handleSettings}
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!band) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Header
+          title="Dashboard"
+          rightIcon="settings"
+          onRightPress={handleSettings}
+        />
+        <EmptyState
+          icon="music"
+          title="No band found"
+          message="You don't have a band profile yet."
+        />
       </SafeAreaView>
     );
   }
@@ -218,9 +250,9 @@ export function BandProfileScreen({ route, navigation }: any) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header
-        title=""
-        showBackButton
-        onBackPress={() => navigation.goBack()}
+        title="Dashboard"
+        rightIcon="settings"
+        onRightPress={handleSettings}
       />
 
       <FlatList
@@ -230,7 +262,9 @@ export function BandProfileScreen({ route, navigation }: any) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
-              onPressAuthor={(username) => navigation.navigate('UserProfile', { username })}
+              onPressAuthor={(username) =>
+                navigation.navigate('UserProfile', { username })
+              }
               showBandInfo={false}
             />
           </View>
@@ -244,12 +278,12 @@ export function BandProfileScreen({ route, navigation }: any) {
             tintColor={theme.colors.primary}
           />
         }
-        ListHeaderComponent={renderBandHeader}
+        ListHeaderComponent={renderHeader}
         ListEmptyComponent={
           <EmptyState
             icon="music"
             title="No recommendations yet"
-            message={`No one has recommended ${band?.name || 'this band'} yet. Be the first!`}
+            message="When fans recommend your music, it will appear here."
           />
         }
       />
@@ -270,7 +304,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: theme.spacing.md,
   },
-  profileSection: {
+  headerSection: {
     marginBottom: theme.spacing.md,
   },
   profileHeader: {
@@ -297,6 +331,9 @@ const styles = StyleSheet.create({
   location: {
     fontSize: theme.fontSizes.sm,
     color: colors.grape[5],
+  },
+  editButton: {
+    padding: theme.spacing.sm,
   },
   linksRow: {
     flexDirection: 'row',

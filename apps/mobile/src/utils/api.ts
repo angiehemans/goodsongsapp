@@ -126,6 +126,53 @@ class MobileApiClient {
     return this.request(`/bands/${slug}`);
   }
 
+  async getUserBands(): Promise<Band[]> {
+    return this.request('/bands/user');
+  }
+
+  async getBandEvents(slug: string): Promise<Event[]> {
+    return this.request(`/bands/${slug}/events`);
+  }
+
+  async createEvent(
+    slug: string,
+    data: {
+      name: string;
+      description?: string;
+      event_date: string;
+      ticket_link?: string;
+      price?: string;
+      age_restriction?: string;
+      venue_id?: number;
+      venue_attributes?: {
+        name: string;
+        address?: string;
+        city: string;
+        region?: string;
+      };
+    }
+  ): Promise<Event> {
+    return this.request(`/bands/${slug}/events`, {
+      method: 'POST',
+      body: JSON.stringify({ event: data }),
+    });
+  }
+
+  async getEvent(eventId: number): Promise<Event> {
+    return this.request(`/events/${eventId}`);
+  }
+
+  async searchVenues(search?: string): Promise<Array<{
+    id: number;
+    name: string;
+    address?: string;
+    city?: string;
+    region?: string;
+  }>> {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return this.request(`/venues${params}`);
+  }
+
   // Reviews
   async getReview(reviewId: number): Promise<Review> {
     return this.request(`/reviews/${reviewId}`);

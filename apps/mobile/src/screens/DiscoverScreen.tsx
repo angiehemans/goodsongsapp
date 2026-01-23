@@ -184,7 +184,10 @@ export function DiscoverScreen({ navigation }: any) {
   );
 
   const renderEventItem = ({ item }: { item: Event }) => (
-    <TouchableOpacity style={styles.eventItem}>
+    <TouchableOpacity
+      style={styles.eventItem}
+      onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+    >
       <View style={styles.eventDate}>
         <Text style={styles.eventDay}>
           {new Date(item.event_date).getDate()}

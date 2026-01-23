@@ -8,3 +8,4 @@ export { Header } from './Header';
 export { LoadingScreen } from './LoadingScreen';
 export { EmptyState } from './EmptyState';
 export { Logo } from './Logo';
+export { MusicPlayer } from './MusicPlayer';

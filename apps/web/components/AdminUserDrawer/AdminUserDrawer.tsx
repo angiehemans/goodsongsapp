@@ -229,9 +229,7 @@ export function AdminUserDrawer({
       onClose={onClose}
       title={
         <Group gap="sm">
-          <Text size="xl" fw={600} c="grape.8">
-            User Details
-          </Text>
+          <span>User Details</span>
           {userDetail?.admin && (
             <Badge color="red" size="sm">
               Admin
@@ -246,9 +244,6 @@ export function AdminUserDrawer({
       }
       position="right"
       size="lg"
-      styles={{
-        body: { paddingTop: 0 },
-      }}
       overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
     >
       {loading ? (

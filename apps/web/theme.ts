@@ -286,5 +286,32 @@ export const theme = createTheme({
         },
       },
     },
+    Drawer: {
+      styles: {
+        header: {
+          backgroundColor: 'var(--mantine-color-grape-2)',
+          borderBottom: '2px solid var(--mantine-color-grape-4)',
+          padding: 'var(--mantine-spacing-md)',
+        },
+        title: {
+          fontFamily: 'aesthet-nova, serif',
+          fontSize: 'var(--mantine-font-size-xl)',
+          fontWeight: 600,
+          color: 'var(--mantine-color-grape-9)',
+        },
+        close: {
+          color: 'var(--mantine-color-grape-6)',
+          '&:hover': {
+            backgroundColor: 'var(--mantine-color-grape-3)',
+          },
+        },
+        body: {
+          backgroundColor: 'var(--mantine-color-grape-0)',
+        },
+        content: {
+          backgroundColor: 'var(--mantine-color-grape-0)',
+        },
+      },
+    },
   },
 });

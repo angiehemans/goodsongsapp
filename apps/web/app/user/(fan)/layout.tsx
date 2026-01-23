@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useState } from 'react';
-import { Center, Container, Drawer, Flex, Loader, Text } from '@mantine/core';
+import { Center, Container, Drawer, Flex, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Header } from '@/components/Header/Header';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
@@ -57,16 +57,9 @@ function LayoutContent({ children }: { children: ReactNode }) {
       <Drawer
         opened={drawerOpened}
         onClose={closeDrawer}
-        title={
-          <Text size="xl" fw={600} c="blue.8">
-            New Recommendation
-          </Text>
-        }
+        title="New Recommendation"
         position="right"
         size="lg"
-        styles={{
-          body: { paddingTop: 0 },
-        }}
         overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
       >
         <RecommendationForm

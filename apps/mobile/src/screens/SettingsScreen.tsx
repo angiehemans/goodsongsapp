@@ -17,7 +17,8 @@ import { apiClient } from '@/utils/api';
 import { LastFmStatus } from '@goodsongs/api-client';
 
 export function SettingsScreen({ navigation }: any) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, accountType } = useAuthStore();
+  const isBandAccount = accountType === 'band';
 
   // Last.fm state
   const [lastFmStatus, setLastFmStatus] = useState<LastFmStatus | null>(null);
@@ -28,8 +29,13 @@ export function SettingsScreen({ navigation }: any) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkLastFmStatus();
-  }, []);
+    // Only check Last.fm status for fan accounts
+    if (!isBandAccount) {
+      checkLastFmStatus();
+    } else {
+      setLastFmLoading(false);
+    }
+  }, [isBandAccount]);
 
   const checkLastFmStatus = async () => {
     try {
@@ -188,8 +194,8 @@ export function SettingsScreen({ navigation }: any) {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Last.fm Connection */}
-        {renderLastFmSection()}
+        {/* Last.fm Connection - Only for fan accounts */}
+        {!isBandAccount && renderLastFmSection()}
 
         {/* Account Section */}
         <Card style={styles.section}>

@@ -9,6 +9,8 @@ interface HeaderProps {
   showBackButton?: boolean;
   onBackPress?: () => void;
   rightContent?: React.ReactNode;
+  rightIcon?: string;
+  onRightPress?: () => void;
 }
 
 export function Header({
@@ -16,6 +18,8 @@ export function Header({
   showBackButton = false,
   onBackPress,
   rightContent,
+  rightIcon,
+  onRightPress,
 }: HeaderProps) {
   return (
     <View style={styles.header}>
@@ -35,7 +39,14 @@ export function Header({
         )}
       </View>
 
-      <View style={styles.rightSection}>{rightContent}</View>
+      <View style={styles.rightSection}>
+        {rightContent}
+        {rightIcon && onRightPress && (
+          <TouchableOpacity onPress={onRightPress} style={styles.rightButton}>
+            <Icon name={rightIcon} size={24} color={colors.grape[8]} />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }
@@ -84,5 +95,9 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.cooperBold,
     color: theme.colors.secondary,
     lineHeight: 28,
+  },
+  rightButton: {
+    padding: theme.spacing.xs,
+    marginRight: -theme.spacing.xs,
   },
 });

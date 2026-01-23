@@ -23,6 +23,9 @@ importers:
       '@react-native-async-storage/async-storage':
         specifier: ^2.1.0
         version: 2.2.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))
+      '@react-native-community/datetimepicker':
+        specifier: ^8.6.0
+        version: 8.6.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
       '@react-native-vector-icons/feather':
         specifier: ^12.0.0
         version: 12.4.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
@@ -50,6 +53,9 @@ importers:
       react-native-svg:
         specifier: ^15.15.1
         version: 15.15.1(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
+      react-native-webview:
+        specifier: ^13.16.0
+        version: 13.16.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
       zustand:
         specifier: ^5.0.0
         version: 5.0.10(@types/react@19.0.12)(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))
@@ -1825,6 +1831,19 @@ packages:
     resolution: {integrity: sha512-nEEYwfyP00j9i4nr/HhwPabDscoBhhCjxDBpcKERi2oTYHcBr3FTu9PV1gbeJCa4vRCHr6b6VgOcVTdy99NddQ==}
     engines: {node: '>=18'}
     hasBin: true
+
+  '@react-native-community/datetimepicker@8.6.0':
+    resolution: {integrity: sha512-yxPSqNfxgpGaqHQIpatqe6ykeBdU/1pdsk/G3x01mY2bpTflLpmVTLqFSJYd3MiZzxNZcMs/j1dQakUczSjcYA==}
+    peerDependencies:
+      expo: '>=52.0.0'
+      react: '*'
+      react-native: '*'
+      react-native-windows: '*'
+    peerDependenciesMeta:
+      expo:
+        optional: true
+      react-native-windows:
+        optional: true
 
   '@react-native-vector-icons/common@12.4.0':
     resolution: {integrity: sha512-t9W0q+AW7WH1Oj5aEg7wGNXDLZJb5sIVkAWo5qtad3PcbBADqoCdikRK/ToLK+xlB0TxjcuL0T74ogudMkYGeA==}
@@ -5511,6 +5530,12 @@ packages:
       react: '*'
       react-native: '*'
 
+  react-native-webview@13.16.0:
+    resolution: {integrity: sha512-Nh13xKZWW35C0dbOskD7OX01nQQavOzHbCw9XoZmar4eXCo7AvrYJ0jlUfRVVIJzqINxHlpECYLdmAdFsl9xDA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   react-native@0.79.2:
     resolution: {integrity: sha512-AnGzb56JvU5YCL7cAwg10+ewDquzvmgrMddiBM0GAWLwQM/6DJfGd2ZKrMuKKehHerpDDZgG+EY64gk3x3dEkw==}
     engines: {node: '>=18'}
@@ -8551,6 +8576,12 @@ snapshots:
       - supports-color
       - typescript
       - utf-8-validate
+
+  '@react-native-community/datetimepicker@8.6.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      invariant: 2.2.4
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0)
 
   '@react-native-vector-icons/common@12.4.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)':
     dependencies:
@@ -13249,6 +13280,13 @@ snapshots:
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0)
       warn-once: 0.1.1
+
+  react-native-webview@13.16.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      escape-string-regexp: 4.0.0
+      invariant: 2.2.4
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0)
 
   react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0):
     dependencies:

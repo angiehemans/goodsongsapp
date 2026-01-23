@@ -4,3 +4,10 @@ html, body {
   max-width: 100vw;
   overflow-x: hidden;
 }
+
+/* Drawer mobile adjustments - account for mobile nav height */
+@media (max-width: 768px) {
+  .mantine-Drawer-body {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+}
