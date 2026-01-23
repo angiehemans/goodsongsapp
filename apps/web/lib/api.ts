@@ -182,6 +182,7 @@ export interface BandData {
   about?: string;
   spotify_link?: string;
   bandcamp_link?: string;
+  bandcamp_embed?: string;
   apple_music_link?: string;
   youtube_music_link?: string;
   profile_picture?: File;
@@ -197,6 +198,7 @@ export interface Band {
   about?: string;
   spotify_link?: string;
   bandcamp_link?: string;
+  bandcamp_embed?: string;
   apple_music_link?: string;
   youtube_music_link?: string;
   profile_picture_url?: string;
@@ -342,6 +344,74 @@ export interface LastFmSearchArtist {
 export interface OnboardingStatus {
   onboarding_completed: boolean;
   account_type?: AccountType;
+}
+
+// Admin types
+export interface AdminUserUpdateData {
+  email?: string;
+  username?: string;
+  about_me?: string;
+  city?: string;
+  region?: string;
+  admin?: boolean;
+  disabled?: boolean;
+  account_type?: 'fan' | 'band';
+  lastfm_username?: string;
+  onboarding_completed?: boolean;
+  profile_image?: File;
+}
+
+export interface AdminBandUpdateData {
+  name?: string;
+  slug?: string;
+  about?: string;
+  city?: string;
+  region?: string;
+  disabled?: boolean;
+  user_id?: number;
+  spotify_link?: string;
+  bandcamp_link?: string;
+  bandcamp_embed?: string;
+  apple_music_link?: string;
+  youtube_music_link?: string;
+  musicbrainz_id?: string;
+  lastfm_artist_name?: string;
+  artist_image_url?: string;
+  profile_picture?: File;
+}
+
+export interface AdminUserDetail extends User {
+  latitude?: number;
+  longitude?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminUserDetailResponse {
+  user: AdminUserDetail;
+  reviews: Review[];
+  bands: Band[];
+}
+
+export interface AdminBandDetail extends Band {
+  latitude?: number;
+  longitude?: number;
+  artist_image_url?: string;
+  lastfm_artist_name?: string;
+  lastfm_url?: string;
+  musicbrainz_id?: string;
+  events_count?: number;
+  owner?: {
+    id: number;
+    username: string;
+    email: string;
+  };
+}
+
+export interface AdminBandDetailResponse {
+  band: AdminBandDetail;
+  reviews: Review[];
+  events: Event[];
 }
 
 export interface SetAccountTypeData {
@@ -578,6 +648,9 @@ class ApiClient {
       if (data.bandcamp_link) {
         formData.append('band[bandcamp_link]', data.bandcamp_link);
       }
+      if (data.bandcamp_embed) {
+        formData.append('band[bandcamp_embed]', data.bandcamp_embed);
+      }
       if (data.apple_music_link) {
         formData.append('band[apple_music_link]', data.apple_music_link);
       }
@@ -664,6 +737,9 @@ class ApiClient {
       }
       if (data.bandcamp_link) {
         formData.append('band[bandcamp_link]', data.bandcamp_link);
+      }
+      if (data.bandcamp_embed) {
+        formData.append('band[bandcamp_embed]', data.bandcamp_embed);
       }
       if (data.apple_music_link) {
         formData.append('band[apple_music_link]', data.apple_music_link);
@@ -839,8 +915,47 @@ class ApiClient {
     return this.makeRequest('/admin/users');
   }
 
-  async getAdminUserDetail(userId: string): Promise<{ user: UserProfile; reviews: Review[] }> {
+  async getAdminUserDetail(userId: number): Promise<AdminUserDetailResponse> {
     return this.makeRequest(`/admin/users/${userId}`);
+  }
+
+  async updateAdminUser(userId: number, data: AdminUserUpdateData): Promise<{ message: string; user: AdminUserDetail }> {
+    const hasFile = data.profile_image instanceof File;
+
+    if (hasFile) {
+      const formData = new FormData();
+      if (data.email !== undefined) formData.append('email', data.email);
+      if (data.username !== undefined) formData.append('username', data.username);
+      if (data.about_me !== undefined) formData.append('about_me', data.about_me);
+      if (data.city !== undefined) formData.append('city', data.city);
+      if (data.region !== undefined) formData.append('region', data.region);
+      if (data.admin !== undefined) formData.append('admin', String(data.admin));
+      if (data.disabled !== undefined) formData.append('disabled', String(data.disabled));
+      if (data.account_type !== undefined) formData.append('account_type', data.account_type);
+      if (data.lastfm_username !== undefined) formData.append('lastfm_username', data.lastfm_username);
+      if (data.onboarding_completed !== undefined) formData.append('onboarding_completed', String(data.onboarding_completed));
+      if (data.profile_image) formData.append('profile_image', data.profile_image);
+
+      const response = await fetch(`${this.getApiUrl()}/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || error.errors?.join(', ') || 'Failed to update user');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest(`/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   }
 
   async toggleUserDisabled(userId: number): Promise<User> {
@@ -857,6 +972,54 @@ class ApiClient {
 
   async getAdminBands(): Promise<Band[]> {
     return this.makeRequest('/admin/bands');
+  }
+
+  async getAdminBandDetail(bandId: number): Promise<AdminBandDetailResponse> {
+    return this.makeRequest(`/admin/bands/${bandId}`);
+  }
+
+  async updateAdminBand(bandId: number, data: AdminBandUpdateData): Promise<{ message: string; band: AdminBandDetail }> {
+    const hasFile = data.profile_picture instanceof File;
+
+    if (hasFile) {
+      const formData = new FormData();
+      if (data.name !== undefined) formData.append('name', data.name);
+      if (data.slug !== undefined) formData.append('slug', data.slug);
+      if (data.about !== undefined) formData.append('about', data.about);
+      if (data.city !== undefined) formData.append('city', data.city);
+      if (data.region !== undefined) formData.append('region', data.region);
+      if (data.disabled !== undefined) formData.append('disabled', String(data.disabled));
+      if (data.user_id !== undefined) formData.append('user_id', String(data.user_id));
+      if (data.spotify_link !== undefined) formData.append('spotify_link', data.spotify_link);
+      if (data.bandcamp_link !== undefined) formData.append('bandcamp_link', data.bandcamp_link);
+      if (data.bandcamp_embed !== undefined) formData.append('bandcamp_embed', data.bandcamp_embed);
+      if (data.apple_music_link !== undefined) formData.append('apple_music_link', data.apple_music_link);
+      if (data.youtube_music_link !== undefined) formData.append('youtube_music_link', data.youtube_music_link);
+      if (data.musicbrainz_id !== undefined) formData.append('musicbrainz_id', data.musicbrainz_id);
+      if (data.lastfm_artist_name !== undefined) formData.append('lastfm_artist_name', data.lastfm_artist_name);
+      if (data.artist_image_url !== undefined) formData.append('artist_image_url', data.artist_image_url);
+      if (data.profile_picture) formData.append('profile_picture', data.profile_picture);
+
+      const response = await fetch(`${this.getApiUrl()}/admin/bands/${bandId}`, {
+        method: 'PATCH',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || error.errors?.join(', ') || 'Failed to update band');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest(`/admin/bands/${bandId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   }
 
   async toggleBandDisabled(bandId: number): Promise<Band> {

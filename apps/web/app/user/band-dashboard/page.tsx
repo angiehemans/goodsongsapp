@@ -244,6 +244,7 @@ export default function BandDashboardPage() {
           {/* Music Player */}
           {band && (
             <MusicPlayer
+              bandcampEmbed={band.bandcamp_embed}
               bandcampLink={band.bandcamp_link}
               spotifyLink={band.spotify_link}
               youtubeMusicLink={band.youtube_music_link}

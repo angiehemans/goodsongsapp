@@ -115,12 +115,67 @@ export function isEmpty(value: any): boolean {
  */
 export function fixImageUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
-  
+
   // If URL starts with http://localhost, replace with the API URL
   if (url.startsWith('http://localhost')) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
     return url.replace('http://localhost', apiUrl);
   }
-  
+
   return url;
+}
+
+/**
+ * Extract Bandcamp embed URL from iframe HTML or return cleaned URL
+ *
+ * Users often paste the full iframe HTML from Bandcamp's embed generator:
+ * <iframe style="..." src="https://bandcamp.com/EmbeddedPlayer/album=123/..." seamless>...</iframe>
+ *
+ * This function extracts just the base embed URL (album/track ID) and strips any
+ * existing styling parameters so we can apply our own brand colors.
+ *
+ * @param input - Either a full iframe HTML string or just the embed URL
+ * @returns The clean embed URL with just the album/track ID, or empty string if invalid
+ */
+export function extractBandcampEmbedUrl(input: string): string {
+  if (!input || !input.trim()) return '';
+
+  const trimmed = input.trim();
+
+  // Try to extract src from iframe HTML
+  // Match: src="https://bandcamp.com/EmbeddedPlayer/..."
+  const iframeSrcMatch = trimmed.match(/src=["']([^"']*bandcamp\.com\/EmbeddedPlayer[^"']*)["']/i);
+
+  let embedUrl = iframeSrcMatch ? iframeSrcMatch[1] : trimmed;
+
+  // Verify it's a valid Bandcamp embed URL
+  if (!embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
+    // If it's a regular bandcamp URL (e.g., artist.bandcamp.com/album/name),
+    // we can't convert it to embed URL without an API call, so return as-is
+    // The MusicPlayer will handle this gracefully
+    if (embedUrl.includes('bandcamp.com')) {
+      return embedUrl;
+    }
+    return '';
+  }
+
+  // Extract just the album or track ID portion and remove all styling params
+  // URL format: https://bandcamp.com/EmbeddedPlayer/album=123456/size=large/bgcol=.../...
+  // We want: https://bandcamp.com/EmbeddedPlayer/album=123456 (or track=123456)
+
+  // Match album=XXXXX or track=XXXXX
+  const albumMatch = embedUrl.match(/album=(\d+)/);
+  const trackMatch = embedUrl.match(/track=(\d+)/);
+
+  if (albumMatch) {
+    return `https://bandcamp.com/EmbeddedPlayer/album=${albumMatch[1]}`;
+  }
+
+  if (trackMatch) {
+    return `https://bandcamp.com/EmbeddedPlayer/track=${trackMatch[1]}`;
+  }
+
+  // If we can't extract album/track ID, return the original URL
+  // (the MusicPlayer will still try to use it)
+  return embedUrl;
 }

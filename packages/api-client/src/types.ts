@@ -165,6 +165,7 @@ export interface BandData {
   about?: string;
   spotify_link?: string;
   bandcamp_link?: string;
+  bandcamp_embed?: string;
   apple_music_link?: string;
   youtube_music_link?: string;
   profile_picture?: File;
@@ -180,6 +181,7 @@ export interface Band {
   about?: string;
   spotify_link?: string;
   bandcamp_link?: string;
+  bandcamp_embed?: string;
   apple_music_link?: string;
   youtube_music_link?: string;
   profile_picture_url?: string;

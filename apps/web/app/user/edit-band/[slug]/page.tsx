@@ -25,7 +25,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
 import { apiClient, BandData, Band } from '@/lib/api';
-import { fixImageUrl } from '@/lib/utils';
+import { extractBandcampEmbedUrl, fixImageUrl } from '@/lib/utils';
 
 export default function EditBandPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -45,6 +45,7 @@ export default function EditBandPage() {
     about: '',
     spotify_link: '',
     bandcamp_link: '',
+    bandcamp_embed: '',
     apple_music_link: '',
     youtube_music_link: '',
     profile_picture: undefined,
@@ -65,6 +66,7 @@ export default function EditBandPage() {
           about: bandData.about || '',
           spotify_link: bandData.spotify_link || '',
           bandcamp_link: bandData.bandcamp_link || '',
+          bandcamp_embed: bandData.bandcamp_embed || '',
           apple_music_link: bandData.apple_music_link || '',
           youtube_music_link: bandData.youtube_music_link || '',
           profile_picture: undefined,
@@ -99,7 +101,12 @@ export default function EditBandPage() {
     setError(null);
 
     try {
-      const updatedBand = await apiClient.updateBand(slug, formData);
+      // Clean up bandcamp_embed before saving (extract URL from iframe HTML if needed)
+      const dataToSubmit = {
+        ...formData,
+        bandcamp_embed: extractBandcampEmbedUrl(formData.bandcamp_embed || ''),
+      };
+      const updatedBand = await apiClient.updateBand(slug, dataToSubmit);
 
       notifications.show({
         title: 'Band updated!',
@@ -273,6 +280,15 @@ export default function EditBandPage() {
                   />
                 </Grid.Col>
               </Grid>
+
+              <Textarea
+                label="Bandcamp Embed"
+                placeholder="Paste iframe code or URL from Bandcamp's Share > Embed"
+                description="Paste the full iframe code from Bandcamp - we'll extract what we need. If set, shows Bandcamp player instead of Spotify."
+                value={formData.bandcamp_embed}
+                onChange={(e) => setFormData({ ...formData, bandcamp_embed: e.target.value })}
+                minRows={2}
+              />
 
               <Grid>
                 <Grid.Col span={{ base: 12, md: 6 }}>

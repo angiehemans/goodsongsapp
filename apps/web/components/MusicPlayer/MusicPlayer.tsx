@@ -2,6 +2,7 @@ import { Box } from '@mantine/core';
 import styles from './MusicPlayer.module.css';
 
 interface MusicPlayerProps {
+  bandcampEmbed?: string;
   bandcampLink?: string;
   spotifyLink?: string;
   youtubeMusicLink?: string;
@@ -9,20 +10,45 @@ interface MusicPlayerProps {
   className?: string;
 }
 
-// Priority: Bandcamp > Spotify > YouTube Music > Apple Music
+// Priority: Bandcamp Embed > Bandcamp Link > Spotify > YouTube Music > Apple Music
+// If bandcampEmbed is set, ONLY show Bandcamp player (no fallback to other players)
 export function MusicPlayer({
+  bandcampEmbed,
   bandcampLink,
   spotifyLink,
   youtubeMusicLink,
   appleMusicLink,
   className,
 }: MusicPlayerProps) {
-  // Bandcamp embed
+  // Bandcamp embed URL (direct embed, highest priority)
+  // If bandcampEmbed is set, only show Bandcamp player - no other players
+  if (bandcampEmbed) {
+    const embedUrl = getBandcampEmbedUrl(bandcampEmbed);
+    if (embedUrl) {
+      return (
+        <Box className={`${styles.bandcampContainer} ${className || ''}`}>
+          <iframe
+            src={embedUrl}
+            width="100%"
+            height="120"
+            seamless={true}
+            style={{ border: 0, width: '100%', height: 120 }}
+            loading="lazy"
+            title="Bandcamp Player"
+          />
+        </Box>
+      );
+    }
+    // If bandcampEmbed is set but invalid, don't fall through to other players
+    return null;
+  }
+
+  // Bandcamp link (fallback from old field)
   if (bandcampLink) {
     const embedUrl = getBandcampEmbedUrl(bandcampLink);
     if (embedUrl) {
       return (
-        <Box className={`${styles.embedContainer} ${className || ''}`}>
+        <Box className={`${styles.bandcampContainer} ${className || ''}`}>
           <iframe
             src={embedUrl}
             width="100%"

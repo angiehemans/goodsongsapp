@@ -27,9 +27,12 @@ import {
   Tabs,
   Text,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
+import { AdminBandDrawer } from '@/components/AdminBandDrawer/AdminBandDrawer';
+import { AdminUserDrawer } from '@/components/AdminUserDrawer/AdminUserDrawer';
 import { Header } from '@/components/Header/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Band, Review, User } from '@/lib/api';
@@ -55,6 +58,14 @@ export default function AdminDashboardPage() {
     name: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // User drawer state
+  const [userDrawerOpened, { open: openUserDrawer, close: closeUserDrawer }] = useDisclosure(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+  // Band drawer state
+  const [bandDrawerOpened, { open: openBandDrawer, close: closeBandDrawer }] = useDisclosure(false);
+  const [selectedBandId, setSelectedBandId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -192,6 +203,38 @@ export default function AdminDashboardPage() {
       setIsDeleting(false);
       setDeleteTarget(null);
     }
+  };
+
+  const handleUserClick = (userId: number) => {
+    setSelectedUserId(userId);
+    openUserDrawer();
+  };
+
+  const handleBandClick = (bandId: number) => {
+    setSelectedBandId(bandId);
+    openBandDrawer();
+  };
+
+  const handleUserUpdated = (updatedUser: User) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === updatedUser.id ? { ...u, ...updatedUser } : u))
+    );
+  };
+
+  const handleBandUpdated = (updatedBand: Band) => {
+    setBands((prev) =>
+      prev.map((b) => (b.id === updatedBand.id ? { ...b, ...updatedBand } : b))
+    );
+  };
+
+  const handleUserDeleteFromDrawer = (userId: number, displayName: string) => {
+    closeUserDrawer();
+    handleDeleteClick('user', userId, displayName);
+  };
+
+  const handleBandDeleteFromDrawer = (bandId: number, bandName: string) => {
+    closeBandDrawer();
+    handleDeleteClick('band', bandId, bandName);
   };
 
   if (isLoading) {
@@ -335,30 +378,30 @@ export default function AdminDashboardPage() {
                       {users.map((u) => (
                         <Table.Tr key={u.id}>
                           <Table.Td>
-                            <Group gap="sm">
-                              <Avatar
-                                size="sm"
-                                src={fixImageUrl(u.profile_image_url)}
-                                color="grape"
-                              >
-                                {u.username?.charAt(0).toUpperCase() || u.email.charAt(0).toUpperCase()}
-                              </Avatar>
-                              {u.username ? (
-                                <Text
-                                  component={Link}
-                                  href={`/users/${u.username}`}
+                            <UnstyledButton onClick={() => handleUserClick(u.id)}>
+                              <Group gap="sm">
+                                <Avatar
                                   size="sm"
-                                  c="grape.6"
-                                  style={{ textDecoration: 'none' }}
+                                  src={fixImageUrl(u.profile_image_url)}
+                                  color="grape"
                                 >
-                                  {u.username}
-                                </Text>
-                              ) : (
-                                <Text size="sm" c="dimmed">
-                                  No username
-                                </Text>
-                              )}
-                            </Group>
+                                  {u.username?.charAt(0).toUpperCase() || u.email.charAt(0).toUpperCase()}
+                                </Avatar>
+                                {u.username ? (
+                                  <Text
+                                    size="sm"
+                                    c="grape.6"
+                                    style={{ textDecoration: 'none' }}
+                                  >
+                                    {u.username}
+                                  </Text>
+                                ) : (
+                                  <Text size="sm" c="dimmed">
+                                    No username
+                                  </Text>
+                                )}
+                              </Group>
+                            </UnstyledButton>
                           </Table.Td>
                           <Table.Td className={styles.hideOnMobile}>
                             <Text size="sm">{u.email}</Text>
@@ -397,27 +440,17 @@ export default function AdminDashboardPage() {
                             )}
                           </Table.Td>
                           <Table.Td>
-                            <Group gap="xs">
+                            {!u.admin && u.id !== user.id && (
                               <Button
-                                component={Link}
-                                href={`/admin/users/${u.id}`}
                                 variant="light"
+                                color="red"
                                 size="xs"
+                                leftSection={<IconTrash size={14} />}
+                                onClick={() => handleDeleteClick('user', u.id, u.username || u.email)}
                               >
-                                View
+                                Delete
                               </Button>
-                              {!u.admin && u.id !== user.id && (
-                                <Button
-                                  variant="light"
-                                  color="red"
-                                  size="xs"
-                                  leftSection={<IconTrash size={14} />}
-                                  onClick={() => handleDeleteClick('user', u.id, u.username || u.email)}
-                                >
-                                  Delete
-                                </Button>
-                              )}
-                            </Group>
+                            )}
                           </Table.Td>
                         </Table.Tr>
                       ))}
@@ -463,30 +496,24 @@ export default function AdminDashboardPage() {
                       {bands.map((band) => (
                         <Table.Tr key={band.id} style={{ opacity: band.disabled ? 0.6 : 1 }}>
                           <Table.Td>
-                            <Group gap="sm">
-                              <Avatar
-                                size="sm"
-                                src={fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
-                                color="grape"
-                              >
-                                {band.name?.charAt(0).toUpperCase() || 'B'}
-                              </Avatar>
-                              {band.disabled ? (
-                                <Text size="sm" c="dimmed">
-                                  {band.name}
-                                </Text>
-                              ) : (
-                                <Text
-                                  component={Link}
-                                  href={`/bands/${band.slug}`}
+                            <UnstyledButton onClick={() => handleBandClick(band.id)}>
+                              <Group gap="sm">
+                                <Avatar
                                   size="sm"
-                                  c="grape.6"
+                                  src={fixImageUrl(band.profile_picture_url) || band.spotify_image_url}
+                                  color="grape"
+                                >
+                                  {band.name?.charAt(0).toUpperCase() || 'B'}
+                                </Avatar>
+                                <Text
+                                  size="sm"
+                                  c={band.disabled ? 'dimmed' : 'grape.6'}
                                   style={{ textDecoration: 'none' }}
                                 >
                                   {band.name}
                                 </Text>
-                              )}
-                            </Group>
+                              </Group>
+                            </UnstyledButton>
                           </Table.Td>
                           <Table.Td className={styles.hideOnMobile}>
                             <Text size="sm" c="dimmed">
@@ -696,6 +723,25 @@ export default function AdminDashboardPage() {
           </Group>
         </Stack>
       </Modal>
+
+      {/* User Detail Drawer */}
+      <AdminUserDrawer
+        userId={selectedUserId}
+        opened={userDrawerOpened}
+        onClose={closeUserDrawer}
+        onUserUpdated={handleUserUpdated}
+        onDeleteClick={handleUserDeleteFromDrawer}
+        currentUserId={user?.id}
+      />
+
+      {/* Band Detail Drawer */}
+      <AdminBandDrawer
+        bandId={selectedBandId}
+        opened={bandDrawerOpened}
+        onClose={closeBandDrawer}
+        onBandUpdated={handleBandUpdated}
+        onDeleteClick={handleBandDeleteFromDrawer}
+      />
     </Box>
   );
 }

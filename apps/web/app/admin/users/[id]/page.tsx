@@ -11,7 +11,6 @@ import {
   Avatar,
   Badge,
   Button,
-  Card,
   Center,
   Container,
   Group,
@@ -23,7 +22,7 @@ import {
 } from '@mantine/core';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, Review, UserProfile } from '@/lib/api';
+import { AdminUserDetail, apiClient, Review } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
 
 export default function AdminUserDetailPage() {
@@ -32,7 +31,7 @@ export default function AdminUserDetailPage() {
   const params = useParams();
   const userId = params.id as string;
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<AdminUserDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +61,7 @@ export default function AdminUserDetailPage() {
 
     try {
       // Fetch user details and reviews via admin endpoint
-      const data = await apiClient.getAdminUserDetail(userId);
+      const data = await apiClient.getAdminUserDetail(parseInt(userId, 10));
       setUserProfile(data.user);
       setReviews(data.reviews || []);
     } catch (err) {
