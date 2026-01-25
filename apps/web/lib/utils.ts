@@ -125,6 +125,13 @@ export function fixImageUrl(url: string | null | undefined): string | undefined 
     return `${apiUrl}${localhostMatch[1]}`;
   }
 
+  // Handle production URLs that incorrectly point to frontend domain instead of API
+  // e.g., https://www.goodsongs.app/rails/active_storage/... should be https://api.goodsongs.app/rails/active_storage/...
+  const frontendMatch = url.match(/^https?:\/\/(?:www\.)?goodsongs\.app(\/rails\/active_storage\/.*)/);
+  if (frontendMatch) {
+    return `${apiUrl}${frontendMatch[1]}`;
+  }
+
   // If URL is a relative path starting with /, prepend the API URL
   if (url.startsWith('/')) {
     return `${apiUrl}${url}`;
