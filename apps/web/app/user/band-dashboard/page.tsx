@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { IconCalendarEvent, IconMusic, IconPlus } from '@tabler/icons-react';
+import { IconAlertCircle, IconCalendarEvent, IconMail, IconMusic, IconPlus } from '@tabler/icons-react';
 import {
+  Alert,
   Button,
   Center,
   Container,
@@ -36,7 +37,7 @@ const EventForm = dynamic(() => import('@/components/EventForm/EventForm').then(
 });
 
 export default function BandDashboardPage() {
-  const { user, isLoading, isOnboardingComplete, isFan } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isFan, refreshUser } = useAuth();
   const router = useRouter();
   const [band, setBand] = useState<Band | null>(null);
   const [bandReviews, setBandReviews] = useState<Review[]>([]);
@@ -46,6 +47,10 @@ export default function BandDashboardPage() {
   // Event form modal state
   const [eventFormOpened, setEventFormOpened] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
+  // Email confirmation resend state
+  const [resendLoading, setResendLoading] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -100,6 +105,43 @@ export default function BandDashboardPage() {
       fetchBandData();
     }
   }, [user, isOnboardingComplete, isFan, fetchBandData]);
+
+  // Countdown timer for email resend retry
+  useEffect(() => {
+    if (retryAfter > 0) {
+      const timer = setInterval(() => {
+        setRetryAfter((prev) => Math.max(0, prev - 1));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [retryAfter]);
+
+  const handleResendConfirmation = useCallback(async () => {
+    setResendLoading(true);
+    try {
+      const response = await apiClient.resendConfirmationEmail();
+      notifications.show({
+        title: 'Email sent',
+        message: response.message || 'Confirmation email has been sent.',
+        color: 'green',
+      });
+      if (response.retry_after) {
+        setRetryAfter(response.retry_after);
+      }
+      await refreshUser();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send confirmation email';
+      notifications.show({
+        title: 'Error',
+        message,
+        color: 'red',
+      });
+    } finally {
+      setResendLoading(false);
+    }
+  }, [refreshUser]);
+
+  const canResend = user?.can_resend_confirmation && retryAfter === 0;
 
   const handleBandSaved = useCallback((updatedBand: Band) => {
     setBand(updatedBand);
@@ -241,6 +283,35 @@ export default function BandDashboardPage() {
 
         {/* Main Content */}
         <Flex direction="column" px="md" pb="lg" maw={700} flex={1}>
+          {/* Email Confirmation Warning */}
+          {user && user.email_confirmed === false && (
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              title="Please confirm your email address"
+              color="orange"
+              mb="md"
+              mt="md"
+            >
+              <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+                <Text size="sm">
+                  We sent a confirmation email to {user.email}. Please check your inbox and click the
+                  link to confirm your account.
+                </Text>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="orange"
+                  leftSection={<IconMail size={14} />}
+                  onClick={handleResendConfirmation}
+                  loading={resendLoading}
+                  disabled={!canResend}
+                >
+                  {retryAfter > 0 ? `Resend (${retryAfter}s)` : 'Resend email'}
+                </Button>
+              </Group>
+            </Alert>
+          )}
+
           {/* Music Player */}
           {band && (
             <MusicPlayer

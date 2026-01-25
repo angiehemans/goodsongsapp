@@ -30,6 +30,14 @@ export interface User {
   display_name?: string;
   followers_count?: number;
   following_count?: number;
+  email_confirmed?: boolean;
+  can_resend_confirmation?: boolean;
+}
+
+export interface ResendConfirmationResponse {
+  message: string;
+  can_resend_confirmation: boolean;
+  retry_after?: number;
 }
 
 export interface ProfileUpdateData {
@@ -525,6 +533,12 @@ class ApiClient {
 
   async getProfile(): Promise<User> {
     return this.makeRequest('/profile');
+  }
+
+  async resendConfirmationEmail(): Promise<ResendConfirmationResponse> {
+    return this.makeRequest('/email/resend-confirmation', {
+      method: 'POST',
+    });
   }
 
   async getOnboardingStatus(): Promise<OnboardingStatus> {

@@ -116,10 +116,18 @@ export function isEmpty(value: any): boolean {
 export function fixImageUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
 
-  // If URL starts with http://localhost, replace with the API URL
-  if (url.startsWith('http://localhost')) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
-    return url.replace('http://localhost', apiUrl);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
+
+  // Extract just the path from the URL if it's a localhost/127.0.0.1 URL
+  // This handles cases where Rails returns URLs with wrong host/port
+  const localhostMatch = url.match(/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(\/.*)/);
+  if (localhostMatch) {
+    return `${apiUrl}${localhostMatch[1]}`;
+  }
+
+  // If URL is a relative path starting with /, prepend the API URL
+  if (url.startsWith('/')) {
+    return `${apiUrl}${url}`;
   }
 
   return url;

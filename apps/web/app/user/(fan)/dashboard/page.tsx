@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  IconAlertCircle,
   IconChevronLeft,
   IconChevronRight,
+  IconMail,
   IconMusic,
   IconPlus,
 } from '@tabler/icons-react';
 import {
   ActionIcon,
+  Alert,
   Box,
   Button,
   Card,
@@ -21,6 +24,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import { FollowingFeed } from '@/components/FollowingFeed/FollowingFeed';
 import { LastFmConnection } from '@/components/LastFmConnection/LastFmConnection';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
@@ -28,12 +32,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiClient, RecentlyPlayedTrack } from '@/lib/api';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>([]);
   const [lastFmConnected, setLastFmConnected] = useState(false);
   const [lastFmLoading, setLastFmLoading] = useState(true);
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(false);
   const recentlyPlayedRef = useRef<HTMLDivElement>(null);
+
+  // Email confirmation resend state
+  const [resendLoading, setResendLoading] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
 
   // Drawer state for new recommendation
   const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure(false);
@@ -95,6 +103,43 @@ export default function DashboardPage() {
     }
   }, [user, lastFmConnected, fetchLastFmData]);
 
+  // Countdown timer for email resend retry
+  useEffect(() => {
+    if (retryAfter > 0) {
+      const timer = setInterval(() => {
+        setRetryAfter((prev) => Math.max(0, prev - 1));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [retryAfter]);
+
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    try {
+      const response = await apiClient.resendConfirmationEmail();
+      notifications.show({
+        title: 'Email sent',
+        message: response.message || 'Confirmation email has been sent.',
+        color: 'green',
+      });
+      if (response.retry_after) {
+        setRetryAfter(response.retry_after);
+      }
+      await refreshUser();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send confirmation email';
+      notifications.show({
+        title: 'Error',
+        message,
+        color: 'red',
+      });
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const canResend = user?.can_resend_confirmation && retryAfter === 0;
+
   // Drawer handlers
   const handleOpenNewRecommendation = (prefill?: typeof formPrefill) => {
     setFormPrefill(prefill || null);
@@ -108,6 +153,35 @@ export default function DashboardPage() {
 
   return (
     <>
+      {/* Email Confirmation Warning */}
+      {user && user.email_confirmed === false && (
+        <Alert
+          icon={<IconAlertCircle size={16} />}
+          title="Please confirm your email address"
+          color="orange"
+          mb="md"
+          maw={700}
+        >
+          <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+            <Text size="sm">
+              We sent a confirmation email to {user.email}. Please check your inbox and click the
+              link to confirm your account.
+            </Text>
+            <Button
+              size="xs"
+              variant="light"
+              color="orange"
+              leftSection={<IconMail size={14} />}
+              onClick={handleResendConfirmation}
+              loading={resendLoading}
+              disabled={!canResend}
+            >
+              {retryAfter > 0 ? `Resend (${retryAfter}s)` : 'Resend email'}
+            </Button>
+          </Group>
+        </Alert>
+      )}
+
       {/* Last.fm Section */}
       {lastFmLoading ? (
         <Center py="md">
