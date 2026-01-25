@@ -2,14 +2,20 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
+  IconBell,
   IconBrandApple,
   IconBrandBandcamp,
   IconBrandSpotify,
   IconBrandYoutube,
   IconCamera,
   IconCheck,
+  IconCompass,
   IconEdit,
+  IconHome,
+  IconSettings,
+  IconShield,
   IconX,
 } from '@tabler/icons-react';
 import {
@@ -21,6 +27,7 @@ import {
   FileButton,
   Flex,
   Group,
+  Indicator,
   Spoiler,
   Stack,
   Text,
@@ -30,6 +37,8 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Band } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
 import styles from './BandSidebar.module.css';
@@ -45,6 +54,18 @@ interface BandSidebarProps {
 }
 
 export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: BandSidebarProps) {
+  const { isAdmin } = useAuth();
+  const { unreadCount } = useNotifications();
+  const pathname = usePathname();
+
+  // Helper to check if a nav item is active
+  const isActive = (href: string) => {
+    if (href === '/user/band-dashboard') {
+      return pathname === '/user/band-dashboard';
+    }
+    return pathname?.startsWith(href);
+  };
+
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -372,6 +393,80 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
       <Button component={Link} href={`/bands/${band.slug}`} variant="light" size="sm">
         View Public Profile
       </Button>
+
+      {/* Navigation Menu */}
+      <div className={styles.userMenu}>
+        <Flex direction="column" w="100%">
+          <Button
+            component={Link}
+            href="/user/band-dashboard"
+            variant={isActive('/user/band-dashboard') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={<IconHome size={16} />}
+            fullWidth
+            justify="flex-start"
+          >
+            Home
+          </Button>
+          <Button
+            component={Link}
+            href="/user/notifications"
+            variant={isActive('/user/notifications') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={
+              <Indicator
+                label={unreadCount > 99 ? '99+' : unreadCount}
+                size={14}
+                disabled={unreadCount === 0}
+                color="red"
+                offset={-2}
+              >
+                <IconBell size={16} />
+              </Indicator>
+            }
+            fullWidth
+            justify="flex-start"
+          >
+            Notifications
+          </Button>
+          <Button
+            component={Link}
+            href="/discover"
+            variant={isActive('/discover') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={<IconCompass size={16} />}
+            fullWidth
+            justify="flex-start"
+          >
+            Discover
+          </Button>
+          <Button
+            component={Link}
+            href="/user/settings"
+            variant={isActive('/user/settings') ? 'light' : 'subtle'}
+            size="sm"
+            leftSection={<IconSettings size={16} />}
+            fullWidth
+            justify="flex-start"
+          >
+            Settings
+          </Button>
+          {isAdmin && (
+            <Button
+              component={Link}
+              href="/admin"
+              variant={isActive('/admin') ? 'light' : 'subtle'}
+              size="sm"
+              color="red"
+              leftSection={<IconShield size={16} />}
+              fullWidth
+              justify="flex-start"
+            >
+              Admin
+            </Button>
+          )}
+        </Flex>
+      </div>
     </Flex>
   );
 }

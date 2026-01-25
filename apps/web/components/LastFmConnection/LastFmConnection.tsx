@@ -1,8 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IconAlertCircle, IconBrandLastfm, IconCheck } from '@tabler/icons-react';
-import { Alert, Button, Group, Loader, Paper, Stack, Text, TextInput } from '@mantine/core';
+import { IconBrandLastfm, IconCheck } from '@tabler/icons-react';
+import {
+  Accordion,
+  Alert,
+  Button,
+  Group,
+  Loader,
+  Paper,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { apiClient, LastFmStatus } from '@/lib/api';
 
@@ -144,16 +155,15 @@ export function LastFmConnection({ onConnectionChange }: LastFmConnectionProps) 
   }
 
   return (
-    <Alert
-      icon={<IconAlertCircle size="1rem" />}
-      title="Connect Your Last.fm"
-      color="red"
-      variant="light"
-      withCloseButton={false}
-      maw={700}
-      my="md"
-    >
+    <Paper p="md" radius="md" bg="grape.0" maw={700}>
       <Stack gap="sm">
+        <Group gap="xs">
+          <IconBrandLastfm size={20} color="var(--mantine-color-grape-6)" />
+          <Title order={4} c="grape.8">
+            Connect Your Last.fm
+          </Title>
+        </Group>
+
         <Group align="flex-end">
           <TextInput
             placeholder="Your Last.fm username"
@@ -172,20 +182,43 @@ export function LastFmConnection({ onConnectionChange }: LastFmConnectionProps) 
           />
           <Button
             leftSection={<IconBrandLastfm size={16} />}
-            color="red"
+            color="grape"
             onClick={handleConnect}
             loading={connecting}
           >
             Connect
           </Button>
         </Group>
-        <Text size="sm">
-          Last.fm is a service that tracks the music you listen to across all your streaming
-          platforms. GoodSongs uses Last.fm to pull in your recently played songs so you can easily
-          recommend tracks you're actually listening to. To get started, connect your Spotify, Apple
-          Music, or other streaming services to your Last.fm account at last.fm/about/trackmymusic.
-        </Text>
+
+        <Accordion variant="subtle" chevronPosition="left">
+          <Accordion.Item value="about">
+            <Accordion.Control>
+              <Text size="sm" c="dimmed">
+                What is Last.fm?
+              </Text>
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Text size="sm" c="dimmed">
+                Last.fm is a service that tracks the music you listen to across all your streaming
+                platforms. GoodSongs uses Last.fm to pull in your recently played songs so you can
+                easily recommend tracks you're actually listening to. To get started, connect your
+                Spotify, Apple Music, or other streaming services to your Last.fm account at{' '}
+                <Text
+                  component="a"
+                  href="https://www.last.fm/about/trackmymusic"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  c="grape.6"
+                  td="underline"
+                >
+                  last.fm/about/trackmymusic
+                </Text>
+                .
+              </Text>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
       </Stack>
-    </Alert>
+    </Paper>
   );
 }

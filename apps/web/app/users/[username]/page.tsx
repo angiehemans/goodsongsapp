@@ -95,7 +95,7 @@ export default async function UserProfilePage({
           <UserProfileSidebar profile={profile} />
 
           {/* Recommendations Section */}
-          <Flex direction="column" px="md" pb="lg">
+          <Flex direction="column" px="md" pb="lg" maw={700}>
             <Title order={2} my="sm" c="blue.8" fw={500}>
               Recommendations
             </Title>

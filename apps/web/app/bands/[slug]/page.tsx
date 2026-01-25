@@ -169,7 +169,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
         </Flex>
 
         {/* Main Content */}
-        <Flex direction="column" px="md" pb="lg" flex={1}>
+        <Flex direction="column" px="md" pb="lg" flex={1} maw={700}>
           {/* Music Player - Priority: Bandcamp > Spotify > YouTube Music > Apple Music */}
           <MusicPlayer
             bandcampEmbed={band.bandcamp_embed}

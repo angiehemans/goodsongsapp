@@ -188,7 +188,9 @@ export default function DashboardPage() {
           <Loader size="sm" />
         </Center>
       ) : !lastFmConnected ? (
-        <LastFmConnection onConnectionChange={handleLastFmConnectionChange} />
+        <Box my="md">
+          <LastFmConnection onConnectionChange={handleLastFmConnectionChange} />
+        </Box>
       ) : (
         <>
           <Group justify="space-between" align="center" my="md" maw={700}>
@@ -226,11 +228,11 @@ export default function DashboardPage() {
           </Group>
 
           {recentlyPlayedLoading ? (
-            <Center py="md">
+            <Center py="md" maw={700}>
               <Loader size="sm" />
             </Center>
           ) : !Array.isArray(recentlyPlayed) || recentlyPlayed.length === 0 ? (
-            <Center py="xl">
+            <Center py="xl" maw={700}>
               <Stack align="center">
                 <IconMusic size={48} color="var(--mantine-color-dimmed)" />
                 <Text c="dimmed" ta="center">
@@ -253,9 +255,10 @@ export default function DashboardPage() {
               <Group gap="sm" wrap="nowrap" pb={8}>
                 {recentlyPlayed.slice(0, 12).map((track, index) => {
                   // Get the largest available album image
-                  const albumImage = track.album?.images?.find((img) => img.size === 'extralarge')
-                    || track.album?.images?.find((img) => img.size === 'large')
-                    || track.album?.images?.[0];
+                  const albumImage =
+                    track.album?.images?.find((img) => img.size === 'extralarge') ||
+                    track.album?.images?.find((img) => img.size === 'large') ||
+                    track.album?.images?.[0];
                   const artistNames = track.artists?.map((a) => a.name).join(', ') || '';
 
                   return (
