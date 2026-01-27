@@ -1,19 +1,31 @@
 'use client';
 
-import { useState } from 'react';
-import { IconAlertCircle, IconBrandLastfm } from '@tabler/icons-react';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  IconAlertCircle,
+  IconBrandLastfm,
+  IconMusic,
+  IconSearch,
+  IconX,
+} from '@tabler/icons-react';
+import {
+  ActionIcon,
   Alert,
+  Box,
   Button,
+  Center,
   Group,
+  Loader,
   MultiSelect,
+  Paper,
   Stack,
   Text,
   Textarea,
   TextInput,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { apiClient, ReviewData } from '@/lib/api';
+import { apiClient, MusicBrainzSearchResult, ReviewData } from '@/lib/api';
 import classes from './RecommendationForm.module.css';
 
 const aspectOptions = [
@@ -47,6 +59,17 @@ export function RecommendationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch] = useDebouncedValue(searchQuery, 400);
+  const [searchResults, setSearchResults] = useState<MusicBrainzSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<MusicBrainzSearchResult | null>(null);
+  const [artworkError, setArtworkError] = useState(false);
+  const [manualEntry, setManualEntry] = useState(false);
+
+  // Form data
   const [formData, setFormData] = useState<ReviewData>({
     song_link: initialValues?.song_link || '',
     band_name: initialValues?.band_name || '',
@@ -57,6 +80,78 @@ export function RecommendationForm({
     band_lastfm_artist_name: initialValues?.band_lastfm_artist_name,
     band_musicbrainz_id: initialValues?.band_musicbrainz_id,
   });
+
+  // Determine if form was prefilled from initial values
+  const isPrefilled = !!(initialValues?.song_name || initialValues?.band_name);
+
+  // Search for songs
+  const handleSearch = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    setHasSearched(false);
+    try {
+      const response = await apiClient.searchMusicBrainz(query, undefined, 8);
+      setSearchResults(response.results || []);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+      setHasSearched(true);
+    }
+  }, []);
+
+  // Trigger search when debounced query changes
+  useEffect(() => {
+    if (debouncedSearch && debouncedSearch.length >= 2 && !isPrefilled && !selectedSong) {
+      handleSearch(debouncedSearch);
+    } else if (!debouncedSearch || debouncedSearch.length < 2) {
+      setSearchResults([]);
+      setHasSearched(false);
+    }
+  }, [debouncedSearch, isPrefilled, selectedSong, handleSearch]);
+
+  // Handle search input change - just update state, let debounce handle search
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  // Select a song from search results
+  const handleSelectSong = async (result: MusicBrainzSearchResult) => {
+    setSelectedSong(result);
+    setSearchResults([]);
+    setSearchQuery('');
+    setArtworkError(false); // Reset artwork error for new selection
+
+    // Set form data from search result (now includes artwork_url)
+    setFormData((prev) => ({
+      ...prev,
+      song_name: result.song_name,
+      band_name: result.band_name,
+      artwork_url: result.artwork_url || '',
+      song_link: '',
+      band_musicbrainz_id: result.band_musicbrainz_id,
+    }));
+  };
+
+  // Clear selected song and reset form
+  const handleClearSelection = () => {
+    setSelectedSong(null);
+    setFormData((prev) => ({
+      song_link: '',
+      band_name: '',
+      song_name: '',
+      artwork_url: '',
+      review_text: prev.review_text, // Keep the review text
+      liked_aspects: prev.liked_aspects, // Keep the liked aspects
+      band_lastfm_artist_name: undefined,
+      band_musicbrainz_id: undefined,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +178,9 @@ export function RecommendationForm({
         band_lastfm_artist_name: undefined,
         band_musicbrainz_id: undefined,
       });
+      setSelectedSong(null);
+      setSearchQuery('');
+      setManualEntry(false);
 
       onSuccess?.();
     } catch (err) {
@@ -92,17 +190,20 @@ export function RecommendationForm({
     }
   };
 
+  // Show search interface if no song is selected, not prefilled, and not in manual entry mode
+  const showSearch = !isPrefilled && !selectedSong && !formData.song_name && !manualEntry;
+
   return (
     <Stack>
       <Text size="sm" c="dimmed">
         Share your favorite songs and help others discover great music!
       </Text>
 
-      {showPrefilledAlert && (initialValues?.song_name || initialValues?.band_name) && (
+      {showPrefilledAlert && isPrefilled && (
         <Alert
           icon={<IconBrandLastfm size="1rem" />}
           title="Prefilled from Last.fm"
-          color="red"
+          color="grape"
           variant="light"
         >
           This form has been prefilled with track information from your recently played songs.
@@ -115,40 +216,208 @@ export function RecommendationForm({
         </Alert>
       )}
 
+      {/* Song Search Section */}
+      {showSearch && (
+        <Box>
+          <TextInput
+            placeholder="Search for a song..."
+            leftSection={<IconSearch size={16} />}
+            rightSection={isSearching ? <Loader size={16} /> : null}
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            mb="xs"
+          />
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <Paper withBorder radius="md" p={0} mah={300} style={{ overflow: 'auto' }}>
+              <Stack gap={0}>
+                {searchResults.map((result) => (
+                  <Box
+                    key={result.mbid}
+                    p="sm"
+                    className={classes.searchResult}
+                    onClick={() => handleSelectSong(result)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <Group gap="sm" wrap="nowrap">
+                      {result.artwork_url ? (
+                        <img
+                          src={result.artwork_url}
+                          alt=""
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 'var(--mantine-radius-sm)',
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.removeAttribute('style');
+                          }}
+                        />
+                      ) : null}
+                      <Center
+                        w={40}
+                        h={40}
+                        bg="grape.1"
+                        style={{
+                          borderRadius: 'var(--mantine-radius-sm)',
+                          flexShrink: 0,
+                          display: result.artwork_url ? 'none' : 'flex',
+                        }}
+                      >
+                        <IconMusic size={20} color="var(--mantine-color-grape-6)" />
+                      </Center>
+                      <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                        <Text size="sm" fw={500} lineClamp={1}>
+                          {result.song_name}
+                        </Text>
+                        <Text size="xs" c="dimmed" lineClamp={1}>
+                          {result.band_name}
+                          {result.release_name && ` • ${result.release_name}`}
+                        </Text>
+                      </Stack>
+                    </Group>
+                  </Box>
+                ))}
+              </Stack>
+            </Paper>
+          )}
+
+          {searchQuery.length >= 2 && isSearching && searchResults.length === 0 && (
+            <Center py="md">
+              <Loader size="sm" />
+            </Center>
+          )}
+
+          {hasSearched && !isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
+            <Text size="sm" c="dimmed" ta="center" py="md">
+              No results found. Try a different search or enter details manually.
+            </Text>
+          )}
+
+          <Text
+            size="sm"
+            c="grape.6"
+            ta="center"
+            py="xs"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setManualEntry(true)}
+          >
+            Can't find your song? Enter details manually
+          </Text>
+        </Box>
+      )}
+
+      {/* Selected Song Display */}
+      {(selectedSong || isPrefilled) && (
+        <Paper p="sm" bg="grape.0" radius="md">
+          <Group justify="space-between" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+              {formData.artwork_url && !artworkError ? (
+                <img
+                  src={formData.artwork_url}
+                  alt="Album art"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    objectFit: 'cover',
+                  }}
+                  onError={() => setArtworkError(true)}
+                />
+              ) : (
+                <Center
+                  w={48}
+                  h={48}
+                  bg="grape.2"
+                  style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
+                >
+                  <IconMusic size={24} color="var(--mantine-color-grape-6)" />
+                </Center>
+              )}
+              <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600} lineClamp={1}>
+                  {formData.song_name || 'Song name'}
+                </Text>
+                <Text size="xs" c="dimmed" lineClamp={1}>
+                  {formData.band_name || 'Artist'}
+                </Text>
+              </Stack>
+            </Group>
+            {!isPrefilled && (
+              <ActionIcon variant="subtle" color="gray" onClick={handleClearSelection}>
+                <IconX size={16} />
+              </ActionIcon>
+            )}
+          </Group>
+        </Paper>
+      )}
+
+      {/* Manual Entry Mode Header */}
+      {manualEntry && !selectedSong && !isPrefilled && (
+        <Group justify="space-between" align="center">
+          <Text size="sm" fw={500}>Enter song details manually</Text>
+          <Text
+            size="sm"
+            c="grape.6"
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              setManualEntry(false);
+              setFormData((prev) => ({
+                ...prev,
+                song_name: '',
+                band_name: '',
+                song_link: '',
+                artwork_url: '',
+              }));
+            }}
+          >
+            Back to search
+          </Text>
+        </Group>
+      )}
+
       <form onSubmit={handleSubmit}>
         <Stack>
-          <TextInput
-            label="Song Link"
-            placeholder="https://www.last.fm/music/Artist/_/Song"
-            required
-            value={formData.song_link}
-            onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}
-          />
+          {/* Manual Entry Fields - Show when in manual entry mode or after selecting a song */}
+          {(manualEntry || selectedSong || isPrefilled) && (
+            <>
+              <Group grow>
+                <TextInput
+                  label="Song Name"
+                  placeholder="Hey Jude"
+                  required
+                  value={formData.song_name || ''}
+                  onChange={(e) => setFormData({ ...formData, song_name: e.target.value })}
+                />
 
-          <Group grow>
-            <TextInput
-              label="Band/Artist Name"
-              placeholder="The Beatles"
-              required
-              value={formData.band_name}
-              onChange={(e) => setFormData({ ...formData, band_name: e.target.value })}
-            />
+                <TextInput
+                  label="Band/Artist Name"
+                  placeholder="The Beatles"
+                  required
+                  value={formData.band_name || ''}
+                  onChange={(e) => setFormData({ ...formData, band_name: e.target.value })}
+                />
+              </Group>
 
-            <TextInput
-              label="Song Name"
-              placeholder="Hey Jude"
-              required
-              value={formData.song_name}
-              onChange={(e) => setFormData({ ...formData, song_name: e.target.value })}
-            />
-          </Group>
+              <TextInput
+                label="Song Link"
+                placeholder="https://open.spotify.com/track/..."
+                value={formData.song_link || ''}
+                onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}
+              />
 
-          <TextInput
-            label="Artwork URL"
-            placeholder="https://image.url/cover.jpg"
-            value={formData.artwork_url}
-            onChange={(e) => setFormData({ ...formData, artwork_url: e.target.value })}
-          />
+              <TextInput
+                label="Artwork URL"
+                placeholder="https://image.url/cover.jpg"
+                value={formData.artwork_url || ''}
+                onChange={(e) => setFormData({ ...formData, artwork_url: e.target.value })}
+              />
+            </>
+          )}
 
           <MultiSelect
             label="What did you like about this song?"
@@ -173,7 +442,7 @@ export function RecommendationForm({
             placeholder="Share why you love this song..."
             minRows={4}
             required
-            value={formData.review_text}
+            value={formData.review_text || ''}
             onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
           />
 

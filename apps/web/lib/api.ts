@@ -453,6 +453,40 @@ export interface CompleteBandProfileData {
   profile_picture?: File;
 }
 
+export interface MusicBrainzSearchResult {
+  mbid: string;
+  song_name: string;
+  band_name: string;
+  band_musicbrainz_id?: string;
+  release_mbid?: string;
+  release_name?: string;
+  release_date?: string;
+  duration_ms?: number;
+  score?: number;
+  artwork_url?: string;
+}
+
+export interface MusicBrainzSearchResponse {
+  results: MusicBrainzSearchResult[];
+  query: {
+    track: string;
+    artist?: string;
+  };
+}
+
+export interface MusicBrainzRecordingResponse {
+  mbid: string;
+  song_name: string;
+  band_name: string;
+  band_musicbrainz_id?: string;
+  release_mbid?: string;
+  release_name?: string;
+  release_date?: string;
+  duration_ms?: number;
+  artwork_url?: string;
+  song_link?: string;
+}
+
 class ApiClient {
   private getApiUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
@@ -1210,6 +1244,25 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ venue: data }),
     });
+  }
+
+  // MusicBrainz Search
+  async searchMusicBrainz(
+    track: string,
+    artist?: string,
+    limit: number = 5
+  ): Promise<MusicBrainzSearchResponse> {
+    const params = new URLSearchParams({ track });
+    if (artist) {
+      params.append('artist', artist);
+    }
+    params.append('limit', limit.toString());
+
+    return this.makeRequest(`/musicbrainz/search?${params.toString()}`);
+  }
+
+  async getMusicBrainzRecording(mbid: string): Promise<MusicBrainzRecordingResponse> {
+    return this.makeRequest(`/musicbrainz/recording/${mbid}`);
   }
 }
 

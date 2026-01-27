@@ -1,7 +1,9 @@
-import Image from 'next/image';
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { IconExternalLink } from '@tabler/icons-react';
-import { Badge, Card, Group, Spoiler, Stack, Text } from '@mantine/core';
+import { IconExternalLink, IconMusic } from '@tabler/icons-react';
+import { Badge, Card, Center, Group, Spoiler, Stack, Text } from '@mantine/core';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { Review } from '@/lib/api';
 import styles from './ReviewCard.module.css';
@@ -11,6 +13,7 @@ interface ReviewCardProps {
 }
 
 export function ReviewCard({ review }: ReviewCardProps) {
+  const [artworkError, setArtworkError] = useState(false);
   const authorUsername = review.author?.username || review.user?.username;
   const authorProfileImage = review.author?.profile_image_url;
   const reviewUrl = authorUsername ? `/users/${authorUsername}/reviews/${review.id}` : '#';
@@ -50,17 +53,24 @@ export function ReviewCard({ review }: ReviewCardProps) {
         <Group gap="sm" justify="space-between" align="flex-start">
           <Group gap="sm">
             <Link href={reviewUrl} className={styles.artworkLink}>
-              {review.artwork_url ? (
-                <Image
+              {review.artwork_url && !artworkError ? (
+                <img
                   src={review.artwork_url}
                   alt={`${review.song_name} artwork`}
                   width={48}
                   height={48}
                   className={styles.artwork}
-                  unoptimized={review.artwork_url.includes('spotify') || review.artwork_url.includes('scdn') || review.artwork_url.includes('last.fm') || review.artwork_url.includes('lastfm')}
+                  onError={() => setArtworkError(true)}
                 />
               ) : (
-                <div className={styles.artworkPlaceholder} />
+                <Center
+                  w={48}
+                  h={48}
+                  bg="grape.2"
+                  style={{ borderRadius: 'var(--mantine-radius-sm)' }}
+                >
+                  <IconMusic size={24} color="var(--mantine-color-grape-6)" />
+                </Center>
               )}
             </Link>
             <Stack gap={2}>

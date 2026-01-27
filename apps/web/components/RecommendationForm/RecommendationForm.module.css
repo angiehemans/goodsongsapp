@@ -3,3 +3,16 @@
     background-color: var(--mantine-color-grape-2);
   }
 }
+
+.searchResult {
+  transition: background-color 150ms ease;
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--mantine-color-grape-0);
+  }
+}
