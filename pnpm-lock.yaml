@@ -47,6 +47,9 @@ importers:
       react-native-bootsplash:
         specifier: ^7.0.1
         version: 7.0.1(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
+      react-native-image-picker:
+        specifier: ^8.2.1
+        version: 8.2.1(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
       react-native-safe-area-context:
         specifier: ^5.4.0
         version: 5.6.2(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
@@ -5616,6 +5619,12 @@ packages:
   react-native-bootsplash@7.0.1:
     resolution: {integrity: sha512-EKZYZN1v9U1AKjlbJ5kdlLySP91suGM469Mz9G3eCkBcPKq4lLirINEH2V91okDnboJCNvPN3jErm9zeXSknvQ==}
     hasBin: true
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
+  react-native-image-picker@8.2.1:
+    resolution: {integrity: sha512-FBeGYJGFDjMdGCcyubDJgBAPCQ4L1D3hwLXyUU91jY9ahOZMTbluceVvRmrEKqnDPFJ0gF1NVhJ0nr1nROFLdg==}
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -13568,6 +13577,11 @@ snapshots:
       xml-formatter: 3.6.7
     transitivePeerDependencies:
       - supports-color
+
+  react-native-image-picker@8.2.1(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0)
 
   react-native-is-edge-to-edge@1.2.1(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0):
     dependencies:

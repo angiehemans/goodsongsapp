@@ -34,6 +34,9 @@ import {
   EventDetailsScreen,
   ScrobblePermissionScreen,
   ScrobbleSettingsScreen,
+  OnboardingAccountTypeScreen,
+  OnboardingFanProfileScreen,
+  OnboardingBandProfileScreen,
 } from '@/screens';
 
 import {
@@ -155,7 +158,7 @@ function MainNavigator() {
 
 // Root Navigator
 export function AppNavigator() {
-  const { isAuthenticated, isLoading, loadAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, isOnboardingComplete, loadAuth } = useAuthStore();
 
   useEffect(() => {
     loadAuth();
@@ -224,49 +227,57 @@ export function AppNavigator() {
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
-          <>
-            <RootStack.Screen name="Main" component={MainNavigator} />
-            <RootStack.Screen
-              name="Settings"
-              component={SettingsScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="EditProfile"
-              component={EditProfileScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="UserProfile"
-              component={UserProfileScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="BandProfile"
-              component={BandProfileScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="EditBand"
-              component={EditBandScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="EventDetails"
-              component={EventDetailsScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="ScrobblePermission"
-              component={ScrobblePermissionScreen}
-              options={{ presentation: 'card' }}
-            />
-            <RootStack.Screen
-              name="ScrobbleSettings"
-              component={ScrobbleSettingsScreen}
-              options={{ presentation: 'card' }}
-            />
-          </>
+          isOnboardingComplete ? (
+            <>
+              <RootStack.Screen name="Main" component={MainNavigator} />
+              <RootStack.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="UserProfile"
+                component={UserProfileScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="BandProfile"
+                component={BandProfileScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="EditBand"
+                component={EditBandScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="EventDetails"
+                component={EventDetailsScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="ScrobblePermission"
+                component={ScrobblePermissionScreen}
+                options={{ presentation: 'card' }}
+              />
+              <RootStack.Screen
+                name="ScrobbleSettings"
+                component={ScrobbleSettingsScreen}
+                options={{ presentation: 'card' }}
+              />
+            </>
+          ) : (
+            <>
+              <RootStack.Screen name="OnboardingAccountType" component={OnboardingAccountTypeScreen} />
+              <RootStack.Screen name="OnboardingFanProfile" component={OnboardingFanProfileScreen} />
+              <RootStack.Screen name="OnboardingBandProfile" component={OnboardingBandProfileScreen} />
+            </>
+          )
         ) : (
           <RootStack.Screen name="Auth" component={AuthNavigator} />
         )}

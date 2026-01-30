@@ -17,3 +17,6 @@ export { CreateEventScreen } from './CreateEventScreen';
 export { EventDetailsScreen } from './EventDetailsScreen';
 export { ScrobblePermissionScreen } from './ScrobblePermissionScreen';
 export { ScrobbleSettingsScreen } from './ScrobbleSettingsScreen';
+export { OnboardingAccountTypeScreen } from './OnboardingAccountTypeScreen';
+export { OnboardingFanProfileScreen } from './OnboardingFanProfileScreen';
+export { OnboardingBandProfileScreen } from './OnboardingBandProfileScreen';

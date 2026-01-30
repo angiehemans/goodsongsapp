@@ -54,7 +54,9 @@ export type ProfileStackParamList = {
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
-  Onboarding: undefined;
+  OnboardingAccountType: undefined;
+  OnboardingFanProfile: undefined;
+  OnboardingBandProfile: undefined;
   Settings: undefined;
   EditProfile: undefined;
   EditBand: { slug: string };

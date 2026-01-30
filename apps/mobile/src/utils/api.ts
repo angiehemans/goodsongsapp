@@ -362,6 +362,82 @@ class MobileApiClient {
       method: 'DELETE',
     });
   }
+
+  // Onboarding
+  async setAccountType(accountType: 'fan' | 'band'): Promise<{ message: string }> {
+    return this.request('/onboarding/account-type', {
+      method: 'POST',
+      body: JSON.stringify({ account_type: accountType }),
+    });
+  }
+
+  async completeFanProfile(data: {
+    username: string;
+    about_me?: string;
+    city?: string;
+    region?: string;
+    profile_image?: { uri: string; type: string; name: string };
+  }): Promise<User> {
+    const formData = new FormData();
+    formData.append('username', data.username);
+    if (data.about_me) formData.append('about_me', data.about_me);
+    if (data.city) formData.append('city', data.city);
+    if (data.region) formData.append('region', data.region);
+    if (data.profile_image) formData.append('profile_image', data.profile_image as any);
+
+    const response = await fetch(`${API_URL}/onboarding/complete-fan-profile`, {
+      method: 'POST',
+      headers: {
+        Authorization: this.token ? `Bearer ${this.token}` : '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to complete fan profile');
+    }
+
+    return response.json();
+  }
+
+  async completeBandProfile(data: {
+    name: string;
+    about?: string;
+    city?: string;
+    region?: string;
+    spotify_link?: string;
+    bandcamp_link?: string;
+    apple_music_link?: string;
+    youtube_music_link?: string;
+    profile_picture?: { uri: string; type: string; name: string };
+  }): Promise<User> {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.about) formData.append('about', data.about);
+    if (data.city) formData.append('city', data.city);
+    if (data.region) formData.append('region', data.region);
+    if (data.spotify_link) formData.append('spotify_link', data.spotify_link);
+    if (data.bandcamp_link) formData.append('bandcamp_link', data.bandcamp_link);
+    if (data.apple_music_link) formData.append('apple_music_link', data.apple_music_link);
+    if (data.youtube_music_link) formData.append('youtube_music_link', data.youtube_music_link);
+    if (data.profile_picture) formData.append('profile_picture', data.profile_picture as any);
+
+    const response = await fetch(`${API_URL}/onboarding/complete-band-profile`, {
+      method: 'POST',
+      headers: {
+        Authorization: this.token ? `Bearer ${this.token}` : '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to complete band profile');
+    }
+
+    return response.json();
+  }
 }
 
 export const apiClient = new MobileApiClient();

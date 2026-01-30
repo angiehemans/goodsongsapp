@@ -306,6 +306,7 @@ export function FeedScreen({ navigation, route }: any) {
                   navigation.navigate("CreateReview", {
                     song_name: nowPlaying!.trackName,
                     band_name: nowPlaying!.artistName,
+                    artwork_url: nowPlayingArt || '',
                   })
                 }
               >
@@ -344,6 +345,7 @@ export function FeedScreen({ navigation, route }: any) {
                   navigation.navigate("CreateReview", {
                     song_name: track.trackName,
                     band_name: track.artistName,
+                    artwork_url: track.coverArtUrl || '',
                   })
                 }
               >

@@ -39,7 +39,22 @@ The main GoodSongs web application built with:
 
 ### Mobile (`apps/mobile`)
 
-React Native mobile app for Android (coming soon). Will share design tokens and API types with the web app.
+React Native mobile app for Android, built with:
+
+- [React Native](https://reactnative.dev/) 0.78+ with Hermes
+- [React Navigation](https://reactnavigation.org/) - Navigation (stack + bottom tabs)
+- [Zustand](https://zustand-demo.pmnd.rs/) - State management
+- [react-native-bootsplash](https://github.com/zoontek/react-native-bootsplash) - Splash screen
+
+**Features:**
+- User and band authentication
+- Song recommendations and discovery feed
+- Music scrobbling via Android notification listener (Spotify, YouTube Music, Tidal, Amazon Music, Apple Music)
+- Background scrobble capture with sync-on-open
+- Last.fm integration for recently played tracks
+- Band profiles, events, and dashboards
+- Push notifications
+- Profile editing
 
 ## Shared Packages
 
@@ -185,6 +200,55 @@ pnpm build
 pnpm build --filter=@goodsongs/web
 ```
 
+### Build the mobile app (Android)
+
+#### Prerequisites
+
+- Java Development Kit (JDK) 17
+- Android SDK (via [Android Studio](https://developer.android.com/studio) or command-line tools)
+- `ANDROID_HOME` environment variable set to your SDK path
+- Android build tools and platform for API 35
+
+#### Debug build
+
+```bash
+cd apps/mobile
+
+# Install dependencies
+pnpm install
+
+# Build and install on a connected device or emulator
+pnpm android
+```
+
+This starts Metro bundler and installs the debug APK. Make sure you have a device connected (`adb devices`) or an emulator running.
+
+#### Release build
+
+```bash
+cd apps/mobile/android
+
+# Generate a release APK
+./gradlew assembleRelease
+
+# The APK will be at:
+# app/build/outputs/apk/release/app-release.apk
+```
+
+> **Note:** Release builds require a signing keystore. See the [React Native docs on signed APKs](https://reactnative.dev/docs/signed-apk-android) for setup.
+
+#### Regenerating splash screen assets
+
+If you update the splash logo, regenerate the native assets:
+
+```bash
+cd apps/mobile
+npx react-native-bootsplash generate assets/images/loading.png \
+  --platforms=android \
+  --background='#0124B0' \
+  --logo-width=88
+```
+
 ## Testing
 
 ### Run all tests
@@ -264,10 +328,12 @@ The web app is configured for Vercel deployment. The `vercel.json` at the root h
 |----------|------------|
 | Monorepo | Turborepo, pnpm workspaces |
 | Web Framework | Next.js 15 (App Router) |
-| UI Library | Mantine 8 |
+| Mobile Framework | React Native 0.78+ (Hermes) |
+| UI Library | Mantine 8 (web) |
+| Navigation | React Navigation (mobile) |
+| State Management | SWR (web), Zustand (mobile) |
 | Styling | PostCSS, CSS Modules |
-| Language | TypeScript |
-| Data Fetching | SWR |
+| Language | TypeScript, Kotlin |
 | Validation | Zod |
 | Testing | Jest, React Testing Library |
 | Storybook | Storybook 8 |

@@ -73,6 +73,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
   const [selectedRelease, setSelectedRelease] = useState<DiscogsSearchResult | null>(null);
   const [manualEntry, setManualEntry] = useState(false);
   const [artworkError, setArtworkError] = useState(false);
+  const [isPrefilled, setIsPrefilled] = useState(false);
 
   // Track last searched query to prevent duplicate API calls
   const lastSearchKey = useRef<string>('');
@@ -91,9 +92,6 @@ export function CreateReviewScreen({ navigation, route }: any) {
     liked_aspects: [],
   });
   const [submitting, setSubmitting] = useState(false);
-
-  // Determine if form was prefilled from params
-  const isPrefilled = !!(params?.song_name || params?.band_name);
 
   // Reset form when screen is focused
   useFocusEffect(
@@ -121,13 +119,14 @@ export function CreateReviewScreen({ navigation, route }: any) {
       };
 
       // Prefill from params if available
-      if (currentParams?.song_name) {
+      if (currentParams?.song_name || currentParams?.band_name) {
         newFormData.song_link = currentParams.song_link || '';
         newFormData.band_name = currentParams.band_name || '';
         newFormData.song_name = currentParams.song_name || '';
         newFormData.artwork_url = currentParams.artwork_url || '';
         newFormData.band_lastfm_artist_name = currentParams.band_lastfm_artist_name;
         newFormData.band_musicbrainz_id = currentParams.band_musicbrainz_id;
+        setIsPrefilled(true);
 
         // Clear params after applying
         setTimeout(() => {
@@ -140,6 +139,8 @@ export function CreateReviewScreen({ navigation, route }: any) {
             band_musicbrainz_id: undefined,
           });
         }, 0);
+      } else {
+        setIsPrefilled(false);
       }
 
       setFormData(newFormData);
