@@ -6,6 +6,7 @@ import {
   IconBrandLastfm,
   IconMusic,
   IconSearch,
+  IconUser,
   IconX,
 } from '@tabler/icons-react';
 import {
@@ -25,7 +26,7 @@ import {
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { apiClient, MusicBrainzSearchResult, ReviewData } from '@/lib/api';
+import { apiClient, DiscogsSearchResult, ReviewData } from '@/lib/api';
 import classes from './RecommendationForm.module.css';
 
 const aspectOptions = [
@@ -60,14 +61,17 @@ export function RecommendationForm({
   const [error, setError] = useState<string | null>(null);
 
   // Search state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch] = useDebouncedValue(searchQuery, 400);
-  const [searchResults, setSearchResults] = useState<MusicBrainzSearchResult[]>([]);
+  const [trackQuery, setTrackQuery] = useState('');
+  const [artistQuery, setArtistQuery] = useState('');
+  const [debouncedTrack] = useDebouncedValue(trackQuery, 600);
+  const [debouncedArtist] = useDebouncedValue(artistQuery, 600);
+  const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<MusicBrainzSearchResult | null>(null);
+  const [selectedRelease, setSelectedRelease] = useState<DiscogsSearchResult | null>(null);
   const [artworkError, setArtworkError] = useState(false);
   const [manualEntry, setManualEntry] = useState(false);
+  const [lastSearchKey, setLastSearchKey] = useState('');
 
   // Form data
   const [formData, setFormData] = useState<ReviewData>({
@@ -84,9 +88,16 @@ export function RecommendationForm({
   // Determine if form was prefilled from initial values
   const isPrefilled = !!(initialValues?.song_name || initialValues?.band_name);
 
-  // Search for songs
-  const handleSearch = useCallback(async (query: string) => {
-    if (!query.trim() || query.length < 2) {
+  // Minimum characters for search
+  const MIN_SEARCH_LENGTH = 2;
+
+  // Search for releases
+  const handleSearch = useCallback(async (track: string, artist: string) => {
+    const trimmedTrack = track.trim();
+    const trimmedArtist = artist.trim();
+
+    // Need at least one field with minimum length
+    if (trimmedTrack.length < MIN_SEARCH_LENGTH && trimmedArtist.length < MIN_SEARCH_LENGTH) {
       setSearchResults([]);
       return;
     }
@@ -94,7 +105,12 @@ export function RecommendationForm({
     setIsSearching(true);
     setHasSearched(false);
     try {
-      const response = await apiClient.searchMusicBrainz(query, undefined, 8);
+      // Pass track and artist to Discogs API
+      const response = await apiClient.searchDiscogs(
+        trimmedTrack || undefined,
+        trimmedArtist || undefined,
+        10
+      );
       setSearchResults(response.results || []);
     } catch (err) {
       console.error('Search failed:', err);
@@ -105,42 +121,47 @@ export function RecommendationForm({
     }
   }, []);
 
-  // Trigger search when debounced query changes
+  // Trigger search when debounced queries change
   useEffect(() => {
-    if (debouncedSearch && debouncedSearch.length >= 2 && !isPrefilled && !selectedSong) {
-      handleSearch(debouncedSearch);
-    } else if (!debouncedSearch || debouncedSearch.length < 2) {
+    const trimmedTrack = debouncedTrack.trim();
+    const trimmedArtist = debouncedArtist.trim();
+    const searchKey = `${trimmedTrack}|${trimmedArtist}`;
+
+    // Check if we have enough input and it's a new search
+    const hasEnoughInput = trimmedTrack.length >= MIN_SEARCH_LENGTH || trimmedArtist.length >= MIN_SEARCH_LENGTH;
+
+    if (hasEnoughInput && !isPrefilled && !selectedRelease && searchKey !== lastSearchKey) {
+      setLastSearchKey(searchKey);
+      handleSearch(trimmedTrack, trimmedArtist);
+    } else if (!hasEnoughInput) {
       setSearchResults([]);
       setHasSearched(false);
+      setLastSearchKey('');
     }
-  }, [debouncedSearch, isPrefilled, selectedSong, handleSearch]);
+  }, [debouncedTrack, debouncedArtist, isPrefilled, selectedRelease, lastSearchKey, handleSearch]);
 
-  // Handle search input change - just update state, let debounce handle search
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-  };
-
-  // Select a song from search results
-  const handleSelectSong = async (result: MusicBrainzSearchResult) => {
-    setSelectedSong(result);
+  // Select a release from search results
+  const handleSelectRelease = async (result: DiscogsSearchResult) => {
+    setSelectedRelease(result);
     setSearchResults([]);
-    setSearchQuery('');
+    setTrackQuery('');
+    setArtistQuery('');
+    setLastSearchKey('');
     setArtworkError(false); // Reset artwork error for new selection
 
-    // Set form data from search result (now includes artwork_url)
+    // Set form data from Discogs result
     setFormData((prev) => ({
       ...prev,
       song_name: result.song_name,
       band_name: result.band_name,
       artwork_url: result.artwork_url || '',
-      song_link: '',
-      band_musicbrainz_id: result.band_musicbrainz_id,
+      song_link: result.discogs_url || '',
     }));
   };
 
-  // Clear selected song and reset form
+  // Clear selected release and reset form
   const handleClearSelection = () => {
-    setSelectedSong(null);
+    setSelectedRelease(null);
     setFormData((prev) => ({
       song_link: '',
       band_name: '',
@@ -178,8 +199,10 @@ export function RecommendationForm({
         band_lastfm_artist_name: undefined,
         band_musicbrainz_id: undefined,
       });
-      setSelectedSong(null);
-      setSearchQuery('');
+      setSelectedRelease(null);
+      setTrackQuery('');
+      setArtistQuery('');
+      setLastSearchKey('');
       setManualEntry(false);
 
       onSuccess?.();
@@ -190,8 +213,8 @@ export function RecommendationForm({
     }
   };
 
-  // Show search interface if no song is selected, not prefilled, and not in manual entry mode
-  const showSearch = !isPrefilled && !selectedSong && !formData.song_name && !manualEntry;
+  // Show search interface if no release is selected, not prefilled, and not in manual entry mode
+  const showSearch = !isPrefilled && !selectedRelease && !formData.song_name && !manualEntry;
 
   return (
     <Stack>
@@ -219,25 +242,33 @@ export function RecommendationForm({
       {/* Song Search Section */}
       {showSearch && (
         <Box>
-          <TextInput
-            placeholder="Search for a song..."
-            leftSection={<IconSearch size={16} />}
-            rightSection={isSearching ? <Loader size={16} /> : null}
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            mb="xs"
-          />
+          <Group grow mb="xs">
+            <TextInput
+              placeholder="Song name..."
+              leftSection={<IconSearch size={16} />}
+              rightSection={isSearching && trackQuery ? <Loader size={16} /> : null}
+              value={trackQuery}
+              onChange={(e) => setTrackQuery(e.target.value)}
+            />
+            <TextInput
+              placeholder="Artist name (optional)..."
+              leftSection={<IconUser size={16} />}
+              rightSection={isSearching && artistQuery && !trackQuery ? <Loader size={16} /> : null}
+              value={artistQuery}
+              onChange={(e) => setArtistQuery(e.target.value)}
+            />
+          </Group>
 
           {/* Search Results */}
           {searchResults.length > 0 && (
             <Paper withBorder radius="md" p={0} mah={300} style={{ overflow: 'auto' }}>
               <Stack gap={0}>
-                {searchResults.map((result) => (
+                {searchResults.map((result, index) => (
                   <Box
-                    key={result.mbid}
+                    key={`${result.song_name}-${result.band_name}-${index}`}
                     p="sm"
                     className={classes.searchResult}
-                    onClick={() => handleSelectSong(result)}
+                    onClick={() => handleSelectRelease(result)}
                     style={{ cursor: 'pointer' }}
                   >
                     <Group gap="sm" wrap="nowrap">
@@ -276,7 +307,7 @@ export function RecommendationForm({
                         </Text>
                         <Text size="xs" c="dimmed" lineClamp={1}>
                           {result.band_name}
-                          {result.release_name && ` • ${result.release_name}`}
+                          {result.release_year && ` • ${result.release_year}`}
                         </Text>
                       </Stack>
                     </Group>
@@ -286,13 +317,13 @@ export function RecommendationForm({
             </Paper>
           )}
 
-          {searchQuery.length >= 2 && isSearching && searchResults.length === 0 && (
+          {(trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && isSearching && searchResults.length === 0 && (
             <Center py="md">
               <Loader size="sm" />
             </Center>
           )}
 
-          {hasSearched && !isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
+          {hasSearched && !isSearching && searchResults.length === 0 && (trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && (
             <Text size="sm" c="dimmed" ta="center" py="md">
               No results found. Try a different search or enter details manually.
             </Text>
@@ -311,8 +342,8 @@ export function RecommendationForm({
         </Box>
       )}
 
-      {/* Selected Song Display */}
-      {(selectedSong || isPrefilled) && (
+      {/* Selected Release Display */}
+      {(selectedRelease || isPrefilled) && (
         <Paper p="sm" bg="grape.0" radius="md">
           <Group justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
@@ -357,7 +388,7 @@ export function RecommendationForm({
       )}
 
       {/* Manual Entry Mode Header */}
-      {manualEntry && !selectedSong && !isPrefilled && (
+      {manualEntry && !selectedRelease && !isPrefilled && (
         <Group justify="space-between" align="center">
           <Text size="sm" fw={500}>Enter song details manually</Text>
           <Text
@@ -383,7 +414,7 @@ export function RecommendationForm({
       <form onSubmit={handleSubmit}>
         <Stack>
           {/* Manual Entry Fields - Show when in manual entry mode or after selecting a song */}
-          {(manualEntry || selectedSong || isPrefilled) && (
+          {(manualEntry || selectedRelease || isPrefilled) && (
             <>
               <Group grow>
                 <TextInput

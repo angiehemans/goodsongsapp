@@ -9,32 +9,29 @@ const API_URL = __DEV__
  * Fix image URLs that come from Rails Active Storage
  * - Converts relative URLs to absolute URLs
  * - Fixes localhost/127.0.0.1 URLs to use the correct API host
+ * - Fixes production URLs that incorrectly point to frontend domain
  */
 export function fixImageUrl(url: string | null | undefined): string | undefined {
   if (!url || url.trim() === '') return undefined;
 
-  let fixedUrl = url;
-
-  // If it's a relative URL, prepend the API URL
-  if (fixedUrl.startsWith('/')) {
-    fixedUrl = `${API_URL}${fixedUrl}`;
+  // Extract just the path from the URL if it's a localhost/127.0.0.1 URL
+  // This handles cases where Rails returns URLs with wrong host/port
+  const localhostMatch = url.match(/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(\/.*)/);
+  if (localhostMatch) {
+    return `${API_URL}${localhostMatch[1]}`;
   }
 
-  // Replace various localhost formats with our API URL
-  // This ensures images work when accessed from the mobile device
-  const localhostPatterns = [
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1',
-    'http://localhost:3000',
-    'http://localhost',
-  ];
-
-  for (const pattern of localhostPatterns) {
-    if (fixedUrl.startsWith(pattern)) {
-      fixedUrl = fixedUrl.replace(pattern, API_URL);
-      break;
-    }
+  // Handle production URLs that incorrectly point to frontend domain instead of API
+  // e.g., https://www.goodsongs.app/rails/active_storage/... should be https://api.goodsongs.app/rails/active_storage/...
+  const frontendMatch = url.match(/^https?:\/\/(?:www\.)?goodsongs\.app(\/rails\/active_storage\/.*)/);
+  if (frontendMatch) {
+    return `${API_URL}${frontendMatch[1]}`;
   }
 
-  return fixedUrl;
+  // If URL is a relative path starting with /, prepend the API URL
+  if (url.startsWith('/')) {
+    return `${API_URL}${url}`;
+  }
+
+  return url;
 }

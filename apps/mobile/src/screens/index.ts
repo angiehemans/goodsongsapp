@@ -15,3 +15,5 @@ export { EditBandScreen } from './EditBandScreen';
 export { CreateReviewScreen } from './CreateReviewScreen';
 export { CreateEventScreen } from './CreateEventScreen';
 export { EventDetailsScreen } from './EventDetailsScreen';
+export { ScrobblePermissionScreen } from './ScrobblePermissionScreen';
+export { ScrobbleSettingsScreen } from './ScrobbleSettingsScreen';

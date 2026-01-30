@@ -61,6 +61,8 @@ export type RootStackParamList = {
   UserProfile: { username: string };
   BandProfile: { slug: string };
   EventDetails: { eventId: number };
+  ScrobblePermission: undefined;
+  ScrobbleSettings: undefined;
 };
 
 // Global type declaration for navigation

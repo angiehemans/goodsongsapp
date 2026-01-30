@@ -7,17 +7,21 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, TextInput, Button, Card } from '@/components';
 import { theme, colors } from '@/theme';
 import { useAuthStore } from '@/context/authStore';
+import { useScrobbleStore } from '@/context/scrobbleStore';
+import { ScrobbleStatus } from '@/types/scrobble';
 import { apiClient } from '@/utils/api';
 import { LastFmStatus } from '@goodsongs/api-client';
 
 export function SettingsScreen({ navigation }: any) {
-  const { user, logout, accountType } = useAuthStore();
+  const { user, logout, accountType, refreshUser } = useAuthStore();
   const isBandAccount = accountType === 'band';
 
   // Last.fm state
@@ -27,6 +31,10 @@ export function SettingsScreen({ navigation }: any) {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Email verification state
+  const [resendLoading, setResendLoading] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
 
   useEffect(() => {
     // Only check Last.fm status for fan accounts
@@ -98,6 +106,73 @@ export function SettingsScreen({ navigation }: any) {
         },
       ]
     );
+  };
+
+  // Email resend countdown timer
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const timer = setInterval(() => {
+      setRetryAfter((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [retryAfter]);
+
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    try {
+      const response = await apiClient.resendConfirmationEmail();
+      Alert.alert('Email Sent', response.message || 'Confirmation email has been sent.');
+      if (response.retry_after) {
+        setRetryAfter(response.retry_after);
+      }
+      await refreshUser();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send confirmation email';
+      Alert.alert('Error', message);
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const canResend = user?.can_resend_confirmation && retryAfter === 0;
+
+  // Scrobble state (Android only)
+  const isAndroid = Platform.OS === 'android';
+  const { status: scrobbleStatus, refreshStatus: refreshScrobbleStatus } =
+    useScrobbleStore();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isAndroid && !isBandAccount) {
+        refreshScrobbleStatus();
+      }
+    }, [isAndroid, isBandAccount, refreshScrobbleStatus])
+  );
+
+  const getScrobbleStatusLabel = () => {
+    switch (scrobbleStatus) {
+      case ScrobbleStatus.active:
+        return 'Active';
+      case ScrobbleStatus.paused:
+        return 'Paused';
+      case ScrobbleStatus.permissionNeeded:
+        return 'Permission needed';
+      default:
+        return 'Not set up';
+    }
+  };
+
+  const getScrobbleStatusColor = () => {
+    switch (scrobbleStatus) {
+      case ScrobbleStatus.active:
+        return theme.colors.success;
+      case ScrobbleStatus.paused:
+        return colors.grape[5];
+      case ScrobbleStatus.permissionNeeded:
+        return theme.colors.warning;
+      default:
+        return colors.grape[4];
+    }
   };
 
   const handleLogout = () => {
@@ -197,12 +272,72 @@ export function SettingsScreen({ navigation }: any) {
         {/* Last.fm Connection - Only for fan accounts */}
         {!isBandAccount && renderLastFmSection()}
 
+        {/* Scrobbling - Android only, fan accounts only */}
+        {isAndroid && !isBandAccount && (
+          <Card style={styles.section}>
+            <Text style={styles.sectionTitle}>Listening History</Text>
+            <TouchableOpacity
+              style={styles.scrobbleRow}
+              onPress={() => navigation.navigate('ScrobbleSettings')}
+            >
+              <View style={styles.scrobbleRowLeft}>
+                <Icon name="headphones" size={20} color={theme.colors.secondary} />
+                <View style={styles.scrobbleRowText}>
+                  <Text style={styles.scrobbleRowLabel}>Scrobbling</Text>
+                  <View style={styles.scrobbleStatusRow}>
+                    <View
+                      style={[
+                        styles.scrobbleStatusDot,
+                        { backgroundColor: getScrobbleStatusColor() },
+                      ]}
+                    />
+                    <Text style={styles.scrobbleStatusText}>
+                      {getScrobbleStatusLabel()}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <Icon name="chevron-right" size={20} color={colors.grape[4]} />
+            </TouchableOpacity>
+          </Card>
+        )}
+
         {/* Account Section */}
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.accountRow}>
-            <Text style={styles.accountLabel}>Email</Text>
+            <View style={styles.emailLabelRow}>
+              <Text style={styles.accountLabel}>Email</Text>
+              {user?.email_confirmed ? (
+                <View style={styles.confirmedBadge}>
+                  <Icon name="check" size={10} color="#fff" />
+                  <Text style={styles.confirmedBadgeText}>Confirmed</Text>
+                </View>
+              ) : (
+                <View style={styles.unconfirmedBadge}>
+                  <Text style={styles.unconfirmedBadgeText}>Unconfirmed</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.accountValue}>{user?.email}</Text>
+            {!user?.email_confirmed && (
+              <TouchableOpacity
+                style={[
+                  styles.resendButton,
+                  (!canResend || resendLoading) && styles.resendButtonDisabled,
+                ]}
+                onPress={handleResendConfirmation}
+                disabled={!canResend || resendLoading}
+              >
+                {resendLoading ? (
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                ) : (
+                  <Text style={styles.resendButtonText}>
+                    {retryAfter > 0 ? `Resend (${retryAfter}s)` : 'Resend confirmation'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </Card>
 
@@ -231,6 +366,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: 60,
   },
   section: {
     marginBottom: theme.spacing.lg,
@@ -288,17 +424,96 @@ const styles = StyleSheet.create({
   accountRow: {
     gap: theme.spacing.xs,
   },
+  emailLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
   accountLabel: {
     fontSize: theme.fontSizes.sm,
     fontWeight: '500',
     color: colors.grape[7],
   },
+  confirmedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: theme.colors.success,
+    borderRadius: theme.radii.full,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  confirmedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  unconfirmedBadge: {
+    backgroundColor: '#f6ad55',
+    borderRadius: theme.radii.full,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  unconfirmedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#fff',
+  },
   accountValue: {
     fontSize: theme.fontSizes.sm,
     color: colors.grape[5],
   },
+  resendButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.grape[1],
+    borderRadius: theme.radii.sm,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  resendButtonDisabled: {
+    opacity: 0.5,
+  },
+  resendButtonText: {
+    fontSize: theme.fontSizes.xs,
+    fontWeight: '600',
+    color: theme.colors.primary,
+  },
   logoutButton: {
     marginTop: theme.spacing.md,
     borderColor: theme.colors.error,
+  },
+  scrobbleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.sm,
+  },
+  scrobbleRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  scrobbleRowText: {
+    gap: 2,
+  },
+  scrobbleRowLabel: {
+    fontSize: theme.fontSizes.base,
+    fontWeight: '500',
+    color: colors.grape[7],
+  },
+  scrobbleStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  scrobbleStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  scrobbleStatusText: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
   },
 });

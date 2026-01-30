@@ -1,4 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { AppState, Platform } from 'react-native';
+import BootSplash from 'react-native-bootsplash';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -7,6 +9,9 @@ import Icon from '@react-native-vector-icons/feather';
 
 import { LoadingScreen } from '@/components';
 import { useAuthStore } from '@/context/authStore';
+import { useScrobbleStore } from '@/context/scrobbleStore';
+import { scrobbleNative } from '@/utils/scrobbleNative';
+import type { NowPlayingTrack } from '@/types/scrobble';
 import { theme, colors } from '@/theme';
 
 import {
@@ -27,6 +32,8 @@ import {
   MyBandProfileScreen,
   EditBandScreen,
   EventDetailsScreen,
+  ScrobblePermissionScreen,
+  ScrobbleSettingsScreen,
 } from '@/screens';
 
 import {
@@ -129,7 +136,7 @@ function MainNavigator() {
         <Tab.Screen
           name="CreateReview"
           component={CreateReviewScreen}
-          options={{ tabBarLabel: 'Review' }}
+          options={{ tabBarLabel: 'Recommend' }}
         />
       )}
       <Tab.Screen
@@ -153,6 +160,61 @@ export function AppNavigator() {
   useEffect(() => {
     loadAuth();
   }, [loadAuth]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      BootSplash.hide({ fade: true });
+    }
+  }, [isLoading]);
+
+  // Listen for native scrobble events so auto-sync works from any screen
+  // Also sync pending scrobbles when the app is opened or foregrounded
+  const hassynced = useRef(false);
+  useEffect(() => {
+    if (!isAuthenticated || Platform.OS !== 'android') return;
+    hassynced.current = false;
+
+    // Flush any scrobbles accumulated while the app was closed
+    const flushPending = () => {
+      const store = useScrobbleStore.getState();
+      store.refreshPendingCount().then(() => {
+        if (useScrobbleStore.getState().pendingCount > 0) {
+          store.syncNow();
+        }
+      });
+    };
+
+    // Sync once on mount (app just opened)
+    flushPending();
+    hassynced.current = true;
+
+    // Sync again each time the app comes back to the foreground
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && hassynced.current) {
+        flushPending();
+      }
+    });
+
+    const scrobbleSub = scrobbleNative.onScrobble(() => {
+      useScrobbleStore.getState().refreshPendingCount();
+      useScrobbleStore.getState().fetchLocalScrobbles();
+      useScrobbleStore.getState().autoSync();
+    });
+
+    const nowPlayingSub = scrobbleNative.onNowPlaying((event) => {
+      if (event && 'trackName' in event && event.trackName) {
+        useScrobbleStore.getState().setNowPlaying(event as NowPlayingTrack);
+      } else {
+        useScrobbleStore.getState().setNowPlaying(null);
+      }
+    });
+
+    return () => {
+      appStateSub.remove();
+      scrobbleSub.remove();
+      nowPlayingSub.remove();
+    };
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -192,6 +254,16 @@ export function AppNavigator() {
             <RootStack.Screen
               name="EventDetails"
               component={EventDetailsScreen}
+              options={{ presentation: 'card' }}
+            />
+            <RootStack.Screen
+              name="ScrobblePermission"
+              component={ScrobblePermissionScreen}
+              options={{ presentation: 'card' }}
+            />
+            <RootStack.Screen
+              name="ScrobbleSettings"
+              component={ScrobbleSettingsScreen}
               options={{ presentation: 'card' }}
             />
           </>

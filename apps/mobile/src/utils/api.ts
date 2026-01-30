@@ -11,6 +11,38 @@ import {
   LastFmStatus,
   RecentlyPlayedTrack,
 } from '@goodsongs/api-client';
+import type {
+  ScrobbleTrack,
+  ScrobbleListResponse,
+  SubmitScrobblesResponse,
+} from '@/types/scrobble';
+
+// Discogs types
+export interface DiscogsSearchResult {
+  song_name: string;
+  band_name: string;
+  album_title: string;
+  release_year?: number;
+  artwork_url?: string;
+  discogs_url?: string;
+  genre?: string;
+  style?: string;
+}
+
+export interface DiscogsSearchResponse {
+  results: DiscogsSearchResult[];
+  pagination: {
+    page: number;
+    pages: number;
+    per_page: number;
+    items: number;
+  };
+  query: {
+    track?: string;
+    artist?: string;
+    q?: string;
+  };
+}
 
 // API base URL - configure this for your environment
 const API_URL = __DEV__
@@ -279,6 +311,56 @@ class MobileApiClient {
 
   async disconnectLastFm(): Promise<void> {
     await this.request('/lastfm/disconnect', { method: 'DELETE' });
+  }
+
+  // Email Confirmation
+  async resendConfirmationEmail(): Promise<{ message: string; can_resend_confirmation: boolean; retry_after?: number }> {
+    return this.request('/email/resend-confirmation', {
+      method: 'POST',
+    });
+  }
+
+  // Discogs Search
+  async searchDiscogs(
+    track?: string,
+    artist?: string,
+    limit: number = 10
+  ): Promise<DiscogsSearchResponse> {
+    const params = new URLSearchParams();
+    if (track) {
+      params.append('track', track);
+    }
+    if (artist) {
+      params.append('artist', artist);
+    }
+    params.append('limit', limit.toString());
+
+    return this.request(`/discogs/search?${params.toString()}`);
+  }
+  // Scrobbles
+  async submitScrobbles(
+    scrobbles: ScrobbleTrack[]
+  ): Promise<SubmitScrobblesResponse> {
+    return this.request('/api/v1/scrobbles', {
+      method: 'POST',
+      body: JSON.stringify({ scrobbles }),
+    });
+  }
+
+  async getScrobbles(
+    cursor?: string,
+    limit: number = 20
+  ): Promise<ScrobbleListResponse> {
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor);
+    params.append('limit', limit.toString());
+    return this.request(`/api/v1/scrobbles?${params.toString()}`);
+  }
+
+  async deleteScrobble(id: number): Promise<{ message: string }> {
+    return this.request(`/api/v1/scrobbles/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 

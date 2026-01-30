@@ -9,14 +9,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput as RNTextInput,
-  Keyboard,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, TextInput, Button } from '@/components';
 import { theme, colors } from '@/theme';
-import { apiClient } from '@/utils/api';
+import { apiClient, DiscogsSearchResult } from '@/utils/api';
+import { fixImageUrl } from '@/utils/imageUrl';
 import { CreateReviewParams } from '@/navigation/types';
 
 const LIKED_ASPECTS = [
@@ -41,12 +43,45 @@ interface FormData {
   band_musicbrainz_id?: string;
 }
 
+// Simple debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Minimum characters required before searching
+const MIN_SEARCH_LENGTH = 3;
+
 export function CreateReviewScreen({ navigation, route }: any) {
   const params = route.params as CreateReviewParams | undefined;
   const scrollViewRef = useRef<ScrollView>(null);
   const paramsRef = useRef(params);
   paramsRef.current = params;
 
+  // Search state
+  const [trackQuery, setTrackQuery] = useState('');
+  const [artistQuery, setArtistQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedRelease, setSelectedRelease] = useState<DiscogsSearchResult | null>(null);
+  const [manualEntry, setManualEntry] = useState(false);
+  const [artworkError, setArtworkError] = useState(false);
+
+  // Track last searched query to prevent duplicate API calls
+  const lastSearchKey = useRef<string>('');
+
+  // Debounced search queries - 600ms delay to reduce API calls
+  const debouncedTrack = useDebounce(trackQuery, 600);
+  const debouncedArtist = useDebounce(artistQuery, 600);
+
+  // Form data
   const [formData, setFormData] = useState<FormData>({
     song_link: '',
     band_name: '',
@@ -57,10 +92,23 @@ export function CreateReviewScreen({ navigation, route }: any) {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Determine if form was prefilled from params
+  const isPrefilled = !!(params?.song_name || params?.band_name);
+
   // Reset form when screen is focused
   useFocusEffect(
     useCallback(() => {
       const currentParams = paramsRef.current;
+
+      // Reset search state
+      setTrackQuery('');
+      setArtistQuery('');
+      setSearchResults([]);
+      setHasSearched(false);
+      setSelectedRelease(null);
+      setManualEntry(false);
+      setArtworkError(false);
+      lastSearchKey.current = '';
 
       // Always start with a clean form on focus
       const newFormData: FormData = {
@@ -81,7 +129,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
         newFormData.band_lastfm_artist_name = currentParams.band_lastfm_artist_name;
         newFormData.band_musicbrainz_id = currentParams.band_musicbrainz_id;
 
-        // Clear params after applying (setTimeout breaks the render cycle to avoid infinite loop)
+        // Clear params after applying
         setTimeout(() => {
           navigation.setParams({
             song_link: undefined,
@@ -98,6 +146,112 @@ export function CreateReviewScreen({ navigation, route }: any) {
     }, [navigation])
   );
 
+  // Trigger search when debounced queries change
+  useEffect(() => {
+    const trimmedTrack = debouncedTrack.trim();
+    const trimmedArtist = debouncedArtist.trim();
+    const searchKey = `${trimmedTrack}|${trimmedArtist}`;
+
+    // Check if we have enough input
+    const hasEnoughInput = trimmedTrack.length >= MIN_SEARCH_LENGTH || trimmedArtist.length >= MIN_SEARCH_LENGTH;
+
+    // Only search if:
+    // - At least one query meets minimum length
+    // - Not prefilled, no release selected, not in manual mode
+    // - Search key is different from last search (prevent duplicates)
+    if (
+      hasEnoughInput &&
+      !isPrefilled &&
+      !selectedRelease &&
+      !manualEntry &&
+      searchKey !== lastSearchKey.current
+    ) {
+      lastSearchKey.current = searchKey;
+      handleSearch(trimmedTrack, trimmedArtist);
+    } else if (!hasEnoughInput) {
+      setSearchResults([]);
+      setHasSearched(false);
+      lastSearchKey.current = '';
+    }
+  }, [debouncedTrack, debouncedArtist, isPrefilled, selectedRelease, manualEntry]);
+
+  const handleSearch = async (track: string, artist: string) => {
+    // Need at least one field with minimum length
+    if (track.length < MIN_SEARCH_LENGTH && artist.length < MIN_SEARCH_LENGTH) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    setHasSearched(false);
+    try {
+      const response = await apiClient.searchDiscogs(
+        track || undefined,
+        artist || undefined,
+        10
+      );
+      setSearchResults(response.results || []);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+      setHasSearched(true);
+    }
+  };
+
+  const handleSelectRelease = (result: DiscogsSearchResult) => {
+    setSelectedRelease(result);
+    setSearchResults([]);
+    setTrackQuery('');
+    setArtistQuery('');
+    lastSearchKey.current = '';
+    setArtworkError(false);
+
+    setFormData(prev => ({
+      ...prev,
+      song_name: result.song_name,
+      band_name: result.band_name,
+      artwork_url: result.artwork_url || '',
+      song_link: result.discogs_url || '',
+    }));
+  };
+
+  const handleClearSelection = () => {
+    setSelectedRelease(null);
+    setArtworkError(false);
+    setFormData(prev => ({
+      song_link: '',
+      band_name: '',
+      song_name: '',
+      artwork_url: '',
+      review_text: prev.review_text,
+      liked_aspects: prev.liked_aspects,
+      band_lastfm_artist_name: undefined,
+      band_musicbrainz_id: undefined,
+    }));
+  };
+
+  const handleEnterManually = () => {
+    setManualEntry(true);
+    setTrackQuery('');
+    setArtistQuery('');
+    setSearchResults([]);
+    setHasSearched(false);
+    lastSearchKey.current = '';
+  };
+
+  const handleBackToSearch = () => {
+    setManualEntry(false);
+    setFormData(prev => ({
+      ...prev,
+      song_name: '',
+      band_name: '',
+      song_link: '',
+      artwork_url: '',
+    }));
+  };
+
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -113,7 +267,6 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
   const isFormValid = () => {
     return (
-      formData.song_link.trim() !== '' &&
       formData.band_name.trim() !== '' &&
       formData.song_name.trim() !== '' &&
       formData.review_text.trim() !== ''
@@ -129,7 +282,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
     setSubmitting(true);
     try {
       await apiClient.createReview({
-        song_link: formData.song_link.trim(),
+        song_link: formData.song_link.trim() || '',
         band_name: formData.band_name.trim(),
         song_name: formData.song_name.trim(),
         artwork_url: formData.artwork_url.trim() || undefined,
@@ -139,14 +292,22 @@ export function CreateReviewScreen({ navigation, route }: any) {
         band_musicbrainz_id: formData.band_musicbrainz_id,
       });
 
-      // Navigate to Home with success flag
+      // Reset state
       setSubmitting(false);
+      setSelectedRelease(null);
+      setManualEntry(false);
+      setTrackQuery('');
+      setArtistQuery('');
+      lastSearchKey.current = '';
       navigation.navigate('Home', { showSuccess: true });
     } catch (error: any) {
       setSubmitting(false);
       Alert.alert('Error', error.message || 'Failed to post recommendation');
     }
   };
+
+  // Show search interface if no release is selected, not prefilled, and not in manual entry mode
+  const showSearch = !isPrefilled && !selectedRelease && !formData.song_name && !manualEntry;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -163,115 +324,270 @@ export function CreateReviewScreen({ navigation, route }: any) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
         >
-          {/* Song Link */}
-          <TextInput
-            label="Song Link *"
-            placeholder="https://www.last.fm/music/Artist/_/Song"
-            value={formData.song_link}
-            onChangeText={(text) => updateField('song_link', text)}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            leftIcon="link"
-          />
+          <Text style={styles.subtitle}>
+            Share your favorite songs and help others discover great music!
+          </Text>
 
-          {/* Band/Artist Name */}
-          <TextInput
-            label="Band / Artist *"
-            placeholder="The Beatles"
-            value={formData.band_name}
-            onChangeText={(text) => updateField('band_name', text)}
-            autoCapitalize="words"
-            leftIcon="users"
-          />
+          {/* Song Search Section */}
+          {showSearch && (
+            <View style={styles.searchSection}>
+              <View style={styles.searchInputContainer}>
+                <Icon name="search" size={18} color={colors.grape[4]} style={styles.searchIcon} />
+                <RNTextInput
+                  style={styles.searchInput}
+                  placeholder="Song name..."
+                  placeholderTextColor={colors.grape[4]}
+                  value={trackQuery}
+                  onChangeText={setTrackQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {isSearching && trackQuery && (
+                  <ActivityIndicator size="small" color={colors.grape[6]} style={styles.searchLoader} />
+                )}
+              </View>
 
-          {/* Song Name */}
-          <TextInput
-            label="Song Name *"
-            placeholder="Hey Jude"
-            value={formData.song_name}
-            onChangeText={(text) => updateField('song_name', text)}
-            autoCapitalize="words"
-            leftIcon="music"
-          />
+              <View style={[styles.searchInputContainer, styles.artistInputContainer]}>
+                <Icon name="user" size={18} color={colors.grape[4]} style={styles.searchIcon} />
+                <RNTextInput
+                  style={styles.searchInput}
+                  placeholder="Artist name (optional)..."
+                  placeholderTextColor={colors.grape[4]}
+                  value={artistQuery}
+                  onChangeText={setArtistQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {isSearching && artistQuery && !trackQuery && (
+                  <ActivityIndicator size="small" color={colors.grape[6]} style={styles.searchLoader} />
+                )}
+              </View>
 
-          {/* Artwork URL (Optional) */}
-          <TextInput
-            label="Artwork URL (optional)"
-            placeholder="https://image.url/cover.jpg"
-            value={formData.artwork_url}
-            onChangeText={(text) => updateField('artwork_url', text)}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            leftIcon="image"
-          />
-
-          {/* Liked Aspects */}
-          <View style={styles.aspectsSection}>
-            <Text style={styles.label}>What did you like about it?</Text>
-            <View style={styles.aspectsGrid}>
-              {LIKED_ASPECTS.map((aspect) => {
-                const isSelected = formData.liked_aspects.includes(aspect);
-                return (
-                  <TouchableOpacity
-                    key={aspect}
-                    style={[
-                      styles.aspectChip,
-                      isSelected && styles.aspectChipSelected,
-                    ]}
-                    onPress={() => toggleAspect(aspect)}
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <View style={styles.searchResults}>
+                  <ScrollView
+                    nestedScrollEnabled
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={true}
                   >
-                    {isSelected && (
-                      <Icon name="check" size={14} color={colors.grape[0]} />
-                    )}
-                    <Text
-                      style={[
-                        styles.aspectChipText,
-                        isSelected && styles.aspectChipTextSelected,
-                      ]}
-                    >
-                      {aspect}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
+                    {searchResults.map((result, index) => (
+                      <TouchableOpacity
+                        key={`${result.song_name}-${result.band_name}-${index}`}
+                        style={styles.searchResultItem}
+                        onPress={() => handleSelectRelease(result)}
+                      >
+                        {result.artwork_url ? (
+                          <Image
+                            source={{ uri: fixImageUrl(result.artwork_url) }}
+                            style={styles.resultArtwork}
+                            onError={() => {}}
+                          />
+                        ) : (
+                          <View style={[styles.resultArtwork, styles.resultArtworkPlaceholder]}>
+                            <Icon name="music" size={16} color={colors.grape[6]} />
+                          </View>
+                        )}
+                        <View style={styles.resultInfo}>
+                          <Text style={styles.resultSongName} numberOfLines={1}>
+                            {result.song_name}
+                          </Text>
+                          <Text style={styles.resultArtist} numberOfLines={1}>
+                            {result.band_name}
+                            {result.release_year && ` \u2022 ${result.release_year}`}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
-          {/* Review Text */}
-          <View style={styles.reviewSection}>
-            <Text style={styles.label}>Your Recommendation *</Text>
-            <View style={styles.textAreaContainer}>
-              <RNTextInput
-                style={styles.textArea}
-                placeholder="Share why you love this song..."
-                placeholderTextColor={colors.grape[4]}
-                value={formData.review_text}
-                onChangeText={(text) => updateField('review_text', text)}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-                onFocus={() => {
-                  setTimeout(() => {
-                    scrollViewRef.current?.scrollToEnd({ animated: true });
-                  }, 300);
-                }}
+              {/* Loading state */}
+              {(trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && isSearching && searchResults.length === 0 && (
+                <View style={styles.searchStatus}>
+                  <ActivityIndicator size="small" color={colors.grape[6]} />
+                </View>
+              )}
+
+              {/* No results message */}
+              {hasSearched && !isSearching && searchResults.length === 0 && (trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && (
+                <Text style={styles.noResultsText}>
+                  No results found. Try a different search or enter details manually.
+                </Text>
+              )}
+
+              {/* Manual entry link */}
+              <TouchableOpacity onPress={handleEnterManually} style={styles.manualEntryLink}>
+                <Text style={styles.manualEntryText}>
+                  Can't find your song? Enter details manually
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Selected Release Display */}
+          {(selectedRelease || isPrefilled) && (
+            <View style={styles.selectedSongCard}>
+              <View style={styles.selectedSongInfo}>
+                {formData.artwork_url && !artworkError ? (
+                  <Image
+                    source={{ uri: fixImageUrl(formData.artwork_url) }}
+                    style={styles.selectedArtwork}
+                    onError={() => setArtworkError(true)}
+                  />
+                ) : (
+                  <View style={[styles.selectedArtwork, styles.selectedArtworkPlaceholder]}>
+                    <Icon name="music" size={20} color={colors.grape[6]} />
+                  </View>
+                )}
+                <View style={styles.selectedSongText}>
+                  <Text style={styles.selectedSongName} numberOfLines={1}>
+                    {formData.song_name || 'Song name'}
+                  </Text>
+                  <Text style={styles.selectedArtist} numberOfLines={1}>
+                    {formData.band_name || 'Artist'}
+                  </Text>
+                </View>
+              </View>
+              {!isPrefilled && (
+                <TouchableOpacity onPress={handleClearSelection} style={styles.clearButton}>
+                  <Icon name="x" size={18} color={colors.grape[5]} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Manual Entry Mode Header */}
+          {manualEntry && !selectedRelease && !isPrefilled && (
+            <View style={styles.manualEntryHeader}>
+              <Text style={styles.manualEntryTitle}>Enter song details manually</Text>
+              <TouchableOpacity onPress={handleBackToSearch}>
+                <Text style={styles.backToSearchText}>Back to search</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Form Fields - Show when in manual entry mode or after selecting a release */}
+          {(manualEntry || selectedRelease || isPrefilled) && (
+            <>
+              {/* Song Name */}
+              <TextInput
+                label="Song Name *"
+                placeholder="Hey Jude"
+                value={formData.song_name}
+                onChangeText={(text) => updateField('song_name', text)}
+                autoCapitalize="words"
+                leftIcon="music"
               />
-            </View>
-            <Text style={styles.charCount}>
-              {formData.review_text.length} characters
-            </Text>
-          </View>
 
-          {/* Submit Button */}
-          <Button
-            title="Post Recommendation"
-            onPress={handleSubmit}
-            loading={submitting}
-            disabled={!isFormValid()}
-            fullWidth
-          />
+              {/* Band/Artist Name */}
+              <TextInput
+                label="Band / Artist *"
+                placeholder="The Beatles"
+                value={formData.band_name}
+                onChangeText={(text) => updateField('band_name', text)}
+                autoCapitalize="words"
+                leftIcon="users"
+              />
+
+              {/* Song Link */}
+              <TextInput
+                label="Song Link (optional)"
+                placeholder="https://open.spotify.com/track/..."
+                value={formData.song_link}
+                onChangeText={(text) => updateField('song_link', text)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                leftIcon="link"
+              />
+
+              {/* Artwork URL (Optional) */}
+              <TextInput
+                label="Artwork URL (optional)"
+                placeholder="https://image.url/cover.jpg"
+                value={formData.artwork_url}
+                onChangeText={(text) => updateField('artwork_url', text)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                leftIcon="image"
+              />
+            </>
+          )}
+
+          {/* Liked Aspects - Always show */}
+          {(manualEntry || selectedRelease || isPrefilled) && (
+            <View style={styles.aspectsSection}>
+              <Text style={styles.label}>What did you like about it?</Text>
+              <View style={styles.aspectsGrid}>
+                {LIKED_ASPECTS.map((aspect) => {
+                  const isSelected = formData.liked_aspects.includes(aspect);
+                  return (
+                    <TouchableOpacity
+                      key={aspect}
+                      style={[
+                        styles.aspectChip,
+                        isSelected && styles.aspectChipSelected,
+                      ]}
+                      onPress={() => toggleAspect(aspect)}
+                    >
+                      {isSelected && (
+                        <Icon name="check" size={14} color={colors.grape[0]} />
+                      )}
+                      <Text
+                        style={[
+                          styles.aspectChipText,
+                          isSelected && styles.aspectChipTextSelected,
+                        ]}
+                      >
+                        {aspect}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* Review Text - Always show */}
+          {(manualEntry || selectedRelease || isPrefilled) && (
+            <View style={styles.reviewSection}>
+              <Text style={styles.label}>Your Recommendation *</Text>
+              <View style={styles.textAreaContainer}>
+                <RNTextInput
+                  style={styles.textArea}
+                  placeholder="Share why you love this song..."
+                  placeholderTextColor={colors.grape[4]}
+                  value={formData.review_text}
+                  onChangeText={(text) => updateField('review_text', text)}
+                  multiline
+                  numberOfLines={6}
+                  textAlignVertical="top"
+                  onFocus={() => {
+                    setTimeout(() => {
+                      scrollViewRef.current?.scrollToEnd({ animated: true });
+                    }, 300);
+                  }}
+                />
+              </View>
+              <Text style={styles.charCount}>
+                {formData.review_text.length} characters
+              </Text>
+            </View>
+          )}
+
+          {/* Submit Button - Always show */}
+          {(manualEntry || selectedRelease || isPrefilled) && (
+            <Button
+              title="Post Recommendation"
+              onPress={handleSubmit}
+              loading={submitting}
+              disabled={!isFormValid()}
+              fullWidth
+            />
+          )}
 
           {/* Bottom spacing */}
           <View style={styles.bottomSpacer} />
@@ -292,11 +608,165 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.md,
   },
+  subtitle: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[5],
+    marginBottom: theme.spacing.md,
+  },
   label: {
     fontSize: theme.fontSizes.sm,
     color: colors.grape[4],
     marginBottom: theme.spacing.xs,
   },
+
+  // Search styles
+  searchSection: {
+    marginBottom: theme.spacing.md,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.grape[0],
+    borderWidth: theme.borderWidth,
+    borderColor: colors.grape[6],
+    borderRadius: theme.radii.md,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  artistInputContainer: {
+    marginTop: theme.spacing.xs,
+  },
+  searchIcon: {
+    marginRight: theme.spacing.xs,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: theme.spacing.sm,
+    fontSize: theme.fontSizes.base,
+    color: colors.grape[8],
+  },
+  searchLoader: {
+    marginLeft: theme.spacing.xs,
+  },
+  searchResults: {
+    marginTop: theme.spacing.xs,
+    backgroundColor: colors.grape[0],
+    borderWidth: 1,
+    borderColor: colors.grape[3],
+    borderRadius: theme.radii.md,
+    maxHeight: 280,
+    overflow: 'hidden',
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.grape[2],
+  },
+  resultArtwork: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radii.sm,
+  },
+  resultArtworkPlaceholder: {
+    backgroundColor: colors.grape[1],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultInfo: {
+    flex: 1,
+    marginLeft: theme.spacing.sm,
+  },
+  resultSongName: {
+    fontSize: theme.fontSizes.sm,
+    fontWeight: '500',
+    color: colors.grape[8],
+  },
+  resultArtist: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+    marginTop: 2,
+  },
+  searchStatus: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  noResultsText: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[5],
+    textAlign: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  manualEntryLink: {
+    paddingVertical: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  manualEntryText: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[6],
+  },
+
+  // Selected song styles
+  selectedSongCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.grape[1],
+    padding: theme.spacing.sm,
+    borderRadius: theme.radii.md,
+    marginBottom: theme.spacing.md,
+  },
+  selectedSongInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  selectedArtwork: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.radii.sm,
+  },
+  selectedArtworkPlaceholder: {
+    backgroundColor: colors.grape[2],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedSongText: {
+    flex: 1,
+    marginLeft: theme.spacing.sm,
+  },
+  selectedSongName: {
+    fontSize: theme.fontSizes.sm,
+    fontWeight: '600',
+    color: colors.grape[8],
+  },
+  selectedArtist: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+    marginTop: 2,
+  },
+  clearButton: {
+    padding: theme.spacing.xs,
+  },
+
+  // Manual entry header
+  manualEntryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  manualEntryTitle: {
+    fontSize: theme.fontSizes.sm,
+    fontWeight: '500',
+    color: colors.grape[7],
+  },
+  backToSearchText: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[6],
+  },
+
+  // Aspects
   aspectsSection: {
     marginBottom: theme.spacing.md,
   },
@@ -328,6 +798,8 @@ const styles = StyleSheet.create({
     color: colors.grape[0],
     fontWeight: '500',
   },
+
+  // Review section
   reviewSection: {
     marginBottom: theme.spacing.lg,
   },

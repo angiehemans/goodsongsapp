@@ -29,7 +29,7 @@ type TabType = 'users' | 'bands' | 'reviews' | 'events';
 const TABS: { key: TabType; label: string; icon: string }[] = [
   { key: 'users', label: 'Users', icon: 'users' },
   { key: 'bands', label: 'Bands', icon: 'music' },
-  { key: 'reviews', label: 'Reviews', icon: 'message-circle' },
+  { key: 'reviews', label: 'Recs', icon: 'message-circle' },
   { key: 'events', label: 'Events', icon: 'calendar' },
 ];
 
@@ -215,7 +215,7 @@ export function DiscoverScreen({ navigation }: any) {
       case 'bands':
         return { icon: 'music', title: 'No bands found' };
       case 'reviews':
-        return { icon: 'message-circle', title: 'No reviews found' };
+        return { icon: 'message-circle', title: 'No recommendations found' };
       case 'events':
         return { icon: 'calendar', title: 'No events found' };
     }

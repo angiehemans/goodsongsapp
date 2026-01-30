@@ -9,30 +9,54 @@ import {
   ScrollView,
   Image,
   Animated,
+  Alert,
+  ActivityIndicator,
+  AppState,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "@react-native-vector-icons/feather";
-import { Header, ReviewCard, LoadingScreen, EmptyState } from "@/components";
+import { Header, ReviewCard, LoadingScreen, EmptyState, Logo } from "@/components";
 import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
+import { useScrobbleStore } from "@/context/scrobbleStore";
+import { ScrobbleStatus } from "@/types/scrobble";
 import { apiClient } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
 
 export function FeedScreen({ navigation, route }: any) {
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, refreshUser } = useAuthStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Recently played state
+  // Recently played state (Last.fm fallback)
   const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>(
     [],
   );
   const [lastFmConnected, setLastFmConnected] = useState(false);
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(true);
+
+  // Scrobble state (Android)
+  const isAndroid = Platform.OS === 'android';
+  const {
+    status: scrobbleStatus,
+    nowPlaying,
+    recentScrobbles,
+    recentScrobblesLoading,
+    localScrobbles,
+    refreshStatus: refreshScrobbleStatus,
+    fetchRecentScrobbles,
+    fetchLocalScrobbles,
+  } = useScrobbleStore();
+  const scrobblingActive = isAndroid && scrobbleStatus === ScrobbleStatus.active;
+
+  // Email verification state
+  const [resendLoading, setResendLoading] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
 
   // Success banner state
   const [showSuccess, setShowSuccess] = useState(false);
@@ -67,6 +91,44 @@ export function FeedScreen({ navigation, route }: any) {
       return () => clearTimeout(timer);
     }
   }, [showSuccess, bannerOpacity]);
+
+  // Refresh user when app returns to foreground (e.g. after confirming email)
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && currentUser?.email_confirmed === false) {
+        refreshUser();
+      }
+    });
+    return () => subscription.remove();
+  }, [currentUser?.email_confirmed, refreshUser]);
+
+  // Email resend countdown timer
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const timer = setInterval(() => {
+      setRetryAfter((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [retryAfter]);
+
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    try {
+      const response = await apiClient.resendConfirmationEmail();
+      Alert.alert("Email Sent", response.message || "Confirmation email has been sent.");
+      if (response.retry_after) {
+        setRetryAfter(response.retry_after);
+      }
+      await refreshUser();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to send confirmation email";
+      Alert.alert("Error", message);
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const canResend = currentUser?.can_resend_confirmation && retryAfter === 0;
 
   const fetchFeed = useCallback(async (pageNum: number, refresh = false) => {
     try {
@@ -123,18 +185,180 @@ export function FeedScreen({ navigation, route }: any) {
 
   useEffect(() => {
     fetchFeed(1, true);
+    // Always fetch Last.fm data as fallback
     fetchRecentlyPlayed();
-  }, [fetchFeed, fetchRecentlyPlayed]);
+    // On Android, refresh scrobble status (which also fetches local scrobbles)
+    if (isAndroid) {
+      refreshScrobbleStatus();
+    }
+  }, [fetchFeed, fetchRecentlyPlayed, isAndroid, refreshScrobbleStatus]);
+
+  // When scrobbling becomes active, also try to fetch API scrobbles
+  useEffect(() => {
+    if (scrobblingActive) {
+      fetchRecentScrobbles();
+      fetchLocalScrobbles();
+    }
+  }, [scrobblingActive, fetchRecentScrobbles, fetchLocalScrobbles]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     setPage(1);
     fetchFeed(1, true);
     fetchRecentlyPlayed();
+    if (scrobblingActive) {
+      fetchRecentScrobbles();
+      fetchLocalScrobbles();
+    }
   };
 
-  // Render recently played section
-  const renderRecentlyPlayed = () => {
+  // Render scrobbled tracks section (when scrobbling is active on Android)
+  const renderScrobbledTracks = () => {
+    const hasNowPlaying = nowPlaying != null;
+    const hasApiTracks = recentScrobbles.length > 0;
+    const hasLocalTracks = localScrobbles.length > 0;
+    const hasTracks = hasApiTracks || hasLocalTracks;
+
+    // Build a unified track list: prefer API scrobbles, fall back to local pending
+    const tracks: { id: string; trackName: string; artistName: string; coverArtUrl?: string; source: 'api' | 'local' }[] = [];
+
+    if (hasApiTracks) {
+      for (const s of recentScrobbles) {
+        tracks.push({
+          id: `api-${s.id}`,
+          trackName: s.track_name,
+          artistName: s.artist_name,
+          coverArtUrl: s.track?.album?.cover_art_url || undefined,
+          source: 'api',
+        });
+      }
+    }
+
+    // Add local scrobbles that aren't already in API results (dedup by track+artist)
+    if (hasLocalTracks) {
+      const apiTrackKeys = new Set(
+        recentScrobbles.map((s) => `${s.track_name}::${s.artist_name}`.toLowerCase())
+      );
+      for (const s of localScrobbles) {
+        const key = `${s.trackName}::${s.artistName}`.toLowerCase();
+        if (!apiTrackKeys.has(key)) {
+          tracks.push({
+            id: `local-${s.id}`,
+            trackName: s.trackName,
+            artistName: s.artistName,
+            source: 'local',
+          });
+        }
+      }
+    }
+
+    // Try to find cover art for the now-playing track from API scrobbles
+    const nowPlayingArt = nowPlaying
+      ? recentScrobbles.find(
+          (s) =>
+            s.track_name.toLowerCase() === nowPlaying.trackName.toLowerCase() &&
+            s.artist_name.toLowerCase() === nowPlaying.artistName.toLowerCase()
+        )?.track?.album?.cover_art_url
+      : undefined;
+
+    if (!hasNowPlaying && !hasTracks) {
+      // No scrobble data at all — fall back to Last.fm
+      return renderLastFmRecentlyPlayed();
+    }
+
+    return (
+      <View style={styles.recentlyPlayedSection}>
+        <Text style={styles.sectionTitle}>Recently Played</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.recentlyPlayedList}
+        >
+          {/* Now Playing card */}
+          {hasNowPlaying && (
+            <View style={styles.trackCard}>
+              <View style={styles.artworkContainer}>
+                {nowPlayingArt ? (
+                  <Image
+                    source={{ uri: fixImageUrl(nowPlayingArt) || '' }}
+                    style={styles.trackArtwork}
+                  />
+                ) : (
+                  <View
+                    style={[styles.trackArtwork, styles.trackArtworkPlaceholder]}
+                  >
+                    <Logo size={28} color={colors.grape[4]} />
+                  </View>
+                )}
+                <View style={styles.nowPlayingOverlay}>
+                  <Icon name="volume-2" size={28} color={colors.grape[0]} />
+                </View>
+              </View>
+              <Text style={styles.trackName} numberOfLines={1}>
+                {nowPlaying!.trackName}
+              </Text>
+              <Text style={styles.trackArtist} numberOfLines={1}>
+                {nowPlaying!.artistName}
+              </Text>
+              <TouchableOpacity
+                style={styles.recommendButton}
+                onPress={() =>
+                  navigation.navigate("CreateReview", {
+                    song_name: nowPlaying!.trackName,
+                    band_name: nowPlaying!.artistName,
+                  })
+                }
+              >
+                <Icon name="plus" size={12} color={colors.grape[0]} />
+                <Text style={styles.recommendButtonText}>Recommend</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Scrobbled tracks (merged API + local) */}
+          {tracks.map((track) => (
+            <View key={track.id} style={styles.trackCard}>
+              <View style={styles.artworkContainer}>
+                {track.coverArtUrl ? (
+                  <Image
+                    source={{ uri: fixImageUrl(track.coverArtUrl) || '' }}
+                    style={styles.trackArtwork}
+                  />
+                ) : (
+                  <View
+                    style={[styles.trackArtwork, styles.trackArtworkPlaceholder]}
+                  >
+                    <Logo size={28} color={colors.grape[4]} />
+                  </View>
+                )}
+              </View>
+              <Text style={styles.trackName} numberOfLines={1}>
+                {track.trackName}
+              </Text>
+              <Text style={styles.trackArtist} numberOfLines={1}>
+                {track.artistName}
+              </Text>
+              <TouchableOpacity
+                style={styles.recommendButton}
+                onPress={() =>
+                  navigation.navigate("CreateReview", {
+                    song_name: track.trackName,
+                    band_name: track.artistName,
+                  })
+                }
+              >
+                <Icon name="plus" size={12} color={colors.grape[0]} />
+                <Text style={styles.recommendButtonText}>Recommend</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  // Render Last.fm recently played section (fallback when scrobbling is not active)
+  const renderLastFmRecentlyPlayed = () => {
     if (recentlyPlayedLoading) {
       return (
         <View style={styles.recentlyPlayedSection}>
@@ -208,7 +432,7 @@ export function FeedScreen({ navigation, route }: any) {
                         styles.trackArtworkPlaceholder,
                       ]}
                     >
-                      <Icon name="music" size={24} color={colors.grape[4]} />
+                      <Logo size={28} color={colors.grape[4]} />
                     </View>
                   )}
                   {track.now_playing && (
@@ -329,13 +553,44 @@ export function FeedScreen({ navigation, route }: any) {
         ListEmptyComponent={
           <EmptyState
             icon="inbox"
-            title="No reviews yet"
+            title="No recommendations yet"
             message="Follow some users to see their recommendations here"
           />
         }
         ListHeaderComponent={
           <>
-            {renderRecentlyPlayed()}
+            {currentUser && currentUser.email_confirmed === false && (
+              <View style={styles.emailBanner}>
+                <View style={styles.emailBannerContent}>
+                  <Icon name="alert-circle" size={18} color="#c05621" />
+                  <View style={styles.emailBannerText}>
+                    <Text style={styles.emailBannerTitle}>
+                      Please confirm your email address
+                    </Text>
+                    <Text style={styles.emailBannerMessage}>
+                      We sent a confirmation email to {currentUser.email}.
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.resendButton,
+                    (!canResend || resendLoading) && styles.resendButtonDisabled,
+                  ]}
+                  onPress={handleResendConfirmation}
+                  disabled={!canResend || resendLoading}
+                >
+                  {resendLoading ? (
+                    <ActivityIndicator size="small" color="#c05621" />
+                  ) : (
+                    <Text style={styles.resendButtonText}>
+                      {retryAfter > 0 ? `Resend (${retryAfter}s)` : "Resend email"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+            {scrobblingActive ? renderScrobbledTracks() : renderLastFmRecentlyPlayed()}
             <Text style={styles.sectionTitle}>Following</Text>
           </>
         }
@@ -496,5 +751,49 @@ const styles = StyleSheet.create({
     color: colors.grape[0],
     fontSize: theme.fontSizes.base,
     fontWeight: "600",
+  },
+  // Email verification banner
+  emailBanner: {
+    backgroundColor: "#fef3e2",
+    borderWidth: 1,
+    borderColor: "#f6ad55",
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  emailBannerContent: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  emailBannerText: {
+    flex: 1,
+    gap: 2,
+  },
+  emailBannerTitle: {
+    fontSize: theme.fontSizes.sm,
+    fontWeight: "600",
+    color: "#c05621",
+  },
+  emailBannerMessage: {
+    fontSize: theme.fontSizes.xs,
+    color: "#c05621",
+    lineHeight: 18,
+  },
+  resendButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#feebc8",
+    borderRadius: theme.radii.sm,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    marginLeft: 26,
+  },
+  resendButtonDisabled: {
+    opacity: 0.5,
+  },
+  resendButtonText: {
+    fontSize: theme.fontSizes.xs,
+    fontWeight: "600",
+    color: "#c05621",
   },
 });

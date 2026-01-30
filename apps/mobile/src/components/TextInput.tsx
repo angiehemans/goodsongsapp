@@ -49,6 +49,8 @@ export function TextInput({
           style={[styles.input, leftIcon && styles.inputWithLeftIcon]}
           placeholderTextColor={colors.grape[4]}
           secureTextEntry={isPassword && !isPasswordVisible}
+          autoCapitalize={isPassword ? 'none' : props.autoCapitalize}
+          autoCorrect={isPassword ? false : props.autoCorrect}
           {...props}
         />
         {isPassword && (

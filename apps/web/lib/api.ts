@@ -453,6 +453,51 @@ export interface CompleteBandProfileData {
   profile_picture?: File;
 }
 
+export interface DiscogsSearchResult {
+  song_name: string;
+  band_name: string;
+  album_title: string;
+  release_year?: number;
+  artwork_url?: string;
+  discogs_url?: string;
+  genre?: string;
+  style?: string;
+}
+
+export interface DiscogsSearchResponse {
+  results: DiscogsSearchResult[];
+  pagination: {
+    page: number;
+    pages: number;
+    per_page: number;
+    items: number;
+  };
+  query: {
+    track?: string;
+    artist?: string;
+    q?: string;
+  };
+}
+
+export interface DiscogsTrack {
+  position: string;
+  title: string;
+  duration?: string;
+}
+
+export interface DiscogsMasterResponse {
+  id: number;
+  title: string;
+  artist: string;
+  year?: number;
+  genres?: string[];
+  styles?: string[];
+  artwork_url?: string;
+  discogs_url?: string;
+  tracklist: DiscogsTrack[];
+}
+
+// Keep old types for backward compatibility during transition
 export interface MusicBrainzSearchResult {
   mbid: string;
   song_name: string;
@@ -472,19 +517,6 @@ export interface MusicBrainzSearchResponse {
     track: string;
     artist?: string;
   };
-}
-
-export interface MusicBrainzRecordingResponse {
-  mbid: string;
-  song_name: string;
-  band_name: string;
-  band_musicbrainz_id?: string;
-  release_mbid?: string;
-  release_name?: string;
-  release_date?: string;
-  duration_ms?: number;
-  artwork_url?: string;
-  song_link?: string;
 }
 
 class ApiClient {
@@ -1246,23 +1278,30 @@ class ApiClient {
     });
   }
 
-  // MusicBrainz Search
-  async searchMusicBrainz(
-    track: string,
+  // Discogs Search
+  async searchDiscogs(
+    track?: string,
     artist?: string,
-    limit: number = 5
-  ): Promise<MusicBrainzSearchResponse> {
-    const params = new URLSearchParams({ track });
+    limit: number = 10
+  ): Promise<DiscogsSearchResponse> {
+    const params = new URLSearchParams();
+    if (track) {
+      params.append('track', track);
+    }
     if (artist) {
       params.append('artist', artist);
     }
     params.append('limit', limit.toString());
 
-    return this.makeRequest(`/musicbrainz/search?${params.toString()}`);
+    return this.makeRequest(`/discogs/search?${params.toString()}`);
   }
 
-  async getMusicBrainzRecording(mbid: string): Promise<MusicBrainzRecordingResponse> {
-    return this.makeRequest(`/musicbrainz/recording/${mbid}`);
+  async getDiscogsMaster(id: number): Promise<DiscogsMasterResponse> {
+    return this.makeRequest(`/discogs/master/${id}`);
+  }
+
+  async getDiscogsRelease(id: number): Promise<DiscogsMasterResponse> {
+    return this.makeRequest(`/discogs/release/${id}`);
   }
 }
 
