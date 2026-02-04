@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
@@ -39,6 +42,7 @@ export function DiscoverScreen({ navigation }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Data states
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -46,58 +50,102 @@ export function DiscoverScreen({ navigation }: any) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
 
-  const fetchData = useCallback(async (tab: TabType, refresh = false) => {
+  // Per-tab pagination
+  const [pages, setPages] = useState<Record<TabType, number>>({
+    users: 1, bands: 1, reviews: 1, events: 1,
+  });
+  const [hasMore, setHasMore] = useState<Record<TabType, boolean>>({
+    users: true, bands: true, reviews: true, events: true,
+  });
+
+  const fetchData = useCallback(async (tab: TabType, pageNum: number, refresh = false) => {
     if (refresh) setRefreshing(true);
-    else setLoading(true);
+    else if (pageNum === 1) setLoading(true);
+    else setLoadingMore(true);
 
     try {
       switch (tab) {
-        case 'users':
-          const usersRes = await apiClient.discoverUsers(1);
-          setUsers(usersRes?.users || []);
+        case 'users': {
+          const res = await apiClient.discoverUsers(pageNum);
+          const items = res?.users || [];
+          setUsers(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
+          setHasMore(prev => ({ ...prev, users: res?.pagination?.has_next_page ?? false }));
           break;
-        case 'bands':
-          const bandsRes = await apiClient.discoverBands(1);
-          setBands(bandsRes?.bands || []);
+        }
+        case 'bands': {
+          const res = await apiClient.discoverBands(pageNum);
+          const items = res?.bands || [];
+          setBands(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
+          setHasMore(prev => ({ ...prev, bands: res?.pagination?.has_next_page ?? false }));
           break;
-        case 'reviews':
-          const reviewsRes = await apiClient.discoverReviews(1);
-          setReviews(reviewsRes?.reviews || []);
+        }
+        case 'reviews': {
+          const res = await apiClient.discoverReviews(pageNum);
+          const items = res?.reviews || [];
+          setReviews(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
+          setHasMore(prev => ({ ...prev, reviews: res?.pagination?.has_next_page ?? false }));
           break;
-        case 'events':
-          const eventsRes = await apiClient.discoverEvents(1);
-          setEvents(eventsRes?.events || []);
+        }
+        case 'events': {
+          const res = await apiClient.discoverEvents(pageNum);
+          const items = res?.events || [];
+          setEvents(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
+          setHasMore(prev => ({ ...prev, events: res?.pagination?.has_next_page ?? false }));
           break;
+        }
       }
+      setPages(prev => ({ ...prev, [tab]: pageNum }));
     } catch (error) {
       console.error('Failed to fetch:', error);
-      // Set empty state on error
-      switch (tab) {
-        case 'users':
-          setUsers([]);
-          break;
-        case 'bands':
-          setBands([]);
-          break;
-        case 'reviews':
-          setReviews([]);
-          break;
-        case 'events':
-          setEvents([]);
-          break;
+      if (refresh || pageNum === 1) {
+        switch (tab) {
+          case 'users': setUsers([]); break;
+          case 'bands': setBands([]); break;
+          case 'reviews': setReviews([]); break;
+          case 'events': setEvents([]); break;
+        }
       }
+      setHasMore(prev => ({ ...prev, [tab]: false }));
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
     }
   }, []);
 
   useEffect(() => {
-    fetchData(activeTab);
+    fetchData(activeTab, 1);
   }, [activeTab, fetchData]);
 
   const handleRefresh = () => {
-    fetchData(activeTab, true);
+    fetchData(activeTab, 1, true);
+  };
+
+  const loadingMoreRef = useRef(false);
+
+  const handleLoadMore = useCallback(() => {
+    if (loadingMoreRef.current || loading || !hasMore[activeTab]) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    fetchData(activeTab, pages[activeTab] + 1);
+  }, [loading, hasMore, activeTab, pages, fetchData]);
+
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+    const distanceFromEnd = contentSize.height - contentOffset.y - layoutMeasurement.height;
+    if (distanceFromEnd < 300) {
+      handleLoadMore();
+    }
+  }, [handleLoadMore]);
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={styles.loadingMore}>
+        <ActivityIndicator size="small" color={theme.colors.primary} />
+      </View>
+    );
   };
 
   // Filter function
@@ -242,6 +290,9 @@ export function DiscoverScreen({ navigation }: any) {
                 colors={[theme.colors.primary]}
               />
             }
+            onScroll={handleScroll}
+            scrollEventThrottle={400}
+            ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
@@ -260,6 +311,9 @@ export function DiscoverScreen({ navigation }: any) {
                 colors={[theme.colors.primary]}
               />
             }
+            onScroll={handleScroll}
+            scrollEventThrottle={400}
+            ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
@@ -277,6 +331,9 @@ export function DiscoverScreen({ navigation }: any) {
                 colors={[theme.colors.primary]}
               />
             }
+            onScroll={handleScroll}
+            scrollEventThrottle={400}
+            ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
@@ -294,6 +351,9 @@ export function DiscoverScreen({ navigation }: any) {
                 colors={[theme.colors.primary]}
               />
             }
+            onScroll={handleScroll}
+            scrollEventThrottle={400}
+            ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
@@ -464,5 +524,9 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.sm,
     color: theme.colors.primaryLight,
     marginTop: 4,
+  },
+  loadingMore: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
   },
 });

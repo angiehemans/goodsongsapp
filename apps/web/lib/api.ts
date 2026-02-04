@@ -292,6 +292,15 @@ export interface PaginationMeta {
   per_page: number;
 }
 
+export interface DiscoverPagination {
+  current_page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
+  has_next_page: boolean;
+  has_previous_page: boolean;
+}
+
 export interface LastFmArtist {
   name: string;
   mbid?: string;
@@ -965,7 +974,7 @@ class ApiClient {
   // Public discover endpoints (no auth required)
   async discoverUsers(page: number = 1): Promise<{
     users: UserProfile[];
-    meta: { current_page: number; total_pages: number; total_count: number; per_page: number };
+    pagination: DiscoverPagination;
   }> {
     return this.makeRequest(`/discover/users?page=${page}`, {
       headers: { 'Content-Type': 'application/json' },
@@ -974,7 +983,7 @@ class ApiClient {
 
   async discoverBands(page: number = 1): Promise<{
     bands: Band[];
-    meta: { current_page: number; total_pages: number; total_count: number; per_page: number };
+    pagination: DiscoverPagination;
   }> {
     return this.makeRequest(`/discover/bands?page=${page}`, {
       headers: { 'Content-Type': 'application/json' },
@@ -983,7 +992,7 @@ class ApiClient {
 
   async discoverReviews(page: number = 1): Promise<{
     reviews: Review[];
-    meta: { current_page: number; total_pages: number; total_count: number; per_page: number };
+    pagination: DiscoverPagination;
   }> {
     return this.makeRequest(`/discover/reviews?page=${page}`, {
       headers: { 'Content-Type': 'application/json' },
@@ -1250,7 +1259,7 @@ class ApiClient {
 
   async discoverEvents(page: number = 1): Promise<{
     events: Event[];
-    meta: PaginationMeta;
+    pagination: DiscoverPagination;
   }> {
     return this.makeRequest(`/discover/events?page=${page}`, {
       headers: { 'Content-Type': 'application/json' },

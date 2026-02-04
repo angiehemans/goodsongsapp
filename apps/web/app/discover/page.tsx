@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import {
@@ -58,62 +58,76 @@ export default function DiscoverPage() {
   const { data: usersData, isLoading: usersLoading } = useSWR(
     activeTab === 'users' ? ['discover-users', usersPage] : null,
     () => fetchUsers(usersPage),
-    {
-      onSuccess: (data) => {
-        if (usersPage === 1) {
-          setAccumulatedUsers(data?.users || []);
-        } else {
-          setAccumulatedUsers((prev) => [...prev, ...(data?.users || [])]);
-        }
-      },
-      revalidateOnFocus: false,
-    }
+    { revalidateOnFocus: false }
   );
 
   const { data: bandsData, isLoading: bandsLoading } = useSWR(
     activeTab === 'bands' ? ['discover-bands', bandsPage] : null,
     () => fetchBands(bandsPage),
-    {
-      onSuccess: (data) => {
-        if (bandsPage === 1) {
-          setAccumulatedBands(data?.bands || []);
-        } else {
-          setAccumulatedBands((prev) => [...prev, ...(data?.bands || [])]);
-        }
-      },
-      revalidateOnFocus: false,
-    }
+    { revalidateOnFocus: false }
   );
 
   const { data: reviewsData, isLoading: reviewsLoading } = useSWR(
     activeTab === 'reviews' ? ['discover-reviews', reviewsPage] : null,
     () => fetchReviews(reviewsPage),
-    {
-      onSuccess: (data) => {
-        if (reviewsPage === 1) {
-          setAccumulatedReviews(data?.reviews || []);
-        } else {
-          setAccumulatedReviews((prev) => [...prev, ...(data?.reviews || [])]);
-        }
-      },
-      revalidateOnFocus: false,
-    }
+    { revalidateOnFocus: false }
   );
 
   const { data: eventsData, isLoading: eventsLoading } = useSWR(
     activeTab === 'events' ? ['discover-events', eventsPage] : null,
     () => fetchEvents(eventsPage),
-    {
-      onSuccess: (data) => {
-        if (eventsPage === 1) {
-          setAccumulatedEvents(data?.events || []);
-        } else {
-          setAccumulatedEvents((prev) => [...prev, ...(data?.events || [])]);
-        }
-      },
-      revalidateOnFocus: false,
-    }
+    { revalidateOnFocus: false }
   );
+
+  // Accumulate paginated data — uses current_page from the response itself
+  // to avoid stale closure issues with page state
+  useEffect(() => {
+    if (!usersData?.users) return;
+    if (usersData.pagination?.current_page === 1) {
+      setAccumulatedUsers(usersData.users);
+    } else {
+      setAccumulatedUsers((prev) => {
+        const ids = new Set(prev.map((u) => u.id));
+        return [...prev, ...usersData.users.filter((u) => !ids.has(u.id))];
+      });
+    }
+  }, [usersData]);
+
+  useEffect(() => {
+    if (!bandsData?.bands) return;
+    if (bandsData.pagination?.current_page === 1) {
+      setAccumulatedBands(bandsData.bands);
+    } else {
+      setAccumulatedBands((prev) => {
+        const ids = new Set(prev.map((b) => b.id));
+        return [...prev, ...bandsData.bands.filter((b) => !ids.has(b.id))];
+      });
+    }
+  }, [bandsData]);
+
+  useEffect(() => {
+    if (!reviewsData?.reviews) return;
+    if (reviewsData.pagination?.current_page === 1) {
+      setAccumulatedReviews(reviewsData.reviews);
+    } else {
+      setAccumulatedReviews((prev) => {
+        const ids = new Set(prev.map((r) => r.id));
+        return [...prev, ...reviewsData.reviews.filter((r) => !ids.has(r.id))];
+      });
+    }
+  }, [reviewsData]);
+
+  useEffect(() => {
+    if (!eventsData?.events) return;
+    if (eventsData.pagination?.current_page === 1) {
+      setAccumulatedEvents(eventsData.events);
+    } else {
+      setAccumulatedEvents((prev) => {
+        const ids = new Set(prev.map((e) => e.id));
+        return [...prev, ...eventsData.events.filter((e) => !ids.has(e.id))];
+      });
+    }
+  }, [eventsData]);
 
   // Memoized filtered arrays - only recalculate when data or search changes
   const filteredUsers = useMemo(() => {
@@ -162,29 +176,29 @@ export default function DiscoverPage() {
   }, [accumulatedEvents, debouncedSearch]);
 
   // Load more handlers
-  const handleLoadMoreUsers = () => {
-    if (usersData?.meta && usersPage < usersData.meta.total_pages) {
+  const handleLoadMoreUsers = useCallback(() => {
+    if (usersData?.pagination?.has_next_page && !usersLoading) {
       setUsersPage((p) => p + 1);
     }
-  };
+  }, [usersData?.pagination?.has_next_page, usersLoading]);
 
-  const handleLoadMoreBands = () => {
-    if (bandsData?.meta && bandsPage < bandsData.meta.total_pages) {
+  const handleLoadMoreBands = useCallback(() => {
+    if (bandsData?.pagination?.has_next_page && !bandsLoading) {
       setBandsPage((p) => p + 1);
     }
-  };
+  }, [bandsData?.pagination?.has_next_page, bandsLoading]);
 
-  const handleLoadMoreReviews = () => {
-    if (reviewsData?.meta && reviewsPage < reviewsData.meta.total_pages) {
+  const handleLoadMoreReviews = useCallback(() => {
+    if (reviewsData?.pagination?.has_next_page && !reviewsLoading) {
       setReviewsPage((p) => p + 1);
     }
-  };
+  }, [reviewsData?.pagination?.has_next_page, reviewsLoading]);
 
-  const handleLoadMoreEvents = () => {
-    if (eventsData?.meta && eventsPage < eventsData.meta.total_pages) {
+  const handleLoadMoreEvents = useCallback(() => {
+    if (eventsData?.pagination?.has_next_page && !eventsLoading) {
       setEventsPage((p) => p + 1);
     }
-  };
+  }, [eventsData?.pagination?.has_next_page, eventsLoading]);
 
   // Check if currently loading based on active tab
   const isLoading =
@@ -193,11 +207,27 @@ export default function DiscoverPage() {
     (activeTab === 'reviews' && reviewsLoading && accumulatedReviews.length === 0) ||
     (activeTab === 'events' && eventsLoading && accumulatedEvents.length === 0);
 
-  const isLoadingMore =
-    (activeTab === 'users' && usersLoading && accumulatedUsers.length > 0) ||
-    (activeTab === 'bands' && bandsLoading && accumulatedBands.length > 0) ||
-    (activeTab === 'reviews' && reviewsLoading && accumulatedReviews.length > 0) ||
-    (activeTab === 'events' && eventsLoading && accumulatedEvents.length > 0);
+  // Infinite scroll via IntersectionObserver
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      if (!node) return;
+
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (!entries[0].isIntersecting) return;
+          if (activeTab === 'users') handleLoadMoreUsers();
+          else if (activeTab === 'bands') handleLoadMoreBands();
+          else if (activeTab === 'reviews') handleLoadMoreReviews();
+          else if (activeTab === 'events') handleLoadMoreEvents();
+        },
+        { rootMargin: '200px' }
+      );
+      observerRef.current.observe(node);
+    },
+    [activeTab, handleLoadMoreUsers, handleLoadMoreBands, handleLoadMoreReviews, handleLoadMoreEvents]
+  );
 
   return (
     <Container p={0} fluid className={styles.container}>
@@ -319,12 +349,12 @@ export default function DiscoverPage() {
                         </Flex>
                       ))}
 
-                    {!debouncedSearch && usersData?.meta && usersPage < usersData.meta.total_pages && (
-                      <Center mt="md">
-                        <Button onClick={handleLoadMoreUsers} loading={isLoadingMore} variant="light">
-                          Load More Users
-                        </Button>
-                      </Center>
+                    {!debouncedSearch && usersData?.pagination?.has_next_page && (
+                      <div ref={sentinelRef}>
+                        <Center py="md">
+                          <Loader size="sm" />
+                        </Center>
+                      </div>
                     )}
                   </Stack>
                 )}
@@ -343,12 +373,12 @@ export default function DiscoverPage() {
                 ) : (
                   <Stack gap={0}>
                     {filteredBands
-                      .filter((band) => band.name && band.slug)
+                      .filter((band) => band.name)
                       .map((band) => (
                         <Flex
                           key={band.id}
-                          component={Link}
-                          href={`/bands/${band.slug}`}
+                          component={band.slug ? Link : 'div'}
+                          href={band.slug ? `/bands/${band.slug}` : undefined}
                           className={styles.card}
                           align="center"
                           gap="md"
@@ -379,12 +409,12 @@ export default function DiscoverPage() {
                         </Flex>
                       ))}
 
-                    {!debouncedSearch && bandsData?.meta && bandsPage < bandsData.meta.total_pages && (
-                      <Center mt="md">
-                        <Button onClick={handleLoadMoreBands} loading={isLoadingMore} variant="light">
-                          Load More Bands
-                        </Button>
-                      </Center>
+                    {!debouncedSearch && bandsData?.pagination?.has_next_page && (
+                      <div ref={sentinelRef}>
+                        <Center py="md">
+                          <Loader size="sm" />
+                        </Center>
+                      </div>
                     )}
                   </Stack>
                 )}
@@ -408,16 +438,12 @@ export default function DiscoverPage() {
                       <ReviewCard key={review.id} review={review} />
                     ))}
 
-                    {!debouncedSearch && reviewsData?.meta && reviewsPage < reviewsData.meta.total_pages && (
-                      <Center>
-                        <Button
-                          onClick={handleLoadMoreReviews}
-                          loading={isLoadingMore}
-                          variant="light"
-                        >
-                          Load More Reviews
-                        </Button>
-                      </Center>
+                    {!debouncedSearch && reviewsData?.pagination?.has_next_page && (
+                      <div ref={sentinelRef}>
+                        <Center py="md">
+                          <Loader size="sm" />
+                        </Center>
+                      </div>
                     )}
                   </Stack>
                 )}
@@ -441,16 +467,12 @@ export default function DiscoverPage() {
                       <EventCard key={event.id} event={event} showBand />
                     ))}
 
-                    {!debouncedSearch && eventsData?.meta && eventsPage < eventsData.meta.total_pages && (
-                      <Center>
-                        <Button
-                          onClick={handleLoadMoreEvents}
-                          loading={isLoadingMore}
-                          variant="light"
-                        >
-                          Load More Events
-                        </Button>
-                      </Center>
+                    {!debouncedSearch && eventsData?.pagination?.has_next_page && (
+                      <div ref={sentinelRef}>
+                        <Center py="md">
+                          <Loader size="sm" />
+                        </Center>
+                      </div>
                     )}
                   </Stack>
                 )}

@@ -11,6 +11,15 @@ import {
   LastFmStatus,
   RecentlyPlayedTrack,
 } from '@goodsongs/api-client';
+
+export interface DiscoverPagination {
+  current_page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
+  has_next_page: boolean;
+  has_previous_page: boolean;
+}
 import type {
   ScrobbleTrack,
   ScrobbleListResponse,
@@ -114,28 +123,28 @@ class MobileApiClient {
   // Discover
   async discoverUsers(page: number = 1): Promise<{
     users: UserProfile[];
-    meta: PaginationMeta;
+    pagination: DiscoverPagination;
   }> {
     return this.request(`/discover/users?page=${page}`);
   }
 
   async discoverBands(page: number = 1): Promise<{
     bands: Band[];
-    meta: PaginationMeta;
+    pagination: DiscoverPagination;
   }> {
     return this.request(`/discover/bands?page=${page}`);
   }
 
   async discoverReviews(page: number = 1): Promise<{
     reviews: Review[];
-    meta: PaginationMeta;
+    pagination: DiscoverPagination;
   }> {
     return this.request(`/discover/reviews?page=${page}`);
   }
 
   async discoverEvents(page: number = 1): Promise<{
     events: Event[];
-    meta: PaginationMeta;
+    pagination: DiscoverPagination;
   }> {
     return this.request(`/discover/events?page=${page}`);
   }
