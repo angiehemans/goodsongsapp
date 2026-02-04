@@ -374,40 +374,58 @@ export default function DiscoverPage() {
                   <Stack gap={0}>
                     {filteredBands
                       .filter((band) => band.name)
-                      .map((band) => (
-                        <Flex
-                          key={band.id}
-                          component={band.slug ? Link : 'div'}
-                          href={band.slug ? `/bands/${band.slug}` : undefined}
-                          className={styles.card}
-                          align="center"
-                          gap="md"
-                          p="xs"
-                        >
-                          <ProfilePhoto
-                            src={band.profile_picture_url || band.spotify_image_url}
-                            alt={band.name || 'Band'}
-                            size={40}
-                            fallback={band.name || 'B'}
-                          />
-                          <Stack gap={2} style={{ flex: 1 }}>
-                            <Text fw={500} className={styles.user}>
-                              {band.name}
-                            </Text>
-                            {(band.location || band.city || band.region) && (
-                              <Text size="xs" c="dimmed">
-                                {band.location || [band.city, band.region].filter(Boolean).join(', ')}
+                      .map((band) => {
+                        const content = (
+                          <>
+                            <ProfilePhoto
+                              src={band.profile_picture_url || band.spotify_image_url}
+                              alt={band.name || 'Band'}
+                              size={40}
+                              fallback={band.name || 'B'}
+                            />
+                            <Stack gap={2} style={{ flex: 1 }}>
+                              <Text fw={500} className={styles.user}>
+                                {band.name}
                               </Text>
+                              {(band.location || band.city || band.region) && (
+                                <Text size="xs" c="dimmed">
+                                  {band.location || [band.city, band.region].filter(Boolean).join(', ')}
+                                </Text>
+                              )}
+                            </Stack>
+                            {(band.reviews_count > 0 || (band.reviews && band.reviews.length > 0)) && (
+                              <Badge size="sm" variant="light" color="grape">
+                                {band.reviews_count || band.reviews?.length} rec
+                                {(band.reviews_count || band.reviews?.length) !== 1 ? 's' : ''}
+                              </Badge>
                             )}
-                          </Stack>
-                          {(band.reviews_count > 0 || (band.reviews && band.reviews.length > 0)) && (
-                            <Badge size="sm" variant="light" color="grape">
-                              {band.reviews_count || band.reviews?.length} rec
-                              {(band.reviews_count || band.reviews?.length) !== 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </Flex>
-                      ))}
+                          </>
+                        );
+
+                        return band.slug ? (
+                          <Flex
+                            key={band.id}
+                            component={Link}
+                            href={`/bands/${band.slug}`}
+                            className={styles.card}
+                            align="center"
+                            gap="md"
+                            p="xs"
+                          >
+                            {content}
+                          </Flex>
+                        ) : (
+                          <Flex
+                            key={band.id}
+                            className={styles.card}
+                            align="center"
+                            gap="md"
+                            p="xs"
+                          >
+                            {content}
+                          </Flex>
+                        );
+                      })}
 
                     {!debouncedSearch && bandsData?.pagination?.has_next_page && (
                       <div ref={sentinelRef}>
