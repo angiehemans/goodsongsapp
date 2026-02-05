@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -10,10 +10,12 @@ import {
   IconHeart,
   IconHeartFilled,
   IconLink,
-  IconMessageCircle,
+  IconMessage,
   IconMusic,
   IconPhoto,
+  IconSend,
   IconShare,
+  IconTrash,
 } from '@tabler/icons-react';
 import html2canvas from 'html2canvas';
 import {
@@ -27,17 +29,21 @@ import {
   Menu,
   Stack,
   Text,
+  Textarea,
+  Title,
   UnstyledButton,
 } from '@mantine/core';
 import { Header } from '@/components/Header/Header';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
-import { apiClient, Review } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { apiClient, Review, ReviewComment } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function SingleReviewPage() {
   const params = useParams();
   const username = params.username as string;
   const reviewId = params.reviewId as string;
+  const { user } = useAuth();
 
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +54,17 @@ export default function SingleReviewPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [isLiking, setIsLiking] = useState(false);
+
+  // Comments state
+  const [comments, setComments] = useState<ReviewComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [loadingMoreComments, setLoadingMoreComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [commentsCount, setCommentsCount] = useState(0);
 
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
@@ -152,6 +169,80 @@ export default function SingleReviewPage() {
     }
   };
 
+  // Load comments
+  const loadComments = useCallback(async (page: number, reset: boolean = false) => {
+    if (reset) {
+      setCommentsLoading(true);
+    } else {
+      setLoadingMoreComments(true);
+    }
+
+    try {
+      const response = await apiClient.getReviewComments(parseInt(reviewId, 10), page);
+      if (reset) {
+        setComments(response.comments);
+      } else {
+        setComments((prev) => [...prev, ...response.comments]);
+      }
+      setHasMoreComments(response.pagination.has_next_page);
+      setCommentsPage(page);
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+    } finally {
+      setCommentsLoading(false);
+      setLoadingMoreComments(false);
+    }
+  }, [reviewId]);
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || isSubmittingComment || !user) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const response = await apiClient.createReviewComment(parseInt(reviewId, 10), newComment.trim());
+      const comment = {
+        ...response,
+        author: response.author || {
+          id: user.id,
+          username: user.username,
+          profile_image_url: user.profile_image_url,
+        },
+      };
+      setComments((prev) => [...prev, comment]);
+      setNewComment('');
+      setCommentsCount((prev) => prev + 1);
+    } catch (error) {
+      console.error('Failed to post comment:', error);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    setDeletingCommentId(commentId);
+    try {
+      await apiClient.deleteReviewComment(parseInt(reviewId, 10), commentId);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      setCommentsCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+    return date.toLocaleDateString();
+  };
+
   useEffect(() => {
     async function fetchReview() {
       try {
@@ -160,6 +251,7 @@ export default function SingleReviewPage() {
         setReview(fetchedReview);
         setIsLiked(fetchedReview.liked_by_current_user ?? false);
         setLikesCount(fetchedReview.likes_count ?? 0);
+        setCommentsCount(fetchedReview.comments_count ?? 0);
       } catch (err) {
         console.error('Failed to fetch review:', err);
         setError('Review not found');
@@ -170,8 +262,9 @@ export default function SingleReviewPage() {
 
     if (reviewId) {
       fetchReview();
+      loadComments(1, true);
     }
-  }, [reviewId]);
+  }, [reviewId, loadComments]);
 
   if (loading) {
     return (
@@ -316,22 +409,40 @@ export default function SingleReviewPage() {
 
           {/* Actions Row */}
           <div className={styles.actionsRow}>
-            <Group gap={4}>
-              <ActionIcon
-                variant="subtle"
-                color={isLiked ? 'red' : 'gray'}
-                size="lg"
-                onClick={handleLikeClick}
-                loading={isLiking}
-                aria-label={isLiked ? 'Unlike' : 'Like'}
-              >
-                {isLiked ? <IconHeartFilled size={22} /> : <IconHeart size={22} />}
-              </ActionIcon>
-              {likesCount > 0 && (
-                <Text size="sm" c="dimmed">
-                  {likesCount}
-                </Text>
-              )}
+            <Group gap="md">
+              <Group gap={4}>
+                <ActionIcon
+                  variant="subtle"
+                  color={isLiked ? 'red' : 'gray'}
+                  size="lg"
+                  onClick={handleLikeClick}
+                  loading={isLiking}
+                  aria-label={isLiked ? 'Unlike' : 'Like'}
+                >
+                  {isLiked ? <IconHeartFilled size={22} /> : <IconHeart size={22} />}
+                </ActionIcon>
+                {likesCount > 0 && (
+                  <Text size="sm" c="dimmed">
+                    {likesCount}
+                  </Text>
+                )}
+              </Group>
+
+              <Group gap={4}>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label="Comments"
+                >
+                  <IconMessage size={22} />
+                </ActionIcon>
+                {commentsCount > 0 && (
+                  <Text size="sm" c="dimmed">
+                    {commentsCount}
+                  </Text>
+                )}
+              </Group>
             </Group>
 
             <Menu shadow="md" width={200} position="bottom-end">
@@ -371,21 +482,138 @@ export default function SingleReviewPage() {
             </Menu>
           </div>
 
-          <Divider color="gray.2" />
+        </div>
 
-          {/* Full timestamp */}
-          <Text size="xs" c="dimmed" className={styles.fullTimestamp}>
-            {new Date(review.created_at).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}{' '}
-            at{' '}
-            {new Date(review.created_at).toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
+        {/* Comments Section */}
+        <div className={styles.commentsSection}>
+          <Title order={4} mb="md">
+            Comments {commentsCount > 0 && `(${commentsCount})`}
+          </Title>
+
+          {/* Comment Input */}
+          {user ? (
+            <div className={styles.commentInput}>
+              <Group gap="sm" align="flex-end">
+                <ProfilePhoto
+                  src={user.profile_image_url}
+                  alt={user.username}
+                  size={36}
+                  fallback={user.username}
+                />
+                <Textarea
+                  placeholder="Add a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  maxLength={300}
+                  minRows={1}
+                  maxRows={4}
+                  autosize
+                  style={{ flex: 1 }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmitComment();
+                    }
+                  }}
+                />
+                <ActionIcon
+                  variant="filled"
+                  color="grape"
+                  size="lg"
+                  onClick={handleSubmitComment}
+                  loading={isSubmittingComment}
+                  disabled={!newComment.trim()}
+                >
+                  <IconSend size={18} />
+                </ActionIcon>
+              </Group>
+              <Text size="xs" c="dimmed" ta="right" mt={4}>
+                {newComment.length}/300
+              </Text>
+            </div>
+          ) : (
+            <Text size="sm" c="dimmed" ta="center" py="md">
+              <Link href="/login" style={{ color: 'var(--mantine-color-grape-6)', fontWeight: 500 }}>
+                Log in
+              </Link>{' '}
+              to leave a comment
+            </Text>
+          )}
+
+          <Divider my="md" />
+
+          {/* Comments List */}
+          {commentsLoading ? (
+            <Center py="xl">
+              <Loader size="md" />
+            </Center>
+          ) : comments.length === 0 ? (
+            <Center py="xl">
+              <Text c="dimmed">No comments yet. Be the first to comment!</Text>
+            </Center>
+          ) : (
+            <Stack gap="md">
+              {comments.map((comment, index) => {
+                const author = comment.author || { id: 0, username: 'unknown', profile_image_url: undefined };
+                return (
+                  <div key={comment.id ?? `comment-${index}`} className={styles.comment}>
+                    <Group gap="sm" align="flex-start">
+                      <ProfilePhoto
+                        src={author.profile_image_url}
+                        alt={author.username}
+                        size={32}
+                        fallback={author.username}
+                        href={`/users/${author.username}`}
+                      />
+                      <Stack gap={4} style={{ flex: 1 }}>
+                        <Group gap="xs" justify="space-between">
+                          <Group gap="xs">
+                            <Text
+                              size="sm"
+                              fw={500}
+                              component={Link}
+                              href={`/users/${author.username}`}
+                              style={{ textDecoration: 'none', color: 'var(--mantine-color-grape-7)' }}
+                            >
+                              @{author.username}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {formatTimeAgo(comment.created_at)}
+                            </Text>
+                          </Group>
+                          {user?.id === author.id && (
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="sm"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              loading={deletingCommentId === comment.id}
+                            >
+                              <IconTrash size={14} />
+                            </ActionIcon>
+                          )}
+                        </Group>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                          {comment.body}
+                        </Text>
+                      </Stack>
+                    </Group>
+                  </div>
+                );
+              })}
+
+              {hasMoreComments && (
+                <Center>
+                  <UnstyledButton
+                    onClick={() => loadComments(commentsPage + 1, false)}
+                    className={styles.loadMoreButton}
+                  >
+                    {loadingMoreComments ? <Loader size="sm" /> : 'Load more comments'}
+                  </UnstyledButton>
+                </Center>
+              )}
+            </Stack>
+          )}
         </div>
       </div>
 

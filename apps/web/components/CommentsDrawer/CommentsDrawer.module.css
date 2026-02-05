@@ -1,0 +1,54 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.commentsList {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.comment {
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 0.15s ease;
+}
+
+.comment:hover {
+  background-color: var(--mantine-color-grape-0);
+}
+
+.username {
+  text-decoration: none;
+  color: var(--mantine-color-grape-7);
+}
+
+.username:hover {
+  text-decoration: underline;
+}
+
+.commentBody {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.inputContainer {
+  padding-top: var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-grape-2);
+}
+
+.loginPrompt {
+  padding: var(--mantine-spacing-md);
+  border-top: 1px solid var(--mantine-color-grape-2);
+}
+
+.loginLink {
+  color: var(--mantine-color-grape-6);
+  font-weight: 500;
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}

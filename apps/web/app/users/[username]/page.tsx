@@ -8,6 +8,17 @@ import { UserReviewsList } from '@/components/UserReviewsList/UserReviewsList';
 import { UserProfile } from '@/lib/api';
 import styles from './page.module.css';
 
+interface PaginatedUserProfile extends UserProfile {
+  reviews_pagination?: {
+    current_page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
+  };
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -23,7 +34,7 @@ export async function generateMetadata({
         description: 'The requested user profile could not be found.',
       };
     }
-    const reviewsCount = profile.reviews?.length ?? profile.reviews_count ?? 0;
+    const reviewsCount = profile.reviews_pagination?.total_count ?? profile.reviews?.length ?? profile.reviews_count ?? 0;
     return {
       title: `@${profile.username} - Goodsongs`,
       description: `View @${profile.username}'s music recommendations on Goodsongs. ${reviewsCount} recommendation${reviewsCount !== 1 ? 's' : ''} shared.`,
@@ -36,14 +47,15 @@ export async function generateMetadata({
   }
 }
 
-async function getUserProfile(username: string): Promise<UserProfile | null> {
+async function getUserProfile(username: string): Promise<PaginatedUserProfile | null> {
   // For server components, we need to use the full URL to the Next.js API route
   const baseUrl =
     process.env.NODE_ENV === 'production'
       ? process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://www.goodsongs.app'
       : 'http://localhost:3001';
 
-  const response = await fetch(`${baseUrl}/api/users/${username}`, {
+  // Fetch first page with pagination
+  const response = await fetch(`${baseUrl}/api/users/${username}?page=1&per_page=20`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -67,7 +79,7 @@ export default async function UserProfilePage({
 }) {
   const { username } = await params;
 
-  let profile: UserProfile | null;
+  let profile: PaginatedUserProfile | null;
 
   try {
     profile = await getUserProfile(username);
@@ -100,7 +112,11 @@ export default async function UserProfilePage({
               Recommendations
             </Title>
 
-            <UserReviewsList profile={profile} initialReviews={profile.reviews || []} />
+            <UserReviewsList
+              profile={profile}
+              initialReviews={profile.reviews || []}
+              initialPagination={profile.reviews_pagination}
+            />
           </Flex>
         </Flex>
       </Container>

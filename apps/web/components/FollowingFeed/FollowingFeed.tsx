@@ -1,10 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { IconMusic, IconUsers } from '@tabler/icons-react';
 import { Button, Center, Loader, Paper, Stack, Text, Title } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { apiClient, FollowingFeedItem, Review } from '@/lib/api';
 import styles from './FollowingFeed.module.css';
@@ -12,8 +11,6 @@ import styles from './FollowingFeed.module.css';
 interface FollowingFeedProps {
   /** Title to display above the feed */
   title?: string;
-  /** Maximum number of items to show initially */
-  initialLimit?: number;
 }
 
 // Convert FollowingFeedItem to Review format for ReviewCard
@@ -32,14 +29,15 @@ function feedItemToReview(item: FollowingFeedItem): Review {
     band: item.band,
     likes_count: item.likes_count,
     liked_by_current_user: item.liked_by_current_user,
+    comments_count: item.comments_count,
   };
 }
 
-export function FollowingFeed({ title = 'Following Feed', initialLimit = 10 }: FollowingFeedProps) {
+export function FollowingFeed({ title = 'Following Feed' }: FollowingFeedProps) {
   const [feedItems, setFeedItems] = useState<FollowingFeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const fetchFeed = useCallback(async (page: number, append: boolean = false) => {
@@ -53,15 +51,22 @@ export function FollowingFeed({ title = 'Following Feed', initialLimit = 10 }: F
       const response = await apiClient.getFollowingFeed(page);
       const reviews = response?.reviews || [];
       if (append) {
-        setFeedItems((prev) => [...prev, ...reviews]);
+        setFeedItems((prev) => {
+          const ids = new Set(prev.map((r) => r.id));
+          return [...prev, ...reviews.filter((r) => !ids.has(r.id))];
+        });
       } else {
         setFeedItems(reviews);
       }
-      setCurrentPage(response?.meta?.current_page || 1);
-      setTotalPages(response?.meta?.total_pages || 1);
+      // Handle both 'meta' and 'pagination' response structures
+      const pagination = (response as any)?.meta || (response as any)?.pagination;
+      const currentPageNum = pagination?.current_page || 1;
+      const totalPagesNum = pagination?.total_pages || 1;
+      const hasNext = pagination?.has_next_page ?? (currentPageNum < totalPagesNum);
+      setCurrentPage(currentPageNum);
+      setHasNextPage(hasNext);
     } catch (error) {
       console.error('Failed to fetch following feed:', error);
-      // Don't show error notification for empty feed - just set empty state
       setFeedItems([]);
     } finally {
       setIsLoading(false);
@@ -73,11 +78,31 @@ export function FollowingFeed({ title = 'Following Feed', initialLimit = 10 }: F
     fetchFeed(1);
   }, [fetchFeed]);
 
-  const handleLoadMore = () => {
-    if (currentPage < totalPages) {
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isLoadingMore) {
       fetchFeed(currentPage + 1, true);
     }
-  };
+  }, [hasNextPage, isLoadingMore, currentPage, fetchFeed]);
+
+  // Infinite scroll via IntersectionObserver
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      if (!node) return;
+
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            handleLoadMore();
+          }
+        },
+        { rootMargin: '200px' }
+      );
+      observerRef.current.observe(node);
+    },
+    [handleLoadMore]
+  );
 
   if (isLoading) {
     return (
@@ -121,24 +146,16 @@ export function FollowingFeed({ title = 'Following Feed', initialLimit = 10 }: F
         {title}
       </Title>
       <Stack>
-        {feedItems.slice(0, initialLimit).map((item) => (
+        {feedItems.map((item) => (
           <ReviewCard key={item.id} review={feedItemToReview(item)} />
         ))}
 
-        {feedItems.length > initialLimit && (
-          <Stack>
-            {feedItems.slice(initialLimit).map((item) => (
-              <ReviewCard key={item.id} review={feedItemToReview(item)} />
-            ))}
-          </Stack>
-        )}
-
-        {currentPage < totalPages && (
-          <Center>
-            <Button onClick={handleLoadMore} loading={isLoadingMore} variant="light">
-              Load More
-            </Button>
-          </Center>
+        {hasNextPage && (
+          <div ref={sentinelRef}>
+            <Center py="md">
+              <Loader size="sm" />
+            </Center>
+          </div>
         )}
       </Stack>
     </div>

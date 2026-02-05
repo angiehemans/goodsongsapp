@@ -9,12 +9,14 @@ import {
   IconHeart,
   IconHeartFilled,
   IconLink,
+  IconMessage,
   IconMusic,
   IconPhoto,
   IconShare,
 } from '@tabler/icons-react';
 import html2canvas from 'html2canvas';
 import { ActionIcon, Badge, Card, Center, Group, Loader, Menu, Spoiler, Stack, Text } from '@mantine/core';
+import { CommentsDrawer } from '@/components/CommentsDrawer/CommentsDrawer';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { apiClient, Review } from '@/lib/api';
 import styles from './ReviewCard.module.css';
@@ -33,6 +35,9 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
   const [generatingImage, setGeneratingImage] = useState(false);
   // Only render hidden Instagram renderers when user clicks to generate
   const [renderFormat, setRenderFormat] = useState<'story' | 'post' | null>(null);
+  // Comments state
+  const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(review.comments_count ?? 0);
 
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
@@ -51,7 +56,8 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
   useEffect(() => {
     setIsLiked(review.liked_by_current_user ?? false);
     setLikesCount(review.likes_count ?? 0);
-  }, [review.liked_by_current_user, review.likes_count]);
+    setCommentsCount(review.comments_count ?? 0);
+  }, [review.liked_by_current_user, review.likes_count, review.comments_count]);
 
   const authorUsername = review.author?.username || review.user?.username;
   const authorProfileImage = review.author?.profile_image_url;
@@ -312,6 +318,23 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
               )}
             </Group>
 
+            {/* Comments Button */}
+            <Group gap={4}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => setCommentsDrawerOpen(true)}
+                aria-label="View comments"
+              >
+                <IconMessage size={20} />
+              </ActionIcon>
+              {commentsCount > 0 && (
+                <Text size="sm" c="dimmed">
+                  {commentsCount}
+                </Text>
+              )}
+            </Group>
+
             {/* Share Menu */}
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
@@ -451,6 +474,14 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
           </div>
         </div>
       )}
+
+      {/* Comments Drawer */}
+      <CommentsDrawer
+        reviewId={review.id}
+        opened={commentsDrawerOpen}
+        onClose={() => setCommentsDrawerOpen(false)}
+        onCommentCountChange={setCommentsCount}
+      />
     </Card>
   );
 }

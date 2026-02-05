@@ -94,6 +94,32 @@ export interface Review extends ReviewData {
   };
   likes_count?: number;
   liked_by_current_user?: boolean;
+  comments_count?: number;
+}
+
+export interface ReviewComment {
+  id: number;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  author: {
+    id: number;
+    username: string;
+    display_name?: string;
+    profile_image_url?: string;
+  };
+}
+
+export interface ReviewCommentsResponse {
+  comments: ReviewComment[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
+  };
 }
 
 export interface LikeResponse {
@@ -149,6 +175,7 @@ export interface FollowingFeedItem {
   };
   likes_count?: number;
   liked_by_current_user?: boolean;
+  comments_count?: number;
 }
 
 export interface FollowingFeedResponse {
@@ -725,9 +752,51 @@ class ApiClient {
     });
   }
 
+  // Review Comments
+  async getReviewComments(reviewId: number, page: number = 1): Promise<ReviewCommentsResponse> {
+    return this.makeRequest(`/reviews/${reviewId}/comments?page=${page}`);
+  }
+
+  async createReviewComment(reviewId: number, body: string): Promise<ReviewComment> {
+    return this.makeRequest(`/reviews/${reviewId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ comment: { body } }),
+    });
+  }
+
+  async updateReviewComment(reviewId: number, commentId: number, body: string): Promise<ReviewComment> {
+    return this.makeRequest(`/reviews/${reviewId}/comments/${commentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ comment: { body } }),
+    });
+  }
+
+  async deleteReviewComment(reviewId: number, commentId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/reviews/${reviewId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getUserProfile(username: string): Promise<UserProfile> {
     // Include auth header when available to get liked_by_current_user in reviews
     return this.makeRequest(`/users/${username}`);
+  }
+
+  async getUserProfilePaginated(
+    username: string,
+    page: number = 1,
+    perPage: number = 20
+  ): Promise<UserProfile & {
+    reviews_pagination?: {
+      current_page: number;
+      per_page: number;
+      total_count: number;
+      total_pages: number;
+      has_next_page: boolean;
+      has_previous_page: boolean;
+    };
+  }> {
+    return this.makeRequest(`/users/${username}?page=${page}&per_page=${perPage}`);
   }
 
   async createBand(data: BandData): Promise<Band> {
