@@ -4,30 +4,30 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
-  IconArrowLeft,
   IconBrandInstagram,
   IconCheck,
   IconExternalLink,
+  IconHeart,
+  IconHeartFilled,
   IconLink,
+  IconMessageCircle,
   IconMusic,
   IconPhoto,
   IconShare,
 } from '@tabler/icons-react';
 import html2canvas from 'html2canvas';
 import {
+  ActionIcon,
   Badge,
-  Box,
-  Button,
-  Card,
   Center,
   Container,
-  Flex,
+  Divider,
   Group,
   Loader,
   Menu,
   Stack,
   Text,
-  Title,
+  UnstyledButton,
 } from '@mantine/core';
 import { Header } from '@/components/Header/Header';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
@@ -44,9 +44,22 @@ export default function SingleReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [renderFormat, setRenderFormat] = useState<'story' | 'post' | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [isLiking, setIsLiking] = useState(false);
 
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
+
+  // Proxy external images to avoid CORS issues with html2canvas
+  const getProxiedImageUrl = (url: string | undefined) => {
+    if (!url) return undefined;
+    if (url.startsWith('/') || url.includes('goodsongs.app')) {
+      return url;
+    }
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  };
 
   const handleCopyLink = async () => {
     const shareUrl = window.location.href;
@@ -61,28 +74,81 @@ export default function SingleReviewPage() {
   };
 
   const handleInstagramShare = async (format: 'story' | 'post') => {
-    const targetRef = format === 'story' ? storyRef : postRef;
-    if (!targetRef.current || !review) return;
-
     setGeneratingImage(true);
+    setRenderFormat(format);
+  };
 
-    try {
-      const canvas = await html2canvas(targetRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
+  // Effect to capture image once the renderer is mounted
+  useEffect(() => {
+    if (!renderFormat || !generatingImage || !review) return;
+
+    const targetRef = renderFormat === 'story' ? storyRef : postRef;
+
+    const captureImage = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      if (!targetRef.current) {
+        setGeneratingImage(false);
+        setRenderFormat(null);
+        return;
+      }
+
+      const images = targetRef.current.querySelectorAll('img');
+      const imagePromises = Array.from(images).map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
       });
 
-      const link = document.createElement('a');
-      const authorName = review.author?.username || review.user?.username || username;
-      link.download = `${review.song_name}-review-by-${authorName}-${format}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch (err) {
-      console.error('Failed to generate image:', err);
+      await Promise.race([
+        Promise.all(imagePromises),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+
+      try {
+        const canvas = await html2canvas(targetRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+        });
+
+        const link = document.createElement('a');
+        const authorName = review.author?.username || review.user?.username || username;
+        link.download = `${review.song_name}-review-by-${authorName}-${renderFormat}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        console.error('Failed to generate image:', err);
+      } finally {
+        setGeneratingImage(false);
+        setRenderFormat(null);
+      }
+    };
+
+    captureImage();
+  }, [renderFormat, generatingImage, review, username]);
+
+  const handleLikeClick = async () => {
+    if (isLiking || !review) return;
+
+    setIsLiking(true);
+    try {
+      if (isLiked) {
+        const response = await apiClient.unlikeReview(review.id);
+        setIsLiked(false);
+        setLikesCount(response.likes_count);
+      } else {
+        const response = await apiClient.likeReview(review.id);
+        setIsLiked(true);
+        setLikesCount(response.likes_count);
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike review:', error);
     } finally {
-      setGeneratingImage(false);
+      setIsLiking(false);
     }
   };
 
@@ -92,6 +158,8 @@ export default function SingleReviewPage() {
         setLoading(true);
         const fetchedReview = await apiClient.getReview(parseInt(reviewId, 10));
         setReview(fetchedReview);
+        setIsLiked(fetchedReview.liked_by_current_user ?? false);
+        setLikesCount(fetchedReview.likes_count ?? 0);
       } catch (err) {
         console.error('Failed to fetch review:', err);
         setError('Review not found');
@@ -110,7 +178,7 @@ export default function SingleReviewPage() {
       <Container p={0} fluid className={styles.container}>
         <Header showBackButton />
         <Center py="xl">
-          <Loader size="lg" />
+          <Loader size="lg" color="grape" />
         </Center>
       </Container>
     );
@@ -120,14 +188,18 @@ export default function SingleReviewPage() {
     return (
       <Container p={0} fluid className={styles.container}>
         <Header showBackButton />
-        <Container size="sm" py="xl">
+        <Container size="xs" py="xl">
           <Center>
             <Stack align="center" gap="md">
               <IconMusic size={48} color="var(--mantine-color-dimmed)" />
               <Text c="dimmed">Review not found</Text>
-              <Button component={Link} href={`/users/${username}`} variant="light">
+              <UnstyledButton
+                component={Link}
+                href={`/users/${username}`}
+                className={styles.linkButton}
+              >
                 Back to profile
-              </Button>
+              </UnstyledButton>
             </Stack>
           </Center>
         </Container>
@@ -137,6 +209,22 @@ export default function SingleReviewPage() {
 
   const authorUsername = review.author?.username || review.user?.username || username;
   const authorProfileImage = review.author?.profile_image_url;
+
+  // Format relative time
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   // Truncate text for Instagram formats
   const truncateText = (text: string, maxLength: number) => {
@@ -148,262 +236,240 @@ export default function SingleReviewPage() {
     <Container p={0} fluid className={styles.container}>
       <Header showBackButton />
 
-      <Container size="sm" py="md">
-        <Stack gap="md">
-          {/* Navigation and actions */}
-          <Group justify="space-between">
-            <Button
-              component={Link}
+      <div className={styles.pageWrapper}>
+        <div className={styles.post}>
+          {/* Author Row */}
+          <div className={styles.authorRow}>
+            <ProfilePhoto
+              src={authorProfileImage}
+              alt={authorUsername}
+              size={44}
+              fallback={authorUsername}
               href={`/users/${authorUsername}`}
-              variant="subtle"
-              leftSection={<IconArrowLeft size={16} />}
-              size="sm"
-            >
-              Back to @{authorUsername}'s profile
-            </Button>
-            <Menu shadow="md" width={200} position="bottom-end">
-              <Menu.Target>
-                <Button
+            />
+            <div className={styles.authorInfo}>
+              <Group gap={6} align="center">
+                <Text
+                  component={Link}
+                  href={`/users/${authorUsername}`}
+                  className={styles.authorName}
+                >
+                  {authorUsername}
+                </Text>
+                <Text c="dimmed" size="sm">
+                  ·
+                </Text>
+                <Text c="dimmed" size="sm">
+                  {getRelativeTime(review.created_at)}
+                </Text>
+              </Group>
+            </div>
+          </div>
+
+          {/* Song Card */}
+          <UnstyledButton
+            component={review.song_link ? 'a' : 'div'}
+            href={review.song_link || undefined}
+            target={review.song_link ? '_blank' : undefined}
+            rel={review.song_link ? 'noopener noreferrer' : undefined}
+            className={styles.songCard}
+          >
+            {review.artwork_url ? (
+              <img
+                src={review.artwork_url}
+                alt={`${review.song_name} artwork`}
+                className={styles.songArtwork}
+              />
+            ) : (
+              <div className={styles.songArtworkPlaceholder}>
+                <IconMusic size={28} color="var(--mantine-color-grape-4)" />
+              </div>
+            )}
+            <div className={styles.songDetails}>
+              <Text className={styles.songName}>{review.song_name}</Text>
+              <Text className={styles.artistName}>{review.band_name}</Text>
+            </div>
+            {review.song_link && (
+              <IconExternalLink size={18} className={styles.songLinkIcon} />
+            )}
+          </UnstyledButton>
+
+          {/* Review Text */}
+          <Text className={styles.reviewText}>{review.review_text}</Text>
+
+          {/* Tags */}
+          {review.liked_aspects && review.liked_aspects.length > 0 && (
+            <Group gap={8} className={styles.tags}>
+              {review.liked_aspects.map((aspect, index) => (
+                <Badge
+                  key={index}
                   variant="light"
                   color="grape"
-                  leftSection={
-                    copied ? (
-                      <IconCheck size={16} />
-                    ) : generatingImage ? (
-                      <Loader size={16} />
-                    ) : (
-                      <IconShare size={16} />
-                    )
-                  }
                   size="sm"
-                  loading={generatingImage}
+                  className={styles.tag}
                 >
-                  {copied ? 'Copied!' : 'Share'}
-                </Button>
+                  {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
+                </Badge>
+              ))}
+            </Group>
+          )}
+
+          {/* Actions Row */}
+          <div className={styles.actionsRow}>
+            <Group gap={4}>
+              <ActionIcon
+                variant="subtle"
+                color={isLiked ? 'red' : 'gray'}
+                size="lg"
+                onClick={handleLikeClick}
+                loading={isLiking}
+                aria-label={isLiked ? 'Unlike' : 'Like'}
+              >
+                {isLiked ? <IconHeartFilled size={22} /> : <IconHeart size={22} />}
+              </ActionIcon>
+              {likesCount > 0 && (
+                <Text size="sm" c="dimmed">
+                  {likesCount}
+                </Text>
+              )}
+            </Group>
+
+            <Menu shadow="md" width={200} position="bottom-end">
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  loading={generatingImage}
+                  aria-label="Share"
+                >
+                  {copied ? <IconCheck size={22} /> : <IconShare size={22} />}
+                </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>Share this review</Menu.Label>
                 <Menu.Item leftSection={<IconLink size={16} />} onClick={handleCopyLink}>
-                  Copy link
+                  {copied ? 'Copied!' : 'Copy link'}
                 </Menu.Item>
                 <Menu.Divider />
                 <Menu.Label>Download for Instagram</Menu.Label>
                 <Menu.Item
                   leftSection={<IconBrandInstagram size={16} />}
                   onClick={() => handleInstagramShare('story')}
+                  disabled={generatingImage}
                 >
                   Story (9:16)
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<IconPhoto size={16} />}
                   onClick={() => handleInstagramShare('post')}
+                  disabled={generatingImage}
                 >
                   Post (1:1)
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
-          </Group>
+          </div>
 
-          {/* Review Card - Expanded version */}
-          <Card p="lg" radius="md" bg="grape.0">
-            <Stack gap="md">
-              {/* Author Info */}
-              <Group gap="sm" pb="md" className={styles.userInfo}>
-                <ProfilePhoto
-                  src={authorProfileImage}
-                  alt={authorUsername}
-                  size={48}
-                  fallback={authorUsername}
-                  href={`/users/${authorUsername}`}
+          <Divider color="gray.2" />
+
+          {/* Full timestamp */}
+          <Text size="xs" c="dimmed" className={styles.fullTimestamp}>
+            {new Date(review.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}{' '}
+            at{' '}
+            {new Date(review.created_at).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+            })}
+          </Text>
+        </div>
+      </div>
+
+      {/* Hidden Instagram Story Renderer */}
+      {renderFormat === 'story' && (
+        <div className={styles.hiddenRenderer}>
+          <div ref={storyRef} className={styles.storyContainer}>
+            <div className={styles.storyContent}>
+              {review.artwork_url ? (
+                <img
+                  src={getProxiedImageUrl(review.artwork_url)}
+                  alt={`${review.song_name} artwork`}
+                  className={styles.storyArtwork}
                 />
-                <Stack gap={2}>
-                  <Text
-                    size="md"
-                    fw={600}
-                    c="grape.6"
-                    component={Link}
-                    href={`/users/${authorUsername}`}
-                    style={{ textDecoration: 'none' }}
-                    className={styles.authorName}
-                  >
-                    @{authorUsername}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {new Date(review.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </Text>
-                </Stack>
-              </Group>
-
-              {/* Song Info */}
-              <Flex gap="md" align="flex-start" justify="space-between">
-                <Group gap="md">
-                  {review.artwork_url ? (
-                    <img
-                      src={review.artwork_url}
-                      alt={`${review.song_name} artwork`}
-                      className={styles.artwork}
-                    />
-                  ) : (
-                    <Box className={styles.artworkPlaceholder}>
-                      <IconMusic size={32} color="var(--mantine-color-grape-4)" />
-                    </Box>
-                  )}
-                  <Stack gap={4}>
-                    <Title order={2} size="h3" c="gray.9">
-                      {review.song_name}
-                    </Title>
-                    {review.band?.slug ? (
-                      <Text
-                        size="md"
-                        c="grape.6"
-                        component={Link}
-                        href={`/bands/${review.band.slug}`}
-                        style={{ textDecoration: 'none' }}
-                      >
-                        {review.band_name}
-                      </Text>
-                    ) : (
-                      <Text size="md" c="dimmed">
-                        {review.band_name}
-                      </Text>
-                    )}
-                  </Stack>
-                </Group>
-                {review.song_link && (
-                  <a href={review.song_link} target="_blank" rel="noopener noreferrer">
-                    <Button
-                      variant="filled"
-                      color="grape"
-                      leftSection={<IconExternalLink size={20} />}
-                      size="sm"
-                    >
-                      Listen Now
-                    </Button>
-                  </a>
-                )}
-              </Flex>
-
-              {/* Review Text */}
-              <Box py="md">
-                <Text size="md" style={{ whiteSpace: 'pre-wrap' }} lh={1.6}>
-                  {review.review_text}
-                </Text>
-              </Box>
-
-              {/* Tags */}
-              {review.liked_aspects && review.liked_aspects.length > 0 && (
-                <Group gap="xs">
-                  {review.liked_aspects.map((aspect, index) => (
-                    <Badge key={index} size="md" variant="light" color="grape">
-                      {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
-                    </Badge>
-                  ))}
-                </Group>
+              ) : (
+                <div className={styles.storyArtworkPlaceholder}>
+                  <IconMusic size={80} color="#9c36b5" />
+                </div>
               )}
-            </Stack>
-          </Card>
-        </Stack>
-      </Container>
-
-      {/* Hidden Instagram Story Renderer (9:16 - 1080x1920) */}
-      <div className={styles.hiddenRenderer}>
-        <div ref={storyRef} className={styles.storyContainer}>
-          <div className={styles.storyContent}>
-            {/* Album Art */}
-            {review.artwork_url ? (
-              <img
-                src={review.artwork_url}
-                alt={`${review.song_name} artwork`}
-                className={styles.storyArtwork}
-                crossOrigin="anonymous"
-              />
-            ) : (
-              <div className={styles.storyArtworkPlaceholder}>
-                <IconMusic size={80} color="#9c36b5" />
+              <div className={styles.storySongInfo}>
+                <h1 className={styles.storySongName}>{review.song_name}</h1>
+                <p className={styles.storyArtistName}>{review.band_name}</p>
               </div>
-            )}
-
-            {/* Song Info */}
-            <div className={styles.storySongInfo}>
-              <h1 className={styles.storySongName}>{review.song_name}</h1>
-              <p className={styles.storyArtistName}>{review.band_name}</p>
-            </div>
-
-            {/* Review Text */}
-            <div className={styles.storyReviewText}>
-              <p>"{truncateText(review.review_text, 280)}"</p>
-              {/* Author Info */}
-              <div className={styles.storyAuthor}>
-                <ProfilePhoto
-                  src={authorProfileImage}
-                  alt={authorUsername}
-                  size={40}
-                  fallback={authorUsername}
-                />
-                <span>@{authorUsername}</span>
+              <div className={styles.storyReviewText}>
+                <p>"{truncateText(review.review_text, 280)}"</p>
+                <div className={styles.storyAuthor}>
+                  <ProfilePhoto
+                    src={authorProfileImage}
+                    alt={authorUsername}
+                    size={40}
+                    fallback={authorUsername}
+                  />
+                  <span>@{authorUsername}</span>
+                </div>
               </div>
-            </div>
-
-            {/* Branding */}
-            <div className={styles.storyBranding}>
-              <img src="/logo.svg" alt="Good Songs" className={styles.storyLogo} />
-              <span>goodsongs.app</span>
+              <div className={styles.storyBranding}>
+                <img src="/logo.svg" alt="Good Songs" className={styles.storyLogo} />
+                <span>goodsongs.app</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Hidden Instagram Post Renderer (1:1 - 1080x1080) */}
-      <div className={styles.hiddenRenderer}>
-        <div ref={postRef} className={styles.postContainer}>
-          <div className={styles.postContent}>
-            {/* Album Art */}
-            {review.artwork_url ? (
-              <img
-                src={review.artwork_url}
-                alt={`${review.song_name} artwork`}
-                className={styles.postArtwork}
-                crossOrigin="anonymous"
-              />
-            ) : (
-              <div className={styles.postArtworkPlaceholder}>
-                <IconMusic size={60} color="#9c36b5" />
-              </div>
-            )}
-
-            {/* Song Info */}
-            <div className={styles.postSongInfo}>
-              <h1 className={styles.postSongName}>{review.song_name}</h1>
-              <p className={styles.postArtistName}>{review.band_name}</p>
-            </div>
-
-            {/* Review Text */}
-            <div className={styles.postReviewText}>
-              <p>"{truncateText(review.review_text, 180)}"</p>
-              {/* Author Info */}
-              <div className={styles.postAuthor}>
-                <ProfilePhoto
-                  src={authorProfileImage}
-                  alt={authorUsername}
-                  size={28}
-                  fallback={authorUsername}
+      {/* Hidden Instagram Post Renderer */}
+      {renderFormat === 'post' && (
+        <div className={styles.hiddenRenderer}>
+          <div ref={postRef} className={styles.postContainer}>
+            <div className={styles.postContent}>
+              {review.artwork_url ? (
+                <img
+                  src={getProxiedImageUrl(review.artwork_url)}
+                  alt={`${review.song_name} artwork`}
+                  className={styles.postArtwork}
                 />
-                <span>@{authorUsername}</span>
+              ) : (
+                <div className={styles.postArtworkPlaceholder}>
+                  <IconMusic size={60} color="#9c36b5" />
+                </div>
+              )}
+              <div className={styles.postSongInfo}>
+                <h1 className={styles.postSongName}>{review.song_name}</h1>
+                <p className={styles.postArtistName}>{review.band_name}</p>
               </div>
-            </div>
-
-            {/* Branding */}
-            <div className={styles.postBranding}>
-              <img src="/logo.svg" alt="Good Songs" className={styles.postLogo} />
-              <span>goodsongs.app</span>
+              <div className={styles.postReviewText}>
+                <p>"{truncateText(review.review_text, 180)}"</p>
+                <div className={styles.postAuthor}>
+                  <ProfilePhoto
+                    src={authorProfileImage}
+                    alt={authorUsername}
+                    size={28}
+                    fallback={authorUsername}
+                  />
+                  <span>@{authorUsername}</span>
+                </div>
+              </div>
+              <div className={styles.postBranding}>
+                <img src="/logo.svg" alt="Good Songs" className={styles.postLogo} />
+                <span>goodsongs.app</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </Container>
   );
 }

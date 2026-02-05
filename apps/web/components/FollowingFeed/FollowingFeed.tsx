@@ -30,6 +30,8 @@ function feedItemToReview(item: FollowingFeedItem): Review {
     updated_at: item.created_at,
     author: item.author,
     band: item.band,
+    likes_count: item.likes_count,
+    liked_by_current_user: item.liked_by_current_user,
   };
 }
 

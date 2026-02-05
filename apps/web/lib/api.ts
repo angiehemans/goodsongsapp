@@ -92,6 +92,14 @@ export interface Review extends ReviewData {
     slug: string;
     name: string;
   };
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+}
+
+export interface LikeResponse {
+  message: string;
+  liked: boolean;
+  likes_count: number;
 }
 
 export interface UserProfile {
@@ -139,6 +147,8 @@ export interface FollowingFeedItem {
     slug: string;
     name: string;
   };
+  likes_count?: number;
+  liked_by_current_user?: boolean;
 }
 
 export interface FollowingFeedResponse {
@@ -703,10 +713,21 @@ class ApiClient {
     });
   }
 
-  async getUserProfile(username: string): Promise<UserProfile> {
-    return this.makeRequest(`/users/${username}`, {
-      headers: { 'Content-Type': 'application/json' }, // Override auth header for public profiles
+  async likeReview(reviewId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/reviews/${reviewId}/like`, {
+      method: 'POST',
     });
+  }
+
+  async unlikeReview(reviewId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/reviews/${reviewId}/like`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getUserProfile(username: string): Promise<UserProfile> {
+    // Include auth header when available to get liked_by_current_user in reviews
+    return this.makeRequest(`/users/${username}`);
   }
 
   async createBand(data: BandData): Promise<Band> {
@@ -1000,8 +1021,11 @@ class ApiClient {
   }
 
   // Admin endpoints
-  async getAllUsers(): Promise<User[]> {
-    return this.makeRequest('/admin/users');
+  async getAllUsers(page: number = 1, perPage: number = 20): Promise<{
+    users: User[];
+    pagination: DiscoverPagination;
+  }> {
+    return this.makeRequest(`/admin/users?page=${page}&per_page=${perPage}`);
   }
 
   async getAdminUserDetail(userId: number): Promise<AdminUserDetailResponse> {
@@ -1059,8 +1083,11 @@ class ApiClient {
     });
   }
 
-  async getAdminBands(): Promise<Band[]> {
-    return this.makeRequest('/admin/bands');
+  async getAdminBands(page: number = 1, perPage: number = 20): Promise<{
+    bands: Band[];
+    pagination: DiscoverPagination;
+  }> {
+    return this.makeRequest(`/admin/bands?page=${page}&per_page=${perPage}`);
   }
 
   async getAdminBandDetail(bandId: number): Promise<AdminBandDetailResponse> {
@@ -1123,8 +1150,11 @@ class ApiClient {
     });
   }
 
-  async getAdminReviews(): Promise<Review[]> {
-    return this.makeRequest('/admin/reviews');
+  async getAdminReviews(page: number = 1, perPage: number = 20): Promise<{
+    reviews: Review[];
+    pagination: DiscoverPagination;
+  }> {
+    return this.makeRequest(`/admin/reviews?page=${page}&per_page=${perPage}`);
   }
 
   async deleteReview(reviewId: number): Promise<{ message: string }> {

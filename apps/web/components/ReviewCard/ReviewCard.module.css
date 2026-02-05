@@ -26,3 +26,255 @@
 .songName {
   font-family: var(--mantine-font-family-headings);
 }
+
+/* Hidden renderer - positioned off-screen for html2canvas */
+.hiddenRenderer {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+/* Instagram Story (9:16 aspect ratio - 1080x1920) */
+.storyContainer {
+  width: 540px;
+  height: 960px;
+  background: linear-gradient(
+    180deg,
+    var(--mantine-color-grape-1) 0%,
+    var(--mantine-color-grape-2) 50%,
+    var(--mantine-color-grape-3) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.storyContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  box-sizing: border-box;
+  gap: 24px;
+}
+
+.storyArtwork {
+  width: 280px;
+  height: 280px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.storyArtworkPlaceholder {
+  width: 280px;
+  height: 280px;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    var(--mantine-color-grape-2) 0%,
+    var(--mantine-color-grape-4) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.storySongInfo {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.storySongName {
+  font-size: 32px;
+  font-weight: 700;
+  font-family: var(--mantine-font-family-headings);
+  color: var(--mantine-color-grey-9);
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.storyArtistName {
+  font-size: 20px;
+  font-family: var(--mantine-font-family);
+  color: var(--mantine-color-grey-6);
+  margin: 0;
+  font-weight: 500;
+}
+
+.storyReviewText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  max-height: 300px;
+  overflow: hidden;
+  gap: 10px;
+}
+
+.storyReviewText p {
+  font-size: 20px;
+  color: var(--mantine-color-grape-8);
+  text-align: center;
+  line-height: 1.6;
+  font-family: var(--mantine-font-family-headings);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 10;
+  line-clamp: 10;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.storyAuthor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  color: var(--mantine-color-grey-7);
+  font-weight: 500;
+}
+
+.storyBranding {
+  display: flex;
+  align-items: center;
+  font-family: var(--mantine-font-family-headings);
+  gap: 8px;
+  font-size: 20px;
+  color: var(--mantine-color-blue-9);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: auto;
+}
+
+.storyLogo {
+  width: 24px;
+  height: 24px;
+}
+
+/* Instagram Post (1:1 aspect ratio - 1080x1080) */
+.postContainer {
+  width: 540px;
+  height: 540px;
+  background: linear-gradient(
+    180deg,
+    var(--mantine-color-grape-1) 0%,
+    var(--mantine-color-grape-2) 50%,
+    var(--mantine-color-grape-3) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.postContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 32px;
+  box-sizing: border-box;
+  gap: 16px;
+}
+
+.postArtwork {
+  width: 160px;
+  height: 160px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.postArtworkPlaceholder {
+  width: 160px;
+  height: 160px;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    var(--mantine-color-grape-2) 0%,
+    var(--mantine-color-grape-4) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.postSongInfo {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.postSongName {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--mantine-font-family-headings);
+  color: var(--mantine-color-grey-9);
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.postArtistName {
+  font-size: 14px;
+  font-family: var(--mantine-font-family);
+  color: var(--mantine-color-grey-6);
+  margin: 0;
+  font-weight: 500;
+}
+
+.postReviewText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+  max-height: 160px;
+  overflow: hidden;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.postReviewText p {
+  font-size: 20px;
+  color: var(--mantine-color-grape-8);
+  text-align: center;
+  line-height: 1.5;
+  font-family: var(--mantine-font-family-headings);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.postAuthor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--mantine-color-grey-7);
+  font-weight: 500;
+}
+
+.postBranding {
+  display: flex;
+  align-items: center;
+  font-family: var(--mantine-font-family-headings);
+  gap: 6px;
+  font-size: 14px;
+  color: var(--mantine-color-blue-9);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.postLogo {
+  width: 18px;
+  height: 18px;
+}

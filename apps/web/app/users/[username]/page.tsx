@@ -1,11 +1,11 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { IconAlertCircle, IconMusic } from '@tabler/icons-react';
-import { Alert, Center, Container, Flex, Paper, Stack, Text, Title } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
+import { Alert, Container, Flex, Title } from '@mantine/core';
 import { Header } from '@/components/Header/Header';
-import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { UserProfileSidebar } from '@/components/UserProfileSidebar/UserProfileSidebar';
-import { Review, UserProfile } from '@/lib/api';
+import { UserReviewsList } from '@/components/UserReviewsList/UserReviewsList';
+import { UserProfile } from '@/lib/api';
 import styles from './page.module.css';
 
 export async function generateMetadata({
@@ -95,29 +95,12 @@ export default async function UserProfilePage({
           <UserProfileSidebar profile={profile} />
 
           {/* Recommendations Section */}
-          <Flex direction="column" px="md" pb="lg" maw={700}>
+          <Flex direction="column" px="md" pb="lg" w="100%" maw={700}>
             <Title order={2} my="sm" c="blue.8" fw={500}>
               Recommendations
             </Title>
 
-            {!profile.reviews || profile.reviews.length === 0 ? (
-              <Paper p="lg" radius="md">
-                <Center py="xl">
-                  <Stack align="center">
-                    <IconMusic size={48} color="var(--mantine-color-dimmed)" />
-                    <Text c="dimmed" ta="center">
-                      @{profile.username} hasn't shared any recommendations yet.
-                    </Text>
-                  </Stack>
-                </Center>
-              </Paper>
-            ) : (
-              <Stack>
-                {profile.reviews.map((review: Review) => (
-                  <ReviewCard key={review.id} review={review} />
-                ))}
-              </Stack>
-            )}
+            <UserReviewsList profile={profile} initialReviews={profile.reviews || []} />
           </Flex>
         </Flex>
       </Container>
