@@ -197,11 +197,14 @@ export default function SingleReviewPage() {
   const handleSubmitComment = async () => {
     if (!newComment.trim() || isSubmittingComment || !user) return;
 
+    const commentText = newComment.trim();
     setIsSubmittingComment(true);
     try {
-      const response = await apiClient.createReviewComment(parseInt(reviewId, 10), newComment.trim());
+      const response = await apiClient.createReviewComment(parseInt(reviewId, 10), commentText);
       const comment = {
         ...response,
+        body: response.body || commentText,
+        created_at: response.created_at || new Date().toISOString(),
         author: response.author || {
           id: user.id,
           username: user.username,

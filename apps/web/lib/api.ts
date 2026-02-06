@@ -196,8 +196,8 @@ export interface NotificationActor {
 
 export interface Notification {
   id: number;
-  notification_type?: 'new_follower' | 'new_review';
-  type?: 'new_follower' | 'new_review';  // Alternative field name from API
+  notification_type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment';
+  type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment';  // Alternative field name from API
   message: string;
   read: boolean;
   created_at: string;
@@ -205,6 +205,17 @@ export interface Notification {
   // For new_review notifications
   song_name?: string;
   band_name?: string;
+  // For review_like and review_comment notifications
+  review?: {
+    id: number;
+    song_name: string;
+    band_name: string;
+  };
+  // For review_comment notifications
+  comment?: {
+    id: number;
+    body: string;
+  };
 }
 
 export interface NotificationsResponse {

@@ -82,12 +82,15 @@ export function CommentsDrawer({
   const handleSubmitComment = async () => {
     if (!newComment.trim() || isSubmitting || !user) return;
 
+    const commentText = newComment.trim();
     setIsSubmitting(true);
     try {
-      const response = await apiClient.createReviewComment(reviewId, newComment.trim());
-      // Construct the full comment object with author data in case API doesn't return it
+      const response = await apiClient.createReviewComment(reviewId, commentText);
+      // Construct the full comment object with fallbacks in case API doesn't return all fields
       const comment = {
         ...response,
+        body: response.body || commentText,
+        created_at: response.created_at || new Date().toISOString(),
         author: response.author || {
           id: user.id,
           username: user.username,

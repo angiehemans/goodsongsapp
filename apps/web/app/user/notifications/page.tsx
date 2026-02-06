@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { IconBell, IconCheck, IconChecks, IconMusic, IconUserPlus } from '@tabler/icons-react';
+import { IconBell, IconCheck, IconChecks, IconHeart, IconMessage, IconMusic, IconUserPlus } from '@tabler/icons-react';
 import {
   ActionIcon,
   Badge,
@@ -192,8 +192,45 @@ export default function NotificationsPage() {
         return `/users/${notification.actor.username}`;
       case 'new_review':
         return `/users/${notification.actor.username}`;
+      case 'review_like':
+      case 'review_comment':
+        // Link to the review page if we have review info
+        if (notification.review?.id && user) {
+          return `/users/${user.username}/reviews/${notification.review.id}`;
+        }
+        return '#';
       default:
         return '#';
+    }
+  };
+
+  const getNotificationIcon = (type: string | undefined) => {
+    switch (type) {
+      case 'new_follower':
+        return <IconUserPlus size={12} color="white" />;
+      case 'new_review':
+        return <IconMusic size={12} color="white" />;
+      case 'review_like':
+        return <IconHeart size={12} color="white" />;
+      case 'review_comment':
+        return <IconMessage size={12} color="white" />;
+      default:
+        return <IconBell size={12} color="white" />;
+    }
+  };
+
+  const getNotificationIconColor = (type: string | undefined) => {
+    switch (type) {
+      case 'new_follower':
+        return 'var(--mantine-color-grape-6)';
+      case 'new_review':
+        return 'var(--mantine-color-blue-6)';
+      case 'review_like':
+        return 'var(--mantine-color-red-6)';
+      case 'review_comment':
+        return 'var(--mantine-color-green-6)';
+      default:
+        return 'var(--mantine-color-gray-6)';
     }
   };
 
@@ -350,42 +387,37 @@ export default function NotificationsPage() {
                             width: 24,
                             height: 24,
                             borderRadius: '50%',
-                            backgroundColor:
-                              getNotificationType(notification) === 'new_follower'
-                                ? 'var(--mantine-color-grape-6)'
-                                : 'var(--mantine-color-blue-6)',
+                            backgroundColor: getNotificationIconColor(getNotificationType(notification)),
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             border: '2px solid white',
                           }}
                         >
-                          {getNotificationType(notification) === 'new_follower' ? (
-                            <IconUserPlus size={12} color="white" />
-                          ) : (
-                            <IconMusic size={12} color="white" />
-                          )}
+                          {getNotificationIcon(getNotificationType(notification))}
                         </Box>
                       </Box>
 
                       <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                         <Text size="sm" fw={notification.read ? 400 : 600} lineClamp={2}>
-                          <Text span fw={600} c="dark">
-                            @{notification.actor.username}
-                          </Text>{' '}
-                          <Text span c={notification.read ? 'dimmed' : 'dark'}>
-                            {getNotificationType(notification) === 'new_follower'
-                              ? 'started following you'
-                              : 'posted a new recommendation'}
-                          </Text>
+                          {notification.message}
                         </Text>
 
+                        {/* Show song info for new_review notifications */}
                         {getNotificationType(notification) === 'new_review' &&
                           (notification.song_name || notification.band_name) && (
                             <Text size="xs" c="dimmed" lineClamp={1}>
                               {notification.song_name && `"${notification.song_name}"`}
                               {notification.song_name && notification.band_name && ' by '}
                               {notification.band_name}
+                            </Text>
+                          )}
+
+                        {/* Show comment preview for review_comment notifications */}
+                        {getNotificationType(notification) === 'review_comment' &&
+                          notification.comment?.body && (
+                            <Text size="xs" c="dimmed" lineClamp={1} fs="italic">
+                              "{notification.comment.body}"
                             </Text>
                           )}
 

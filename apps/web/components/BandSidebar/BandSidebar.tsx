@@ -420,6 +420,7 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
                 disabled={unreadCount === 0}
                 color="red"
                 offset={-2}
+                styles={{ indicator: { zIndex: 10 } }}
               >
                 <IconBell size={16} />
               </Indicator>
