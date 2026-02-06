@@ -9,11 +9,16 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, ProfilePhoto } from '@/components';
 import { apiClient } from '@/utils/api';
 import { theme, colors } from '@/theme';
+import { useAuthStore } from '@/context/authStore';
+import { useNotificationStore } from '@/context/notificationStore';
 import { PaginationMeta } from '@goodsongs/api-client';
+
+type NotificationType = 'new_follower' | 'new_review' | 'review_like' | 'review_comment';
 
 interface NotificationActor {
   id: number;
@@ -23,14 +28,23 @@ interface NotificationActor {
 
 interface Notification {
   id: number;
-  notification_type?: 'new_follower' | 'new_review';
-  type?: 'new_follower' | 'new_review';
+  notification_type?: NotificationType;
+  type?: NotificationType;
   message: string;
   read: boolean;
   created_at: string;
   actor: NotificationActor;
   song_name?: string;
   band_name?: string;
+  review?: {
+    id: number;
+    song_name?: string;
+    band_name?: string;
+  };
+  comment?: {
+    id: number;
+    body: string;
+  };
 }
 
 function formatTimeAgo(dateString: string): string {
@@ -49,6 +63,9 @@ function formatTimeAgo(dateString: string): string {
 }
 
 export function NotificationsScreen() {
+  const navigation = useNavigation();
+  const { user: currentUser } = useAuthStore();
+  const { clearUnreadCount } = useNotificationStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,9 +101,10 @@ export function NotificationsScreen() {
 
   useEffect(() => {
     fetchNotifications(1);
-    // Mark all as read when viewing
+    // Mark all as read when viewing and clear badge
     apiClient.markAllNotificationsAsRead().catch(() => {});
-  }, [fetchNotifications]);
+    clearUnreadCount();
+  }, [fetchNotifications, clearUnreadCount]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -99,25 +117,80 @@ export function NotificationsScreen() {
     fetchNotifications(currentPage + 1, true);
   }, [currentPage, totalPages, isLoadingMore, fetchNotifications]);
 
-  const getNotificationType = (notification: Notification) => {
+  const getNotificationType = (notification: Notification): NotificationType | undefined => {
     return notification.notification_type || notification.type;
+  };
+
+  const getNotificationIcon = (type: NotificationType | undefined): string => {
+    switch (type) {
+      case 'new_follower':
+        return 'user-plus';
+      case 'new_review':
+        return 'music';
+      case 'review_like':
+        return 'heart';
+      case 'review_comment':
+        return 'message-circle';
+      default:
+        return 'bell';
+    }
+  };
+
+  const getNotificationBadgeStyle = (type: NotificationType | undefined) => {
+    switch (type) {
+      case 'new_follower':
+        return styles.followerBadge;
+      case 'new_review':
+        return styles.reviewBadge;
+      case 'review_like':
+        return styles.likeBadge;
+      case 'review_comment':
+        return styles.commentBadge;
+      default:
+        return styles.defaultBadge;
+    }
+  };
+
+  const handleNotificationPress = (notification: Notification) => {
+    const notificationType = getNotificationType(notification);
+
+    switch (notificationType) {
+      case 'new_follower':
+        navigation.navigate('UserProfile' as never, { username: notification.actor.username } as never);
+        break;
+      case 'new_review':
+        navigation.navigate('UserProfile' as never, { username: notification.actor.username } as never);
+        break;
+      case 'review_like':
+      case 'review_comment':
+        if (notification.review?.id && currentUser) {
+          navigation.navigate('ReviewDetail' as never, {
+            reviewId: notification.review.id,
+            username: currentUser.username,
+          } as never);
+        }
+        break;
+    }
   };
 
   const renderNotification = ({ item }: { item: Notification }) => {
     const notificationType = getNotificationType(item);
-    const isFollower = notificationType === 'new_follower';
 
     return (
-      <View style={[styles.notificationItem, !item.read && styles.unreadNotification]}>
+      <TouchableOpacity
+        style={[styles.notificationItem, !item.read && styles.unreadNotification]}
+        onPress={() => handleNotificationPress(item)}
+        activeOpacity={0.7}
+      >
         <View style={styles.avatarContainer}>
           <ProfilePhoto
             src={item.actor?.profile_image_url}
             name={item.actor?.username || '?'}
             size={48}
           />
-          <View style={[styles.typeBadge, isFollower ? styles.followerBadge : styles.reviewBadge]}>
+          <View style={[styles.typeBadge, getNotificationBadgeStyle(notificationType)]}>
             <Icon
-              name={isFollower ? 'user-plus' : 'music'}
+              name={getNotificationIcon(notificationType)}
               size={12}
               color={colors.grape[0]}
             />
@@ -125,10 +198,29 @@ export function NotificationsScreen() {
         </View>
 
         <View style={styles.notificationContent}>
-          <Text style={styles.notificationMessage}>{item.message}</Text>
+          <Text style={[styles.notificationMessage, !item.read && styles.unreadMessage]}>
+            {item.message}
+          </Text>
+
+          {/* Show song info for new_review notifications */}
+          {notificationType === 'new_review' && (item.song_name || item.band_name) && (
+            <Text style={styles.notificationMeta} numberOfLines={1}>
+              {item.song_name && `"${item.song_name}"`}
+              {item.song_name && item.band_name && ' by '}
+              {item.band_name}
+            </Text>
+          )}
+
+          {/* Show comment preview for review_comment notifications */}
+          {notificationType === 'review_comment' && item.comment?.body && (
+            <Text style={styles.commentPreview} numberOfLines={1}>
+              "{item.comment.body}"
+            </Text>
+          )}
+
           <Text style={styles.notificationTime}>{formatTimeAgo(item.created_at)}</Text>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -237,6 +329,15 @@ const styles = StyleSheet.create({
   reviewBadge: {
     backgroundColor: theme.colors.secondary,
   },
+  likeBadge: {
+    backgroundColor: '#ef4444',
+  },
+  commentBadge: {
+    backgroundColor: '#10b981',
+  },
+  defaultBadge: {
+    backgroundColor: colors.grape[5],
+  },
   notificationContent: {
     flex: 1,
     justifyContent: 'center',
@@ -244,6 +345,20 @@ const styles = StyleSheet.create({
   notificationMessage: {
     fontSize: theme.fontSizes.base,
     color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  unreadMessage: {
+    fontWeight: '600',
+  },
+  notificationMeta: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textMuted,
+    marginBottom: theme.spacing.xs,
+  },
+  commentPreview: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textMuted,
+    fontStyle: 'italic',
     marginBottom: theme.spacing.xs,
   },
   notificationTime: {

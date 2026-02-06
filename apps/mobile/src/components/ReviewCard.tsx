@@ -1,18 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from "react-native";
+import FastImage from "react-native-fast-image";
 import Icon from "@react-native-vector-icons/feather";
 import { Review } from "@goodsongs/api-client";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { Badge } from "./Badge";
 import { theme, colors } from "@/theme";
 import { fixImageUrl } from "@/utils/imageUrl";
+import { apiClient } from "@/utils/api";
 
 interface ReviewCardProps {
   review: Review;
@@ -30,9 +32,38 @@ export function ReviewCard({
   const authorUsername = review.author?.username || review.user?.username;
   const authorProfileImage = review.author?.profile_image_url;
 
+  // Like state
+  const [isLiked, setIsLiked] = useState(review.liked_by_current_user ?? false);
+  const [likesCount, setLikesCount] = useState(review.likes_count ?? 0);
+  const [isLiking, setIsLiking] = useState(false);
+
+  // Comments count
+  const commentsCount = review.comments_count ?? 0;
+
   const handleOpenLink = () => {
     if (review.song_link) {
       Linking.openURL(review.song_link);
+    }
+  };
+
+  const handleLikePress = async () => {
+    if (isLiking) return;
+
+    setIsLiking(true);
+    try {
+      if (isLiked) {
+        const response = await apiClient.unlikeReview(review.id);
+        setIsLiked(false);
+        setLikesCount(response.likes_count);
+      } else {
+        const response = await apiClient.likeReview(review.id);
+        setIsLiked(true);
+        setLikesCount(response.likes_count);
+      }
+    } catch (error) {
+      console.error("Failed to like/unlike review:", error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -62,9 +93,10 @@ export function ReviewCard({
       <View style={styles.songRow}>
         <View style={styles.songInfo}>
           {review.artwork_url ? (
-            <Image
+            <FastImage
               source={{ uri: fixImageUrl(review.artwork_url) || "" }}
               style={styles.artwork}
+              resizeMode={FastImage.resizeMode.cover}
             />
           ) : (
             <View style={[styles.artwork, styles.artworkPlaceholder]} />
@@ -117,6 +149,40 @@ export function ReviewCard({
           )}
         </View>
       )}
+
+      {/* Actions Row */}
+      <View style={styles.actionsRow}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleLikePress();
+          }}
+          disabled={isLiking}
+        >
+          {isLiking ? (
+            <ActivityIndicator size="small" color={colors.grape[6]} />
+          ) : (
+            <Icon
+              name="heart"
+              size={18}
+              color={isLiked ? "#ef4444" : colors.grape[6]}
+            />
+          )}
+          {likesCount > 0 && (
+            <Text style={[styles.actionCount, isLiked && styles.actionCountLiked]}>
+              {likesCount}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.actionButton}>
+          <Icon name="message-circle" size={18} color={colors.grape[6]} />
+          {commentsCount > 0 && (
+            <Text style={styles.actionCount}>{commentsCount}</Text>
+          )}
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -195,5 +261,27 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: theme.fontSizes.xs,
     color: colors.grey[5],
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.grape[2],
+    marginTop: theme.spacing.sm,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    padding: theme.spacing.xs,
+  },
+  actionCount: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[6],
+  },
+  actionCountLiked: {
+    color: "#ef4444",
   },
 });

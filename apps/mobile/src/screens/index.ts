@@ -20,3 +20,4 @@ export { ScrobbleSettingsScreen } from './ScrobbleSettingsScreen';
 export { OnboardingAccountTypeScreen } from './OnboardingAccountTypeScreen';
 export { OnboardingFanProfileScreen } from './OnboardingFanProfileScreen';
 export { OnboardingBandProfileScreen } from './OnboardingBandProfileScreen';
+export { ReviewDetailScreen } from './ReviewDetailScreen';

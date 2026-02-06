@@ -20,6 +20,7 @@ import {
   Badge,
   LoadingScreen,
   EmptyState,
+  Logo,
 } from '@/components';
 import { theme, colors } from '@/theme';
 import { useAuthStore } from '@/context/authStore';
@@ -30,10 +31,10 @@ import { UserProfile, Band, Review, Event } from '@goodsongs/api-client';
 type TabType = 'users' | 'bands' | 'reviews' | 'events';
 
 const TABS: { key: TabType; label: string; icon: string }[] = [
-  { key: 'users', label: 'Users', icon: 'users' },
+  { key: 'users', label: 'Fans', icon: 'users' },
   { key: 'bands', label: 'Bands', icon: 'music' },
-  { key: 'reviews', label: 'Recs', icon: 'message-circle' },
-  { key: 'events', label: 'Events', icon: 'calendar' },
+  { key: 'reviews', label: 'Songs', icon: 'message-circle' },
+  { key: 'events', label: 'Shows', icon: 'calendar' },
 ];
 
 export function DiscoverScreen({ navigation }: any) {
@@ -196,30 +197,41 @@ export function DiscoverScreen({ navigation }: any) {
     </TouchableOpacity>
   );
 
-  const renderBandItem = ({ item }: { item: Band }) => (
-    <TouchableOpacity
-      style={styles.listItem}
-      onPress={() => navigation.navigate('BandProfile', { slug: item.slug })}
-    >
-      <ProfilePhoto
-        src={fixImageUrl(item.profile_picture_url) || fixImageUrl(item.spotify_image_url)}
-        alt={item.name}
-        size={40}
-        fallback={item.name || 'B'}
-      />
-      <View style={styles.listItemContent}>
-        <Text style={styles.listItemTitle}>{item.name}</Text>
-        {(item.location || item.city) && (
-          <Text style={styles.listItemSubtitle}>
-            {item.location || item.city}
-          </Text>
+  const renderBandItem = ({ item }: { item: Band }) => {
+    // Check if band has ANY image URL (before fixImageUrl processing)
+    const hasImageUrl = !!(item.profile_picture_url || item.spotify_image_url);
+
+    return (
+      <TouchableOpacity
+        style={styles.listItem}
+        onPress={() => navigation.navigate('BandProfile', { slug: item.slug })}
+      >
+        {hasImageUrl ? (
+          <ProfilePhoto
+            src={item.profile_picture_url || item.spotify_image_url}
+            alt={item.name}
+            size={40}
+            fallback={item.name || 'B'}
+          />
+        ) : (
+          <View style={styles.bandPlaceholder}>
+            <Logo size={24} color={colors.grape[4]} />
+          </View>
         )}
-      </View>
-      {item.reviews_count > 0 && (
-        <Badge text={`${item.reviews_count} recs`} />
-      )}
-    </TouchableOpacity>
-  );
+        <View style={styles.listItemContent}>
+          <Text style={styles.listItemTitle}>{item.name}</Text>
+          {(item.location || item.city) && (
+            <Text style={styles.listItemSubtitle}>
+              {item.location || item.city}
+            </Text>
+          )}
+        </View>
+        {item.reviews_count > 0 && (
+          <Badge text={`${item.reviews_count} recs`} />
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const renderReviewItem = ({ item }: { item: Review }) => (
     <View style={styles.reviewItem}>
@@ -477,6 +489,14 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.xs,
     color: colors.grey[5],
     marginTop: 2,
+  },
+  bandPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.grape[2],
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   reviewItem: {
     marginBottom: theme.spacing.md,

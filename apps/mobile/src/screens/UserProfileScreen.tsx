@@ -27,6 +27,11 @@ export function UserProfileScreen({ route, navigation }: any) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
+  // Pagination state
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
+
   const isOwnProfile = currentUser?.username === username;
 
   const fetchProfile = useCallback(async () => {
@@ -34,25 +39,55 @@ export function UserProfileScreen({ route, navigation }: any) {
       const userProfile = await apiClient.getUserProfile(username);
       setProfile(userProfile);
       setIsFollowing(userProfile.is_following || false);
-
-      // Fetch user's reviews if available
-      // Note: This might need a specific API endpoint
-      setReviews(userProfile.reviews || []);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
     }
   }, [username]);
 
+  const fetchReviews = useCallback(async (page: number, reset: boolean = false) => {
+    if (reset) {
+      setLoading(true);
+    } else {
+      setLoadingMoreReviews(true);
+    }
+
+    try {
+      const response = await apiClient.getUserReviewsPaginated(username, page);
+      if (reset) {
+        setReviews(response.reviews);
+      } else {
+        setReviews((prev) => [...prev, ...response.reviews]);
+      }
+      setHasMoreReviews(response.pagination.has_next_page);
+      setReviewsPage(page);
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+      // Fallback: use reviews from profile if pagination fails
+      if (reset && profile?.reviews) {
+        setReviews(profile.reviews);
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMoreReviews(false);
+    }
+  }, [username, profile?.reviews]);
+
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+    fetchReviews(1, true);
+  }, [fetchProfile, fetchReviews]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchProfile();
+    fetchReviews(1, true);
+  };
+
+  const handleLoadMore = () => {
+    if (hasMoreReviews && !loadingMoreReviews) {
+      fetchReviews(reviewsPage + 1, false);
+    }
   };
 
   const handleFollowToggle = async () => {
@@ -189,6 +224,12 @@ export function UserProfileScreen({ route, navigation }: any) {
             <ReviewCard
               review={item}
               onPressBand={(slug) => navigation.navigate('BandProfile', { slug })}
+              onPressReview={(review) => {
+                const reviewUsername = review.author?.username || review.user?.username;
+                if (reviewUsername) {
+                  navigation.navigate('ReviewDetail', { reviewId: review.id, username: reviewUsername });
+                }
+              }}
             />
           </View>
         )}
@@ -201,6 +242,8 @@ export function UserProfileScreen({ route, navigation }: any) {
             tintColor={theme.colors.primary}
           />
         }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         ListHeaderComponent={renderProfileHeader}
         ListEmptyComponent={
           <EmptyState
@@ -208,6 +251,13 @@ export function UserProfileScreen({ route, navigation }: any) {
             title="No recommendations yet"
             message={`${profile?.username || username} hasn't shared any recommendations yet.`}
           />
+        }
+        ListFooterComponent={
+          loadingMoreReviews ? (
+            <View style={styles.loadingMore}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          ) : null
         }
       />
     </SafeAreaView>
@@ -300,5 +350,9 @@ const styles = StyleSheet.create({
   },
   reviewWrapper: {
     marginBottom: theme.spacing.md,
+  },
+  loadingMore: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
   },
 });

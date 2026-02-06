@@ -7,7 +7,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   ScrollView,
-  Image,
   Animated,
   Alert,
   ActivityIndicator,
@@ -15,6 +14,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FastImage from "react-native-fast-image";
 import Icon from "@react-native-vector-icons/feather";
 import { Header, ReviewCard, LoadingScreen, EmptyState, Logo } from "@/components";
 import { theme, colors } from "@/theme";
@@ -279,9 +279,10 @@ export function FeedScreen({ navigation, route }: any) {
             <View style={styles.trackCard}>
               <View style={styles.artworkContainer}>
                 {nowPlayingArt ? (
-                  <Image
+                  <FastImage
                     source={{ uri: fixImageUrl(nowPlayingArt) || '' }}
                     style={styles.trackArtwork}
+                    resizeMode={FastImage.resizeMode.cover}
                   />
                 ) : (
                   <View
@@ -321,9 +322,10 @@ export function FeedScreen({ navigation, route }: any) {
             <View key={track.id} style={styles.trackCard}>
               <View style={styles.artworkContainer}>
                 {track.coverArtUrl ? (
-                  <Image
+                  <FastImage
                     source={{ uri: fixImageUrl(track.coverArtUrl) || '' }}
                     style={styles.trackArtwork}
+                    resizeMode={FastImage.resizeMode.cover}
                   />
                 ) : (
                   <View
@@ -423,9 +425,10 @@ export function FeedScreen({ navigation, route }: any) {
               >
                 <View style={styles.artworkContainer}>
                   {albumImage?.url ? (
-                    <Image
+                    <FastImage
                       source={{ uri: fixImageUrl(albumImage.url) || "" }}
                       style={styles.trackArtwork}
+                      resizeMode={FastImage.resizeMode.cover}
                     />
                   ) : (
                     <View

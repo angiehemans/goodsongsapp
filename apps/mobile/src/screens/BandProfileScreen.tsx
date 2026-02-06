@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
-import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState, MusicPlayer } from '@/components';
+import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState, MusicPlayer, Logo } from '@/components';
 import { theme, colors } from '@/theme';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
@@ -70,16 +70,26 @@ export function BandProfileScreen({ route, navigation }: any) {
     (event) => new Date(event.event_date) >= new Date()
   );
 
-  const renderBandHeader = () => (
+  const renderBandHeader = () => {
+    // Check if band has ANY image URL (before fixImageUrl processing)
+    const hasImageUrl = !!(band?.profile_picture_url || band?.spotify_image_url);
+
+    return (
     <View style={styles.profileSection}>
       {/* Band Info */}
       <View style={styles.profileHeader}>
-        <ProfilePhoto
-          src={fixImageUrl(band?.profile_picture_url) || fixImageUrl(band?.spotify_image_url)}
-          alt={band?.name}
-          size={72}
-          fallback={band?.name || 'B'}
-        />
+        {hasImageUrl ? (
+          <ProfilePhoto
+            src={band?.profile_picture_url || band?.spotify_image_url}
+            alt={band?.name}
+            size={72}
+            fallback={band?.name || 'B'}
+          />
+        ) : (
+          <View style={styles.bandPlaceholder}>
+            <Logo size={40} color={colors.grape[4]} />
+          </View>
+        )}
         <View style={styles.profileInfo}>
           <Text style={styles.bandName}>{band?.name || slug}</Text>
           {(band?.location || band?.city) && (
@@ -196,7 +206,8 @@ export function BandProfileScreen({ route, navigation }: any) {
       {/* Recommendations Title */}
       <Text style={styles.sectionTitle}>Recommendations</Text>
     </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -281,6 +292,14 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
+  },
+  bandPlaceholder: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.grape[2],
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bandName: {
     fontSize: theme.fontSizes.xl,

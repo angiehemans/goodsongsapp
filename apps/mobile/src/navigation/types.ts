@@ -65,6 +65,7 @@ export type RootStackParamList = {
   EventDetails: { eventId: number };
   ScrobblePermission: undefined;
   ScrobbleSettings: undefined;
+  ReviewDetail: { reviewId: number; username: string };
 };
 
 // Global type declaration for navigation

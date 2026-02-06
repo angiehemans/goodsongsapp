@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, Platform, View, Text, StyleSheet } from 'react-native';
 import BootSplash from 'react-native-bootsplash';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import Icon from '@react-native-vector-icons/feather';
 import { LoadingScreen } from '@/components';
 import { useAuthStore } from '@/context/authStore';
 import { useScrobbleStore } from '@/context/scrobbleStore';
+import { useNotificationStore } from '@/context/notificationStore';
 import { scrobbleNative } from '@/utils/scrobbleNative';
 import type { NowPlayingTrack } from '@/types/scrobble';
 import { theme, colors } from '@/theme';
@@ -37,6 +38,7 @@ import {
   OnboardingAccountTypeScreen,
   OnboardingFanProfileScreen,
   OnboardingBandProfileScreen,
+  ReviewDetailScreen,
 } from '@/screens';
 
 import {
@@ -69,7 +71,21 @@ function AuthNavigator() {
 function MainNavigator() {
   const insets = useSafeAreaInsets();
   const { accountType } = useAuthStore();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const isBandAccount = accountType === 'band';
+
+  // Fetch unread count on mount and when app becomes active
+  useEffect(() => {
+    fetchUnreadCount();
+
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        fetchUnreadCount();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [fetchUnreadCount]);
 
   return (
     <Tab.Navigator
@@ -99,6 +115,20 @@ function MainNavigator() {
               break;
             default:
               iconName = 'circle';
+          }
+
+          // Add badge for notifications
+          if (route.name === 'Notifications' && unreadCount > 0) {
+            return (
+              <View>
+                <Icon name={iconName} size={size} color={color} />
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              </View>
+            );
           }
 
           return <Icon name={iconName} size={size} color={color} />;
@@ -270,6 +300,11 @@ export function AppNavigator() {
                 component={ScrobbleSettingsScreen}
                 options={{ presentation: 'card' }}
               />
+              <RootStack.Screen
+                name="ReviewDetail"
+                component={ReviewDetailScreen}
+                options={{ presentation: 'card' }}
+              />
             </>
           ) : (
             <>
@@ -285,3 +320,23 @@ export function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    right: -8,
+    top: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+});

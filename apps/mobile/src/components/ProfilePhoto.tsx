@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { theme, colors } from '@/theme';
 import { fixImageUrl } from '@/utils/imageUrl';
 
@@ -21,6 +22,11 @@ export function ProfilePhoto({
   const [imageError, setImageError] = useState(false);
   const initials = fallback.charAt(0).toUpperCase();
 
+  // Reset error state when src changes (important for FlatList reuse)
+  useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
   const containerStyle = {
     width: size,
     height: size,
@@ -38,11 +44,12 @@ export function ProfilePhoto({
   );
 
   const content = imageUri && !imageError ? (
-    <Image
+    <FastImage
       source={{ uri: imageUri }}
       style={[styles.image, containerStyle]}
       accessibilityLabel={alt}
       onError={() => setImageError(true)}
+      resizeMode={FastImage.resizeMode.cover}
     />
   ) : (
     renderFallback()

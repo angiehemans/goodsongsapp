@@ -20,6 +20,19 @@ export interface DiscoverPagination {
   has_next_page: boolean;
   has_previous_page: boolean;
 }
+
+export interface ReviewComment {
+  id: number;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  author: {
+    id: number;
+    username: string;
+    display_name?: string;
+    profile_image_url?: string;
+  };
+}
 import type {
   ScrobbleTrack,
   ScrobbleListResponse,
@@ -237,6 +250,56 @@ class MobileApiClient {
       method: 'POST',
       body: JSON.stringify({ review: data }),
     });
+  }
+
+  // Review Likes
+  async likeReview(reviewId: number): Promise<{ likes_count: number }> {
+    return this.request(`/reviews/${reviewId}/like`, { method: 'POST' });
+  }
+
+  async unlikeReview(reviewId: number): Promise<{ likes_count: number }> {
+    return this.request(`/reviews/${reviewId}/like`, { method: 'DELETE' });
+  }
+
+  // Review Comments
+  async getReviewComments(
+    reviewId: number,
+    page: number = 1
+  ): Promise<{
+    comments: ReviewComment[];
+    pagination: DiscoverPagination;
+  }> {
+    return this.request(`/reviews/${reviewId}/comments?page=${page}`);
+  }
+
+  async createReviewComment(
+    reviewId: number,
+    body: string
+  ): Promise<ReviewComment> {
+    return this.request(`/reviews/${reviewId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ comment: { body } }),
+    });
+  }
+
+  async deleteReviewComment(
+    reviewId: number,
+    commentId: number
+  ): Promise<{ message: string }> {
+    return this.request(`/reviews/${reviewId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // User Reviews with pagination
+  async getUserReviewsPaginated(
+    username: string,
+    page: number = 1
+  ): Promise<{
+    reviews: Review[];
+    pagination: DiscoverPagination;
+  }> {
+    return this.request(`/users/${username}/reviews?page=${page}`);
   }
 
   // Feed
