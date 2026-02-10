@@ -542,13 +542,16 @@ export default function DevlogPage() {
                 <Link href="/devlog" className={styles.footerLink}>
                   Development Log
                 </Link>
+                <Link href="/privacy" className={styles.footerLink}>
+                  Privacy Policy
+                </Link>
               </Stack>
             </Grid.Col>
           </Grid>
 
           <Box className={styles.footerBottom}>
             <Text c="blue.4" size="sm" ta="center">
-              © 2025 Goodsongs. Made for music lovers, by music lovers.
+              &copy; 2026 Goodsongs. Made for music lovers, by music lovers.
             </Text>
           </Box>
         </Container>

@@ -288,12 +288,23 @@ export default function HomePage() {
                 </Link>
               </Stack>
             </Grid.Col>
+
+            <Grid.Col span={{ base: 6, sm: 4 }}>
+              <Text c="grape.0" fw={600} mb="md">
+                Legal
+              </Text>
+              <Stack gap="xs">
+                <Link href="/privacy" className={styles.footerLink}>
+                  Privacy Policy
+                </Link>
+              </Stack>
+            </Grid.Col>
             </Grid>
           </div>
 
           <Box className={styles.footerBottom}>
             <Text c="blue.4" size="sm" ta="center">
-              © 2024 Goodsongs. Made for music lovers, by music lovers.
+              &copy; 2026 Goodsongs. Made for music lovers, by music lovers.
             </Text>
           </Box>
         </Container>

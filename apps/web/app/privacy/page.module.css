@@ -1,0 +1,144 @@
+/* Page wrapper */
+.page {
+  min-height: 100vh;
+  background-color: var(--mantine-color-grape-0);
+}
+
+/* Fixed Navigation */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--mantine-color-grape-0);
+  border-bottom: 2px solid var(--mantine-color-blue-9);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--mantine-color-blue-9);
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  width: 100%;
+  padding-top: 120px;
+  padding-bottom: 40px;
+  text-align: center;
+  background-color: var(--mantine-color-grape-0);
+}
+
+/* Content Section */
+.content {
+  background-color: var(--mantine-color-grape-0);
+}
+
+.policyContent {
+  background-color: var(--mantine-color-grape-1);
+  border: 2px solid var(--mantine-color-grape-3);
+  padding: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .policyContent {
+    padding: 1.5rem;
+  }
+}
+
+/* Section Styles */
+.section {
+  margin-bottom: 2.5rem;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  color: var(--mantine-color-blue-9);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--mantine-color-grape-3);
+}
+
+.subsectionTitle {
+  font-size: 1.125rem;
+  color: var(--mantine-color-blue-8);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Text Styles */
+.paragraph {
+  color: var(--mantine-color-grape-8);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* List Styles */
+.list {
+  color: var(--mantine-color-grape-8);
+  line-height: 1.7;
+  margin: 0;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.list li {
+  margin-bottom: 0.75rem;
+}
+
+.list li:last-child {
+  margin-bottom: 0;
+}
+
+.list strong {
+  color: var(--mantine-color-blue-9);
+}
+
+/* Link Styles */
+.link {
+  color: var(--mantine-color-grape-7);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: var(--mantine-color-blue-9);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--mantine-color-blue-9);
+  border-top: 2px solid var(--mantine-color-blue-6);
+}
+
+.footerLink {
+  color: var(--mantine-color-blue-3);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.footerLink:hover {
+  color: var(--mantine-color-grape-0);
+}
+
+.footerBottom {
+  border-top: 1px solid var(--mantine-color-blue-7);
+  padding: 1.5rem 0;
+}
