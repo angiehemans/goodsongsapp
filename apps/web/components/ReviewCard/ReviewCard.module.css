@@ -75,8 +75,8 @@
   border-radius: 16px;
   background: linear-gradient(
     135deg,
-    var(--mantine-color-grape-2) 0%,
-    var(--mantine-color-grape-4) 100%
+    var(--mantine-color-grape-1) 0%,
+    var(--mantine-color-grape-3) 100%
   );
   display: flex;
   align-items: center;
@@ -197,8 +197,8 @@
   border-radius: 16px;
   background: linear-gradient(
     135deg,
-    var(--mantine-color-grape-2) 0%,
-    var(--mantine-color-grape-4) 100%
+    var(--mantine-color-grape-1) 0%,
+    var(--mantine-color-grape-3) 100%
   );
   display: flex;
   align-items: center;

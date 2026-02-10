@@ -1,0 +1,212 @@
+/* Page wrapper */
+.page {
+  min-height: 100vh;
+  background-color: var(--mantine-color-grape-0);
+}
+
+/* Fixed Navigation */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--mantine-color-grape-0);
+  border-bottom: 2px solid var(--mantine-color-blue-9);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--mantine-color-blue-9);
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  width: 100%;
+  padding-top: 120px;
+  padding-bottom: 60px;
+  text-align: center;
+  background-color: var(--mantine-color-grape-0);
+}
+
+/* Section Styles */
+.sectionLight {
+  background-color: var(--mantine-color-grape-0);
+}
+
+.sectionDark {
+  background-color: var(--mantine-color-blue-9);
+}
+
+/* Feature Category Header */
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.categoryIcon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--mantine-color-grape-2);
+  border: 2px solid var(--mantine-color-blue-9);
+  color: var(--mantine-color-blue-9);
+}
+
+.categoryIconDark {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--mantine-color-blue-8);
+  border: 2px solid var(--mantine-color-grape-3);
+  color: var(--mantine-color-grape-0);
+}
+
+/* Feature Item */
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 1rem;
+  background-color: var(--mantine-color-grape-1);
+  border: 2px solid var(--mantine-color-grape-3);
+  margin-bottom: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureItem:hover {
+  transform: translateX(4px);
+  box-shadow: 4px 4px 0 var(--mantine-color-blue-9);
+}
+
+.featureItemDark {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 1rem;
+  background-color: var(--mantine-color-blue-8);
+  border: 2px solid var(--mantine-color-blue-6);
+  margin-bottom: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureItemDark:hover {
+  transform: translateX(4px);
+  box-shadow: 4px 4px 0 var(--mantine-color-grape-3);
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 2px solid;
+}
+
+.badgeWeb {
+  background-color: var(--mantine-color-blue-1);
+  border-color: var(--mantine-color-blue-6);
+  color: var(--mantine-color-blue-9);
+}
+
+.badgeMobile {
+  background-color: var(--mantine-color-grape-1);
+  border-color: var(--mantine-color-grape-6);
+  color: var(--mantine-color-grape-9);
+}
+
+.badgeBoth {
+  background-color: var(--mantine-color-green-1);
+  border-color: var(--mantine-color-green-6);
+  color: var(--mantine-color-green-9);
+}
+
+.badgePlanned {
+  background-color: var(--mantine-color-orange-1);
+  border-color: var(--mantine-color-orange-6);
+  color: var(--mantine-color-orange-9);
+}
+
+/* Roadmap Timeline */
+.timelineItem {
+  position: relative;
+  padding-left: 2rem;
+  padding-bottom: 2rem;
+  border-left: 3px solid var(--mantine-color-grape-4);
+}
+
+.timelineItem:last-child {
+  border-left-color: transparent;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  background-color: var(--mantine-color-grape-0);
+  border: 3px solid var(--mantine-color-grape-6);
+  border-radius: 50%;
+}
+
+.timelineItemDark {
+  position: relative;
+  padding-left: 2rem;
+  padding-bottom: 2rem;
+  border-left: 3px solid var(--mantine-color-blue-6);
+}
+
+.timelineItemDark:last-child {
+  border-left-color: transparent;
+}
+
+.timelineDotDark {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  background-color: var(--mantine-color-blue-9);
+  border: 3px solid var(--mantine-color-grape-3);
+  border-radius: 50%;
+}
+
+/* Footer */
+.footer {
+  background-color: var(--mantine-color-blue-9);
+  border-top: 2px solid var(--mantine-color-blue-6);
+}
+
+.footerLink {
+  color: var(--mantine-color-blue-3);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.footerLink:hover {
+  color: var(--mantine-color-grape-0);
+}
+
+.footerBottom {
+  border-top: 1px solid var(--mantine-color-blue-7);
+  padding: 1.5rem 0;
+}

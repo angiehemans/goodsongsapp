@@ -259,6 +259,7 @@ export interface Band {
   youtube_music_link?: string;
   profile_picture_url?: string;
   spotify_image_url?: string;
+  musicbrainz_id?: string;
   reviews_count: number;
   user_owned: boolean;
   disabled?: boolean;
@@ -374,17 +375,38 @@ export interface LastFmTrack {
 
 export interface RecentlyPlayedTrack {
   name: string;
-  mbid?: string;
-  artists: LastFmArtist[];
-  album: {
-    name: string;
-    mbid?: string;
-    images: LastFmAlbumImage[];
-  };
-  lastfm_url: string;
+  artist: string;
+  album: string;
   played_at: string | null;
   now_playing: boolean;
+  source: 'lastfm' | 'scrobble';
+  album_art_url: string | null;
   loved: boolean;
+  id?: number;  // Scrobble ID (only present for scrobble source)
+  scrobble_id?: number;  // Alternative field name
+}
+
+export interface RefreshArtworkResponse {
+  status: 'success' | 'already_has_artwork' | 'not_found' | 'no_track';
+  message: string;
+  artwork_url?: string;
+  scrobble?: {
+    id: number;
+    track?: {
+      id: number;
+      name: string;
+      album?: {
+        id: number;
+        name: string;
+        cover_art_url?: string;
+      };
+    };
+  };
+}
+
+export interface RecentlyPlayedResponse {
+  tracks: RecentlyPlayedTrack[];
+  sources: ('lastfm' | 'scrobble')[];
 }
 
 export interface LastFmStatus {
@@ -1027,9 +1049,19 @@ class ApiClient {
     await this.makeRequest('/lastfm/disconnect', { method: 'DELETE' });
   }
 
-  async getRecentlyPlayed(limit?: number): Promise<{ tracks: RecentlyPlayedTrack[] }> {
-    const params = limit ? `?limit=${limit}` : '';
-    return this.makeRequest(`/recently-played${params}`);
+  async getRecentlyPlayed(options?: { limit?: number; sources?: ('lastfm' | 'scrobble')[] }): Promise<RecentlyPlayedResponse> {
+    const params = new URLSearchParams();
+    if (options?.limit) params.append('limit', options.limit.toString());
+    if (options?.sources?.length) params.append('sources', options.sources.join(','));
+    const queryString = params.toString();
+    return this.makeRequest(`/recently-played${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async refreshScrobbleArtwork(scrobbleId: number, force?: boolean): Promise<RefreshArtworkResponse> {
+    const params = force ? '?force=true' : '';
+    return this.makeRequest(`/api/v1/scrobbles/${scrobbleId}/refresh_artwork${params}`, {
+      method: 'POST',
+    });
   }
 
   async searchLastFmArtists(query: string, limit?: number): Promise<{ artists: LastFmSearchArtist[] }> {
@@ -1073,39 +1105,54 @@ class ApiClient {
   }
 
   // Public discover endpoints (no auth required)
-  async discoverUsers(page: number = 1): Promise<{
+  async discoverUsers(page: number = 1, query?: string): Promise<{
     users: UserProfile[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.makeRequest(`/discover/users?page=${page}`, {
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.makeRequest(`/discover/users?${params.toString()}`, {
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  async discoverBands(page: number = 1): Promise<{
+  async discoverBands(page: number = 1, query?: string): Promise<{
     bands: Band[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.makeRequest(`/discover/bands?page=${page}`, {
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.makeRequest(`/discover/bands?${params.toString()}`, {
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  async discoverReviews(page: number = 1): Promise<{
+  async discoverReviews(page: number = 1, query?: string): Promise<{
     reviews: Review[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.makeRequest(`/discover/reviews?page=${page}`, {
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.makeRequest(`/discover/reviews?${params.toString()}`, {
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
   // Admin endpoints
-  async getAllUsers(page: number = 1, perPage: number = 20): Promise<{
+  async getAllUsers(page: number = 1, perPage: number = 20, query?: string): Promise<{
     users: User[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.makeRequest(`/admin/users?page=${page}&per_page=${perPage}`);
+    const params = new URLSearchParams({
+      page: String(page),
+      per_page: String(perPage),
+    });
+    if (query) params.append('q', query);
+    return this.makeRequest(`/admin/users?${params.toString()}`);
   }
 
   async getAdminUserDetail(userId: number): Promise<AdminUserDetailResponse> {
@@ -1163,11 +1210,35 @@ class ApiClient {
     });
   }
 
-  async getAdminBands(page: number = 1, perPage: number = 20): Promise<{
-    bands: Band[];
+  async getAdminBands(
+    page: number = 1,
+    perPage: number = 20,
+    options?: { findDuplicates?: boolean; duplicateMbids?: boolean; search?: string }
+  ): Promise<{
+    bands: (Band & {
+      normalized_name?: string;
+      duplicate_group_size?: number;
+      duplicate_mbid_count?: number;
+    })[];
     pagination: DiscoverPagination;
+    duplicate_groups_count?: number;
+    total_duplicate_bands?: number;
+    duplicate_mbid_count?: number;
   }> {
-    return this.makeRequest(`/admin/bands?page=${page}&per_page=${perPage}`);
+    const params = new URLSearchParams({
+      page: String(page),
+      per_page: String(perPage),
+    });
+    if (options?.findDuplicates) {
+      params.append('find_duplicates', 'true');
+    }
+    if (options?.duplicateMbids) {
+      params.append('duplicate_mbids', 'true');
+    }
+    if (options?.search) {
+      params.append('search', options.search);
+    }
+    return this.makeRequest(`/admin/bands?${params.toString()}`);
   }
 
   async getAdminBandDetail(bandId: number): Promise<AdminBandDetailResponse> {
@@ -1230,16 +1301,45 @@ class ApiClient {
     });
   }
 
-  async getAdminReviews(page: number = 1, perPage: number = 20): Promise<{
+  async enrichBand(bandId: number): Promise<{ message: string; band: Band }> {
+    return this.makeRequest(`/admin/bands/${bandId}/enrich`, {
+      method: 'POST',
+    });
+  }
+
+  async getAdminReviews(page: number = 1, perPage: number = 20, query?: string): Promise<{
     reviews: Review[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.makeRequest(`/admin/reviews?page=${page}&per_page=${perPage}`);
+    const params = new URLSearchParams({
+      page: String(page),
+      per_page: String(perPage),
+    });
+    if (query) params.append('q', query);
+    return this.makeRequest(`/admin/reviews?${params.toString()}`);
   }
 
   async deleteReview(reviewId: number): Promise<{ message: string }> {
     return this.makeRequest(`/admin/reviews/${reviewId}`, {
       method: 'DELETE',
+    });
+  }
+
+  async enrichReview(reviewId: number): Promise<{
+    message: string;
+    band: Band;
+    track_lookup: {
+      status: 'found' | 'not_found' | 'skipped' | 'error';
+      mbid?: string;
+      title?: string;
+      artist?: string;
+      album?: string;
+      duration_ms?: number;
+    };
+  }> {
+    return this.makeRequest(`/admin/reviews/${reviewId}/enrich`, {
+      method: 'POST',
     });
   }
 
@@ -1367,11 +1467,14 @@ class ApiClient {
     });
   }
 
-  async discoverEvents(page: number = 1): Promise<{
+  async discoverEvents(page: number = 1, query?: string): Promise<{
     events: Event[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.makeRequest(`/discover/events?page=${page}`, {
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.makeRequest(`/discover/events?${params.toString()}`, {
       headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -1422,6 +1525,42 @@ class ApiClient {
   async getDiscogsRelease(id: number): Promise<DiscogsMasterResponse> {
     return this.makeRequest(`/discogs/release/${id}`);
   }
+
+  // Artwork Search - fetches from multiple sources
+  async searchArtwork(
+    track: string,
+    artist: string,
+    album?: string
+  ): Promise<ArtworkSearchResponse> {
+    const params = new URLSearchParams();
+    params.append('track', track);
+    params.append('artist', artist);
+    if (album) {
+      params.append('album', album);
+    }
+    return this.makeRequest(`/artwork/search?${params.toString()}`);
+  }
+}
+
+export interface ArtworkOption {
+  url: string;
+  source: 'cover_art_archive' | 'discogs' | 'lastfm';
+  source_display: string;
+  album_name?: string;
+  release_mbid?: string;
+  release_date?: string;
+  size?: number;
+  master_id?: number;
+  year?: number;
+}
+
+export interface ArtworkSearchResponse {
+  artwork_options: ArtworkOption[];
+  query: {
+    track: string;
+    artist: string;
+    album: string | null;
+  };
 }
 
 export const apiClient = new ApiClient();

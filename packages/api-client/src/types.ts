@@ -290,17 +290,18 @@ export interface LastFmTrack {
 
 export interface RecentlyPlayedTrack {
   name: string;
-  mbid?: string;
-  artists: LastFmArtist[];
-  album: {
-    name: string;
-    mbid?: string;
-    images: LastFmAlbumImage[];
-  };
-  lastfm_url: string;
+  artist: string;
+  album: string;
   played_at: string | null;
   now_playing: boolean;
+  source: 'lastfm' | 'scrobble';
+  album_art_url: string | null;
   loved: boolean;
+}
+
+export interface RecentlyPlayedResponse {
+  tracks: RecentlyPlayedTrack[];
+  sources: ('lastfm' | 'scrobble')[];
 }
 
 export interface LastFmStatus {

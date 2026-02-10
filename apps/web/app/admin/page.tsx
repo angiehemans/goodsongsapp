@@ -4,8 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  IconCopy,
+  IconFingerprint,
   IconMessage,
   IconMicrophone2,
+  IconSearch,
+  IconSparkles,
   IconTrash,
   IconUsers,
 } from '@tabler/icons-react';
@@ -27,10 +31,11 @@ import {
   Table,
   Tabs,
   Text,
+  TextInput,
   Title,
   UnstyledButton,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDebouncedValue, useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { AdminBandDrawer } from '@/components/AdminBandDrawer/AdminBandDrawer';
 import { AdminUserDrawer } from '@/components/AdminUserDrawer/AdminUserDrawer';
@@ -50,6 +55,28 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<string | null>('users');
   const [togglingUserId, setTogglingUserId] = useState<number | null>(null);
   const [togglingBandId, setTogglingBandId] = useState<number | null>(null);
+
+  // Duplicate bands filter state
+  const [findDuplicates, setFindDuplicates] = useState(false);
+  const [duplicateGroupsCount, setDuplicateGroupsCount] = useState<number | null>(null);
+  const [totalDuplicateBands, setTotalDuplicateBands] = useState<number | null>(null);
+
+  // Duplicate MusicBrainz IDs filter state
+  const [findDuplicateMbids, setFindDuplicateMbids] = useState(false);
+  const [duplicateMbidCount, setDuplicateMbidCount] = useState<number | null>(null);
+  const [totalDuplicateMbidBands, setTotalDuplicateMbidBands] = useState<number | null>(null);
+
+  // Enrichment loading state
+  const [enrichingBandId, setEnrichingBandId] = useState<number | null>(null);
+  const [enrichingReviewId, setEnrichingReviewId] = useState<number | null>(null);
+
+  // Search state
+  const [usersSearch, setUsersSearch] = useState('');
+  const [bandsSearch, setBandsSearch] = useState('');
+  const [reviewsSearch, setReviewsSearch] = useState('');
+  const [debouncedUsersSearch] = useDebouncedValue(usersSearch, 300);
+  const [debouncedBandsSearch] = useDebouncedValue(bandsSearch, 300);
+  const [debouncedReviewsSearch] = useDebouncedValue(reviewsSearch, 300);
 
   // Pagination state
   const [usersPagination, setUsersPagination] = useState<DiscoverPagination | null>(null);
@@ -93,11 +120,11 @@ export default function AdminDashboardPage() {
     }
   }, [user, isLoading, isOnboardingComplete, isAdmin, router]);
 
-  const fetchUsers = useCallback(async (page: number) => {
+  const fetchUsers = useCallback(async (page: number, query?: string) => {
     if (!user || !isAdmin) return;
     setDataLoading(true);
     try {
-      const response = await apiClient.getAllUsers(page);
+      const response = await apiClient.getAllUsers(page, 20, query || undefined);
       setUsers(response.users || []);
       setUsersPagination(response.pagination);
     } catch (error) {
@@ -107,13 +134,24 @@ export default function AdminDashboardPage() {
     setDataLoading(false);
   }, [user, isAdmin]);
 
-  const fetchBands = useCallback(async (page: number) => {
+  const fetchBands = useCallback(async (
+    page: number,
+    options?: { duplicatesOnly?: boolean; duplicateMbids?: boolean; search?: string }
+  ) => {
     if (!user || !isAdmin) return;
     setDataLoading(true);
     try {
-      const response = await apiClient.getAdminBands(page);
+      const response = await apiClient.getAdminBands(page, 20, {
+        findDuplicates: options?.duplicatesOnly,
+        duplicateMbids: options?.duplicateMbids,
+        search: options?.search,
+      });
       setBands(response.bands || []);
       setBandsPagination(response.pagination);
+      setDuplicateGroupsCount(response.duplicate_groups_count ?? null);
+      setTotalDuplicateBands(response.total_duplicate_bands ?? null);
+      setDuplicateMbidCount(response.duplicate_mbid_count ?? null);
+      setTotalDuplicateMbidBands(response.total_duplicate_bands ?? null);
     } catch (error) {
       console.error('Failed to fetch bands:', error);
       setBands([]);
@@ -121,11 +159,11 @@ export default function AdminDashboardPage() {
     setDataLoading(false);
   }, [user, isAdmin]);
 
-  const fetchReviews = useCallback(async (page: number) => {
+  const fetchReviews = useCallback(async (page: number, query?: string) => {
     if (!user || !isAdmin) return;
     setDataLoading(true);
     try {
-      const response = await apiClient.getAdminReviews(page);
+      const response = await apiClient.getAdminReviews(page, 20, query || undefined);
       setReviews(response.reviews || []);
       setReviewsPagination(response.pagination);
     } catch (error) {
@@ -170,17 +208,47 @@ export default function AdminDashboardPage() {
 
   const handleUsersPageChange = (page: number) => {
     setUsersPage(page);
-    fetchUsers(page);
+    fetchUsers(page, debouncedUsersSearch);
   };
 
   const handleBandsPageChange = (page: number) => {
     setBandsPage(page);
-    fetchBands(page);
+    fetchBands(page, { duplicatesOnly: findDuplicates, duplicateMbids: findDuplicateMbids, search: debouncedBandsSearch });
+  };
+
+  // Refetch when search changes
+  useEffect(() => {
+    setUsersPage(1);
+    fetchUsers(1, debouncedUsersSearch);
+  }, [debouncedUsersSearch, fetchUsers]);
+
+  useEffect(() => {
+    setBandsPage(1);
+    fetchBands(1, { duplicatesOnly: findDuplicates, duplicateMbids: findDuplicateMbids, search: debouncedBandsSearch });
+  }, [debouncedBandsSearch, findDuplicates, findDuplicateMbids, fetchBands]);
+
+  useEffect(() => {
+    setReviewsPage(1);
+    fetchReviews(1, debouncedReviewsSearch);
+  }, [debouncedReviewsSearch, fetchReviews]);
+
+  const handleFindDuplicatesToggle = (checked: boolean) => {
+    setFindDuplicates(checked);
+    if (checked) setFindDuplicateMbids(false); // Only one filter at a time
+    setBandsPage(1);
+    fetchBands(1, { duplicatesOnly: checked, duplicateMbids: false, search: debouncedBandsSearch });
+  };
+
+  const handleFindDuplicateMbidsToggle = (checked: boolean) => {
+    setFindDuplicateMbids(checked);
+    if (checked) setFindDuplicates(false); // Only one filter at a time
+    setBandsPage(1);
+    fetchBands(1, { duplicatesOnly: false, duplicateMbids: checked });
   };
 
   const handleReviewsPageChange = (page: number) => {
     setReviewsPage(page);
-    fetchReviews(page);
+    fetchReviews(page, debouncedReviewsSearch);
   };
 
   const handleToggleUserDisabled = async (userId: number, username: string | undefined) => {
@@ -309,6 +377,55 @@ export default function AdminDashboardPage() {
     handleDeleteClick('band', bandId, bandName);
   };
 
+  const handleEnrichBand = async (bandId: number, bandName: string) => {
+    setEnrichingBandId(bandId);
+    try {
+      const response = await apiClient.enrichBand(bandId);
+      notifications.show({
+        title: 'Enrichment Queued',
+        message: response.message || `Enrichment job queued for "${bandName}"`,
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('Failed to enrich band:', error);
+      notifications.show({
+        title: 'Error',
+        message: `Failed to enrich "${bandName}". Please try again.`,
+        color: 'red',
+      });
+    } finally {
+      setEnrichingBandId(null);
+    }
+  };
+
+  const handleEnrichReview = async (reviewId: number, songName: string) => {
+    setEnrichingReviewId(reviewId);
+    try {
+      const response = await apiClient.enrichReview(reviewId);
+      const trackStatus = response.track_lookup?.status;
+      let message = response.message;
+      if (trackStatus === 'found') {
+        message += ` Track found: "${response.track_lookup.title}"`;
+      } else if (trackStatus === 'not_found') {
+        message += ' Track not found in MusicBrainz.';
+      }
+      notifications.show({
+        title: 'Enrichment Queued',
+        message,
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('Failed to enrich review:', error);
+      notifications.show({
+        title: 'Error',
+        message: `Failed to enrich review "${songName}". Please try again.`,
+        color: 'red',
+      });
+    } finally {
+      setEnrichingReviewId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <Box className={styles.container}>
@@ -416,6 +533,13 @@ export default function AdminDashboardPage() {
 
           {/* Users Tab */}
           <Tabs.Panel value="users" pt="md">
+            <TextInput
+              placeholder="Search by username or email..."
+              leftSection={<IconSearch size={16} />}
+              value={usersSearch}
+              onChange={(e) => setUsersSearch(e.target.value)}
+              mb="md"
+            />
             {dataLoading ? (
               <Center py="xl">
                 <Loader size="md" />
@@ -426,7 +550,7 @@ export default function AdminDashboardPage() {
                   <Stack align="center" gap="md">
                     <IconUsers size={48} color="var(--mantine-color-gray-5)" />
                     <Text c="dimmed" ta="center">
-                      No users found.
+                      {debouncedUsersSearch ? 'No users found matching your search.' : 'No users found.'}
                     </Text>
                   </Stack>
                 </Center>
@@ -547,6 +671,71 @@ export default function AdminDashboardPage() {
 
           {/* Bands Tab */}
           <Tabs.Panel value="bands" pt="md">
+            {/* Duplicate Finder Toggles */}
+            <Paper p="md" radius="md" mb="md" withBorder>
+              <Stack gap="md">
+                {/* Duplicate Names Toggle */}
+                <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+                  <Group gap="sm">
+                    <IconCopy size={20} color="var(--mantine-color-orange-6)" />
+                    <div>
+                      <Text size="sm" fw={500}>Find Duplicate Names</Text>
+                      <Text size="xs" c="dimmed">
+                        Show bands with similar names that may be duplicates
+                      </Text>
+                    </div>
+                  </Group>
+                  <Group gap="md">
+                    {findDuplicates && duplicateGroupsCount !== null && (
+                      <Badge color="orange" variant="light">
+                        {duplicateGroupsCount} groups ({totalDuplicateBands} bands)
+                      </Badge>
+                    )}
+                    <Switch
+                      checked={findDuplicates}
+                      onChange={(e) => handleFindDuplicatesToggle(e.currentTarget.checked)}
+                      label={findDuplicates ? 'On' : 'Off'}
+                      color="orange"
+                    />
+                  </Group>
+                </Group>
+
+                {/* Duplicate MusicBrainz IDs Toggle */}
+                <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+                  <Group gap="sm">
+                    <IconFingerprint size={20} color="var(--mantine-color-violet-6)" />
+                    <div>
+                      <Text size="sm" fw={500}>Find Duplicate MusicBrainz IDs</Text>
+                      <Text size="xs" c="dimmed">
+                        Show bands sharing the same MusicBrainz ID
+                      </Text>
+                    </div>
+                  </Group>
+                  <Group gap="md">
+                    {findDuplicateMbids && duplicateMbidCount !== null && (
+                      <Badge color="violet" variant="light">
+                        {duplicateMbidCount} MBIDs ({totalDuplicateMbidBands} bands)
+                      </Badge>
+                    )}
+                    <Switch
+                      checked={findDuplicateMbids}
+                      onChange={(e) => handleFindDuplicateMbidsToggle(e.currentTarget.checked)}
+                      label={findDuplicateMbids ? 'On' : 'Off'}
+                      color="violet"
+                    />
+                  </Group>
+                </Group>
+              </Stack>
+            </Paper>
+
+            <TextInput
+              placeholder="Search by band name..."
+              leftSection={<IconSearch size={16} />}
+              value={bandsSearch}
+              onChange={(e) => setBandsSearch(e.target.value)}
+              mb="md"
+            />
+
             {dataLoading ? (
               <Center py="xl">
                 <Loader size="md" />
@@ -557,7 +746,13 @@ export default function AdminDashboardPage() {
                   <Stack align="center" gap="md">
                     <IconMicrophone2 size={48} color="var(--mantine-color-gray-5)" />
                     <Text c="dimmed" ta="center">
-                      No bands found.
+                      {debouncedBandsSearch
+                        ? 'No bands found matching your search.'
+                        : findDuplicates
+                          ? 'No duplicate bands found.'
+                          : findDuplicateMbids
+                            ? 'No bands with duplicate MusicBrainz IDs found.'
+                            : 'No bands found.'}
                     </Text>
                   </Stack>
                 </Center>
@@ -570,6 +765,10 @@ export default function AdminDashboardPage() {
                       <Table.Thead>
                         <Table.Tr>
                           <Table.Th>Band</Table.Th>
+                          {findDuplicates && <Table.Th className={styles.hideOnMobile}>Normalized</Table.Th>}
+                          {findDuplicates && <Table.Th>Duplicates</Table.Th>}
+                          {findDuplicateMbids && <Table.Th className={styles.hideOnMobile}>MusicBrainz ID</Table.Th>}
+                          {findDuplicateMbids && <Table.Th>Duplicates</Table.Th>}
                           <Table.Th className={styles.hideOnMobile}>Location</Table.Th>
                           <Table.Th className={styles.hideOnMobile}>Owner</Table.Th>
                           <Table.Th className={styles.hideOnMobile}>Reviews</Table.Th>
@@ -600,6 +799,42 @@ export default function AdminDashboardPage() {
                                 </Group>
                               </UnstyledButton>
                             </Table.Td>
+                            {findDuplicates && (
+                              <Table.Td className={styles.hideOnMobile}>
+                                <Text size="xs" c="dimmed" ff="monospace">
+                                  {(band as any).normalized_name || '-'}
+                                </Text>
+                              </Table.Td>
+                            )}
+                            {findDuplicates && (
+                              <Table.Td>
+                                {(band as any).duplicate_group_size > 1 ? (
+                                  <Badge color="orange" variant="light">
+                                    {(band as any).duplicate_group_size} matches
+                                  </Badge>
+                                ) : (
+                                  <Text size="xs" c="dimmed">-</Text>
+                                )}
+                              </Table.Td>
+                            )}
+                            {findDuplicateMbids && (
+                              <Table.Td className={styles.hideOnMobile}>
+                                <Text size="xs" c="dimmed" ff="monospace" lineClamp={1} maw={120}>
+                                  {band.musicbrainz_id || '-'}
+                                </Text>
+                              </Table.Td>
+                            )}
+                            {findDuplicateMbids && (
+                              <Table.Td>
+                                {(band as any).duplicate_mbid_count > 1 ? (
+                                  <Badge color="violet" variant="light">
+                                    {(band as any).duplicate_mbid_count} matches
+                                  </Badge>
+                                ) : (
+                                  <Text size="xs" c="dimmed">-</Text>
+                                )}
+                              </Table.Td>
+                            )}
                             <Table.Td className={styles.hideOnMobile}>
                               <Text size="sm" c="dimmed">
                                 {[band.city, band.region].filter(Boolean).join(', ') || band.location || 'Not specified'}
@@ -638,15 +873,28 @@ export default function AdminDashboardPage() {
                               />
                             </Table.Td>
                             <Table.Td>
-                              <Button
-                                variant="light"
-                                color="red"
-                                size="xs"
-                                leftSection={<IconTrash size={14} />}
-                                onClick={() => handleDeleteClick('band', band.id, band.name)}
-                              >
-                                Delete
-                              </Button>
+                              <Group gap="xs" wrap="nowrap">
+                                <Button
+                                  variant="light"
+                                  color="grape"
+                                  size="xs"
+                                  leftSection={<IconSparkles size={14} />}
+                                  onClick={() => handleEnrichBand(band.id, band.name)}
+                                  loading={enrichingBandId === band.id}
+                                  disabled={enrichingBandId !== null && enrichingBandId !== band.id}
+                                >
+                                  Enrich
+                                </Button>
+                                <Button
+                                  variant="light"
+                                  color="red"
+                                  size="xs"
+                                  leftSection={<IconTrash size={14} />}
+                                  onClick={() => handleDeleteClick('band', band.id, band.name)}
+                                >
+                                  Delete
+                                </Button>
+                              </Group>
                             </Table.Td>
                           </Table.Tr>
                         ))}
@@ -670,6 +918,13 @@ export default function AdminDashboardPage() {
 
           {/* Reviews Tab */}
           <Tabs.Panel value="reviews" pt="md">
+            <TextInput
+              placeholder="Search by song name or band name..."
+              leftSection={<IconSearch size={16} />}
+              value={reviewsSearch}
+              onChange={(e) => setReviewsSearch(e.target.value)}
+              mb="md"
+            />
             {dataLoading ? (
               <Center py="xl">
                 <Loader size="md" />
@@ -680,7 +935,7 @@ export default function AdminDashboardPage() {
                   <Stack align="center" gap="md">
                     <IconMessage size={48} color="var(--mantine-color-gray-5)" />
                     <Text c="dimmed" ta="center">
-                      No reviews found.
+                      {debouncedReviewsSearch ? 'No reviews found matching your search.' : 'No reviews found.'}
                     </Text>
                   </Stack>
                 </Center>
@@ -758,15 +1013,28 @@ export default function AdminDashboardPage() {
                               </Text>
                             </Table.Td>
                             <Table.Td>
-                              <Button
-                                variant="light"
-                                color="red"
-                                size="xs"
-                                leftSection={<IconTrash size={14} />}
-                                onClick={() => handleDeleteClick('review', review.id, `"${review.song_name}"`)}
-                              >
-                                Delete
-                              </Button>
+                              <Group gap="xs" wrap="nowrap">
+                                <Button
+                                  variant="light"
+                                  color="grape"
+                                  size="xs"
+                                  leftSection={<IconSparkles size={14} />}
+                                  onClick={() => handleEnrichReview(review.id, review.song_name)}
+                                  loading={enrichingReviewId === review.id}
+                                  disabled={enrichingReviewId !== null && enrichingReviewId !== review.id}
+                                >
+                                  Enrich
+                                </Button>
+                                <Button
+                                  variant="light"
+                                  color="red"
+                                  size="xs"
+                                  leftSection={<IconTrash size={14} />}
+                                  onClick={() => handleDeleteClick('review', review.id, `"${review.song_name}"`)}
+                                >
+                                  Delete
+                                </Button>
+                              </Group>
                             </Table.Td>
                           </Table.Tr>
                         ))}

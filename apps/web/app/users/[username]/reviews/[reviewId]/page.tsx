@@ -378,7 +378,7 @@ export default function SingleReviewPage() {
               />
             ) : (
               <div className={styles.songArtworkPlaceholder}>
-                <IconMusic size={28} color="var(--mantine-color-grape-4)" />
+                <img src="/logo-grape.svg" alt="Good Songs" width={28} height={28} style={{ opacity: 0.8 }} />
               </div>
             )}
             <div className={styles.songDetails}>
@@ -633,7 +633,7 @@ export default function SingleReviewPage() {
                 />
               ) : (
                 <div className={styles.storyArtworkPlaceholder}>
-                  <IconMusic size={80} color="#9c36b5" />
+                  <img src="/logo-grape.svg" alt="Good Songs" width={80} height={80} />
                 </div>
               )}
               <div className={styles.storySongInfo}>
@@ -674,7 +674,7 @@ export default function SingleReviewPage() {
                 />
               ) : (
                 <div className={styles.postArtworkPlaceholder}>
-                  <IconMusic size={60} color="#9c36b5" />
+                  <img src="/logo-grape.svg" alt="Good Songs" width={60} height={60} />
                 </div>
               )}
               <div className={styles.postSongInfo}>

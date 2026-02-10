@@ -33,11 +33,10 @@ export function FeedScreen({ navigation, route }: any) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Recently played state (Last.fm fallback)
+  // Recently played state
   const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>(
     [],
   );
-  const [lastFmConnected, setLastFmConnected] = useState(false);
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(true);
 
   // Scrobble state (Android)
@@ -156,27 +155,14 @@ export function FeedScreen({ navigation, route }: any) {
     }
   }, []);
 
-  // Fetch Last.fm data
+  // Fetch recently played tracks (from any source)
   const fetchRecentlyPlayed = useCallback(async () => {
     setRecentlyPlayedLoading(true);
     try {
-      const status = await apiClient.getLastFmStatus();
-      setLastFmConnected(status?.connected || false);
-
-      if (status?.connected) {
-        try {
-          const response = await apiClient.getRecentlyPlayed(12);
-          setRecentlyPlayed(response?.tracks || []);
-        } catch (tracksError) {
-          // Silently fail for tracks - user is still connected, just can't fetch tracks
-          console.error("Failed to fetch tracks:", tracksError);
-          setRecentlyPlayed([]);
-        }
-      }
+      const response = await apiClient.getRecentlyPlayed({ limit: 12 });
+      setRecentlyPlayed(response?.tracks || []);
     } catch (error) {
-      // If status check fails, assume not connected and don't show the section
-      console.error("Failed to fetch Last.fm status:", error);
-      setLastFmConnected(false);
+      console.error("Failed to fetch recently played:", error);
       setRecentlyPlayed([]);
     } finally {
       setRecentlyPlayedLoading(false);
@@ -185,7 +171,7 @@ export function FeedScreen({ navigation, route }: any) {
 
   useEffect(() => {
     fetchFeed(1, true);
-    // Always fetch Last.fm data as fallback
+    // Fetch recently played tracks
     fetchRecentlyPlayed();
     // On Android, refresh scrobble status (which also fetches local scrobbles)
     if (isAndroid) {
@@ -361,7 +347,7 @@ export function FeedScreen({ navigation, route }: any) {
     );
   };
 
-  // Render Last.fm recently played section (fallback when scrobbling is not active)
+  // Render recently played section (fallback when scrobbling is not active)
   const renderLastFmRecentlyPlayed = () => {
     if (recentlyPlayedLoading) {
       return (
@@ -374,20 +360,7 @@ export function FeedScreen({ navigation, route }: any) {
       );
     }
 
-    if (!lastFmConnected) {
-      return (
-        <View style={styles.recentlyPlayedSection}>
-          <Text style={styles.sectionTitle}>Recently Played</Text>
-          <View style={styles.connectLastFm}>
-            <Icon name="music" size={24} color={colors.grape[5]} />
-            <Text style={styles.connectText}>
-              Connect Last.fm to see your recently played tracks
-            </Text>
-          </View>
-        </View>
-      );
-    }
-
+    // Show connection prompt only when there are no tracks
     if (recentlyPlayed.length === 0) {
       return (
         <View style={styles.recentlyPlayedSection}>
@@ -395,7 +368,7 @@ export function FeedScreen({ navigation, route }: any) {
           <View style={styles.connectLastFm}>
             <Icon name="music" size={24} color={colors.grape[5]} />
             <Text style={styles.connectText}>
-              No recently played tracks found
+              Connect Last.fm to see your recently played tracks
             </Text>
           </View>
         </View>
@@ -410,58 +383,49 @@ export function FeedScreen({ navigation, route }: any) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.recentlyPlayedList}
         >
-          {recentlyPlayed.map((track, index) => {
-            const albumImage =
-              track.album?.images?.find((img) => img.size === "large") ||
-              track.album?.images?.find((img) => img.size === "medium") ||
-              track.album?.images?.[0];
-            const artistNames =
-              track.artists?.map((a) => a.name).join(", ") || "";
-
-            return (
-              <View
-                key={`${track.mbid || track.name}-${index}`}
-                style={styles.trackCard}
-              >
-                <View style={styles.artworkContainer}>
-                  {albumImage?.url ? (
-                    <FastImage
-                      source={{ uri: fixImageUrl(albumImage.url) || "" }}
-                      style={styles.trackArtwork}
-                      resizeMode={FastImage.resizeMode.cover}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.trackArtwork,
-                        styles.trackArtworkPlaceholder,
-                      ]}
-                    >
-                      <Logo size={28} color={colors.grape[4]} />
-                    </View>
-                  )}
-                  {track.now_playing && (
-                    <View style={styles.nowPlayingOverlay}>
-                      <Icon name="volume-2" size={28} color={colors.grape[0]} />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.trackName} numberOfLines={1}>
-                  {track.name}
-                </Text>
-                <Text style={styles.trackArtist} numberOfLines={1}>
-                  {artistNames}
-                </Text>
-                <TouchableOpacity
-                  style={styles.recommendButton}
-                  onPress={() => handleRecommendTrack(track)}
-                >
-                  <Icon name="plus" size={12} color={colors.grape[0]} />
-                  <Text style={styles.recommendButtonText}>Recommend</Text>
-                </TouchableOpacity>
+          {recentlyPlayed.map((track, index) => (
+            <View
+              key={`${track.name}-${track.artist}-${index}`}
+              style={styles.trackCard}
+            >
+              <View style={styles.artworkContainer}>
+                {track.album_art_url ? (
+                  <FastImage
+                    source={{ uri: fixImageUrl(track.album_art_url) || "" }}
+                    style={styles.trackArtwork}
+                    resizeMode={FastImage.resizeMode.cover}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.trackArtwork,
+                      styles.trackArtworkPlaceholder,
+                    ]}
+                  >
+                    <Logo size={28} color={colors.grape[4]} />
+                  </View>
+                )}
+                {track.now_playing && (
+                  <View style={styles.nowPlayingOverlay}>
+                    <Icon name="volume-2" size={28} color={colors.grape[0]} />
+                  </View>
+                )}
               </View>
-            );
-          })}
+              <Text style={styles.trackName} numberOfLines={1}>
+                {track.name}
+              </Text>
+              <Text style={styles.trackArtist} numberOfLines={1}>
+                {track.artist}
+              </Text>
+              <TouchableOpacity
+                style={styles.recommendButton}
+                onPress={() => handleRecommendTrack(track)}
+              >
+                <Icon name="plus" size={12} color={colors.grape[0]} />
+                <Text style={styles.recommendButtonText}>Recommend</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
         </ScrollView>
       </View>
     );
@@ -495,21 +459,10 @@ export function FeedScreen({ navigation, route }: any) {
   };
 
   const handleRecommendTrack = (track: RecentlyPlayedTrack) => {
-    const artistNames = track.artists?.map((a) => a.name).join(", ") || "";
-    const primaryArtist = track.artists?.[0];
-    const albumImage =
-      track.album?.images?.find((img) => img.size === "extralarge") ||
-      track.album?.images?.find((img) => img.size === "large") ||
-      track.album?.images?.find((img) => img.size === "medium") ||
-      track.album?.images?.[0];
-
     navigation.navigate("CreateReview", {
       song_name: track.name,
-      band_name: artistNames,
-      song_link: track.lastfm_url || "",
-      artwork_url: albumImage?.url || "",
-      band_lastfm_artist_name: primaryArtist?.name,
-      band_musicbrainz_id: primaryArtist?.mbid,
+      band_name: track.artist,
+      artwork_url: track.album_art_url || "",
     });
   };
 

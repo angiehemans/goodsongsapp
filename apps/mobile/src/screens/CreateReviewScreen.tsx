@@ -17,7 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, TextInput, Button } from '@/components';
 import { theme, colors } from '@/theme';
-import { apiClient, DiscogsSearchResult } from '@/utils/api';
+import { apiClient, ArtworkOption, DiscogsSearchResult } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
 import { CreateReviewParams } from '@/navigation/types';
 
@@ -75,6 +75,11 @@ export function CreateReviewScreen({ navigation, route }: any) {
   const [artworkError, setArtworkError] = useState(false);
   const [isPrefilled, setIsPrefilled] = useState(false);
 
+  // Artwork options state
+  const [artworkOptions, setArtworkOptions] = useState<ArtworkOption[]>([]);
+  const [artworkLoading, setArtworkLoading] = useState(false);
+  const [showArtworkPicker, setShowArtworkPicker] = useState(false);
+
   // Track last searched query to prevent duplicate API calls
   const lastSearchKey = useRef<string>('');
 
@@ -106,6 +111,8 @@ export function CreateReviewScreen({ navigation, route }: any) {
       setSelectedRelease(null);
       setManualEntry(false);
       setArtworkError(false);
+      setArtworkOptions([]);
+      setShowArtworkPicker(false);
       lastSearchKey.current = '';
 
       // Always start with a clean form on focus
@@ -201,6 +208,20 @@ export function CreateReviewScreen({ navigation, route }: any) {
     }
   };
 
+  // Fetch artwork options from multiple sources
+  const fetchArtworkOptions = async (track: string, artist: string) => {
+    setArtworkLoading(true);
+    try {
+      const response = await apiClient.searchArtwork(track, artist);
+      setArtworkOptions(response.artwork_options || []);
+    } catch (err) {
+      console.error('Failed to fetch artwork options:', err);
+      setArtworkOptions([]);
+    } finally {
+      setArtworkLoading(false);
+    }
+  };
+
   const handleSelectRelease = (result: DiscogsSearchResult) => {
     setSelectedRelease(result);
     setSearchResults([]);
@@ -208,6 +229,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
     setArtistQuery('');
     lastSearchKey.current = '';
     setArtworkError(false);
+    setArtworkOptions([]); // Clear previous artwork options
 
     setFormData(prev => ({
       ...prev,
@@ -216,11 +238,15 @@ export function CreateReviewScreen({ navigation, route }: any) {
       artwork_url: result.artwork_url || '',
       song_link: result.discogs_url || '',
     }));
+
+    // Fetch artwork options in background
+    fetchArtworkOptions(result.song_name, result.band_name);
   };
 
   const handleClearSelection = () => {
     setSelectedRelease(null);
     setArtworkError(false);
+    setArtworkOptions([]);
     setFormData(prev => ({
       song_link: '',
       band_name: '',
@@ -231,6 +257,12 @@ export function CreateReviewScreen({ navigation, route }: any) {
       band_lastfm_artist_name: undefined,
       band_musicbrainz_id: undefined,
     }));
+  };
+
+  const handleSelectArtwork = (option: ArtworkOption) => {
+    setFormData(prev => ({ ...prev, artwork_url: option.url }));
+    setArtworkError(false);
+    setShowArtworkPicker(false);
   };
 
   const handleEnterManually = () => {
@@ -282,9 +314,11 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
     setSubmitting(true);
     try {
+      // Strip trailing asterisks from band name (fixes song lookup issues)
+      const cleanBandName = formData.band_name.trim().replace(/\*+$/, '').trim();
       await apiClient.createReview({
         song_link: formData.song_link.trim() || '',
-        band_name: formData.band_name.trim(),
+        band_name: cleanBandName,
         song_name: formData.song_name.trim(),
         artwork_url: formData.artwork_url.trim() || undefined,
         review_text: formData.review_text.trim(),
@@ -504,17 +538,72 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 leftIcon="link"
               />
 
-              {/* Artwork URL (Optional) */}
-              <TextInput
-                label="Artwork URL (optional)"
-                placeholder="https://image.url/cover.jpg"
-                value={formData.artwork_url}
-                onChangeText={(text) => updateField('artwork_url', text)}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-                leftIcon="image"
-              />
+              {/* Artwork Selection */}
+              {artworkLoading ? (
+                <View style={styles.artworkLoadingContainer}>
+                  <Text style={styles.artworkLoadingText}>Loading artwork options...</Text>
+                  <ActivityIndicator size="small" color={colors.grape[6]} />
+                </View>
+              ) : artworkOptions.length > 0 ? (
+                <View style={styles.artworkPickerSection}>
+                  <Text style={styles.label}>Artwork</Text>
+                  <TouchableOpacity
+                    style={styles.artworkPickerButton}
+                    onPress={() => setShowArtworkPicker(!showArtworkPicker)}
+                  >
+                    <Icon name="image" size={18} color={colors.grape[6]} />
+                    <Text style={styles.artworkPickerButtonText} numberOfLines={1}>
+                      {formData.artwork_url
+                        ? artworkOptions.find(o => o.url === formData.artwork_url)?.source_display || 'Selected'
+                        : 'Select artwork...'}
+                    </Text>
+                    <Icon name={showArtworkPicker ? 'chevron-up' : 'chevron-down'} size={18} color={colors.grape[5]} />
+                  </TouchableOpacity>
+                  {showArtworkPicker && (
+                    <View style={styles.artworkOptionsList}>
+                      {artworkOptions.map((option, index) => (
+                        <TouchableOpacity
+                          key={`${option.source}-${index}`}
+                          style={[
+                            styles.artworkOptionItem,
+                            formData.artwork_url === option.url && styles.artworkOptionItemSelected,
+                          ]}
+                          onPress={() => handleSelectArtwork(option)}
+                        >
+                          <Image
+                            source={{ uri: fixImageUrl(option.url) }}
+                            style={styles.artworkOptionThumb}
+                            onError={() => {}}
+                          />
+                          <View style={styles.artworkOptionInfo}>
+                            <Text style={styles.artworkOptionSource}>{option.source_display}</Text>
+                            {option.album_name && (
+                              <Text style={styles.artworkOptionAlbum} numberOfLines={1}>
+                                {option.album_name}
+                                {option.year ? ` (${option.year})` : option.release_date ? ` (${option.release_date.slice(0, 4)})` : ''}
+                              </Text>
+                            )}
+                          </View>
+                          {formData.artwork_url === option.url && (
+                            <Icon name="check" size={18} color={colors.grape[6]} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <TextInput
+                  label="Artwork URL (optional)"
+                  placeholder="https://image.url/cover.jpg"
+                  value={formData.artwork_url}
+                  onChangeText={(text) => updateField('artwork_url', text)}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  leftIcon="image"
+                />
+              )}
             </>
           )}
 
@@ -824,5 +913,73 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 100,
+  },
+
+  // Artwork picker styles
+  artworkLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  artworkLoadingText: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[5],
+  },
+  artworkPickerSection: {
+    marginBottom: theme.spacing.md,
+  },
+  artworkPickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.grape[0],
+    borderWidth: theme.borderWidth,
+    borderColor: colors.grape[6],
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    gap: theme.spacing.sm,
+  },
+  artworkPickerButtonText: {
+    flex: 1,
+    fontSize: theme.fontSizes.base,
+    color: colors.grape[7],
+  },
+  artworkOptionsList: {
+    marginTop: theme.spacing.xs,
+    backgroundColor: colors.grape[0],
+    borderWidth: 1,
+    borderColor: colors.grape[3],
+    borderRadius: theme.radii.md,
+    overflow: 'hidden',
+  },
+  artworkOptionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.grape[2],
+    gap: theme.spacing.sm,
+  },
+  artworkOptionItemSelected: {
+    backgroundColor: colors.grape[1],
+  },
+  artworkOptionThumb: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radii.sm,
+  },
+  artworkOptionInfo: {
+    flex: 1,
+  },
+  artworkOptionSource: {
+    fontSize: theme.fontSizes.sm,
+    fontWeight: '500',
+    color: colors.grape[8],
+  },
+  artworkOptionAlbum: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+    marginTop: 2,
   },
 });

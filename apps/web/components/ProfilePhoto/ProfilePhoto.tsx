@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Avatar } from '@mantine/core';
+import { Center } from '@mantine/core';
 import { fixImageUrl } from '@/lib/utils';
 import styles from './ProfilePhoto.module.css';
 
@@ -10,7 +10,7 @@ interface ProfilePhotoProps {
   alt?: string;
   /** Size of the photo in pixels */
   size?: number;
-  /** Fallback letter to show in avatar if no image */
+  /** Fallback letter to show in avatar if no image (deprecated, logo is now used) */
   fallback?: string;
   /** Optional link to wrap the photo */
   href?: string;
@@ -23,6 +23,9 @@ export function ProfilePhoto({
   fallback = '?',
   href,
 }: ProfilePhotoProps) {
+  // Calculate logo size - roughly 60% of container size
+  const logoSize = Math.round(size * 0.6);
+
   const photoContent = src ? (
     <div className={styles.wrapper} style={{ width: size, height: size }}>
       <div className={styles.blend}>
@@ -30,9 +33,23 @@ export function ProfilePhoto({
       </div>
     </div>
   ) : (
-    <Avatar size={size} color="grape.6">
-      {fallback.charAt(0).toUpperCase()}
-    </Avatar>
+    <Center
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        backgroundColor: 'var(--mantine-color-grape-1)',
+        border: '2px solid var(--mantine-color-grape-2)',
+      }}
+    >
+      <img
+        src="/logo-grape.svg"
+        alt="Good Songs"
+        width={logoSize}
+        height={logoSize}
+        style={{ opacity: 0.8 }}
+      />
+    </Center>
   );
 
   if (href) {

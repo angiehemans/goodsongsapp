@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import {
@@ -32,10 +32,10 @@ import { apiClient, Band, Event, Review, UserProfile } from '@/lib/api';
 import styles from './page.module.css';
 
 // SWR fetcher functions
-const fetchUsers = async (page: number) => apiClient.discoverUsers(page);
-const fetchBands = async (page: number) => apiClient.discoverBands(page);
-const fetchReviews = async (page: number) => apiClient.discoverReviews(page);
-const fetchEvents = async (page: number) => apiClient.discoverEvents(page);
+const fetchUsers = async (page: number, query?: string) => apiClient.discoverUsers(page, query);
+const fetchBands = async (page: number, query?: string) => apiClient.discoverBands(page, query);
+const fetchReviews = async (page: number, query?: string) => apiClient.discoverReviews(page, query);
+const fetchEvents = async (page: number, query?: string) => apiClient.discoverEvents(page, query);
 
 export default function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<string>('users');
@@ -54,28 +54,40 @@ export default function DiscoverPage() {
   const [accumulatedReviews, setAccumulatedReviews] = useState<Review[]>([]);
   const [accumulatedEvents, setAccumulatedEvents] = useState<Event[]>([]);
 
+  // Reset pagination when search query changes
+  useEffect(() => {
+    setUsersPage(1);
+    setBandsPage(1);
+    setReviewsPage(1);
+    setEventsPage(1);
+    setAccumulatedUsers([]);
+    setAccumulatedBands([]);
+    setAccumulatedReviews([]);
+    setAccumulatedEvents([]);
+  }, [debouncedSearch]);
+
   // SWR hooks - only fetch when tab is active (conditional fetching)
   const { data: usersData, isLoading: usersLoading } = useSWR(
-    activeTab === 'users' ? ['discover-users', usersPage] : null,
-    () => fetchUsers(usersPage),
+    activeTab === 'users' ? ['discover-users', usersPage, debouncedSearch] : null,
+    () => fetchUsers(usersPage, debouncedSearch || undefined),
     { revalidateOnFocus: false }
   );
 
   const { data: bandsData, isLoading: bandsLoading } = useSWR(
-    activeTab === 'bands' ? ['discover-bands', bandsPage] : null,
-    () => fetchBands(bandsPage),
+    activeTab === 'bands' ? ['discover-bands', bandsPage, debouncedSearch] : null,
+    () => fetchBands(bandsPage, debouncedSearch || undefined),
     { revalidateOnFocus: false }
   );
 
   const { data: reviewsData, isLoading: reviewsLoading } = useSWR(
-    activeTab === 'reviews' ? ['discover-reviews', reviewsPage] : null,
-    () => fetchReviews(reviewsPage),
+    activeTab === 'reviews' ? ['discover-reviews', reviewsPage, debouncedSearch] : null,
+    () => fetchReviews(reviewsPage, debouncedSearch || undefined),
     { revalidateOnFocus: false }
   );
 
   const { data: eventsData, isLoading: eventsLoading } = useSWR(
-    activeTab === 'events' ? ['discover-events', eventsPage] : null,
-    () => fetchEvents(eventsPage),
+    activeTab === 'events' ? ['discover-events', eventsPage, debouncedSearch] : null,
+    () => fetchEvents(eventsPage, debouncedSearch || undefined),
     { revalidateOnFocus: false }
   );
 
@@ -129,51 +141,6 @@ export default function DiscoverPage() {
     }
   }, [eventsData]);
 
-  // Memoized filtered arrays - only recalculate when data or search changes
-  const filteredUsers = useMemo(() => {
-    if (!debouncedSearch) return accumulatedUsers;
-    const query = debouncedSearch.toLowerCase();
-    return accumulatedUsers.filter(
-      (user) =>
-        user.username?.toLowerCase().includes(query) ||
-        user.city?.toLowerCase().includes(query) ||
-        user.region?.toLowerCase().includes(query)
-    );
-  }, [accumulatedUsers, debouncedSearch]);
-
-  const filteredBands = useMemo(() => {
-    if (!debouncedSearch) return accumulatedBands;
-    const query = debouncedSearch.toLowerCase();
-    return accumulatedBands.filter(
-      (band) =>
-        band.name?.toLowerCase().includes(query) ||
-        band.city?.toLowerCase().includes(query) ||
-        band.region?.toLowerCase().includes(query)
-    );
-  }, [accumulatedBands, debouncedSearch]);
-
-  const filteredReviews = useMemo(() => {
-    if (!debouncedSearch) return accumulatedReviews;
-    const query = debouncedSearch.toLowerCase();
-    return accumulatedReviews.filter(
-      (review) =>
-        review.song_name?.toLowerCase().includes(query) ||
-        review.band_name?.toLowerCase().includes(query) ||
-        review.author?.username?.toLowerCase().includes(query)
-    );
-  }, [accumulatedReviews, debouncedSearch]);
-
-  const filteredEvents = useMemo(() => {
-    if (!debouncedSearch) return accumulatedEvents;
-    const query = debouncedSearch.toLowerCase();
-    return accumulatedEvents.filter(
-      (event) =>
-        event.name?.toLowerCase().includes(query) ||
-        event.venue?.name?.toLowerCase().includes(query) ||
-        event.venue?.city?.toLowerCase().includes(query) ||
-        event.band?.name?.toLowerCase().includes(query)
-    );
-  }, [accumulatedEvents, debouncedSearch]);
 
   // Load more handlers
   const handleLoadMoreUsers = useCallback(() => {
@@ -302,7 +269,7 @@ export default function DiscoverPage() {
               </Center>
             ) : activeTab === 'users' ? (
               <div>
-                {filteredUsers.length === 0 ? (
+                {accumulatedUsers.length === 0 ? (
                   <Center py="xl">
                     <Stack align="center">
                       <IconUsers size={48} color="var(--mantine-color-dimmed)" />
@@ -313,7 +280,7 @@ export default function DiscoverPage() {
                   </Center>
                 ) : (
                   <Stack gap={0}>
-                    {filteredUsers
+                    {accumulatedUsers
                       .filter((user) => user.username)
                       .map((user) => (
                         <Flex
@@ -349,7 +316,7 @@ export default function DiscoverPage() {
                         </Flex>
                       ))}
 
-                    {!debouncedSearch && usersData?.pagination?.has_next_page && (
+                    {usersData?.pagination?.has_next_page && (
                       <div ref={sentinelRef}>
                         <Center py="md">
                           <Loader size="sm" />
@@ -361,7 +328,7 @@ export default function DiscoverPage() {
               </div>
             ) : activeTab === 'bands' ? (
               <div>
-                {filteredBands.length === 0 ? (
+                {accumulatedBands.length === 0 ? (
                   <Center py="xl">
                     <Stack align="center">
                       <IconMusic size={48} color="var(--mantine-color-dimmed)" />
@@ -372,7 +339,7 @@ export default function DiscoverPage() {
                   </Center>
                 ) : (
                   <Stack gap={0}>
-                    {filteredBands
+                    {accumulatedBands
                       .filter((band) => band.name)
                       .map((band) => {
                         const content = (
@@ -427,7 +394,7 @@ export default function DiscoverPage() {
                         );
                       })}
 
-                    {!debouncedSearch && bandsData?.pagination?.has_next_page && (
+                    {bandsData?.pagination?.has_next_page && (
                       <div ref={sentinelRef}>
                         <Center py="md">
                           <Loader size="sm" />
@@ -439,7 +406,7 @@ export default function DiscoverPage() {
               </div>
             ) : activeTab === 'reviews' ? (
               <div>
-                {filteredReviews.length === 0 ? (
+                {accumulatedReviews.length === 0 ? (
                   <Center py="xl">
                     <Stack align="center">
                       <IconMessage size={48} color="var(--mantine-color-dimmed)" />
@@ -452,11 +419,11 @@ export default function DiscoverPage() {
                   </Center>
                 ) : (
                   <Stack gap="md">
-                    {filteredReviews.map((review) => (
+                    {accumulatedReviews.map((review) => (
                       <ReviewCard key={review.id} review={review} />
                     ))}
 
-                    {!debouncedSearch && reviewsData?.pagination?.has_next_page && (
+                    {reviewsData?.pagination?.has_next_page && (
                       <div ref={sentinelRef}>
                         <Center py="md">
                           <Loader size="sm" />
@@ -468,7 +435,7 @@ export default function DiscoverPage() {
               </div>
             ) : (
               <div>
-                {filteredEvents.length === 0 ? (
+                {accumulatedEvents.length === 0 ? (
                   <Center py="xl">
                     <Stack align="center">
                       <IconCalendarEvent size={48} color="var(--mantine-color-dimmed)" />
@@ -481,11 +448,11 @@ export default function DiscoverPage() {
                   </Center>
                 ) : (
                   <Stack gap="md">
-                    {filteredEvents.map((event) => (
+                    {accumulatedEvents.map((event) => (
                       <EventCard key={event.id} event={event} showBand />
                     ))}
 
-                    {!debouncedSearch && eventsData?.pagination?.has_next_page && (
+                    {eventsData?.pagination?.has_next_page && (
                       <div ref={sentinelRef}>
                         <Center py="md">
                           <Loader size="sm" />

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   IconAlertCircle,
   IconBrandLastfm,
-  IconMusic,
+  IconPhoto,
   IconSearch,
   IconUser,
   IconX,
@@ -19,6 +19,7 @@ import {
   Loader,
   MultiSelect,
   Paper,
+  Select,
   Stack,
   Text,
   Textarea,
@@ -26,7 +27,7 @@ import {
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { apiClient, DiscogsSearchResult, ReviewData } from '@/lib/api';
+import { apiClient, ArtworkOption, DiscogsSearchResult, ReviewData } from '@/lib/api';
 import classes from './RecommendationForm.module.css';
 
 const aspectOptions = [
@@ -72,6 +73,10 @@ export function RecommendationForm({
   const [artworkError, setArtworkError] = useState(false);
   const [manualEntry, setManualEntry] = useState(false);
   const [lastSearchKey, setLastSearchKey] = useState('');
+
+  // Artwork options state
+  const [artworkOptions, setArtworkOptions] = useState<ArtworkOption[]>([]);
+  const [artworkLoading, setArtworkLoading] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState<ReviewData>({
@@ -140,6 +145,20 @@ export function RecommendationForm({
     }
   }, [debouncedTrack, debouncedArtist, isPrefilled, selectedRelease, lastSearchKey, handleSearch]);
 
+  // Fetch artwork options from multiple sources
+  const fetchArtworkOptions = useCallback(async (track: string, artist: string) => {
+    setArtworkLoading(true);
+    try {
+      const response = await apiClient.searchArtwork(track, artist);
+      setArtworkOptions(response.artwork_options || []);
+    } catch (err) {
+      console.error('Failed to fetch artwork options:', err);
+      setArtworkOptions([]);
+    } finally {
+      setArtworkLoading(false);
+    }
+  }, []);
+
   // Select a release from search results
   const handleSelectRelease = async (result: DiscogsSearchResult) => {
     setSelectedRelease(result);
@@ -148,6 +167,7 @@ export function RecommendationForm({
     setArtistQuery('');
     setLastSearchKey('');
     setArtworkError(false); // Reset artwork error for new selection
+    setArtworkOptions([]); // Clear previous artwork options
 
     // Set form data from Discogs result
     setFormData((prev) => ({
@@ -157,11 +177,15 @@ export function RecommendationForm({
       artwork_url: result.artwork_url || '',
       song_link: result.discogs_url || '',
     }));
+
+    // Fetch artwork options in background
+    fetchArtworkOptions(result.song_name, result.band_name);
   };
 
   // Clear selected release and reset form
   const handleClearSelection = () => {
     setSelectedRelease(null);
+    setArtworkOptions([]);
     setFormData((prev) => ({
       song_link: '',
       band_name: '',
@@ -180,7 +204,12 @@ export function RecommendationForm({
     setError(null);
 
     try {
-      await apiClient.createReview(formData);
+      // Strip trailing asterisks from band name (fixes song lookup issues)
+      const cleanedFormData = {
+        ...formData,
+        band_name: formData.band_name.replace(/\*+$/, '').trim(),
+      };
+      await apiClient.createReview(cleanedFormData);
 
       notifications.show({
         title: 'Recommendation created!',
@@ -299,7 +328,7 @@ export function RecommendationForm({
                           display: result.artwork_url ? 'none' : 'flex',
                         }}
                       >
-                        <IconMusic size={20} color="var(--mantine-color-grape-6)" />
+                        <img src="/logo-grape.svg" alt="Good Songs" width={24} height={24} style={{ opacity: 0.8 }} />
                       </Center>
                       <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                         <Text size="sm" fw={500} lineClamp={1}>
@@ -363,10 +392,10 @@ export function RecommendationForm({
                 <Center
                   w={48}
                   h={48}
-                  bg="grape.2"
+                  bg="grape.1"
                   style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
                 >
-                  <IconMusic size={24} color="var(--mantine-color-grape-6)" />
+                  <img src="/logo-grape.svg" alt="Good Songs" width={32} height={32} style={{ opacity: 0.8 }} />
                 </Center>
               )}
               <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
@@ -441,12 +470,67 @@ export function RecommendationForm({
                 onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}
               />
 
-              <TextInput
-                label="Artwork URL"
-                placeholder="https://image.url/cover.jpg"
-                value={formData.artwork_url || ''}
-                onChange={(e) => setFormData({ ...formData, artwork_url: e.target.value })}
-              />
+              {/* Artwork Selection */}
+              {artworkLoading ? (
+                <Group gap="xs">
+                  <Text size="sm" c="dimmed">Loading artwork options...</Text>
+                  <Loader size="xs" />
+                </Group>
+              ) : artworkOptions.length > 0 ? (
+                <Select
+                  label="Artwork"
+                  placeholder="Select artwork"
+                  leftSection={
+                    formData.artwork_url ? (
+                      <img
+                        src={formData.artwork_url}
+                        alt=""
+                        style={{ width: 20, height: 20, borderRadius: 2, objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <IconPhoto size={16} />
+                    )
+                  }
+                  data={artworkOptions.map((opt) => ({
+                    value: opt.url,
+                    label: `${opt.source_display}${opt.album_name ? ` - ${opt.album_name}` : ''}${opt.year ? ` (${opt.year})` : opt.release_date ? ` (${opt.release_date.slice(0, 4)})` : ''}`,
+                  }))}
+                  value={formData.artwork_url || null}
+                  onChange={(value) => {
+                    setFormData({ ...formData, artwork_url: value || '' });
+                    setArtworkError(false);
+                  }}
+                  renderOption={({ option }) => (
+                    <Group gap="sm" wrap="nowrap">
+                      <img
+                        src={option.value}
+                        alt=""
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 4,
+                          objectFit: 'cover',
+                          flexShrink: 0,
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Text size="sm" lineClamp={1}>{option.label}</Text>
+                    </Group>
+                  )}
+                  searchable
+                  clearable
+                  allowDeselect
+                />
+              ) : (
+                <TextInput
+                  label="Artwork URL"
+                  placeholder="https://image.url/cover.jpg"
+                  value={formData.artwork_url || ''}
+                  onChange={(e) => setFormData({ ...formData, artwork_url: e.target.value })}
+                />
+              )}
             </>
           )}
 

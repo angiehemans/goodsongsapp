@@ -10,6 +10,7 @@ import {
   PaginationMeta,
   LastFmStatus,
   RecentlyPlayedTrack,
+  RecentlyPlayedResponse,
 } from '@goodsongs/api-client';
 
 export interface DiscoverPagination {
@@ -63,6 +64,28 @@ export interface DiscogsSearchResponse {
     track?: string;
     artist?: string;
     q?: string;
+  };
+}
+
+// Artwork search types
+export interface ArtworkOption {
+  url: string;
+  source: 'cover_art_archive' | 'discogs' | 'lastfm';
+  source_display: string;
+  album_name?: string;
+  release_mbid?: string;
+  release_date?: string;
+  size?: number;
+  master_id?: number;
+  year?: number;
+}
+
+export interface ArtworkSearchResponse {
+  artwork_options: ArtworkOption[];
+  query: {
+    track: string;
+    artist: string;
+    album: string | null;
   };
 }
 
@@ -134,32 +157,44 @@ class MobileApiClient {
   }
 
   // Discover
-  async discoverUsers(page: number = 1): Promise<{
+  async discoverUsers(page: number = 1, query?: string): Promise<{
     users: UserProfile[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.request(`/discover/users?page=${page}`);
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.request(`/discover/users?${params.toString()}`);
   }
 
-  async discoverBands(page: number = 1): Promise<{
+  async discoverBands(page: number = 1, query?: string): Promise<{
     bands: Band[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.request(`/discover/bands?page=${page}`);
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.request(`/discover/bands?${params.toString()}`);
   }
 
-  async discoverReviews(page: number = 1): Promise<{
+  async discoverReviews(page: number = 1, query?: string): Promise<{
     reviews: Review[];
     pagination: DiscoverPagination;
+    query?: string;
   }> {
-    return this.request(`/discover/reviews?page=${page}`);
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.request(`/discover/reviews?${params.toString()}`);
   }
 
-  async discoverEvents(page: number = 1): Promise<{
+  async discoverEvents(page: number = 1, query?: string): Promise<{
     events: Event[];
+    query?: string;
     pagination: DiscoverPagination;
   }> {
-    return this.request(`/discover/events?page=${page}`);
+    const params = new URLSearchParams({ page: String(page) });
+    if (query) params.append('q', query);
+    return this.request(`/discover/events?${params.toString()}`);
   }
 
   // Users
@@ -369,9 +404,12 @@ class MobileApiClient {
     return this.request('/lastfm/status');
   }
 
-  async getRecentlyPlayed(limit?: number): Promise<{ tracks: RecentlyPlayedTrack[] }> {
-    const params = limit ? `?limit=${limit}` : '';
-    return this.request(`/recently-played${params}`);
+  async getRecentlyPlayed(options?: { limit?: number; sources?: ('lastfm' | 'scrobble')[] }): Promise<RecentlyPlayedResponse> {
+    const params = new URLSearchParams();
+    if (options?.limit) params.append('limit', options.limit.toString());
+    if (options?.sources?.length) params.append('sources', options.sources.join(','));
+    const queryString = params.toString();
+    return this.request(`/recently-played${queryString ? `?${queryString}` : ''}`);
   }
 
   async connectLastFm(username: string): Promise<{ message: string; username: string }> {
@@ -409,6 +447,22 @@ class MobileApiClient {
 
     return this.request(`/discogs/search?${params.toString()}`);
   }
+
+  // Artwork Search - fetches from multiple sources
+  async searchArtwork(
+    track: string,
+    artist: string,
+    album?: string
+  ): Promise<ArtworkSearchResponse> {
+    const params = new URLSearchParams();
+    params.append('track', track);
+    params.append('artist', artist);
+    if (album) {
+      params.append('album', album);
+    }
+    return this.request(`/artwork/search?${params.toString()}`);
+  }
+
   // Scrobbles
   async submitScrobbles(
     scrobbles: ScrobbleTrack[]

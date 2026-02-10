@@ -10,7 +10,6 @@ import {
   IconHeartFilled,
   IconLink,
   IconMessage,
-  IconMusic,
   IconPhoto,
   IconShare,
 } from '@tabler/icons-react';
@@ -215,10 +214,16 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
                 <Center
                   w={48}
                   h={48}
-                  bg="grape.2"
+                  bg="grape.1"
                   style={{ borderRadius: 'var(--mantine-radius-sm)' }}
                 >
-                  <IconMusic size={24} color="var(--mantine-color-grape-6)" />
+                  <img
+                    src="/logo-grape.svg"
+                    alt="Good Songs"
+                    width={32}
+                    height={32}
+                    style={{ opacity: 0.8 }}
+                  />
                 </Center>
               )}
             </Link>
@@ -391,7 +396,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
                 />
               ) : (
                 <div className={styles.storyArtworkPlaceholder}>
-                  <IconMusic size={80} color="#9c36b5" />
+                  <img src="/logo-grape.svg" alt="Good Songs" width={80} height={80} />
                 </div>
               )}
 
@@ -440,7 +445,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
                 />
               ) : (
                 <div className={styles.postArtworkPlaceholder}>
-                  <IconMusic size={60} color="#9c36b5" />
+                  <img src="/logo-grape.svg" alt="Good Songs" width={60} height={60} />
                 </div>
               )}
 

@@ -37,10 +37,23 @@ const TABS: { key: TabType; label: string; icon: string }[] = [
   { key: 'events', label: 'Shows', icon: 'calendar' },
 ];
 
+// Simple debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export function DiscoverScreen({ navigation }: any) {
   const { user: currentUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('users');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -59,7 +72,7 @@ export function DiscoverScreen({ navigation }: any) {
     users: true, bands: true, reviews: true, events: true,
   });
 
-  const fetchData = useCallback(async (tab: TabType, pageNum: number, refresh = false) => {
+  const fetchData = useCallback(async (tab: TabType, pageNum: number, query?: string, refresh = false) => {
     if (refresh) setRefreshing(true);
     else if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
@@ -67,28 +80,28 @@ export function DiscoverScreen({ navigation }: any) {
     try {
       switch (tab) {
         case 'users': {
-          const res = await apiClient.discoverUsers(pageNum);
+          const res = await apiClient.discoverUsers(pageNum, query || undefined);
           const items = res?.users || [];
           setUsers(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
           setHasMore(prev => ({ ...prev, users: res?.pagination?.has_next_page ?? false }));
           break;
         }
         case 'bands': {
-          const res = await apiClient.discoverBands(pageNum);
+          const res = await apiClient.discoverBands(pageNum, query || undefined);
           const items = res?.bands || [];
           setBands(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
           setHasMore(prev => ({ ...prev, bands: res?.pagination?.has_next_page ?? false }));
           break;
         }
         case 'reviews': {
-          const res = await apiClient.discoverReviews(pageNum);
+          const res = await apiClient.discoverReviews(pageNum, query || undefined);
           const items = res?.reviews || [];
           setReviews(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
           setHasMore(prev => ({ ...prev, reviews: res?.pagination?.has_next_page ?? false }));
           break;
         }
         case 'events': {
-          const res = await apiClient.discoverEvents(pageNum);
+          const res = await apiClient.discoverEvents(pageNum, query || undefined);
           const items = res?.events || [];
           setEvents(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
           setHasMore(prev => ({ ...prev, events: res?.pagination?.has_next_page ?? false }));
@@ -115,12 +128,15 @@ export function DiscoverScreen({ navigation }: any) {
     }
   }, []);
 
+  // Refetch when tab or search query changes
   useEffect(() => {
-    fetchData(activeTab, 1);
-  }, [activeTab, fetchData]);
+    // Reset pagination when search changes
+    setPages({ users: 1, bands: 1, reviews: 1, events: 1 });
+    fetchData(activeTab, 1, debouncedSearch);
+  }, [activeTab, debouncedSearch, fetchData]);
 
   const handleRefresh = () => {
-    fetchData(activeTab, 1, true);
+    fetchData(activeTab, 1, debouncedSearch, true);
   };
 
   const loadingMoreRef = useRef(false);
@@ -129,8 +145,8 @@ export function DiscoverScreen({ navigation }: any) {
     if (loadingMoreRef.current || loading || !hasMore[activeTab]) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
-    fetchData(activeTab, pages[activeTab] + 1);
-  }, [loading, hasMore, activeTab, pages, fetchData]);
+    fetchData(activeTab, pages[activeTab] + 1, debouncedSearch);
+  }, [loading, hasMore, activeTab, pages, debouncedSearch, fetchData]);
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
@@ -146,20 +162,6 @@ export function DiscoverScreen({ navigation }: any) {
       <View style={styles.loadingMore}>
         <ActivityIndicator size="small" color={theme.colors.primary} />
       </View>
-    );
-  };
-
-  // Filter function
-  const filterBySearch = <T extends { name?: string; username?: string }>(
-    items: T[],
-    query: string
-  ): T[] => {
-    if (!query) return items;
-    const lowerQuery = query.toLowerCase();
-    return items.filter(
-      (item) =>
-        item.name?.toLowerCase().includes(lowerQuery) ||
-        item.username?.toLowerCase().includes(lowerQuery)
     );
   };
 
@@ -288,10 +290,9 @@ export function DiscoverScreen({ navigation }: any) {
 
     switch (activeTab) {
       case 'users':
-        const filteredUsers = filterBySearch(users, searchQuery);
         return (
           <FlatList
-            data={filteredUsers}
+            data={users}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderUserItem}
             contentContainerStyle={styles.listContent}
@@ -309,10 +310,9 @@ export function DiscoverScreen({ navigation }: any) {
           />
         );
       case 'bands':
-        const filteredBands = filterBySearch(bands, searchQuery);
         return (
           <FlatList
-            data={filteredBands}
+            data={bands}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderBandItem}
             contentContainerStyle={styles.listContent}
