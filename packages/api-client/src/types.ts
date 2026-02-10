@@ -91,8 +91,17 @@ export interface UserProfile {
   profile_image_url?: string;
   reviews?: Review[];
   reviews_count?: number;
+  reviews_pagination?: {
+    current_page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
+  };
   bands?: Band[];
   is_following?: boolean;
+  following?: boolean;
   followers_count?: number;
   following_count?: number;
 }

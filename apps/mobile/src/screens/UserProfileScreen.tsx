@@ -34,59 +34,51 @@ export function UserProfileScreen({ route, navigation }: any) {
 
   const isOwnProfile = currentUser?.username === username;
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      const userProfile = await apiClient.getUserProfile(username);
-      setProfile(userProfile);
-      setIsFollowing(userProfile.is_following || false);
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-    }
-  }, [username]);
-
-  const fetchReviews = useCallback(async (page: number, reset: boolean = false) => {
-    if (reset) {
+  const fetchProfile = useCallback(async (page: number = 1, loadMore: boolean = false) => {
+    if (!loadMore) {
       setLoading(true);
     } else {
       setLoadingMoreReviews(true);
     }
 
     try {
-      const response = await apiClient.getUserReviewsPaginated(username, page);
-      if (reset) {
-        setReviews(response.reviews);
+      const userProfile = await apiClient.getUserProfile(username, page);
+      setProfile(userProfile);
+      setIsFollowing(userProfile.following ?? userProfile.is_following ?? false);
+
+      const reviewsList = userProfile.reviews || [];
+      if (loadMore) {
+        setReviews((prev) => [...prev, ...reviewsList]);
       } else {
-        setReviews((prev) => [...prev, ...response.reviews]);
+        setReviews(reviewsList);
       }
-      setHasMoreReviews(response.pagination.has_next_page);
+
+      setHasMoreReviews(userProfile.reviews_pagination?.has_next_page || false);
       setReviewsPage(page);
     } catch (error) {
-      console.error('Failed to fetch reviews:', error);
-      // Fallback: use reviews from profile if pagination fails
-      if (reset && profile?.reviews) {
-        setReviews(profile.reviews);
+      console.error('Failed to fetch profile:', error);
+      if (!loadMore) {
+        setReviews([]);
       }
     } finally {
       setLoading(false);
       setRefreshing(false);
       setLoadingMoreReviews(false);
     }
-  }, [username, profile?.reviews]);
+  }, [username]);
 
   useEffect(() => {
     fetchProfile();
-    fetchReviews(1, true);
-  }, [fetchProfile, fetchReviews]);
+  }, [fetchProfile]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchProfile();
-    fetchReviews(1, true);
+    fetchProfile(1, false);
   };
 
   const handleLoadMore = () => {
     if (hasMoreReviews && !loadingMoreReviews) {
-      fetchReviews(reviewsPage + 1, false);
+      fetchProfile(reviewsPage + 1, true);
     }
   };
 

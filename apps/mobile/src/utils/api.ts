@@ -207,8 +207,8 @@ class MobileApiClient {
   }
 
   // Users
-  async getUserProfile(username: string): Promise<UserProfile> {
-    return this.request(`/users/${username}`);
+  async getUserProfile(username: string, page: number = 1): Promise<UserProfile> {
+    return this.request(`/users/${username}?page=${page}`);
   }
 
   async followUser(userId: number): Promise<{ message: string }> {
@@ -337,13 +337,13 @@ class MobileApiClient {
 
   // User Reviews with pagination
   async getUserReviewsPaginated(
-    username: string,
+    userId: number,
     page: number = 1
   ): Promise<{
     reviews: Review[];
     pagination: DiscoverPagination;
   }> {
-    return this.request(`/users/${username}/reviews?page=${page}`);
+    return this.request(`/users/${userId}/reviews?page=${page}`);
   }
 
   // Feed
