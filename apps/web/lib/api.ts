@@ -384,6 +384,8 @@ export interface RecentlyPlayedTrack {
   loved: boolean;
   id?: number | string;  // Scrobble ID (only present for scrobble source)
   scrobble_id?: number | string;  // Alternative field name
+  metadata_status?: 'pending' | 'enriched' | 'not_found' | 'failed';
+  can_refresh_artwork?: boolean;
 }
 
 export interface RefreshArtworkResponse {

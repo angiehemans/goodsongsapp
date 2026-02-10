@@ -230,15 +230,13 @@ export function FeedScreen({ navigation, route }: any) {
                     <Icon name="volume-2" size={28} color={colors.grape[0]} />
                   </View>
                 )}
-                {!track.album_art_url && (
+                {!track.album_art_url && track.can_refresh_artwork && (
                   <TouchableOpacity
                     style={styles.refreshArtworkButton}
                     onPress={() => {
                       const scrobbleId = getScrobbleId(track);
                       if (scrobbleId) {
                         handleRefreshArtwork(scrobbleId, track.name);
-                      } else {
-                        Alert.alert('Cannot refresh', 'This track does not have a scrobble ID to refresh artwork.');
                       }
                     }}
                     disabled={refreshingArtworkId !== null}

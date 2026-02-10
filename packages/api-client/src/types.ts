@@ -299,6 +299,8 @@ export interface RecentlyPlayedTrack {
   source: 'lastfm' | 'scrobble';
   album_art_url: string | null;
   loved: boolean;
+  metadata_status?: 'pending' | 'enriched' | 'not_found' | 'failed';
+  can_refresh_artwork?: boolean;
 }
 
 export interface RecentlyPlayedResponse {

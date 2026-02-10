@@ -209,7 +209,7 @@ export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
                     />
                   </Center>
                 )}
-                {!track.album_art_url && (
+                {!track.album_art_url && track.can_refresh_artwork && (
                   <ActionIcon
                     variant="filled"
                     size="sm"
@@ -228,10 +228,8 @@ export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
                       }
                     }}
                     loading={refreshingArtworkId === getScrobbleId(track)}
-                    disabled={refreshingArtworkId !== null || !getScrobbleId(track)}
-                    title={
-                      getScrobbleId(track) ? 'Search for artwork' : 'No scrobble ID available'
-                    }
+                    disabled={refreshingArtworkId !== null}
+                    title="Search for artwork"
                   >
                     <IconRefresh size={14} color="var(--mantine-color-grape-8)" />
                   </ActionIcon>
