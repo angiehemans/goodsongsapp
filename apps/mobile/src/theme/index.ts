@@ -41,10 +41,11 @@ export const theme = {
     semibold: 'Inter-SemiBold',
     bold: 'Inter-Bold',
     headingRegular: 'AesthetNova-Regular',
-    // Cooper fonts
-    cooper: 'Cooper-Regular',
-    cooperMedium: 'Cooper-Medium',
-    cooperBold: 'Cooper-Bold',
+    // Thecoa fonts
+    thecoa: 'Thecoa-Regular',
+    thecoaMedium: 'Thecoa-Medium',
+    thecoaBold: 'Thecoa-Bold',
+    thecoaHeavy: 'Thecoa-Heavy',
   },
 
   fontSizes: {

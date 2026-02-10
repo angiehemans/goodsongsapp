@@ -112,8 +112,8 @@ class MobileApiClient {
     this.token = null;
   }
 
-  private getHeaders(): HeadersInit {
-    const headers: HeadersInit = {
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     if (this.token) {
@@ -349,7 +349,7 @@ class MobileApiClient {
   // Feed
   async getFollowingFeed(page: number = 1): Promise<{
     reviews: Review[];
-    meta: PaginationMeta;
+    pagination: DiscoverPagination;
   }> {
     return this.request(`/feed/following?page=${page}`);
   }

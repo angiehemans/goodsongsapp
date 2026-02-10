@@ -17,19 +17,21 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Review } from '@goodsongs/api-client';
 import { Header, ProfilePhoto, Badge, LoadingScreen } from '@/components';
 import { theme, colors } from '@/theme';
 import { useAuthStore } from '@/context/authStore';
 import { apiClient, ReviewComment } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
-import { HomeStackParamList } from '@/navigation/types';
+import { RootStackParamList, HomeStackParamList } from '@/navigation/types';
 
 type ReviewDetailRouteProp = RouteProp<HomeStackParamList, 'ReviewDetail'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export function ReviewDetailScreen() {
   const route = useRoute<ReviewDetailRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { reviewId, username } = route.params;
   const { user: currentUser } = useAuthStore();
@@ -197,15 +199,15 @@ export function ReviewDetailScreen() {
   // Handle author press
   const handleAuthorPress = (authorUsername: string) => {
     if (authorUsername === currentUser?.username) {
-      navigation.navigate('Main' as never, { screen: 'Profile' } as never);
+      navigation.navigate('Main', { screen: 'Profile' });
     } else {
-      navigation.navigate('UserProfile' as never, { username: authorUsername } as never);
+      navigation.navigate('UserProfile', { username: authorUsername });
     }
   };
 
   // Handle band press
   const handleBandPress = (slug: string) => {
-    navigation.navigate('BandProfile' as never, { slug } as never);
+    navigation.navigate('BandProfile', { slug });
   };
 
   // Handle open link
@@ -344,7 +346,6 @@ export function ReviewDetailScreen() {
                   name="heart"
                   size={22}
                   color={isLiked ? '#ef4444' : colors.grape[6]}
-                  style={isLiked ? { fill: '#ef4444' } : undefined}
                 />
               )}
               {likesCount > 0 && (
@@ -542,7 +543,7 @@ const styles = StyleSheet.create({
   },
   authorName: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: colors.grape[7],
     lineHeight: theme.fontSizes.lg * 1.4,
   },
@@ -581,7 +582,7 @@ const styles = StyleSheet.create({
   },
   songName: {
     fontSize: theme.fontSizes.base,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: colors.grey[9],
   },
   bandName: {
@@ -632,7 +633,7 @@ const styles = StyleSheet.create({
   },
   commentsTitle: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.md,
   },

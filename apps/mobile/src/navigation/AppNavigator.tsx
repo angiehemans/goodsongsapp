@@ -7,6 +7,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
 
+type IconName = React.ComponentProps<typeof Icon>['name'];
+
 import { LoadingScreen } from '@/components';
 import { useAuthStore } from '@/context/authStore';
 import { useScrobbleStore } from '@/context/scrobbleStore';
@@ -92,7 +94,7 @@ function MainNavigator() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
+          let iconName: IconName;
 
           switch (route.name) {
             case 'Home':

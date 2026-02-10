@@ -13,7 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, TextInput, Card } from '@/components';
 import { theme, colors } from '@/theme';
 import { AuthStackParamList } from '@/navigation/types';
-import { useAuthStore } from '@/context/authStore';
+import { useAuthStore, AuthState } from '@/context/authStore';
 
 type SignupScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
@@ -30,7 +30,7 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
     confirmPassword?: string;
   }>({});
 
-  const signup = useAuthStore((state) => state.signup);
+  const signup = useAuthStore((state: AuthState) => state.signup);
 
   const validate = () => {
     const newErrors: {

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, TextInput, Button, Card } from '@/components';
 import { theme, colors } from '@/theme';
@@ -19,8 +20,13 @@ import { useScrobbleStore } from '@/context/scrobbleStore';
 import { ScrobbleStatus } from '@/types/scrobble';
 import { apiClient } from '@/utils/api';
 import { LastFmStatus } from '@goodsongs/api-client';
+import { RootStackParamList } from '@/navigation/types';
 
-export function SettingsScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function SettingsScreen({ navigation }: Props) {
   const { user, logout, accountType, refreshUser } = useAuthStore();
   const isBandAccount = accountType === 'band';
 
@@ -242,7 +248,7 @@ export function SettingsScreen({ navigation }: any) {
           <TextInput
             placeholder="Your Last.fm username"
             value={lastFmUsername}
-            onChangeText={(text) => {
+            onChangeText={(text: string) => {
               setLastFmUsername(text);
               setError(null);
             }}
@@ -373,7 +379,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.md,
     lineHeight: 32,

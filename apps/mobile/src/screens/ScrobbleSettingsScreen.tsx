@@ -10,14 +10,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, Button, Card } from '@/components';
 import { theme, colors } from '@/theme';
 import { useScrobbleStore } from '@/context/scrobbleStore';
 import { scrobbleNative } from '@/utils/scrobbleNative';
 import { ScrobbleStatus } from '@/types/scrobble';
+import { RootStackParamList } from '@/navigation/types';
 
-export function ScrobbleSettingsScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function ScrobbleSettingsScreen({ navigation }: Props) {
   const {
     status,
     appSettings,
@@ -306,7 +312,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.xs,
     lineHeight: 32,
@@ -325,7 +331,7 @@ const styles = StyleSheet.create({
   },
   setupTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.sm,
@@ -365,7 +371,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: 4,
   },

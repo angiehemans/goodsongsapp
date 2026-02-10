@@ -11,14 +11,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState, MusicPlayer } from '@/components';
 import { theme, colors } from '@/theme';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
 import { useAuthStore } from '@/context/authStore';
 import { Band, Review, Event } from '@goodsongs/api-client';
+import { RootStackParamList } from '@/navigation/types';
 
-export function BandDashboardScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function BandDashboardScreen({ navigation }: Props) {
   const { user } = useAuthStore();
   const [band, setBand] = useState<Band | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
@@ -262,7 +268,7 @@ export function BandDashboardScreen({ navigation }: any) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
-              onPressAuthor={(username) =>
+              onPressAuthor={(username: string) =>
                 navigation.navigate('UserProfile', { username })
               }
               showBandInfo={false}
@@ -318,7 +324,7 @@ const styles = StyleSheet.create({
   },
   bandName: {
     fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     lineHeight: 30,
   },
@@ -371,7 +377,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     marginTop: theme.spacing.md,

@@ -162,7 +162,7 @@ export function BandProfileScreen({ route, navigation }: any) {
       <View style={styles.badgesRow}>
         <Badge text={`${band?.reviews_count || 0} recommendation${(band?.reviews_count || 0) !== 1 ? 's' : ''}`} />
         {band?.genres && band.genres.length > 0 && (
-          band.genres.slice(0, 2).map((genre, index) => (
+          band.genres.slice(0, 2).map((genre: string, index: number) => (
             <Badge key={index} text={genre} />
           ))
         )}
@@ -241,7 +241,7 @@ export function BandProfileScreen({ route, navigation }: any) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
-              onPressAuthor={(username) => navigation.navigate('UserProfile', { username })}
+              onPressAuthor={(username: string) => navigation.navigate('UserProfile', { username })}
               showBandInfo={false}
             />
           </View>
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   bandName: {
     fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     lineHeight: 30,
   },
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     marginTop: theme.spacing.md,

@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.md,

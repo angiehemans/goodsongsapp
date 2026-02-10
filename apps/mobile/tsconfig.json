@@ -7,7 +7,7 @@
       "@goodsongs/tokens": ["../../packages/tokens/src"],
       "@goodsongs/api-client": ["../../packages/api-client/src"]
     },
-    "types": ["react-native", "node"]
+    "types": ["react-native"]
   },
   "include": ["src/**/*", "index.js", "App.tsx"],
   "exclude": ["node_modules", "babel.config.js", "metro.config.js"]

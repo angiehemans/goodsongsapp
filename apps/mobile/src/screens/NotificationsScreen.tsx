@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,23 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import Icon from '@react-native-vector-icons/feather';
-import { Header, ProfilePhoto } from '@/components';
-import { apiClient } from '@/utils/api';
-import { theme, colors } from '@/theme';
-import { useAuthStore } from '@/context/authStore';
-import { useNotificationStore } from '@/context/notificationStore';
-import { PaginationMeta } from '@goodsongs/api-client';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Icon from "@react-native-vector-icons/feather";
+import { RootStackParamList } from "@/navigation/types";
+import { Header, ProfilePhoto } from "@/components";
+import { apiClient } from "@/utils/api";
+import { theme, colors } from "@/theme";
+import { useAuthStore } from "@/context/authStore";
+import { useNotificationStore } from "@/context/notificationStore";
 
-type NotificationType = 'new_follower' | 'new_review' | 'review_like' | 'review_comment';
+type NotificationType =
+  | "new_follower"
+  | "new_review"
+  | "review_like"
+  | "review_comment";
 
 interface NotificationActor {
   id: number;
@@ -55,15 +60,17 @@ function formatTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'just now';
+  if (diffMins < 1) return "just now";
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
   return date.toLocaleDateString();
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export function NotificationsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { user: currentUser } = useAuthStore();
   const { clearUnreadCount } = useNotificationStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -73,31 +80,34 @@ export function NotificationsScreen() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchNotifications = useCallback(async (page: number = 1, append: boolean = false) => {
-    try {
-      if (page === 1 && !append) {
-        setIsLoading(true);
+  const fetchNotifications = useCallback(
+    async (page: number = 1, append: boolean = false) => {
+      try {
+        if (page === 1 && !append) {
+          setIsLoading(true);
+        }
+
+        const response = await apiClient.getNotifications(page);
+        const newNotifications = response?.notifications || [];
+
+        if (append) {
+          setNotifications((prev) => [...prev, ...newNotifications]);
+        } else {
+          setNotifications(newNotifications);
+        }
+
+        setCurrentPage(response?.meta?.current_page || 1);
+        setTotalPages(response?.meta?.total_pages || 1);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+        setIsLoadingMore(false);
       }
-
-      const response = await apiClient.getNotifications(page);
-      const newNotifications = response?.notifications || [];
-
-      if (append) {
-        setNotifications((prev) => [...prev, ...newNotifications]);
-      } else {
-        setNotifications(newNotifications);
-      }
-
-      setCurrentPage(response?.meta?.current_page || 1);
-      setTotalPages(response?.meta?.total_pages || 1);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-      setIsLoadingMore(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     fetchNotifications(1);
@@ -117,37 +127,71 @@ export function NotificationsScreen() {
     fetchNotifications(currentPage + 1, true);
   }, [currentPage, totalPages, isLoadingMore, fetchNotifications]);
 
-  const getNotificationType = (notification: Notification): NotificationType | undefined => {
+  const getNotificationType = (
+    notification: Notification,
+  ): NotificationType | undefined => {
     return notification.notification_type || notification.type;
   };
 
-  const getNotificationIcon = (type: NotificationType | undefined): string => {
+  const getNotificationIcon = (
+    type: NotificationType | undefined,
+  ): "user-plus" | "music" | "heart" | "message-circle" | "bell" => {
     switch (type) {
-      case 'new_follower':
-        return 'user-plus';
-      case 'new_review':
-        return 'music';
-      case 'review_like':
-        return 'heart';
-      case 'review_comment':
-        return 'message-circle';
+      case "new_follower":
+        return "user-plus";
+      case "new_review":
+        return "music";
+      case "review_like":
+        return "heart";
+      case "review_comment":
+        return "message-circle";
       default:
-        return 'bell';
+        return "bell";
     }
   };
 
   const getNotificationBadgeStyle = (type: NotificationType | undefined) => {
     switch (type) {
-      case 'new_follower':
+      case "new_follower":
         return styles.followerBadge;
-      case 'new_review':
+      case "new_review":
         return styles.reviewBadge;
-      case 'review_like':
+      case "review_like":
         return styles.likeBadge;
-      case 'review_comment':
+      case "review_comment":
         return styles.commentBadge;
       default:
         return styles.defaultBadge;
+    }
+  };
+
+  const getActionText = (
+    type: NotificationType | undefined,
+    notification: Notification,
+  ): string => {
+    switch (type) {
+      case "new_follower":
+        return "started following you";
+      case "new_review": {
+        const songPart = notification.song_name
+          ? `"${notification.song_name}"`
+          : "";
+        const bandPart = notification.band_name || "";
+        if (songPart && bandPart)
+          return `recommended ${songPart} by ${bandPart}`;
+        if (songPart) return `recommended ${songPart}`;
+        return "shared a new recommendation";
+      }
+      case "review_like":
+        return "liked your recommendation";
+      case "review_comment": {
+        const songName =
+          notification.review?.song_name || notification.song_name;
+        if (songName) return `commented on "${songName}"`;
+        return "commented on your recommendation";
+      }
+      default:
+        return "interacted with you";
     }
   };
 
@@ -155,19 +199,23 @@ export function NotificationsScreen() {
     const notificationType = getNotificationType(notification);
 
     switch (notificationType) {
-      case 'new_follower':
-        navigation.navigate('UserProfile' as never, { username: notification.actor.username } as never);
+      case "new_follower":
+        navigation.navigate("UserProfile", {
+          username: notification.actor.username,
+        });
         break;
-      case 'new_review':
-        navigation.navigate('UserProfile' as never, { username: notification.actor.username } as never);
+      case "new_review":
+        navigation.navigate("UserProfile", {
+          username: notification.actor.username,
+        });
         break;
-      case 'review_like':
-      case 'review_comment':
+      case "review_like":
+      case "review_comment":
         if (notification.review?.id && currentUser) {
-          navigation.navigate('ReviewDetail' as never, {
+          navigation.navigate("ReviewDetail", {
             reviewId: notification.review.id,
             username: currentUser.username,
-          } as never);
+          });
         }
         break;
     }
@@ -178,47 +226,60 @@ export function NotificationsScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.notificationItem, !item.read && styles.unreadNotification]}
+        style={[
+          styles.notificationItem,
+          !item.read && styles.unreadNotification,
+        ]}
         onPress={() => handleNotificationPress(item)}
         activeOpacity={0.7}
       >
         <View style={styles.avatarContainer}>
           <ProfilePhoto
             src={item.actor?.profile_image_url}
-            name={item.actor?.username || '?'}
-            size={48}
+            name={item.actor?.username || "?"}
+            size={40}
           />
-          <View style={[styles.typeBadge, getNotificationBadgeStyle(notificationType)]}>
+          <View
+            style={[
+              styles.typeBadge,
+              getNotificationBadgeStyle(notificationType),
+            ]}
+          >
             <Icon
               name={getNotificationIcon(notificationType)}
-              size={12}
+              size={10}
               color={colors.grape[0]}
             />
           </View>
         </View>
 
         <View style={styles.notificationContent}>
-          <Text style={[styles.notificationMessage, !item.read && styles.unreadMessage]}>
-            {item.message}
+          {/* Line 1: Username and time */}
+          <View style={styles.notificationHeader}>
+            <Text
+              style={[
+                styles.notificationUsername,
+                !item.read && styles.unreadText,
+              ]}
+            >
+              @{item.actor?.username}
+            </Text>
+            <Text style={styles.notificationTime}>
+              · {formatTimeAgo(item.created_at)}
+            </Text>
+          </View>
+
+          {/* Line 2: Action */}
+          <Text style={styles.notificationAction} numberOfLines={2}>
+            {getActionText(notificationType, item)}
           </Text>
 
-          {/* Show song info for new_review notifications */}
-          {notificationType === 'new_review' && (item.song_name || item.band_name) && (
-            <Text style={styles.notificationMeta} numberOfLines={1}>
-              {item.song_name && `"${item.song_name}"`}
-              {item.song_name && item.band_name && ' by '}
-              {item.band_name}
-            </Text>
-          )}
-
-          {/* Show comment preview for review_comment notifications */}
-          {notificationType === 'review_comment' && item.comment?.body && (
-            <Text style={styles.commentPreview} numberOfLines={1}>
+          {/* Line 3: Comment preview (if applicable) */}
+          {notificationType === "review_comment" && item.comment?.body && (
+            <Text style={styles.commentPreview} numberOfLines={2}>
               "{item.comment.body}"
             </Text>
           )}
-
-          <Text style={styles.notificationTime}>{formatTimeAgo(item.created_at)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -229,7 +290,8 @@ export function NotificationsScreen() {
       <Icon name="bell-off" size={48} color={colors.grape[4]} />
       <Text style={styles.emptyTitle}>No notifications yet</Text>
       <Text style={styles.emptySubtitle}>
-        When someone follows you or interacts with your reviews, you'll see it here.
+        When someone follows you or interacts with your reviews, you'll see it
+        here.
       </Text>
     </View>
   );
@@ -245,7 +307,7 @@ export function NotificationsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <Header title="Alerts" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -255,13 +317,15 @@ export function NotificationsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <Header title="Alerts" />
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderNotification}
-        contentContainerStyle={notifications.length === 0 ? styles.emptyList : styles.listContent}
+        contentContainerStyle={
+          notifications.length === 0 ? styles.emptyList : styles.listContent
+        }
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
         refreshControl={
@@ -285,8 +349,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   listContent: {
     padding: theme.spacing.md,
@@ -295,33 +359,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   notificationItem: {
-    flexDirection: 'row',
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: theme.spacing.sm,
+    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     marginBottom: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.surfaceBorder,
+    gap: theme.spacing.md,
   },
   unreadNotification: {
-    backgroundColor: colors.grape[1],
-    borderColor: colors.grape[3],
+    backgroundColor: colors.grape[2],
   },
   avatarContainer: {
-    position: 'relative',
-    marginRight: theme.spacing.md,
+    position: "relative",
   },
   typeBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -2,
     right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.grape[0],
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
   },
   followerBadge: {
     backgroundColor: theme.colors.primary,
@@ -330,50 +390,55 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
   },
   likeBadge: {
-    backgroundColor: '#ef4444',
+    backgroundColor: "#ef4444",
   },
   commentBadge: {
-    backgroundColor: '#10b981',
+    backgroundColor: "#10b981",
   },
   defaultBadge: {
     backgroundColor: colors.grape[5],
   },
   notificationContent: {
     flex: 1,
-    justifyContent: 'center',
   },
-  notificationMessage: {
-    fontSize: theme.fontSizes.base,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+  notificationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
   },
-  unreadMessage: {
-    fontWeight: '600',
-  },
-  notificationMeta: {
+  notificationUsername: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.textMuted,
-    marginBottom: theme.spacing.xs,
+    fontFamily: theme.fonts.thecoaMedium,
+    color: colors.blue.base,
+  },
+  unreadText: {
+    fontFamily: theme.fonts.thecoaBold,
+  },
+  notificationTime: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grey[5],
+  },
+  notificationAction: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grey[5],
+    marginTop: 2,
+    lineHeight: 18,
   },
   commentPreview: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.textMuted,
-    fontStyle: 'italic',
-    marginBottom: theme.spacing.xs,
-  },
-  notificationTime: {
-    fontSize: theme.fontSizes.sm,
-    color: theme.colors.textMuted,
+    color: colors.grey[9],
+    marginTop: 4,
+    lineHeight: 16,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   emptyTitle: {
     fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.sm,
@@ -382,10 +447,10 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: theme.fontSizes.base,
     color: theme.colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingMore: {
     paddingVertical: theme.spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });

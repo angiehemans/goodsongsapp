@@ -17,9 +17,14 @@ export type CreateReviewParams = {
   band_musicbrainz_id?: string;
 };
 
+// Home params for success banner
+export type HomeParams = {
+  showSuccess?: boolean;
+};
+
 // Main Tab Navigator
 export type MainTabParamList = {
-  Home: undefined;
+  Home: HomeParams | undefined;
   Discover: undefined;
   CreateReview: CreateReviewParams | undefined;
   CreateEvent: undefined;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   TouchableOpacity,
   Text,
@@ -6,14 +6,14 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-} from 'react-native';
-import { theme } from '@/theme';
+} from "react-native";
+import { theme } from "@/theme";
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'outline' | 'subtle';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "outline" | "subtle";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
@@ -25,8 +25,8 @@ interface ButtonProps {
 export function Button({
   title,
   onPress,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   loading = false,
   disabled = false,
   fullWidth = false,
@@ -60,7 +60,9 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? theme.colors.white : theme.colors.primary}
+          color={
+            variant === "primary" ? theme.colors.white : theme.colors.primary
+          }
           size="small"
         />
       ) : (
@@ -75,9 +77,9 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: theme.radii.md,
     borderWidth: theme.borderWidth,
     gap: theme.spacing.sm,
@@ -89,12 +91,12 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderColor: theme.colors.secondary,
   },
   subtle: {
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
+    backgroundColor: "transparent",
+    borderColor: "transparent",
   },
 
   // Sizes
@@ -116,13 +118,15 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   fullWidth: {
-    width: '100%',
+    width: "100%",
   },
 
   // Text
   text: {
-    fontWeight: '600',
-    textAlign: 'center',
+    textAlign: "center",
+    fontFamily: theme.fonts.thecoa,
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
   text_primary: {
     color: theme.colors.white,

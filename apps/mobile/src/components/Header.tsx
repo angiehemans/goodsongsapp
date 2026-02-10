@@ -4,12 +4,14 @@ import Icon from "@react-native-vector-icons/feather";
 import { theme, colors } from "@/theme";
 import { Logo } from "./Logo";
 
+type IconName = React.ComponentProps<typeof Icon>["name"];
+
 interface HeaderProps {
   title?: string;
   showBackButton?: boolean;
   onBackPress?: () => void;
   rightContent?: React.ReactNode;
-  rightIcon?: string;
+  rightIcon?: IconName;
   onRightPress?: () => void;
 }
 
@@ -81,7 +83,7 @@ const styles = StyleSheet.create({
   },
   backTitle: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     lineHeight: 28,
   },
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     lineHeight: 28,
   },

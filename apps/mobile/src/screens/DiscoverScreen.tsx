@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
   NativeScrollEvent,
   NativeSyntheticEvent,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from '@react-native-vector-icons/feather';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "@react-native-vector-icons/feather";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   Header,
   TextInput,
@@ -21,21 +22,22 @@ import {
   LoadingScreen,
   EmptyState,
   Logo,
-} from '@/components';
-import { theme, colors } from '@/theme';
-import { useAuthStore } from '@/context/authStore';
-import { apiClient } from '@/utils/api';
-import { fixImageUrl } from '@/utils/imageUrl';
-import { UserProfile, Band, Review, Event } from '@goodsongs/api-client';
+} from "@/components";
+import { theme, colors } from "@/theme";
+import { useAuthStore } from "@/context/authStore";
+import { apiClient } from "@/utils/api";
+import { fixImageUrl } from "@/utils/imageUrl";
+import { UserProfile, Band, Review, Event } from "@goodsongs/api-client";
+import { RootStackParamList } from "@/navigation/types";
 
-type TabType = 'users' | 'bands' | 'reviews' | 'events';
+const TABS = [
+  { key: "users", label: "Fans", icon: "users" },
+  { key: "bands", label: "Bands", icon: "music" },
+  { key: "reviews", label: "Songs", icon: "message-circle" },
+  { key: "events", label: "Shows", icon: "calendar" },
+] as const;
 
-const TABS: { key: TabType; label: string; icon: string }[] = [
-  { key: 'users', label: 'Fans', icon: 'users' },
-  { key: 'bands', label: 'Bands', icon: 'music' },
-  { key: 'reviews', label: 'Songs', icon: 'message-circle' },
-  { key: 'events', label: 'Shows', icon: 'calendar' },
-];
+type TabType = (typeof TABS)[number]["key"];
 
 // Simple debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -49,10 +51,14 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export function DiscoverScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function DiscoverScreen({ navigation }: Props) {
   const { user: currentUser } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<TabType>('users');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>("users");
+  const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,67 +72,116 @@ export function DiscoverScreen({ navigation }: any) {
 
   // Per-tab pagination
   const [pages, setPages] = useState<Record<TabType, number>>({
-    users: 1, bands: 1, reviews: 1, events: 1,
+    users: 1,
+    bands: 1,
+    reviews: 1,
+    events: 1,
   });
   const [hasMore, setHasMore] = useState<Record<TabType, boolean>>({
-    users: true, bands: true, reviews: true, events: true,
+    users: true,
+    bands: true,
+    reviews: true,
+    events: true,
   });
 
-  const fetchData = useCallback(async (tab: TabType, pageNum: number, query?: string, refresh = false) => {
-    if (refresh) setRefreshing(true);
-    else if (pageNum === 1) setLoading(true);
-    else setLoadingMore(true);
+  const fetchData = useCallback(
+    async (tab: TabType, pageNum: number, query?: string, refresh = false) => {
+      if (refresh) setRefreshing(true);
+      else if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
 
-    try {
-      switch (tab) {
-        case 'users': {
-          const res = await apiClient.discoverUsers(pageNum, query || undefined);
-          const items = res?.users || [];
-          setUsers(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
-          setHasMore(prev => ({ ...prev, users: res?.pagination?.has_next_page ?? false }));
-          break;
-        }
-        case 'bands': {
-          const res = await apiClient.discoverBands(pageNum, query || undefined);
-          const items = res?.bands || [];
-          setBands(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
-          setHasMore(prev => ({ ...prev, bands: res?.pagination?.has_next_page ?? false }));
-          break;
-        }
-        case 'reviews': {
-          const res = await apiClient.discoverReviews(pageNum, query || undefined);
-          const items = res?.reviews || [];
-          setReviews(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
-          setHasMore(prev => ({ ...prev, reviews: res?.pagination?.has_next_page ?? false }));
-          break;
-        }
-        case 'events': {
-          const res = await apiClient.discoverEvents(pageNum, query || undefined);
-          const items = res?.events || [];
-          setEvents(prev => refresh || pageNum === 1 ? items : [...prev, ...items]);
-          setHasMore(prev => ({ ...prev, events: res?.pagination?.has_next_page ?? false }));
-          break;
-        }
-      }
-      setPages(prev => ({ ...prev, [tab]: pageNum }));
-    } catch (error) {
-      console.error('Failed to fetch:', error);
-      if (refresh || pageNum === 1) {
+      try {
         switch (tab) {
-          case 'users': setUsers([]); break;
-          case 'bands': setBands([]); break;
-          case 'reviews': setReviews([]); break;
-          case 'events': setEvents([]); break;
+          case "users": {
+            const res = await apiClient.discoverUsers(
+              pageNum,
+              query || undefined,
+            );
+            const items = res?.users || [];
+            setUsers((prev) =>
+              refresh || pageNum === 1 ? items : [...prev, ...items],
+            );
+            setHasMore((prev) => ({
+              ...prev,
+              users: res?.pagination?.has_next_page ?? false,
+            }));
+            break;
+          }
+          case "bands": {
+            const res = await apiClient.discoverBands(
+              pageNum,
+              query || undefined,
+            );
+            const items = res?.bands || [];
+            setBands((prev) =>
+              refresh || pageNum === 1 ? items : [...prev, ...items],
+            );
+            setHasMore((prev) => ({
+              ...prev,
+              bands: res?.pagination?.has_next_page ?? false,
+            }));
+            break;
+          }
+          case "reviews": {
+            const res = await apiClient.discoverReviews(
+              pageNum,
+              query || undefined,
+            );
+            const items = res?.reviews || [];
+            setReviews((prev) =>
+              refresh || pageNum === 1 ? items : [...prev, ...items],
+            );
+            setHasMore((prev) => ({
+              ...prev,
+              reviews: res?.pagination?.has_next_page ?? false,
+            }));
+            break;
+          }
+          case "events": {
+            const res = await apiClient.discoverEvents(
+              pageNum,
+              query || undefined,
+            );
+            const items = res?.events || [];
+            setEvents((prev) =>
+              refresh || pageNum === 1 ? items : [...prev, ...items],
+            );
+            setHasMore((prev) => ({
+              ...prev,
+              events: res?.pagination?.has_next_page ?? false,
+            }));
+            break;
+          }
         }
+        setPages((prev) => ({ ...prev, [tab]: pageNum }));
+      } catch (error) {
+        console.error("Failed to fetch:", error);
+        if (refresh || pageNum === 1) {
+          switch (tab) {
+            case "users":
+              setUsers([]);
+              break;
+            case "bands":
+              setBands([]);
+              break;
+            case "reviews":
+              setReviews([]);
+              break;
+            case "events":
+              setEvents([]);
+              break;
+          }
+        }
+        setHasMore((prev) => ({ ...prev, [tab]: false }));
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+        loadingMoreRef.current = false;
       }
-      setHasMore(prev => ({ ...prev, [tab]: false }));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-      setLoadingMore(false);
-      loadingMoreRef.current = false;
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Refetch when tab or search query changes
   useEffect(() => {
@@ -148,13 +203,17 @@ export function DiscoverScreen({ navigation }: any) {
     fetchData(activeTab, pages[activeTab] + 1, debouncedSearch);
   }, [loading, hasMore, activeTab, pages, debouncedSearch, fetchData]);
 
-  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
-    const distanceFromEnd = contentSize.height - contentOffset.y - layoutMeasurement.height;
-    if (distanceFromEnd < 300) {
-      handleLoadMore();
-    }
-  }, [handleLoadMore]);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+      const distanceFromEnd =
+        contentSize.height - contentOffset.y - layoutMeasurement.height;
+      if (distanceFromEnd < 300) {
+        handleLoadMore();
+      }
+    },
+    [handleLoadMore],
+  );
 
   const renderFooter = () => {
     if (!loadingMore) return null;
@@ -168,9 +227,9 @@ export function DiscoverScreen({ navigation }: any) {
   const handleUserPress = (username: string) => {
     if (username === currentUser?.username) {
       // Navigate to own profile tab
-      navigation.navigate('Main', { screen: 'Profile' });
+      navigation.navigate("Main", { screen: "Profile" });
     } else {
-      navigation.navigate('UserProfile', { username });
+      navigation.navigate("UserProfile", { username });
     }
   };
 
@@ -183,7 +242,7 @@ export function DiscoverScreen({ navigation }: any) {
         src={fixImageUrl(item.profile_image_url)}
         alt={item.username}
         size={40}
-        fallback={item.username || 'U'}
+        fallback={item.username || "U"}
       />
       <View style={styles.listItemContent}>
         <Text style={styles.listItemTitle}>@{item.username}</Text>
@@ -206,14 +265,14 @@ export function DiscoverScreen({ navigation }: any) {
     return (
       <TouchableOpacity
         style={styles.listItem}
-        onPress={() => navigation.navigate('BandProfile', { slug: item.slug })}
+        onPress={() => navigation.navigate("BandProfile", { slug: item.slug })}
       >
         {hasImageUrl ? (
           <ProfilePhoto
             src={item.profile_picture_url || item.spotify_image_url}
             alt={item.name}
             size={40}
-            fallback={item.name || 'B'}
+            fallback={item.name || "B"}
           />
         ) : (
           <View style={styles.bandPlaceholder}>
@@ -240,7 +299,7 @@ export function DiscoverScreen({ navigation }: any) {
       <ReviewCard
         review={item}
         onPressAuthor={handleUserPress}
-        onPressBand={(slug) => navigation.navigate('BandProfile', { slug })}
+        onPressBand={(slug: string) => navigation.navigate("BandProfile", { slug })}
       />
     </View>
   );
@@ -248,15 +307,15 @@ export function DiscoverScreen({ navigation }: any) {
   const renderEventItem = ({ item }: { item: Event }) => (
     <TouchableOpacity
       style={styles.eventItem}
-      onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+      onPress={() => navigation.navigate("EventDetails", { eventId: item.id })}
     >
       <View style={styles.eventDate}>
         <Text style={styles.eventDay}>
           {new Date(item.event_date).getDate()}
         </Text>
         <Text style={styles.eventMonth}>
-          {new Date(item.event_date).toLocaleString('default', {
-            month: 'short',
+          {new Date(item.event_date).toLocaleString("default", {
+            month: "short",
           })}
         </Text>
       </View>
@@ -272,14 +331,14 @@ export function DiscoverScreen({ navigation }: any) {
 
   const getEmptyMessage = () => {
     switch (activeTab) {
-      case 'users':
-        return { icon: 'users', title: 'No users found' };
-      case 'bands':
-        return { icon: 'music', title: 'No bands found' };
-      case 'reviews':
-        return { icon: 'message-circle', title: 'No recommendations found' };
-      case 'events':
-        return { icon: 'calendar', title: 'No events found' };
+      case "users":
+        return { icon: "users", title: "No users found" };
+      case "bands":
+        return { icon: "music", title: "No bands found" };
+      case "reviews":
+        return { icon: "message-circle", title: "No recommendations found" };
+      case "events":
+        return { icon: "calendar", title: "No events found" };
     }
   };
 
@@ -289,7 +348,7 @@ export function DiscoverScreen({ navigation }: any) {
     const emptyProps = getEmptyMessage();
 
     switch (activeTab) {
-      case 'users':
+      case "users":
         return (
           <FlatList
             data={users}
@@ -309,7 +368,7 @@ export function DiscoverScreen({ navigation }: any) {
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
-      case 'bands':
+      case "bands":
         return (
           <FlatList
             data={bands}
@@ -329,7 +388,7 @@ export function DiscoverScreen({ navigation }: any) {
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
-      case 'reviews':
+      case "reviews":
         return (
           <FlatList
             data={reviews}
@@ -349,7 +408,7 @@ export function DiscoverScreen({ navigation }: any) {
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );
-      case 'events':
+      case "events":
         return (
           <FlatList
             data={events}
@@ -373,7 +432,7 @@ export function DiscoverScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <Header title="Discover" />
 
       {/* Search */}
@@ -399,9 +458,7 @@ export function DiscoverScreen({ navigation }: any) {
               name={tab.icon}
               size={16}
               color={
-                activeTab === tab.key
-                  ? theme.colors.primary
-                  : colors.grape[5]
+                activeTab === tab.key ? theme.colors.primary : colors.grape[5]
               }
             />
             <Text
@@ -435,16 +492,16 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   tabsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     gap: theme.spacing.xs,
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.radii.md,
@@ -459,7 +516,7 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     flex: 1,
@@ -468,8 +525,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: theme.spacing.sm,
     backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
@@ -481,8 +538,8 @@ const styles = StyleSheet.create({
   },
   listItemTitle: {
     fontSize: theme.fontSizes.base,
-    fontFamily: theme.fonts.cooperBold,
-    color: colors.grape[8],
+    fontFamily: theme.fonts.thecoaMedium,
+    color: colors.blue.base,
     lineHeight: 24,
   },
   listItemSubtitle: {
@@ -495,14 +552,14 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.grape[2],
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   reviewItem: {
     marginBottom: theme.spacing.md,
   },
   eventItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
@@ -511,28 +568,28 @@ const styles = StyleSheet.create({
   },
   eventDate: {
     width: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.grape[2],
     borderRadius: theme.radii.md,
     padding: theme.spacing.sm,
   },
   eventDay: {
     fontSize: theme.fontSizes.xl,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.primary,
   },
   eventMonth: {
     fontSize: theme.fontSizes.xs,
     color: colors.grape[6],
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   eventContent: {
     flex: 1,
   },
   eventTitle: {
     fontSize: theme.fontSizes.base,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.grape[8],
   },
   eventVenue: {
@@ -547,6 +604,6 @@ const styles = StyleSheet.create({
   },
   loadingMore: {
     paddingVertical: theme.spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });

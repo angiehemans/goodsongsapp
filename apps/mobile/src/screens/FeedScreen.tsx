@@ -11,22 +11,39 @@ import {
   Alert,
   ActivityIndicator,
   AppState,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FastImage from "react-native-fast-image";
 import Icon from "@react-native-vector-icons/feather";
-import { Header, ReviewCard, LoadingScreen, EmptyState, Logo } from "@/components";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
+import {
+  Header,
+  ReviewCard,
+  LoadingScreen,
+  EmptyState,
+  Logo,
+} from "@/components";
 import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
 import { apiClient } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
+import { RootStackParamList, MainTabParamList } from "@/navigation/types";
 
-export function FeedScreen({ navigation, route }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  route: RouteProp<MainTabParamList, "Home">;
+};
+
+export function FeedScreen({ navigation, route }: Props) {
   const { user: currentUser, refreshUser } = useAuthStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
@@ -35,7 +52,9 @@ export function FeedScreen({ navigation, route }: any) {
     [],
   );
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(true);
-  const [refreshingArtworkId, setRefreshingArtworkId] = useState<number | string | null>(null);
+  const [refreshingArtworkId, setRefreshingArtworkId] = useState<
+    number | string | null
+  >(null);
 
   // Email verification state
   const [resendLoading, setResendLoading] = useState(false);
@@ -43,20 +62,10 @@ export function FeedScreen({ navigation, route }: any) {
 
   // Success banner state
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('Recommendation posted!');
+  const [successMessage, setSuccessMessage] = useState(
+    "Recommendation posted!",
+  );
   const bannerOpacity = useRef(new Animated.Value(0)).current;
-
-  // Handle success banner from CreateReview
-  useEffect(() => {
-    if (route.params?.showSuccess) {
-      setSuccessMessage('Recommendation posted!');
-      setShowSuccess(true);
-      // Refresh feed to show new review
-      fetchFeed(1, true);
-      // Clear the param immediately
-      navigation.setParams({ showSuccess: undefined });
-    }
-  }, [route.params?.showSuccess, navigation, fetchFeed]);
 
   // Animate success banner
   useEffect(() => {
@@ -100,13 +109,19 @@ export function FeedScreen({ navigation, route }: any) {
     setResendLoading(true);
     try {
       const response = await apiClient.resendConfirmationEmail();
-      Alert.alert("Email Sent", response.message || "Confirmation email has been sent.");
+      Alert.alert(
+        "Email Sent",
+        response.message || "Confirmation email has been sent.",
+      );
       if (response.retry_after) {
         setRetryAfter(response.retry_after);
       }
       await refreshUser();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to send confirmation email";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to send confirmation email";
       Alert.alert("Error", message);
     } finally {
       setResendLoading(false);
@@ -118,15 +133,15 @@ export function FeedScreen({ navigation, route }: any) {
   const fetchFeed = useCallback(async (pageNum: number, refresh = false) => {
     try {
       const response = await apiClient.getFollowingFeed(pageNum);
-      const reviews = response?.reviews || [];
+      const newReviews = response?.reviews || [];
 
       if (refresh) {
-        setReviews(reviews);
+        setReviews(newReviews);
       } else {
-        setReviews((prev) => [...prev, ...reviews]);
+        setReviews((prev) => [...prev, ...newReviews]);
       }
 
-      const totalPages = response?.meta?.total_pages || 1;
+      const totalPages = response?.pagination?.total_pages || 1;
       setHasMore(pageNum < totalPages);
     } catch (error) {
       console.error("Failed to fetch feed:", error);
@@ -138,6 +153,8 @@ export function FeedScreen({ navigation, route }: any) {
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
     }
   }, []);
 
@@ -159,6 +176,18 @@ export function FeedScreen({ navigation, route }: any) {
     fetchFeed(1, true);
     fetchRecentlyPlayed();
   }, [fetchFeed, fetchRecentlyPlayed]);
+
+  // Handle success banner from CreateReview
+  useEffect(() => {
+    if (route.params?.showSuccess) {
+      setSuccessMessage("Recommendation posted!");
+      setShowSuccess(true);
+      // Refresh feed to show new review
+      fetchFeed(1, true);
+      // Clear the param immediately
+      navigation.setParams({ showSuccess: undefined });
+    }
+  }, [route.params?.showSuccess, navigation, fetchFeed]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -188,7 +217,8 @@ export function FeedScreen({ navigation, route }: any) {
           <View style={styles.connectLastFm}>
             <Icon name="music" size={24} color={colors.grape[5]} />
             <Text style={styles.connectText}>
-              Connect Last.fm or enable scrobbling to see your recently played tracks
+              Connect Last.fm or enable scrobbling to see your recently played
+              tracks
             </Text>
           </View>
         </View>
@@ -244,7 +274,11 @@ export function FeedScreen({ navigation, route }: any) {
                     {refreshingArtworkId === getScrobbleId(track) ? (
                       <ActivityIndicator size="small" color={colors.grape[8]} />
                     ) : (
-                      <Icon name="refresh-cw" size={14} color={colors.grape[8]} />
+                      <Icon
+                        name="refresh-cw"
+                        size={14}
+                        color={colors.grape[8]}
+                      />
                     )}
                   </TouchableOpacity>
                 )}
@@ -269,13 +303,28 @@ export function FeedScreen({ navigation, route }: any) {
     );
   };
 
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchFeed(nextPage);
-    }
-  };
+  const loadingMoreRef = useRef(false);
+
+  const handleLoadMore = useCallback(() => {
+    if (loadingMoreRef.current || loading || !hasMore) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchFeed(nextPage);
+  }, [loading, hasMore, page, fetchFeed]);
+
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+      const distanceFromEnd =
+        contentSize.height - contentOffset.y - layoutMeasurement.height;
+      if (distanceFromEnd < 300) {
+        handleLoadMore();
+      }
+    },
+    [handleLoadMore],
+  );
 
   const handlePressAuthor = (username: string) => {
     if (username === currentUser?.username) {
@@ -297,14 +346,19 @@ export function FeedScreen({ navigation, route }: any) {
   };
 
   const handleRecommendTrack = (track: RecentlyPlayedTrack) => {
-    navigation.navigate("CreateReview", {
-      song_name: track.name,
-      band_name: track.artist,
-      artwork_url: track.album_art_url || "",
+    navigation.navigate("Main", {
+      screen: "CreateReview",
+      params: {
+        song_name: track.name,
+        band_name: track.artist,
+        artwork_url: track.album_art_url || "",
+      },
     });
   };
 
-  const getScrobbleId = (track: RecentlyPlayedTrack): number | string | undefined => {
+  const getScrobbleId = (
+    track: RecentlyPlayedTrack,
+  ): number | string | undefined => {
     return track.scrobble_id ?? track.id;
   };
 
@@ -313,22 +367,29 @@ export function FeedScreen({ navigation, route }: any) {
     setShowSuccess(true);
   };
 
-  const handleRefreshArtwork = async (scrobbleId: number | string, trackName: string) => {
+  const handleRefreshArtwork = async (
+    scrobbleId: number | string,
+    trackName: string,
+  ) => {
     setRefreshingArtworkId(scrobbleId);
     try {
       const response = await apiClient.refreshScrobbleArtwork(scrobbleId);
-      if (response.status === 'success' && response.artwork_url) {
+      if (response.status === "success" && response.artwork_url) {
         showSuccessBanner(`Found artwork for "${trackName}"`);
         fetchRecentlyPlayed();
-      } else if (response.status === 'not_found') {
+      } else if (response.status === "not_found") {
         showSuccessBanner(`No artwork found for "${trackName}"`);
       } else {
-        showSuccessBanner(response.message || 'Artwork refreshed');
+        showSuccessBanner(response.message || "Artwork refreshed");
         fetchRecentlyPlayed();
       }
     } catch (error: any) {
-      const message = error?.message || error?.error || String(error) || 'Failed to refresh artwork';
-      Alert.alert('Error', message);
+      const message =
+        error?.message ||
+        error?.error ||
+        String(error) ||
+        "Failed to refresh artwork";
+      Alert.alert("Error", message);
     } finally {
       setRefreshingArtworkId(null);
     }
@@ -374,8 +435,25 @@ export function FeedScreen({ navigation, route }: any) {
             tintColor={theme.colors.primary}
           />
         }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
+        onScroll={handleScroll}
+        scrollEventThrottle={400}
+        ListFooterComponent={
+          reviews.length > 0 ? (
+            <View style={styles.footerContainer}>
+              {loadingMore ? (
+                <View style={styles.loadingMore}>
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                </View>
+              ) : hasMore ? (
+                <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
+                  <Text style={styles.loadMoreButtonText}>Load More</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.endOfListText}>You're all caught up!</Text>
+              )}
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <EmptyState
             icon="inbox"
@@ -401,7 +479,8 @@ export function FeedScreen({ navigation, route }: any) {
                 <TouchableOpacity
                   style={[
                     styles.resendButton,
-                    (!canResend || resendLoading) && styles.resendButtonDisabled,
+                    (!canResend || resendLoading) &&
+                      styles.resendButtonDisabled,
                   ]}
                   onPress={handleResendConfirmation}
                   disabled={!canResend || resendLoading}
@@ -410,7 +489,9 @@ export function FeedScreen({ navigation, route }: any) {
                     <ActivityIndicator size="small" color="#c05621" />
                   ) : (
                     <Text style={styles.resendButtonText}>
-                      {retryAfter > 0 ? `Resend (${retryAfter}s)` : "Resend email"}
+                      {retryAfter > 0
+                        ? `Resend (${retryAfter}s)`
+                        : "Resend email"}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -449,7 +530,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: theme.fontSizes["2xl"],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginVertical: theme.spacing.md,
     lineHeight: 32,
@@ -463,7 +544,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes["2xl"],
-    fontFamily: theme.fonts.cooperMedium,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 32,
@@ -539,7 +620,7 @@ const styles = StyleSheet.create({
   },
   trackName: {
     fontSize: theme.fontSizes.sm,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: colors.grape[8],
     lineHeight: 22,
   },
@@ -561,8 +642,11 @@ const styles = StyleSheet.create({
   },
   recommendButtonText: {
     fontSize: 11,
+    lineHeight: 12,
     color: colors.grape[0],
-    fontWeight: "600",
+    fontFamily: theme.fonts.thecoa,
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
   successBanner: {
     position: "absolute",
@@ -632,5 +716,31 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.xs,
     fontWeight: "600",
     color: "#c05621",
+  },
+  footerContainer: {
+    paddingVertical: theme.spacing.md,
+    alignItems: "center",
+  },
+  loadingMore: {
+    paddingVertical: theme.spacing.md,
+    alignItems: "center",
+  },
+  endOfListText: {
+    color: colors.grape[5],
+    fontSize: theme.fontSizes.sm,
+    paddingVertical: theme.spacing.md,
+  },
+  loadMoreButton: {
+    backgroundColor: colors.grape[1],
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.md,
+    alignItems: "center",
+  },
+  loadMoreButtonText: {
+    color: theme.colors.primary,
+    fontSize: theme.fontSizes.base,
+    fontFamily: theme.fonts.thecoaMedium,
   },
 });

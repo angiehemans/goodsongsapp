@@ -15,11 +15,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState, LoadingScreen } from '@/components';
 import { theme, colors } from '@/theme';
 import { useAuthStore } from '@/context/authStore';
 import { apiClient } from '@/utils/api';
 import { Review, User } from '@goodsongs/api-client';
+import { RootStackParamList } from '@/navigation/types';
 
 // Separate component for the edit form to prevent re-render issues
 function ProfileEditForm({
@@ -174,7 +176,11 @@ function ProfileViewHeader({
   );
 }
 
-export function ProfileScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function ProfileScreen({ navigation }: Props) {
   const { user, setUser } = useAuthStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -273,7 +279,7 @@ export function ProfileScreen({ navigation }: any) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
-              onPressBand={(slug) => navigation.navigate('BandProfile', { slug })}
+              onPressBand={(slug: string) => navigation.navigate('BandProfile', { slug })}
             />
           </View>
         )}
@@ -329,7 +335,7 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.primary,
     lineHeight: 30,
   },
@@ -430,7 +436,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 32,

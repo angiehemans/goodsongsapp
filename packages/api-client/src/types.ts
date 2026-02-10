@@ -78,6 +78,9 @@ export interface Review extends ReviewData {
     slug: string;
     name: string;
   };
+  liked_by_current_user?: boolean;
+  likes_count?: number;
+  comments_count?: number;
 }
 
 export interface UserProfile {
@@ -198,6 +201,7 @@ export interface Band {
   reviews_count: number;
   user_owned: boolean;
   disabled?: boolean;
+  genres?: string[];
   owner?: {
     id: number;
     username: string;
@@ -232,6 +236,7 @@ export interface EventBand {
   name: string;
   location?: string;
   profile_picture_url?: string;
+  spotify_image_url?: string;
   reviews_count: number;
   user_owned: boolean;
 }

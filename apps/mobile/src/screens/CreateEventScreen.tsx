@@ -12,10 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header, TextInput, Button } from '@/components';
 import { theme, colors } from '@/theme';
 import { apiClient } from '@/utils/api';
 import { Band } from '@goodsongs/api-client';
+import { RootStackParamList } from '@/navigation/types';
 
 const AGE_RESTRICTIONS = ['All Ages', '18+', '21+'];
 
@@ -32,7 +34,11 @@ interface FormData {
   venue_region: string;
 }
 
-export function CreateEventScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function CreateEventScreen({ navigation }: Props) {
   const [band, setBand] = useState<Band | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -150,7 +156,7 @@ export function CreateEventScreen({ navigation }: any) {
       });
 
       Alert.alert('Success', 'Event created successfully!', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
+        { text: 'OK', onPress: () => navigation.navigate('Main', { screen: 'Home' }) },
       ]);
     } catch (error: any) {
       console.error('Failed to create event:', error);
@@ -200,7 +206,7 @@ export function CreateEventScreen({ navigation }: any) {
             label="Event Name *"
             placeholder="Summer Concert, Album Release, etc."
             value={formData.name}
-            onChangeText={(text) => updateField('name', text)}
+            onChangeText={(text: string) => updateField('name', text)}
             leftIcon="calendar"
           />
 
@@ -213,7 +219,7 @@ export function CreateEventScreen({ navigation }: any) {
                 placeholder="Tell fans about this event..."
                 placeholderTextColor={colors.grape[4]}
                 value={formData.description}
-                onChangeText={(text) => updateField('description', text)}
+                onChangeText={(text: string) => updateField('description', text)}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -268,7 +274,7 @@ export function CreateEventScreen({ navigation }: any) {
             label="Venue Name *"
             placeholder="The Blue Note, Madison Square Garden, etc."
             value={formData.venue_name}
-            onChangeText={(text) => updateField('venue_name', text)}
+            onChangeText={(text: string) => updateField('venue_name', text)}
             leftIcon="map-pin"
           />
 
@@ -276,7 +282,7 @@ export function CreateEventScreen({ navigation }: any) {
             label="Address"
             placeholder="123 Main Street"
             value={formData.venue_address}
-            onChangeText={(text) => updateField('venue_address', text)}
+            onChangeText={(text: string) => updateField('venue_address', text)}
           />
 
           <View style={styles.row}>
@@ -285,7 +291,7 @@ export function CreateEventScreen({ navigation }: any) {
                 label="City *"
                 placeholder="New York"
                 value={formData.venue_city}
-                onChangeText={(text) => updateField('venue_city', text)}
+                onChangeText={(text: string) => updateField('venue_city', text)}
               />
             </View>
             <View style={styles.halfField}>
@@ -293,7 +299,7 @@ export function CreateEventScreen({ navigation }: any) {
                 label="State / Region"
                 placeholder="NY"
                 value={formData.venue_region}
-                onChangeText={(text) => updateField('venue_region', text)}
+                onChangeText={(text: string) => updateField('venue_region', text)}
               />
             </View>
           </View>
@@ -305,7 +311,7 @@ export function CreateEventScreen({ navigation }: any) {
             label="Ticket Link"
             placeholder="https://tickets.example.com/..."
             value={formData.ticket_link}
-            onChangeText={(text) => updateField('ticket_link', text)}
+            onChangeText={(text: string) => updateField('ticket_link', text)}
             autoCapitalize="none"
             keyboardType="url"
             leftIcon="link"
@@ -315,7 +321,7 @@ export function CreateEventScreen({ navigation }: any) {
             label="Price"
             placeholder="$15, Free, $10-$20, etc."
             value={formData.price}
-            onChangeText={(text) => updateField('price', text)}
+            onChangeText={(text: string) => updateField('price', text)}
             leftIcon="dollar-sign"
           />
 
@@ -408,7 +414,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.md,

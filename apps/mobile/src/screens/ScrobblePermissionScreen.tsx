@@ -7,12 +7,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, Button } from '@/components';
 import { theme, colors } from '@/theme';
 import { scrobbleNative } from '@/utils/scrobbleNative';
+import { RootStackParamList } from '@/navigation/types';
 
-export function ScrobblePermissionScreen({ navigation }: any) {
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
+
+export function ScrobblePermissionScreen({ navigation }: Props) {
   useFocusEffect(
     React.useCallback(() => {
       let active = true;
@@ -111,7 +117,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: theme.fontSizes['3xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.md,

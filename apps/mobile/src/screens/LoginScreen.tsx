@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, TextInput, Card } from '@/components';
 import { theme, colors } from '@/theme';
 import { AuthStackParamList } from '@/navigation/types';
-import { useAuthStore } from '@/context/authStore';
+import { useAuthStore, AuthState } from '@/context/authStore';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -26,7 +26,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const login = useAuthStore((state) => state.login);
+  const login = useAuthStore((state: AuthState) => state.login);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};

@@ -3,8 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import Icon from '@react-native-vector-icons/feather';
 import { theme, colors } from '@/theme';
 
+type IconName = React.ComponentProps<typeof Icon>['name'];
+
 interface EmptyStateProps {
-  icon?: string;
+  icon?: IconName;
   title: string;
   message?: string;
 }

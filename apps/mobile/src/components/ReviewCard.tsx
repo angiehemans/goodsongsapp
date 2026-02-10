@@ -170,7 +170,9 @@ export function ReviewCard({
             />
           )}
           {likesCount > 0 && (
-            <Text style={[styles.actionCount, isLiked && styles.actionCountLiked]}>
+            <Text
+              style={[styles.actionCount, isLiked && styles.actionCountLiked]}
+            >
               {likesCount}
             </Text>
           )}
@@ -206,7 +208,7 @@ const styles = StyleSheet.create({
   },
   authorName: {
     fontSize: theme.fontSizes.lg,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaMedium,
     color: colors.grape[7],
     lineHeight: 24,
   },
@@ -235,7 +237,7 @@ const styles = StyleSheet.create({
   },
   songName: {
     fontSize: theme.fontSizes.base,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaMedium,
     color: colors.grey[9],
     lineHeight: 24,
   },

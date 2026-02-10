@@ -511,7 +511,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 label="Song Name *"
                 placeholder="Hey Jude"
                 value={formData.song_name}
-                onChangeText={(text) => updateField('song_name', text)}
+                onChangeText={(text: string) => updateField('song_name', text)}
                 autoCapitalize="words"
                 leftIcon="music"
               />
@@ -521,7 +521,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 label="Band / Artist *"
                 placeholder="The Beatles"
                 value={formData.band_name}
-                onChangeText={(text) => updateField('band_name', text)}
+                onChangeText={(text: string) => updateField('band_name', text)}
                 autoCapitalize="words"
                 leftIcon="users"
               />
@@ -531,7 +531,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 label="Song Link (optional)"
                 placeholder="https://open.spotify.com/track/..."
                 value={formData.song_link}
-                onChangeText={(text) => updateField('song_link', text)}
+                onChangeText={(text: string) => updateField('song_link', text)}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
@@ -597,7 +597,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                   label="Artwork URL (optional)"
                   placeholder="https://image.url/cover.jpg"
                   value={formData.artwork_url}
-                  onChangeText={(text) => updateField('artwork_url', text)}
+                  onChangeText={(text: string) => updateField('artwork_url', text)}
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="url"
@@ -651,7 +651,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                   placeholder="Share why you love this song..."
                   placeholderTextColor={colors.grape[4]}
                   value={formData.review_text}
-                  onChangeText={(text) => updateField('review_text', text)}
+                  onChangeText={(text: string) => updateField('review_text', text)}
                   multiline
                   numberOfLines={6}
                   textAlignVertical="top"

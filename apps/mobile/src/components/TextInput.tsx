@@ -11,11 +11,13 @@ import {
 import Icon from '@react-native-vector-icons/feather';
 import { theme, colors } from '@/theme';
 
+type IconName = React.ComponentProps<typeof Icon>['name'];
+
 interface TextInputProps extends RNTextInputProps {
   label?: string;
   error?: string;
-  leftIcon?: string;
-  rightIcon?: string;
+  leftIcon?: IconName;
+  rightIcon?: IconName;
   onRightIconPress?: () => void;
   containerStyle?: ViewStyle;
 }

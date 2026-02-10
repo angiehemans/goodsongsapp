@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AccountType, normalizeAccountType } from '@goodsongs/api-client';
 import { apiClient } from '@/utils/api';
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;

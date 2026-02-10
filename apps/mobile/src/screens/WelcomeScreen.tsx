@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 40,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     textAlign: "center",
     lineHeight: 52,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 28,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: colors.blue.base,
     lineHeight: 42,
   },

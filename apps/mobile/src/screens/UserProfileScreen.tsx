@@ -215,8 +215,8 @@ export function UserProfileScreen({ route, navigation }: any) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
-              onPressBand={(slug) => navigation.navigate('BandProfile', { slug })}
-              onPressReview={(review) => {
+              onPressBand={(slug: string) => navigation.navigate('BandProfile', { slug })}
+              onPressReview={(review: Review) => {
                 const reviewUsername = review.author?.username || review.user?.username;
                 if (reviewUsername) {
                   navigation.navigate('ReviewDetail', { reviewId: review.id, username: reviewUsername });
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.primary,
     lineHeight: 30,
   },
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
-    fontFamily: theme.fonts.cooperBold,
+    fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 32,
