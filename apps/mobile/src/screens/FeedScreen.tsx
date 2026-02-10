@@ -11,7 +11,6 @@ import {
   Alert,
   ActivityIndicator,
   AppState,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FastImage from "react-native-fast-image";
@@ -19,8 +18,6 @@ import Icon from "@react-native-vector-icons/feather";
 import { Header, ReviewCard, LoadingScreen, EmptyState, Logo } from "@/components";
 import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
-import { useScrobbleStore } from "@/context/scrobbleStore";
-import { ScrobbleStatus } from "@/types/scrobble";
 import { apiClient } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
@@ -38,20 +35,7 @@ export function FeedScreen({ navigation, route }: any) {
     [],
   );
   const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(true);
-
-  // Scrobble state (Android)
-  const isAndroid = Platform.OS === 'android';
-  const {
-    status: scrobbleStatus,
-    nowPlaying,
-    recentScrobbles,
-    recentScrobblesLoading,
-    localScrobbles,
-    refreshStatus: refreshScrobbleStatus,
-    fetchRecentScrobbles,
-    fetchLocalScrobbles,
-  } = useScrobbleStore();
-  const scrobblingActive = isAndroid && scrobbleStatus === ScrobbleStatus.active;
+  const [refreshingArtworkId, setRefreshingArtworkId] = useState<number | string | null>(null);
 
   // Email verification state
   const [resendLoading, setResendLoading] = useState(false);
@@ -59,11 +43,13 @@ export function FeedScreen({ navigation, route }: any) {
 
   // Success banner state
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('Recommendation posted!');
   const bannerOpacity = useRef(new Animated.Value(0)).current;
 
   // Handle success banner from CreateReview
   useEffect(() => {
     if (route.params?.showSuccess) {
+      setSuccessMessage('Recommendation posted!');
       setShowSuccess(true);
       // Refresh feed to show new review
       fetchFeed(1, true);
@@ -171,184 +157,18 @@ export function FeedScreen({ navigation, route }: any) {
 
   useEffect(() => {
     fetchFeed(1, true);
-    // Fetch recently played tracks
     fetchRecentlyPlayed();
-    // On Android, refresh scrobble status (which also fetches local scrobbles)
-    if (isAndroid) {
-      refreshScrobbleStatus();
-    }
-  }, [fetchFeed, fetchRecentlyPlayed, isAndroid, refreshScrobbleStatus]);
-
-  // When scrobbling becomes active, also try to fetch API scrobbles
-  useEffect(() => {
-    if (scrobblingActive) {
-      fetchRecentScrobbles();
-      fetchLocalScrobbles();
-    }
-  }, [scrobblingActive, fetchRecentScrobbles, fetchLocalScrobbles]);
+  }, [fetchFeed, fetchRecentlyPlayed]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     setPage(1);
     fetchFeed(1, true);
     fetchRecentlyPlayed();
-    if (scrobblingActive) {
-      fetchRecentScrobbles();
-      fetchLocalScrobbles();
-    }
   };
 
-  // Render scrobbled tracks section (when scrobbling is active on Android)
-  const renderScrobbledTracks = () => {
-    const hasNowPlaying = nowPlaying != null;
-    const hasApiTracks = recentScrobbles.length > 0;
-    const hasLocalTracks = localScrobbles.length > 0;
-    const hasTracks = hasApiTracks || hasLocalTracks;
-
-    // Build a unified track list: prefer API scrobbles, fall back to local pending
-    const tracks: { id: string; trackName: string; artistName: string; coverArtUrl?: string; source: 'api' | 'local' }[] = [];
-
-    if (hasApiTracks) {
-      for (const s of recentScrobbles) {
-        tracks.push({
-          id: `api-${s.id}`,
-          trackName: s.track_name,
-          artistName: s.artist_name,
-          coverArtUrl: s.track?.album?.cover_art_url || undefined,
-          source: 'api',
-        });
-      }
-    }
-
-    // Add local scrobbles that aren't already in API results (dedup by track+artist)
-    if (hasLocalTracks) {
-      const apiTrackKeys = new Set(
-        recentScrobbles.map((s) => `${s.track_name}::${s.artist_name}`.toLowerCase())
-      );
-      for (const s of localScrobbles) {
-        const key = `${s.trackName}::${s.artistName}`.toLowerCase();
-        if (!apiTrackKeys.has(key)) {
-          tracks.push({
-            id: `local-${s.id}`,
-            trackName: s.trackName,
-            artistName: s.artistName,
-            source: 'local',
-          });
-        }
-      }
-    }
-
-    // Try to find cover art for the now-playing track from API scrobbles
-    const nowPlayingArt = nowPlaying
-      ? recentScrobbles.find(
-          (s) =>
-            s.track_name.toLowerCase() === nowPlaying.trackName.toLowerCase() &&
-            s.artist_name.toLowerCase() === nowPlaying.artistName.toLowerCase()
-        )?.track?.album?.cover_art_url
-      : undefined;
-
-    if (!hasNowPlaying && !hasTracks) {
-      // No scrobble data at all — fall back to Last.fm
-      return renderLastFmRecentlyPlayed();
-    }
-
-    return (
-      <View style={styles.recentlyPlayedSection}>
-        <Text style={styles.sectionTitle}>Recently Played</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.recentlyPlayedList}
-        >
-          {/* Now Playing card */}
-          {hasNowPlaying && (
-            <View style={styles.trackCard}>
-              <View style={styles.artworkContainer}>
-                {nowPlayingArt ? (
-                  <FastImage
-                    source={{ uri: fixImageUrl(nowPlayingArt) || '' }}
-                    style={styles.trackArtwork}
-                    resizeMode={FastImage.resizeMode.cover}
-                  />
-                ) : (
-                  <View
-                    style={[styles.trackArtwork, styles.trackArtworkPlaceholder]}
-                  >
-                    <Logo size={28} color={colors.grape[4]} />
-                  </View>
-                )}
-                <View style={styles.nowPlayingOverlay}>
-                  <Icon name="volume-2" size={28} color={colors.grape[0]} />
-                </View>
-              </View>
-              <Text style={styles.trackName} numberOfLines={1}>
-                {nowPlaying!.trackName}
-              </Text>
-              <Text style={styles.trackArtist} numberOfLines={1}>
-                {nowPlaying!.artistName}
-              </Text>
-              <TouchableOpacity
-                style={styles.recommendButton}
-                onPress={() =>
-                  navigation.navigate("CreateReview", {
-                    song_name: nowPlaying!.trackName,
-                    band_name: nowPlaying!.artistName,
-                    artwork_url: nowPlayingArt || '',
-                  })
-                }
-              >
-                <Icon name="plus" size={12} color={colors.grape[0]} />
-                <Text style={styles.recommendButtonText}>Recommend</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Scrobbled tracks (merged API + local) */}
-          {tracks.map((track) => (
-            <View key={track.id} style={styles.trackCard}>
-              <View style={styles.artworkContainer}>
-                {track.coverArtUrl ? (
-                  <FastImage
-                    source={{ uri: fixImageUrl(track.coverArtUrl) || '' }}
-                    style={styles.trackArtwork}
-                    resizeMode={FastImage.resizeMode.cover}
-                  />
-                ) : (
-                  <View
-                    style={[styles.trackArtwork, styles.trackArtworkPlaceholder]}
-                  >
-                    <Logo size={28} color={colors.grape[4]} />
-                  </View>
-                )}
-              </View>
-              <Text style={styles.trackName} numberOfLines={1}>
-                {track.trackName}
-              </Text>
-              <Text style={styles.trackArtist} numberOfLines={1}>
-                {track.artistName}
-              </Text>
-              <TouchableOpacity
-                style={styles.recommendButton}
-                onPress={() =>
-                  navigation.navigate("CreateReview", {
-                    song_name: track.trackName,
-                    band_name: track.artistName,
-                    artwork_url: track.coverArtUrl || '',
-                  })
-                }
-              >
-                <Icon name="plus" size={12} color={colors.grape[0]} />
-                <Text style={styles.recommendButtonText}>Recommend</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  // Render recently played section (fallback when scrobbling is not active)
-  const renderLastFmRecentlyPlayed = () => {
+  // Render recently played section
+  const renderRecentlyPlayed = () => {
     if (recentlyPlayedLoading) {
       return (
         <View style={styles.recentlyPlayedSection}>
@@ -368,7 +188,7 @@ export function FeedScreen({ navigation, route }: any) {
           <View style={styles.connectLastFm}>
             <Icon name="music" size={24} color={colors.grape[5]} />
             <Text style={styles.connectText}>
-              Connect Last.fm to see your recently played tracks
+              Connect Last.fm or enable scrobbling to see your recently played tracks
             </Text>
           </View>
         </View>
@@ -409,6 +229,26 @@ export function FeedScreen({ navigation, route }: any) {
                   <View style={styles.nowPlayingOverlay}>
                     <Icon name="volume-2" size={28} color={colors.grape[0]} />
                   </View>
+                )}
+                {!track.album_art_url && (
+                  <TouchableOpacity
+                    style={styles.refreshArtworkButton}
+                    onPress={() => {
+                      const scrobbleId = getScrobbleId(track);
+                      if (scrobbleId) {
+                        handleRefreshArtwork(scrobbleId, track.name);
+                      } else {
+                        Alert.alert('Cannot refresh', 'This track does not have a scrobble ID to refresh artwork.');
+                      }
+                    }}
+                    disabled={refreshingArtworkId !== null}
+                  >
+                    {refreshingArtworkId === getScrobbleId(track) ? (
+                      <ActivityIndicator size="small" color={colors.grape[8]} />
+                    ) : (
+                      <Icon name="refresh-cw" size={14} color={colors.grape[8]} />
+                    )}
+                  </TouchableOpacity>
                 )}
               </View>
               <Text style={styles.trackName} numberOfLines={1}>
@@ -464,6 +304,36 @@ export function FeedScreen({ navigation, route }: any) {
       band_name: track.artist,
       artwork_url: track.album_art_url || "",
     });
+  };
+
+  const getScrobbleId = (track: RecentlyPlayedTrack): number | string | undefined => {
+    return track.scrobble_id ?? track.id;
+  };
+
+  const showSuccessBanner = (message: string) => {
+    setSuccessMessage(message);
+    setShowSuccess(true);
+  };
+
+  const handleRefreshArtwork = async (scrobbleId: number | string, trackName: string) => {
+    setRefreshingArtworkId(scrobbleId);
+    try {
+      const response = await apiClient.refreshScrobbleArtwork(scrobbleId);
+      if (response.status === 'success' && response.artwork_url) {
+        showSuccessBanner(`Found artwork for "${trackName}"`);
+        fetchRecentlyPlayed();
+      } else if (response.status === 'not_found') {
+        showSuccessBanner(`No artwork found for "${trackName}"`);
+      } else {
+        showSuccessBanner(response.message || 'Artwork refreshed');
+        fetchRecentlyPlayed();
+      }
+    } catch (error: any) {
+      const message = error?.message || error?.error || String(error) || 'Failed to refresh artwork';
+      Alert.alert('Error', message);
+    } finally {
+      setRefreshingArtworkId(null);
+    }
   };
 
   if (loading && reviews.length === 0) {
@@ -548,7 +418,7 @@ export function FeedScreen({ navigation, route }: any) {
                 </TouchableOpacity>
               </View>
             )}
-            {scrobblingActive ? renderScrobbledTracks() : renderLastFmRecentlyPlayed()}
+            {renderRecentlyPlayed()}
             <Text style={styles.sectionTitle}>Following</Text>
           </>
         }
@@ -560,7 +430,7 @@ export function FeedScreen({ navigation, route }: any) {
           style={[styles.successBanner, { opacity: bannerOpacity }]}
         >
           <Icon name="check-circle" size={20} color={colors.grape[0]} />
-          <Text style={styles.successText}>Recommendation posted!</Text>
+          <Text style={styles.successText}>{successMessage}</Text>
         </Animated.View>
       )}
     </SafeAreaView>
@@ -644,6 +514,17 @@ const styles = StyleSheet.create({
   },
   trackArtworkPlaceholder: {
     backgroundColor: colors.grape[2],
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  refreshArtworkButton: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    backgroundColor: colors.grape[2],
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
   },

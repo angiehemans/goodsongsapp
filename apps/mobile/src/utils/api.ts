@@ -89,6 +89,13 @@ export interface ArtworkSearchResponse {
   };
 }
 
+// Refresh artwork response
+export interface RefreshArtworkResponse {
+  status: 'success' | 'already_has_artwork' | 'not_found' | 'no_track';
+  message: string;
+  artwork_url?: string;
+}
+
 // API base URL - configure this for your environment
 const API_URL = __DEV__
   ? 'http://localhost:3000' // Physical device via adb reverse, or emulator via 10.0.2.2
@@ -131,7 +138,9 @@ class MobileApiClient {
       } catch {
         throw new Error(`Request failed with status ${response.status}`);
       }
-      throw new Error(error.error || error.errors || 'Request failed');
+      // Handle nested error structure: { error: { code, message } }
+      const message = error.error?.message || error.error || error.errors || 'Request failed';
+      throw new Error(message);
     }
 
     return response.json();
@@ -486,6 +495,12 @@ class MobileApiClient {
   async deleteScrobble(id: number): Promise<{ message: string }> {
     return this.request(`/api/v1/scrobbles/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  async refreshScrobbleArtwork(scrobbleId: number | string): Promise<RefreshArtworkResponse> {
+    return this.request(`/api/v1/scrobbles/${scrobbleId}/refresh_artwork`, {
+      method: 'POST',
     });
   }
 

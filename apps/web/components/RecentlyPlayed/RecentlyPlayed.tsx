@@ -37,7 +37,7 @@ export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
   const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [refreshingArtworkId, setRefreshingArtworkId] = useState<number | null>(null);
+  const [refreshingArtworkId, setRefreshingArtworkId] = useState<number | string | null>(null);
 
   const fetchRecentlyPlayed = useCallback(async (silent = false) => {
     if (!user) return;
@@ -69,11 +69,11 @@ export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
     }
   };
 
-  const getScrobbleId = (track: RecentlyPlayedTrack): number | undefined => {
+  const getScrobbleId = (track: RecentlyPlayedTrack): number | string | undefined => {
     return track.scrobble_id ?? track.id;
   };
 
-  const handleRefreshArtwork = async (scrobbleId: number, trackName: string) => {
+  const handleRefreshArtwork = async (scrobbleId: number | string, trackName: string) => {
     setRefreshingArtworkId(scrobbleId);
     try {
       const response = await apiClient.refreshScrobbleArtwork(scrobbleId);
@@ -100,8 +100,8 @@ export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
         // Rehydrate the component with fresh data (silent to avoid loader flash)
         fetchRecentlyPlayed(true);
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to refresh artwork';
+    } catch (error: any) {
+      const message = error?.message || error?.error || String(error) || 'Failed to refresh artwork';
       notifications.show({
         title: 'Error',
         message,

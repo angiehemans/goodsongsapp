@@ -289,6 +289,8 @@ export interface LastFmTrack {
 }
 
 export interface RecentlyPlayedTrack {
+  id?: number | string;
+  scrobble_id?: number | string;
   name: string;
   artist: string;
   album: string;

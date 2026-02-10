@@ -382,8 +382,8 @@ export interface RecentlyPlayedTrack {
   source: 'lastfm' | 'scrobble';
   album_art_url: string | null;
   loved: boolean;
-  id?: number;  // Scrobble ID (only present for scrobble source)
-  scrobble_id?: number;  // Alternative field name
+  id?: number | string;  // Scrobble ID (only present for scrobble source)
+  scrobble_id?: number | string;  // Alternative field name
 }
 
 export interface RefreshArtworkResponse {
@@ -628,7 +628,9 @@ class ApiClient {
       } catch {
         throw new Error(`Request failed with status ${response.status}`);
       }
-      throw new Error(error.error || error.errors || 'Request failed');
+      // Handle nested error structure: { error: { code, message } }
+      const message = error.error?.message || error.error || error.errors || 'Request failed';
+      throw new Error(message);
     }
 
     return response.json();
@@ -654,7 +656,9 @@ class ApiClient {
       } catch {
         throw new Error(`Request failed with status ${response.status}`);
       }
-      throw new Error(error.error || error.errors || 'Request failed');
+      // Handle nested error structure: { error: { code, message } }
+      const message = error.error?.message || error.error || error.errors || 'Request failed';
+      throw new Error(message);
     }
 
     return response.json();
@@ -1057,7 +1061,7 @@ class ApiClient {
     return this.makeRequest(`/recently-played${queryString ? `?${queryString}` : ''}`);
   }
 
-  async refreshScrobbleArtwork(scrobbleId: number, force?: boolean): Promise<RefreshArtworkResponse> {
+  async refreshScrobbleArtwork(scrobbleId: number | string, force?: boolean): Promise<RefreshArtworkResponse> {
     const params = force ? '?force=true' : '';
     return this.makeRequest(`/api/v1/scrobbles/${scrobbleId}/refresh_artwork${params}`, {
       method: 'POST',
