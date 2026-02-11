@@ -18,8 +18,19 @@
   background-color: var(--mantine-color-grape-3);
 }
 
-.userInfo {
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+.songContainer {
+  background-color: var(--mantine-color-grape-2);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-sm);
+  /* margin-top: var(--mantine-spacing-sm); */
+}
+
+.cardBorder {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: none;
+  border-bottom: 2px solid var(--mantine-color-grape-5);
 }
 
 .authorName,

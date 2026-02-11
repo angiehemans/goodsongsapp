@@ -62,7 +62,7 @@ export function FollowingFeed({ title = 'Following Feed' }: FollowingFeedProps) 
       const pagination = (response as any)?.meta || (response as any)?.pagination;
       const currentPageNum = pagination?.current_page || 1;
       const totalPagesNum = pagination?.total_pages || 1;
-      const hasNext = pagination?.has_next_page ?? (currentPageNum < totalPagesNum);
+      const hasNext = pagination?.has_next_page ?? currentPageNum < totalPagesNum;
       setCurrentPage(currentPageNum);
       setHasNextPage(hasNext);
     } catch (error) {
@@ -145,7 +145,7 @@ export function FollowingFeed({ title = 'Following Feed' }: FollowingFeedProps) 
       <Title order={2} mb="sm" c="blue.8" fw={500}>
         {title}
       </Title>
-      <Stack>
+      <Stack gap={0}>
         {feedItems.map((item) => (
           <ReviewCard key={item.id} review={feedItemToReview(item)} />
         ))}

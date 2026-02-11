@@ -38,11 +38,16 @@
 @media (max-width: 768px) {
   .menu {
     flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
   }
 
   .menuButton {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: center !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 }
 

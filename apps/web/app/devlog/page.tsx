@@ -539,6 +539,9 @@ export default function DevlogPage() {
                 Resources
               </Text>
               <Stack gap="xs">
+                <Link href="/about" className={styles.footerLink}>
+                  About
+                </Link>
                 <Link href="/devlog" className={styles.footerLink}>
                   Development Log
                 </Link>

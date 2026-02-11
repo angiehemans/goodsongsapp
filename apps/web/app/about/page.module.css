@@ -1,0 +1,141 @@
+/* Page wrapper */
+.page {
+  min-height: 100vh;
+  background-color: var(--mantine-color-grape-0);
+}
+
+/* Fixed Navigation */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--mantine-color-grape-0);
+  border-bottom: 2px solid var(--mantine-color-blue-9);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--mantine-color-blue-9);
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  width: 100%;
+  padding-top: 120px;
+  padding-bottom: 20px;
+  text-align: center;
+  background-color: var(--mantine-color-grape-0);
+}
+
+/* Section Styles */
+.sectionLight {
+  background-color: var(--mantine-color-grape-0);
+}
+
+.sectionDark {
+  background-color: var(--mantine-color-blue-9);
+}
+
+/* Content Cards */
+.contentCard {
+  background-color: var(--mantine-color-grape-1);
+  border: 2px solid var(--mantine-color-grape-3);
+  padding: 2.5rem;
+}
+
+.contentCardDark {
+  background-color: var(--mantine-color-blue-8);
+  border: 2px solid var(--mantine-color-blue-6);
+  padding: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .contentCard,
+  .contentCardDark {
+    padding: 1.5rem;
+  }
+}
+
+/* Section Titles */
+.sectionTitle {
+  font-size: 1.75rem;
+  color: var(--mantine-color-blue-9);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--mantine-color-grape-3);
+}
+
+.sectionTitleDark {
+  font-size: 1.75rem;
+  color: var(--mantine-color-grape-0);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--mantine-color-blue-6);
+}
+
+/* Text Styles */
+.paragraph {
+  color: var(--mantine-color-grape-8);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  font-size: 1.0625rem;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.paragraphDark {
+  color: var(--mantine-color-grape-1);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  font-size: 1.0625rem;
+}
+
+.paragraphDark:last-child {
+  margin-bottom: 0;
+}
+
+/* Link Styles */
+.link {
+  color: var(--mantine-color-grape-7);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+  font-weight: 500;
+}
+
+.link:hover {
+  color: var(--mantine-color-blue-9);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--mantine-color-blue-9);
+  border-top: 2px solid var(--mantine-color-blue-6);
+}
+
+.footerLink {
+  color: var(--mantine-color-blue-3);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.footerLink:hover {
+  color: var(--mantine-color-grape-0);
+}
+
+.footerBottom {
+  border-top: 1px solid var(--mantine-color-blue-7);
+  padding: 1.5rem 0;
+}

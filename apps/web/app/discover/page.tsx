@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import useSWR from 'swr';
 import {
   IconCalendarEvent,
   IconMessage,
@@ -10,6 +9,7 @@ import {
   IconSearch,
   IconUsers,
 } from '@tabler/icons-react';
+import useSWR from 'swr';
 import {
   Badge,
   Box,
@@ -141,7 +141,6 @@ export default function DiscoverPage() {
     }
   }, [eventsData]);
 
-
   // Load more handlers
   const handleLoadMoreUsers = useCallback(() => {
     if (usersData?.pagination?.has_next_page && !usersLoading) {
@@ -193,7 +192,13 @@ export default function DiscoverPage() {
       );
       observerRef.current.observe(node);
     },
-    [activeTab, handleLoadMoreUsers, handleLoadMoreBands, handleLoadMoreReviews, handleLoadMoreEvents]
+    [
+      activeTab,
+      handleLoadMoreUsers,
+      handleLoadMoreBands,
+      handleLoadMoreReviews,
+      handleLoadMoreEvents,
+    ]
   );
 
   return (
@@ -216,7 +221,7 @@ export default function DiscoverPage() {
               justify="flex-start"
               onClick={() => setActiveTab('users')}
             >
-              Users
+              Fans
             </Button>
             <Button
               variant={activeTab === 'bands' ? 'light' : 'subtle'}
@@ -236,7 +241,7 @@ export default function DiscoverPage() {
               justify="flex-start"
               onClick={() => setActiveTab('reviews')}
             >
-              Reviews
+              Songs
             </Button>
             <Button
               variant={activeTab === 'events' ? 'light' : 'subtle'}
@@ -246,7 +251,7 @@ export default function DiscoverPage() {
               justify="flex-start"
               onClick={() => setActiveTab('events')}
             >
-              Events
+              Shows
             </Button>
           </Flex>
         </Box>
@@ -304,7 +309,8 @@ export default function DiscoverPage() {
                             </Text>
                             {(user.location || user.city || user.region) && (
                               <Text size="xs" c="dimmed">
-                                {user.location || [user.city, user.region].filter(Boolean).join(', ')}
+                                {user.location ||
+                                  [user.city, user.region].filter(Boolean).join(', ')}
                               </Text>
                             )}
                           </Stack>
@@ -356,11 +362,13 @@ export default function DiscoverPage() {
                               </Text>
                               {(band.location || band.city || band.region) && (
                                 <Text size="xs" c="dimmed">
-                                  {band.location || [band.city, band.region].filter(Boolean).join(', ')}
+                                  {band.location ||
+                                    [band.city, band.region].filter(Boolean).join(', ')}
                                 </Text>
                               )}
                             </Stack>
-                            {(band.reviews_count > 0 || (band.reviews && band.reviews.length > 0)) && (
+                            {(band.reviews_count > 0 ||
+                              (band.reviews && band.reviews.length > 0)) && (
                               <Badge size="sm" variant="light" color="grape">
                                 {band.reviews_count || band.reviews?.length} rec
                                 {(band.reviews_count || band.reviews?.length) !== 1 ? 's' : ''}
@@ -418,7 +426,7 @@ export default function DiscoverPage() {
                     </Stack>
                   </Center>
                 ) : (
-                  <Stack gap="md">
+                  <Stack gap={0}>
                     {accumulatedReviews.map((review) => (
                       <ReviewCard key={review.id} review={review} />
                     ))}

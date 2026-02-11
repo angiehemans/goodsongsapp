@@ -146,7 +146,7 @@ function MainNavigator() {
           height: 60 + insets.bottom,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           marginTop: 2,
         },
       })}

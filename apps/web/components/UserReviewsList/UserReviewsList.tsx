@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import useSWR from 'swr';
 import { IconMusic } from '@tabler/icons-react';
+import useSWR from 'swr';
 import { Center, Loader, Paper, Stack, Text } from '@mantine/core';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { apiClient, Review, UserProfile } from '@/lib/api';
@@ -20,7 +20,11 @@ interface UserReviewsListProps {
   };
 }
 
-export function UserReviewsList({ profile, initialReviews, initialPagination }: UserReviewsListProps) {
+export function UserReviewsList({
+  profile,
+  initialReviews,
+  initialPagination,
+}: UserReviewsListProps) {
   const [page, setPage] = useState(1);
   const [accumulatedReviews, setAccumulatedReviews] = useState<Review[]>(initialReviews);
   const [hasNextPage, setHasNextPage] = useState(initialPagination?.has_next_page ?? false);
@@ -115,7 +119,7 @@ export function UserReviewsList({ profile, initialReviews, initialPagination }: 
   }
 
   return (
-    <Stack>
+    <Stack gap={0}>
       {accumulatedReviews.map((review: Review) => (
         <ReviewCard key={review.id} review={review} />
       ))}

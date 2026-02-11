@@ -49,7 +49,21 @@ export interface ProfileUpdateData {
 
 export interface AuthResponse {
   auth_token: string;
+  refresh_token?: string;
   message?: string;
+}
+
+export interface RefreshTokenResponse {
+  auth_token: string;
+}
+
+export interface Session {
+  id: number;
+  device_info: string;
+  ip_address: string;
+  last_used_at: string;
+  created_at: string;
+  current: boolean;
 }
 
 export interface LoginCredentials {
@@ -601,6 +615,9 @@ export interface MusicBrainzSearchResponse {
 }
 
 class ApiClient {
+  private isRefreshing = false;
+  private refreshPromise: Promise<string> | null = null;
+
   private getApiUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
   }
@@ -610,9 +627,52 @@ class ApiClient {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
+  private async refreshAccessToken(): Promise<string> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${this.getApiUrl()}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      // Refresh token is invalid - clear tokens and throw
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      throw new Error('Session expired. Please log in again.');
+    }
+
+    const data = await response.json();
+    localStorage.setItem('auth_token', data.auth_token);
+    return data.auth_token;
+  }
+
+  private async handleTokenRefresh(): Promise<string> {
+    // If already refreshing, wait for the existing refresh to complete
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = this.refreshAccessToken();
+
+    try {
+      const token = await this.refreshPromise;
+      return token;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
   private async makeRequest<T = any>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<T> {
     const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
       headers: {
@@ -630,6 +690,19 @@ class ApiClient {
       } catch {
         throw new Error(`Request failed with status ${response.status}`);
       }
+
+      // Check for token expiration and attempt refresh
+      if (response.status === 401 && error.error?.code === 'token_expired' && !isRetry) {
+        try {
+          await this.handleTokenRefresh();
+          // Retry the original request with new token
+          return this.makeRequest<T>(endpoint, options, true);
+        } catch (refreshError) {
+          // Refresh failed - throw the original error
+          throw new Error('Session expired. Please log in again.');
+        }
+      }
+
       // Handle nested error structure: { error: { code, message } }
       const message = error.error?.message || error.error || error.errors || 'Request failed';
       throw new Error(message);
@@ -640,7 +713,8 @@ class ApiClient {
 
   private async makeFormRequest<T = any>(
     endpoint: string,
-    formData: FormData
+    formData: FormData,
+    isRetry = false
   ): Promise<T> {
     const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
       method: 'POST',
@@ -658,6 +732,18 @@ class ApiClient {
       } catch {
         throw new Error(`Request failed with status ${response.status}`);
       }
+
+      // Check for token expiration and attempt refresh
+      if (response.status === 401 && error.error?.code === 'token_expired' && !isRetry) {
+        try {
+          await this.handleTokenRefresh();
+          // Retry the original request with new token
+          return this.makeFormRequest<T>(endpoint, formData, true);
+        } catch (refreshError) {
+          throw new Error('Session expired. Please log in again.');
+        }
+      }
+
       // Handle nested error structure: { error: { code, message } }
       const message = error.error?.message || error.error || error.errors || 'Request failed';
       throw new Error(message);
@@ -758,8 +844,59 @@ class ApiClient {
     localStorage.setItem('auth_token', token);
   }
 
+  setRefreshToken(token: string) {
+    localStorage.setItem('refresh_token', token);
+  }
+
   removeAuthToken() {
     localStorage.removeItem('auth_token');
+  }
+
+  removeRefreshToken() {
+    localStorage.removeItem('refresh_token');
+  }
+
+  clearAllTokens() {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
+  }
+
+  // Auth endpoints
+  async logout(): Promise<void> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      try {
+        await this.makeRequest('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+      } catch {
+        // Ignore errors during logout - we're clearing tokens anyway
+      }
+    }
+    this.clearAllTokens();
+  }
+
+  async logoutAll(): Promise<{ message: string }> {
+    const result = await this.makeRequest<{ message: string }>('/auth/logout-all', {
+      method: 'POST',
+    });
+    this.clearAllTokens();
+    return result;
+  }
+
+  async getSessions(): Promise<Session[]> {
+    return this.makeRequest('/auth/sessions');
+  }
+
+  async revokeSession(sessionId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/auth/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
   }
 
   getAuthToken(): string | null {

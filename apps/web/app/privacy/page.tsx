@@ -389,6 +389,9 @@ export default function PrivacyPolicyPage() {
                 Legal
               </Text>
               <Stack gap="xs">
+                <Link href="/about" className={styles.footerLink}>
+                  About
+                </Link>
                 <Link href="/privacy" className={styles.footerLink}>
                   Privacy Policy
                 </Link>

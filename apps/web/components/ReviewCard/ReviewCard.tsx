@@ -14,7 +14,18 @@ import {
   IconShare,
 } from '@tabler/icons-react';
 import html2canvas from 'html2canvas';
-import { ActionIcon, Badge, Card, Center, Group, Loader, Menu, Spoiler, Stack, Text } from '@mantine/core';
+import {
+  ActionIcon,
+  Badge,
+  Card,
+  Center,
+  Group,
+  Loader,
+  Menu,
+  Spoiler,
+  Stack,
+  Text,
+} from '@mantine/core';
 import { CommentsDrawer } from '@/components/CommentsDrawer/CommentsDrawer';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { apiClient, Review } from '@/lib/api';
@@ -167,10 +178,10 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
   };
 
   return (
-    <Card p="md" bd="0" bg="grape.0" maw={700}>
+    <Card py="sm" px={0} bg="none" maw={700} className={styles.cardBorder}>
       <Stack gap="sm">
         {/* Author Info */}
-        <Group gap="sm" pb="sm" className={styles.userInfo}>
+        <Group gap="sm">
           <ProfilePhoto
             src={authorProfileImage}
             alt={authorUsername || 'Unknown user'}
@@ -178,112 +189,122 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
             fallback={authorUsername || '?'}
             href={authorUsername ? `/users/${authorUsername}` : undefined}
           />
-          {authorUsername ? (
-            <Text
-              size="sm"
-              fw={500}
-              c="grape.6"
-              component={Link}
-              href={`/users/${authorUsername}`}
-              style={{ textDecoration: 'none' }}
-              className={styles.authorName}
-            >
-              @{authorUsername}
-            </Text>
-          ) : (
-            <Text size="sm" fw={500} c="dimmed">
-              @unknown
-            </Text>
-          )}
-        </Group>
-
-        {/* Song Info */}
-        <Group gap="sm" justify="space-between" align="flex-start">
-          <Group gap="sm">
-            <Link href={reviewUrl} className={styles.artworkLink}>
-              {review.artwork_url && !artworkError ? (
-                <img
-                  src={review.artwork_url}
-                  alt={`${review.song_name} artwork`}
-                  width={48}
-                  height={48}
-                  className={styles.artwork}
-                  onError={() => setArtworkError(true)}
-                />
-              ) : (
-                <Center
-                  w={48}
-                  h={48}
-                  bg="grape.1"
-                  style={{ borderRadius: 'var(--mantine-radius-sm)' }}
-                >
-                  <img
-                    src="/logo-grape.svg"
-                    alt="Good Songs"
-                    width={32}
-                    height={32}
-                    style={{ opacity: 0.8 }}
-                  />
-                </Center>
-              )}
-            </Link>
-            <Stack gap={2}>
+          <Stack gap={2}>
+            {authorUsername ? (
               <Text
-                size="md"
+                size="sm"
                 fw={500}
-                c="gray.9"
+                c="grape.6"
                 component={Link}
-                href={reviewUrl}
+                href={`/users/${authorUsername}`}
                 style={{ textDecoration: 'none' }}
-                className={styles.songName}
+                className={styles.authorName}
               >
-                {review.song_name}
+                @{authorUsername}
               </Text>
-              {review.band?.slug ? (
-                <Text
-                  size="sm"
-                  c="grape.6"
-                  component={Link}
-                  href={`/bands/${review.band.slug}`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  {review.band_name}
-                </Text>
-              ) : (
-                <Text size="sm" c="dimmed">
-                  {review.band_name}
-                </Text>
-              )}
-            </Stack>
-          </Group>
-          {review.song_link && (
-            <a href={review.song_link} target="_blank" rel="noopener noreferrer">
-              <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
-            </a>
-          )}
+            ) : (
+              <Text size="sm" fw={500} c="dimmed">
+                @unknown
+              </Text>
+            )}
+            <Text size="xs" c="gray.5">
+              {new Date(review.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </Text>
+          </Stack>
         </Group>
 
-        {/* Review Text */}
-        <Spoiler
-          maxHeight={60}
-          showLabel="Read more"
-          hideLabel="Show less"
-          styles={{
-            control: {
-              fontSize: 'var(--mantine-font-size-sm)',
-              color: 'var(--mantine-color-grape-4)',
-            },
-          }}
-        >
-          <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-            {review.review_text}
-          </Text>
-        </Spoiler>
+        {/* Song Content Container */}
+        <div className={styles.songContainer}>
+          {/* Song Info */}
+          <Group gap="sm" justify="space-between" align="flex-start" mb="sm">
+            <Group gap="sm">
+              <Link href={reviewUrl} className={styles.artworkLink}>
+                {review.artwork_url && !artworkError ? (
+                  <img
+                    src={review.artwork_url}
+                    alt={`${review.song_name} artwork`}
+                    width={48}
+                    height={48}
+                    className={styles.artwork}
+                    onError={() => setArtworkError(true)}
+                  />
+                ) : (
+                  <Center
+                    w={48}
+                    h={48}
+                    bg="grape.1"
+                    style={{ borderRadius: 'var(--mantine-radius-sm)' }}
+                  >
+                    <img
+                      src="/logo-grape.svg"
+                      alt="Good Songs"
+                      width={32}
+                      height={32}
+                      style={{ opacity: 0.8 }}
+                    />
+                  </Center>
+                )}
+              </Link>
+              <Stack gap={2}>
+                <Text
+                  size="md"
+                  fw={500}
+                  c="gray.9"
+                  component={Link}
+                  href={reviewUrl}
+                  style={{ textDecoration: 'none' }}
+                  className={styles.songName}
+                >
+                  {review.song_name}
+                </Text>
+                {review.band?.slug ? (
+                  <Text
+                    size="sm"
+                    c="grape.6"
+                    component={Link}
+                    href={`/bands/${review.band.slug}`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {review.band_name}
+                  </Text>
+                ) : (
+                  <Text size="sm" c="dimmed">
+                    {review.band_name}
+                  </Text>
+                )}
+              </Stack>
+            </Group>
+            {review.song_link && (
+              <a href={review.song_link} target="_blank" rel="noopener noreferrer">
+                <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
+              </a>
+            )}
+          </Group>
 
-        {/* Tags and Like Button */}
-        <Group justify="space-between" align="center">
-          {review.liked_aspects && review.liked_aspects.length > 0 ? (
-            <Group gap="xs">
+          {/* Review Text */}
+          <Spoiler
+            maxHeight={60}
+            showLabel="Read more"
+            hideLabel="Show less"
+            styles={{
+              control: {
+                fontSize: 'var(--mantine-font-size-sm)',
+                color: 'var(--mantine-color-grape-4)',
+              },
+            }}
+          >
+            <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+              {review.review_text}
+            </Text>
+          </Spoiler>
+
+          {/* Tags */}
+          {review.liked_aspects && review.liked_aspects.length > 0 && (
+            <Group gap="xs" mt="sm">
               {review.liked_aspects.slice(0, 3).map((aspect, index) => (
                 <Badge key={index} size="sm" variant="light" color="grape">
                   {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
@@ -295,89 +316,80 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
                 </Text>
               )}
             </Group>
-          ) : (
-            <div />
           )}
+        </div>
 
-          {/* Like and Share Buttons */}
-          <Group gap="xs">
-            {/* Like Button */}
-            <Group gap={4}>
+        {/* Like, Comments, and Share Buttons */}
+        <Group gap="sm" justify="flex-end">
+          {/* Share Menu */}
+          <Menu shadow="md" width={200} position="bottom-end">
+            <Menu.Target>
               <ActionIcon
                 variant="subtle"
-                color={isLiked ? 'red' : 'gray'}
-                onClick={handleLikeClick}
-                loading={isLiking}
-                aria-label={isLiked ? 'Unlike review' : 'Like review'}
+                color="grape.6"
+                aria-label="Share review"
+                loading={generatingImage}
               >
-                {isLiked ? (
-                  <IconHeartFilled size={20} />
-                ) : (
-                  <IconHeart size={20} />
-                )}
+                {copied ? <IconCheck size={20} /> : <IconShare size={20} />}
               </ActionIcon>
-              {likesCount > 0 && (
-                <Text size="sm" c="dimmed">
-                  {likesCount}
-                </Text>
-              )}
-            </Group>
-
-            {/* Comments Button */}
-            <Group gap={4}>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setCommentsDrawerOpen(true)}
-                aria-label="View comments"
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Share this review</Menu.Label>
+              <Menu.Item leftSection={<IconLink size={16} />} onClick={handleCopyLink}>
+                {copied ? 'Copied!' : 'Copy link'}
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Label>Download for Instagram</Menu.Label>
+              <Menu.Item
+                leftSection={<IconBrandInstagram size={16} />}
+                onClick={() => handleInstagramShare('story')}
+                disabled={generatingImage}
               >
-                <IconMessage size={20} />
-              </ActionIcon>
-              {commentsCount > 0 && (
-                <Text size="sm" c="dimmed">
-                  {commentsCount}
-                </Text>
-              )}
-            </Group>
+                Story (9:16)
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconPhoto size={16} />}
+                onClick={() => handleInstagramShare('post')}
+                disabled={generatingImage}
+              >
+                Post (1:1)
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
 
-            {/* Share Menu */}
-            <Menu shadow="md" width={200} position="bottom-end">
-              <Menu.Target>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  aria-label="Share review"
-                  loading={generatingImage}
-                >
-                  {copied ? <IconCheck size={20} /> : <IconShare size={20} />}
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>Share this review</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconLink size={16} />}
-                  onClick={handleCopyLink}
-                >
-                  {copied ? 'Copied!' : 'Copy link'}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Label>Download for Instagram</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconBrandInstagram size={16} />}
-                  onClick={() => handleInstagramShare('story')}
-                  disabled={generatingImage}
-                >
-                  Story (9:16)
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconPhoto size={16} />}
-                  onClick={() => handleInstagramShare('post')}
-                  disabled={generatingImage}
-                >
-                  Post (1:1)
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+          {/* Comments Button */}
+          <Group gap={4}>
+            <ActionIcon
+              variant="subtle"
+              color="grape.6"
+              onClick={() => setCommentsDrawerOpen(true)}
+              aria-label="View comments"
+            >
+              <IconMessage size={20} />
+            </ActionIcon>
+            {commentsCount > 0 && (
+              <Text size="sm" c="grape.6">
+                {commentsCount}
+              </Text>
+            )}
+          </Group>
+
+          {/* Like Button */}
+          <Group gap={4}>
+            <ActionIcon
+              variant="subtle"
+              color={isLiked ? 'red' : 'grape.6'}
+              onClick={handleLikeClick}
+              loading={isLiking}
+              aria-label={isLiked ? 'Unlike review' : 'Like review'}
+            >
+              {isLiked ? <IconHeartFilled size={20} /> : <IconHeart size={20} />}
+            </ActionIcon>
+            {likesCount > 0 && (
+              <Text size="sm" c="grape.6">
+                {likesCount}
+              </Text>
+            )}
           </Group>
         </Group>
       </Stack>

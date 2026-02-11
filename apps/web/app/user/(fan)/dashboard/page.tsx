@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IconAlertCircle, IconMail } from '@tabler/icons-react';
+import { IconAlertCircle, IconBrandDiscord, IconMail } from '@tabler/icons-react';
 import { Alert, Button, Drawer, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
@@ -111,6 +111,27 @@ export default function DashboardPage() {
 
       {/* Recently Played Section */}
       <RecentlyPlayed onRecommendTrack={handleOpenNewRecommendation} />
+
+      {/* Discord Notice */}
+      <Alert bg="blue.0" my="md" maw={700}>
+        <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+          <Text size="sm">
+            Want to give us feedback or join the Android beta test? Join our Discord community!
+          </Text>
+          <Button
+            size="xs"
+            variant="light"
+            color="blue"
+            component="a"
+            href="https://discord.gg/33MCPDwws"
+            target="_blank"
+            rel="noopener noreferrer"
+            leftSection={<IconBrandDiscord size={14} />}
+          >
+            Join Discord
+          </Button>
+        </Group>
+      </Alert>
 
       {/* Following Feed */}
       <FollowingFeed title="From People You Follow" />

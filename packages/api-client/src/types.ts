@@ -24,6 +24,8 @@ export interface User {
   display_name?: string;
   followers_count?: number;
   following_count?: number;
+  email_confirmed?: boolean;
+  can_resend_confirmation?: boolean;
 }
 
 export interface ProfileUpdateData {
@@ -35,7 +37,21 @@ export interface ProfileUpdateData {
 
 export interface AuthResponse {
   auth_token: string;
+  refresh_token?: string;
   message?: string;
+}
+
+export interface RefreshTokenResponse {
+  auth_token: string;
+}
+
+export interface Session {
+  id: number;
+  device_info: string;
+  ip_address: string;
+  last_used_at: string;
+  created_at: string;
+  current: boolean;
 }
 
 export interface LoginCredentials {

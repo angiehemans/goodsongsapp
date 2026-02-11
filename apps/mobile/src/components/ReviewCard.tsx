@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import FastImage from "react-native-fast-image";
 import Icon from "@react-native-vector-icons/feather";
@@ -15,6 +16,15 @@ import { Badge } from "./Badge";
 import { theme, colors } from "@/theme";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { apiClient } from "@/utils/api";
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 interface ReviewCardProps {
   review: Review;
@@ -43,6 +53,18 @@ export function ReviewCard({
   const handleOpenLink = () => {
     if (review.song_link) {
       Linking.openURL(review.song_link);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const shareUrl = `https://goodsongs.app/users/${authorUsername}/reviews/${review.id}`;
+      await Share.share({
+        message: `Check out this song recommendation on GoodSongs: "${review.song_name}" by ${review.band_name}\n\n${shareUrl}`,
+        url: shareUrl,
+      });
+    } catch (error) {
+      console.error("Failed to share:", error);
     }
   };
 
@@ -86,72 +108,102 @@ export function ReviewCard({
           size={36}
           fallback={authorUsername || "?"}
         />
-        <Text style={styles.authorName}>@{authorUsername || "unknown"}</Text>
+        <View style={styles.authorInfo}>
+          <Text style={styles.authorName}>@{authorUsername || "unknown"}</Text>
+          <Text style={styles.dateText}>{formatDate(review.created_at)}</Text>
+        </View>
       </TouchableOpacity>
 
-      {/* Song Info */}
-      <View style={styles.songRow}>
-        <View style={styles.songInfo}>
-          {review.artwork_url ? (
-            <FastImage
-              source={{ uri: fixImageUrl(review.artwork_url) || "" }}
-              style={styles.artwork}
-              resizeMode={FastImage.resizeMode.cover}
-            />
-          ) : (
-            <View style={[styles.artwork, styles.artworkPlaceholder]} />
-          )}
-          <View style={styles.songDetails}>
-            <Text style={styles.songName} numberOfLines={1}>
-              {review.song_name}
-            </Text>
-            <TouchableOpacity
-              onPress={() =>
-                review.band?.slug && onPressBand?.(review.band.slug)
-              }
-              disabled={!review.band?.slug || !onPressBand}
-            >
-              <Text style={styles.bandName} numberOfLines={1}>
-                {review.band_name}
+      {/* Song Content Container */}
+      <View style={styles.songContainer}>
+        {/* Song Info */}
+        <View style={styles.songRow}>
+          <View style={styles.songInfo}>
+            {review.artwork_url ? (
+              <FastImage
+                source={{ uri: fixImageUrl(review.artwork_url) || "" }}
+                style={styles.artwork}
+                resizeMode={FastImage.resizeMode.cover}
+              />
+            ) : (
+              <View style={[styles.artwork, styles.artworkPlaceholder]} />
+            )}
+            <View style={styles.songDetails}>
+              <Text style={styles.songName} numberOfLines={1}>
+                {review.song_name}
               </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  review.band?.slug && onPressBand?.(review.band.slug)
+                }
+                disabled={!review.band?.slug || !onPressBand}
+              >
+                <Text style={styles.bandName} numberOfLines={1}>
+                  {review.band_name}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          {review.song_link && (
+            <TouchableOpacity
+              onPress={handleOpenLink}
+              style={styles.linkButton}
+            >
+              <Icon name="external-link" size={20} color={colors.grape[6]} />
+            </TouchableOpacity>
+          )}
         </View>
-        {review.song_link && (
-          <TouchableOpacity onPress={handleOpenLink} style={styles.linkButton}>
-            <Icon name="external-link" size={20} color={colors.grape[6]} />
-          </TouchableOpacity>
+
+        {/* Review Text */}
+        <Text style={styles.reviewText} numberOfLines={3}>
+          {review.review_text}
+        </Text>
+
+        {/* Tags */}
+        {review.liked_aspects && review.liked_aspects.length > 0 && (
+          <View style={styles.tagsRow}>
+            {review.liked_aspects.slice(0, 3).map((aspect, index) => (
+              <Badge
+                style={styles.badgeStyle}
+                key={index}
+                text={
+                  typeof aspect === "string"
+                    ? aspect
+                    : aspect.name || String(aspect)
+                }
+              />
+            ))}
+            {review.liked_aspects.length > 3 && (
+              <Text style={styles.moreText}>
+                +{review.liked_aspects.length - 3} more
+              </Text>
+            )}
+          </View>
         )}
       </View>
 
-      {/* Review Text */}
-      <Text style={styles.reviewText} numberOfLines={3}>
-        {review.review_text}
-      </Text>
-
-      {/* Tags */}
-      {review.liked_aspects && review.liked_aspects.length > 0 && (
-        <View style={styles.tagsRow}>
-          {review.liked_aspects.slice(0, 3).map((aspect, index) => (
-            <Badge
-              key={index}
-              text={
-                typeof aspect === "string"
-                  ? aspect
-                  : aspect.name || String(aspect)
-              }
-            />
-          ))}
-          {review.liked_aspects.length > 3 && (
-            <Text style={styles.moreText}>
-              +{review.liked_aspects.length - 3} more
-            </Text>
-          )}
-        </View>
-      )}
-
       {/* Actions Row */}
       <View style={styles.actionsRow}>
+        {/* Share Button */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleShare();
+          }}
+        >
+          <Icon name="share" size={22} color={colors.grape[6]} />
+        </TouchableOpacity>
+
+        {/* Comments Button */}
+        <View style={styles.actionButton}>
+          <Icon name="message-circle" size={22} color={colors.grape[6]} />
+          {commentsCount > 0 && (
+            <Text style={styles.actionCount}>{commentsCount}</Text>
+          )}
+        </View>
+
+        {/* Like Button */}
         <TouchableOpacity
           style={styles.actionButton}
           onPress={(e) => {
@@ -165,7 +217,7 @@ export function ReviewCard({
           ) : (
             <Icon
               name="heart"
-              size={18}
+              size={22}
               color={isLiked ? "#ef4444" : colors.grape[6]}
             />
           )}
@@ -177,13 +229,6 @@ export function ReviewCard({
             </Text>
           )}
         </TouchableOpacity>
-
-        <View style={styles.actionButton}>
-          <Icon name="message-circle" size={18} color={colors.grape[6]} />
-          {commentsCount > 0 && (
-            <Text style={styles.actionCount}>{commentsCount}</Text>
-          )}
-        </View>
       </View>
     </TouchableOpacity>
   );
@@ -191,26 +236,32 @@ export function ReviewCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.grape[0],
-    paddingBottom: theme.spacing.md,
     borderBottomWidth: 2,
-    borderBottomColor: colors.grape[4],
+    borderBottomColor: colors.grape[5],
   },
   authorRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.grape[3],
-    borderStyle: "dashed",
-    marginBottom: theme.spacing.sm,
+  },
+  authorInfo: {
+    gap: 2,
   },
   authorName: {
-    fontSize: theme.fontSizes.lg,
+    fontSize: theme.fontSizes.sm,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.grape[7],
-    lineHeight: 24,
+    color: colors.grape[6],
+  },
+  dateText: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grey[5],
+  },
+  songContainer: {
+    backgroundColor: colors.grape[2],
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
   },
   songRow: {
     flexDirection: "row",
@@ -252,26 +303,29 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.base,
     color: colors.grey[8],
     lineHeight: 20,
-    marginBottom: theme.spacing.sm,
+    marginVertical: theme.spacing.sm,
   },
   tagsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: theme.spacing.xs,
     alignItems: "center",
+    marginTop: theme.spacing.sm,
   },
   moreText: {
     fontSize: theme.fontSizes.xs,
     color: colors.grey[5],
   },
+  badgeStyle: {
+    borderColor: colors.grape[3],
+    borderWidth: 1,
+  },
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.lg,
-    paddingTop: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.grape[2],
-    marginTop: theme.spacing.sm,
+    justifyContent: "flex-end",
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
   },
   actionButton: {
     flexDirection: "row",

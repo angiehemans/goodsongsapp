@@ -13,6 +13,7 @@ import {
   AppState,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FastImage from "react-native-fast-image";
@@ -442,10 +443,16 @@ export function FeedScreen({ navigation, route }: Props) {
             <View style={styles.footerContainer}>
               {loadingMore ? (
                 <View style={styles.loadingMore}>
-                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primary}
+                  />
                 </View>
               ) : hasMore ? (
-                <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
+                <TouchableOpacity
+                  style={styles.loadMoreButton}
+                  onPress={handleLoadMore}
+                >
                   <Text style={styles.loadMoreButtonText}>Load More</Text>
                 </TouchableOpacity>
               ) : (
@@ -498,6 +505,20 @@ export function FeedScreen({ navigation, route }: Props) {
               </View>
             )}
             {renderRecentlyPlayed()}
+
+            {/* Discord Notice */}
+            <TouchableOpacity
+              style={styles.discordBanner}
+              onPress={() => Linking.openURL("https://discord.gg/33MCPDwws")}
+            >
+              <Text style={styles.discordText}>
+                Want to give us feedback? Join our Discord community!
+              </Text>
+              <View style={styles.discordButton}>
+                <Text style={styles.discordButtonText}>Join Discord</Text>
+              </View>
+            </TouchableOpacity>
+
             <Text style={styles.sectionTitle}>Following</Text>
           </>
         }
@@ -537,6 +558,35 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     marginBottom: theme.spacing.md,
+  },
+  // Discord banner styles
+  discordBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#E6EAF8", // 95% tint of #0124B0
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  discordText: {
+    flex: 1,
+    fontSize: theme.fontSizes.sm,
+    color: "#0124B0", // Brand blue
+  },
+  discordButton: {
+    backgroundColor: "#CCD5F1", // 85% tint of #0124B0
+    borderRadius: theme.radii.sm,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  discordButtonText: {
+    fontSize: theme.fontSizes.xs,
+    fontFamily: theme.fonts.thecoaMedium,
+    color: "#0124B0", // Brand blue
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
   // Recently Played styles
   recentlyPlayedSection: {

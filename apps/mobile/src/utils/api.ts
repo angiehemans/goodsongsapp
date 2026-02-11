@@ -101,15 +101,59 @@ const API_URL = __DEV__
   ? 'http://localhost:3000' // Physical device via adb reverse, or emulator via 10.0.2.2
   : 'https://api.goodsongs.app';
 
+// Session type for active sessions
+export interface Session {
+  id: number;
+  device_info: string;
+  ip_address: string;
+  last_used_at: string;
+  created_at: string;
+  current: boolean;
+}
+
+// Extended auth response with refresh token
+export interface AuthResponseWithRefresh {
+  auth_token: string;
+  refresh_token?: string;
+  message?: string;
+}
+
 class MobileApiClient {
   private token: string | null = null;
+  private refreshToken: string | null = null;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string> | null = null;
+  private onTokenRefreshed: ((token: string, refreshToken: string | null) => void) | null = null;
+  private onSessionExpired: (() => void) | null = null;
 
   setToken(token: string) {
     this.token = token;
   }
 
+  setRefreshToken(token: string) {
+    this.refreshToken = token;
+  }
+
   clearToken() {
     this.token = null;
+  }
+
+  clearRefreshToken() {
+    this.refreshToken = null;
+  }
+
+  clearAllTokens() {
+    this.token = null;
+    this.refreshToken = null;
+  }
+
+  // Set callbacks for token refresh events
+  setTokenRefreshCallback(callback: (token: string, refreshToken: string | null) => void) {
+    this.onTokenRefreshed = callback;
+  }
+
+  setSessionExpiredCallback(callback: () => void) {
+    this.onSessionExpired = callback;
   }
 
   private getHeaders(): Record<string, string> {
@@ -122,9 +166,55 @@ class MobileApiClient {
     return headers;
   }
 
+  private async refreshAccessToken(): Promise<string> {
+    if (!this.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: this.refreshToken }),
+    });
+
+    if (!response.ok) {
+      // Refresh token is invalid - clear tokens and notify
+      this.clearAllTokens();
+      this.onSessionExpired?.();
+      throw new Error('Session expired. Please log in again.');
+    }
+
+    const data = await response.json();
+    this.token = data.auth_token;
+
+    // Notify the auth store to persist the new token
+    this.onTokenRefreshed?.(data.auth_token, this.refreshToken);
+
+    return data.auth_token;
+  }
+
+  private async handleTokenRefresh(): Promise<string> {
+    // If already refreshing, wait for the existing refresh to complete
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = this.refreshAccessToken();
+
+    try {
+      const token = await this.refreshPromise;
+      return token;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<T> {
     const response = await fetch(`${API_URL}${endpoint}`, {
       headers: this.getHeaders(),
@@ -138,6 +228,19 @@ class MobileApiClient {
       } catch {
         throw new Error(`Request failed with status ${response.status}`);
       }
+
+      // Check for token expiration and attempt refresh
+      if (response.status === 401 && error.error?.code === 'token_expired' && !isRetry) {
+        try {
+          await this.handleTokenRefresh();
+          // Retry the original request with new token
+          return this.request<T>(endpoint, options, true);
+        } catch (refreshError) {
+          // Refresh failed - throw session expired error
+          throw new Error('Session expired. Please log in again.');
+        }
+      }
+
       // Handle nested error structure: { error: { code, message } }
       const message = error.error?.message || error.error || error.errors || 'Request failed';
       throw new Error(message);
@@ -147,14 +250,14 @@ class MobileApiClient {
   }
 
   // Auth
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  async login(credentials: LoginCredentials): Promise<AuthResponseWithRefresh> {
     return this.request('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
   }
 
-  async signup(data: SignupData): Promise<AuthResponse> {
+  async signup(data: SignupData): Promise<AuthResponseWithRefresh> {
     return this.request('/signup', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -578,6 +681,39 @@ class MobileApiClient {
     }
 
     return response.json();
+  }
+
+  // Auth token management
+  async logout(): Promise<void> {
+    if (this.refreshToken) {
+      try {
+        await this.request('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refresh_token: this.refreshToken }),
+        });
+      } catch {
+        // Ignore errors during logout - we're clearing tokens anyway
+      }
+    }
+    this.clearAllTokens();
+  }
+
+  async logoutAll(): Promise<{ message: string }> {
+    const result = await this.request<{ message: string }>('/auth/logout-all', {
+      method: 'POST',
+    });
+    this.clearAllTokens();
+    return result;
+  }
+
+  async getSessions(): Promise<Session[]> {
+    return this.request('/auth/sessions');
+  }
+
+  async revokeSession(sessionId: number): Promise<{ message: string }> {
+    return this.request(`/auth/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
   }
 }
 
