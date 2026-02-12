@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Paper,
@@ -27,7 +27,7 @@ interface ResetPasswordFormValues {
   passwordConfirmation: string;
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -114,95 +114,102 @@ export default function ResetPasswordPage() {
   // Show loading while validating token
   if (validating) {
     return (
-      <Container size={400} my={40}>
-        <Center py="xl">
-          <Loader size="lg" />
-        </Center>
-      </Container>
+      <Center py="xl">
+        <Loader size="lg" />
+      </Center>
     );
   }
 
   // Show error if token is invalid
   if (!tokenValid) {
     return (
-      <Container size={400} my={40}>
-        <Stack>
-          <Title ta="center" c="goodsongs.6">
-            Reset Password
-          </Title>
+      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+        <Stack align="center" gap="md">
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            color="red"
+            variant="light"
+            w="100%"
+          >
+            {tokenError}
+          </Alert>
 
-          <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-            <Stack align="center" gap="md">
-              <Alert
-                icon={<IconAlertCircle size={16} />}
-                color="red"
-                variant="light"
-                w="100%"
-              >
-                {tokenError}
-              </Alert>
+          <Text size="sm" c="dimmed" ta="center">
+            The password reset link may have expired or already been used. Please request a new one.
+          </Text>
 
-              <Text size="sm" c="dimmed" ta="center">
-                The password reset link may have expired or already been used. Please request a new one.
-              </Text>
-
-              <Stack gap="xs" align="center">
-                <Anchor component={Link} href="/forgot-password" size="sm">
-                  Request new reset link
-                </Anchor>
-                <Anchor component={Link} href="/login" size="sm" c="dimmed">
-                  <IconArrowLeft size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                  Back to login
-                </Anchor>
-              </Stack>
-            </Stack>
-          </Paper>
+          <Stack gap="xs" align="center">
+            <Anchor component={Link} href="/forgot-password" size="sm">
+              Request new reset link
+            </Anchor>
+            <Anchor component={Link} href="/login" size="sm" c="dimmed">
+              <IconArrowLeft size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+              Back to login
+            </Anchor>
+          </Stack>
         </Stack>
-      </Container>
+      </Paper>
     );
   }
 
+  return (
+    <>
+      <Text c="dimmed" size="sm" ta="center" mt={5}>
+        Enter your new password below
+      </Text>
+
+      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack>
+            <PasswordInput
+              label="New Password"
+              placeholder="Your new password"
+              leftSection={<IconLock size={16} />}
+              required
+              {...form.getInputProps('password')}
+            />
+
+            <PasswordInput
+              label="Confirm Password"
+              placeholder="Confirm your new password"
+              leftSection={<IconLock size={16} />}
+              required
+              {...form.getInputProps('passwordConfirmation')}
+            />
+
+            <Button
+              fullWidth
+              mt="xl"
+              loading={loading}
+              type="submit"
+              color="grape.9"
+            >
+              Reset Password
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
+    </>
+  );
+}
+
+export default function ResetPasswordPage() {
   return (
     <Container size={400} my={40}>
       <Stack>
         <Title ta="center" c="goodsongs.6">
           Reset Password
         </Title>
-        <Text c="dimmed" size="sm" ta="center" mt={5}>
-          Enter your new password below
-        </Text>
 
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-          <form onSubmit={form.onSubmit(handleSubmit)}>
-            <Stack>
-              <PasswordInput
-                label="New Password"
-                placeholder="Your new password"
-                leftSection={<IconLock size={16} />}
-                required
-                {...form.getInputProps('password')}
-              />
-
-              <PasswordInput
-                label="Confirm Password"
-                placeholder="Confirm your new password"
-                leftSection={<IconLock size={16} />}
-                required
-                {...form.getInputProps('passwordConfirmation')}
-              />
-
-              <Button
-                fullWidth
-                mt="xl"
-                loading={loading}
-                type="submit"
-                color="grape.9"
-              >
-                Reset Password
-              </Button>
-            </Stack>
-          </form>
-        </Paper>
+        <Suspense
+          fallback={
+            <Center py="xl">
+              <Loader size="lg" />
+            </Center>
+          }
+        >
+          <ResetPasswordForm />
+        </Suspense>
       </Stack>
     </Container>
   );
