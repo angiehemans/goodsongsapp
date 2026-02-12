@@ -455,7 +455,7 @@ export default function DiscoverPage() {
                     </Stack>
                   </Center>
                 ) : (
-                  <Stack gap="md">
+                  <Stack gap="sm">
                     {accumulatedEvents.map((event) => (
                       <EventCard key={event.id} event={event} showBand />
                     ))}

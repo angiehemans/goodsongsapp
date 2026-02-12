@@ -189,7 +189,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
                   Upcoming Events
                 </Group>
               </Title>
-              <Stack gap="md" mb="xl">
+              <Stack gap="sm" mb="xl">
                 {upcomingEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}

@@ -25,3 +25,26 @@
     width: 100%;
   }
 }
+
+.notificationCard {
+  background-color: var(--mantine-color-grape-1);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-sm);
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 150ms ease;
+}
+
+.notificationCard:hover {
+  background-color: var(--mantine-color-grape-2);
+}
+
+.notificationCardUnread {
+  background-color: var(--mantine-color-grape-2);
+}
+
+.notificationCardUnread:hover {
+  background-color: var(--mantine-color-grape-3);
+}

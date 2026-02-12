@@ -180,7 +180,7 @@ export function NotificationsScreen() {
         if (songPart && bandPart)
           return `recommended ${songPart} by ${bandPart}`;
         if (songPart) return `recommended ${songPart}`;
-        return "shared a new recommendation";
+        return "recommended your music";
       }
       case "review_like":
         return "liked your recommendation";

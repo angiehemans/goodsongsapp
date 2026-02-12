@@ -639,7 +639,26 @@ class MobileApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to complete fan profile');
+      // Extract error message from various possible formats
+      let errorMessage = 'Failed to complete fan profile';
+      if (error.error) {
+        errorMessage = typeof error.error === 'string' ? error.error : JSON.stringify(error.error);
+      } else if (error.errors) {
+        // Handle Rails-style validation errors: { errors: { username: ["has already been taken"] } }
+        if (typeof error.errors === 'object') {
+          const firstKey = Object.keys(error.errors)[0];
+          if (firstKey && Array.isArray(error.errors[firstKey])) {
+            errorMessage = `${firstKey} ${error.errors[firstKey][0]}`;
+          } else {
+            errorMessage = JSON.stringify(error.errors);
+          }
+        } else {
+          errorMessage = error.errors;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json();

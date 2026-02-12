@@ -234,6 +234,32 @@ export default function NotificationsPage() {
     }
   };
 
+  // Get the action text (without username) for mobile-style layout
+  const getActionText = (notification: Notification) => {
+    const type = getNotificationType(notification);
+
+    switch (type) {
+      case 'new_follower':
+        return 'started following you';
+      case 'new_review':
+        if (notification.song_name && notification.band_name) {
+          return `recommended "${notification.song_name}" by ${notification.band_name}`;
+        } else if (notification.song_name) {
+          return `recommended "${notification.song_name}"`;
+        }
+        return 'recommended your music';
+      case 'review_like':
+        return 'liked your recommendation';
+      case 'review_comment': {
+        const songName = notification.review?.song_name || notification.song_name;
+        if (songName) return `commented on "${songName}"`;
+        return 'commented on your recommendation';
+      }
+      default:
+        return 'interacted with you';
+    }
+  };
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -341,57 +367,32 @@ export default function NotificationsPage() {
               </Center>
             ) : (
               <Stack gap={0}>
-                {notificationsList.map((notification, index) => (
+                {notificationsList.map((notification) => (
                   <Box
                     key={notification.id}
                     component={Link}
                     href={getNotificationLink(notification)}
-                    py="md"
-                    px="sm"
-                    style={{
-                      display: 'block',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      borderBottom:
-                        index < notificationsList.length - 1
-                          ? '1px solid var(--mantine-color-gray-2)'
-                          : 'none',
-                      backgroundColor: notification.read ? 'transparent' : 'var(--mantine-color-grape-0)',
-                      borderRadius: 'var(--mantine-radius-md)',
-                      marginBottom: index < notificationsList.length - 1 ? 4 : 0,
-                      transition: 'background-color 150ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = notification.read
-                        ? 'var(--mantine-color-gray-0)'
-                        : 'var(--mantine-color-grape-1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = notification.read
-                        ? 'transparent'
-                        : 'var(--mantine-color-grape-0)';
-                    }}
+                    className={`${styles.notificationCard} ${!notification.read ? styles.notificationCardUnread : ''}`}
                   >
                     <Group gap="md" wrap="nowrap" align="flex-start">
                       <Box pos="relative">
                         <ProfilePhoto
                           src={notification.actor.profile_image_url}
                           fallback={notification.actor.username}
-                          size={44}
+                          size={40}
                         />
                         <Box
                           style={{
                             position: 'absolute',
-                            bottom: -4,
-                            right: -4,
-                            width: 24,
-                            height: 24,
+                            bottom: -2,
+                            right: -2,
+                            width: 18,
+                            height: 18,
                             borderRadius: '50%',
                             backgroundColor: getNotificationIconColor(getNotificationType(notification)),
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: '2px solid white',
                           }}
                         >
                           {getNotificationIcon(getNotificationType(notification))}
@@ -399,31 +400,28 @@ export default function NotificationsPage() {
                       </Box>
 
                       <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                        <Text size="sm" fw={notification.read ? 400 : 600} lineClamp={2}>
-                          {notification.message}
+                        {/* Line 1: @username · time */}
+                        <Group gap="xs" wrap="nowrap">
+                          <Text size="sm" fw={notification.read ? 500 : 700} c="blue.8">
+                            @{notification.actor.username}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            · {formatTimeAgo(notification.created_at)}
+                          </Text>
+                        </Group>
+
+                        {/* Line 2: Action text */}
+                        <Text size="sm" c="dimmed" lineClamp={2}>
+                          {getActionText(notification)}
                         </Text>
 
-                        {/* Show song info for new_review notifications */}
-                        {getNotificationType(notification) === 'new_review' &&
-                          (notification.song_name || notification.band_name) && (
-                            <Text size="xs" c="dimmed" lineClamp={1}>
-                              {notification.song_name && `"${notification.song_name}"`}
-                              {notification.song_name && notification.band_name && ' by '}
-                              {notification.band_name}
-                            </Text>
-                          )}
-
-                        {/* Show comment preview for review_comment notifications */}
+                        {/* Line 3: Comment preview (if applicable) */}
                         {getNotificationType(notification) === 'review_comment' &&
                           notification.comment?.body && (
-                            <Text size="xs" c="dimmed" lineClamp={1} fs="italic">
+                            <Text size="sm" c="dark" lineClamp={2} fs="italic">
                               "{notification.comment.body}"
                             </Text>
                           )}
-
-                        <Text size="xs" c="dimmed">
-                          {formatTimeAgo(notification.created_at)}
-                        </Text>
                       </Stack>
 
                       {!notification.read && (

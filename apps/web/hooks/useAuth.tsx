@@ -46,6 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await apiClient.login({ email, password });
     apiClient.setAuthToken(response.auth_token);
+    if (response.refresh_token) {
+      apiClient.setRefreshToken(response.refresh_token);
+    }
     await fetchUser();
   };
 
@@ -56,11 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password_confirmation: passwordConfirmation,
     });
     apiClient.setAuthToken(response.auth_token);
+    if (response.refresh_token) {
+      apiClient.setRefreshToken(response.refresh_token);
+    }
     await fetchUser();
   };
 
   const logout = () => {
-    apiClient.removeAuthToken();
+    apiClient.clearAllTokens();
     setUser(null);
   };
 

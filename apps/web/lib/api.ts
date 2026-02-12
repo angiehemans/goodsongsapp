@@ -745,7 +745,26 @@ class ApiClient {
       }
 
       // Handle nested error structure: { error: { code, message } }
-      const message = error.error?.message || error.error || error.errors || 'Request failed';
+      let message = 'Request failed';
+      if (error.error?.message) {
+        message = error.error.message;
+      } else if (typeof error.error === 'string') {
+        message = error.error;
+      } else if (error.errors) {
+        // Handle Rails-style validation errors: { errors: { username: ["has already been taken"] } }
+        if (typeof error.errors === 'object' && !Array.isArray(error.errors)) {
+          const firstKey = Object.keys(error.errors)[0];
+          if (firstKey && Array.isArray(error.errors[firstKey])) {
+            message = `${firstKey} ${error.errors[firstKey][0]}`;
+          } else {
+            message = JSON.stringify(error.errors);
+          }
+        } else {
+          message = typeof error.errors === 'string' ? error.errors : JSON.stringify(error.errors);
+        }
+      } else if (error.message) {
+        message = error.message;
+      }
       throw new Error(message);
     }
 

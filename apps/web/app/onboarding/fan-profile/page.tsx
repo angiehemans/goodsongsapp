@@ -16,11 +16,28 @@ import {
   Paper,
   Avatar,
   Group,
+  ThemeIcon,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconMapPin, IconUpload, IconUser } from '@tabler/icons-react';
+import { IconAlertCircle, IconCheck, IconMapPin, IconUpload, IconUser } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, normalizeAccountType } from '@/lib/api';
+
+// Username can only contain letters, numbers, and underscores
+const isValidUsername = (value: string): boolean => {
+  return /^[a-zA-Z0-9_]*$/.test(value);
+};
+
+const getUsernameError = (value: string): string | null => {
+  if (!value) return null;
+  if (!isValidUsername(value)) {
+    return 'Only letters, numbers, and underscores allowed';
+  }
+  if (value.length < 3) {
+    return 'Username must be at least 3 characters';
+  }
+  return null;
+};
 
 export default function FanProfilePage() {
   const { user, isLoading, refreshUser, isOnboardingComplete, isBand } = useAuth();
@@ -32,6 +49,17 @@ export default function FanProfilePage() {
   const [region, setRegion] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const usernameError = getUsernameError(username);
+  const isUsernameValid = username.length >= 3 && !usernameError && !serverError;
+
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    if (serverError) {
+      setServerError(null);
+    }
+  };
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -82,7 +110,17 @@ export default function FanProfilePage() {
       return;
     }
 
+    if (usernameError) {
+      notifications.show({
+        title: 'Invalid Username',
+        message: usernameError,
+        color: 'red',
+      });
+      return;
+    }
+
     setSubmitting(true);
+    setServerError(null);
     try {
       await apiClient.completeFanProfile({
         username: username.trim(),
@@ -102,11 +140,27 @@ export default function FanProfilePage() {
 
       router.push('/user/dashboard');
     } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to complete profile',
-        color: 'red',
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to complete profile';
+      const lowerMessage = errorMessage.toLowerCase();
+
+      // Check if the error is related to username
+      if (
+        lowerMessage.includes('username') ||
+        lowerMessage.includes('taken') ||
+        lowerMessage.includes('already') ||
+        lowerMessage.includes('exists') ||
+        lowerMessage.includes('unique')
+      ) {
+        // Show a user-friendly message for username errors
+        if (lowerMessage.includes('taken') || lowerMessage.includes('already') || lowerMessage.includes('exists')) {
+          setServerError('This username is already taken');
+        } else {
+          setServerError(errorMessage);
+        }
+      } else {
+        // For other errors, show inline as well since most errors are username-related
+        setServerError(errorMessage);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -165,11 +219,31 @@ export default function FanProfilePage() {
               <TextInput
                 label="Username"
                 placeholder="Choose a unique username"
-                description="This will be your public identity on Goodsongs"
+                description={
+                  serverError
+                    ? undefined
+                    : usernameError && username
+                      ? undefined
+                      : 'Letters, numbers, and underscores only'
+                }
+                error={serverError || (usernameError && username ? usernameError : undefined)}
                 required
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => handleUsernameChange(e.target.value)}
                 leftSection={<IconUser size={16} />}
+                rightSection={
+                  username.length > 0 ? (
+                    isUsernameValid ? (
+                      <ThemeIcon size="sm" color="green" variant="light" radius="xl">
+                        <IconCheck size={14} />
+                      </ThemeIcon>
+                    ) : (
+                      <ThemeIcon size="sm" color="red" variant="light" radius="xl">
+                        <IconAlertCircle size={14} />
+                      </ThemeIcon>
+                    )
+                  ) : undefined
+                }
               />
 
               {/* About Me */}
@@ -205,7 +279,7 @@ export default function FanProfilePage() {
                 fullWidth
                 color="grape.9"
                 loading={submitting}
-                disabled={!username.trim()}
+                disabled={!isUsernameValid}
                 mt="md"
               >
                 Complete Setup

@@ -360,7 +360,7 @@ export default function BandDashboardPage() {
               </Center>
             </Paper>
           ) : (
-            <Stack gap="md" mb="xl">
+            <Stack gap="sm" mb="xl">
               {upcomingEvents.length > 0 && (
                 <>
                   <Text size="sm" fw={500} c="dimmed">

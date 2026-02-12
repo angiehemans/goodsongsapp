@@ -19,6 +19,22 @@ import { apiClient } from '@/utils/api';
 import { useAuthStore } from '@/context/authStore';
 import { theme, colors, commonStyles } from '@/theme';
 
+// Username can only contain letters, numbers, and underscores
+const isValidUsername = (value: string): boolean => {
+  return /^[a-zA-Z0-9_]*$/.test(value);
+};
+
+const getUsernameError = (value: string): string | null => {
+  if (!value) return null;
+  if (!isValidUsername(value)) {
+    return 'Only letters, numbers, and underscores allowed';
+  }
+  if (value.length < 3) {
+    return 'Username must be at least 3 characters';
+  }
+  return null;
+};
+
 export function OnboardingFanProfileScreen() {
   const { refreshUser } = useAuthStore();
 
@@ -32,6 +48,18 @@ export function OnboardingFanProfileScreen() {
     name: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const usernameError = getUsernameError(username);
+  const isUsernameValid = username.length >= 3 && !usernameError && !serverError;
+
+  // Clear server error when username changes
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    if (serverError) {
+      setServerError(null);
+    }
+  };
 
   const pickImage = async () => {
     const result = await launchImageLibrary({
@@ -57,12 +85,13 @@ export function OnboardingFanProfileScreen() {
       Alert.alert('Required', 'Please enter a username');
       return;
     }
-    if (trimmedUsername.length < 3) {
-      Alert.alert('Too short', 'Username must be at least 3 characters');
+    if (usernameError) {
+      Alert.alert('Invalid Username', usernameError);
       return;
     }
 
     setLoading(true);
+    setServerError(null);
     try {
       await apiClient.completeFanProfile({
         username: trimmedUsername,
@@ -73,7 +102,28 @@ export function OnboardingFanProfileScreen() {
       });
       await refreshUser();
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Something went wrong');
+      const errorMessage = error.message || 'Something went wrong';
+      const lowerMessage = errorMessage.toLowerCase();
+
+      // Check if the error is related to username
+      if (
+        lowerMessage.includes('username') ||
+        lowerMessage.includes('taken') ||
+        lowerMessage.includes('already') ||
+        lowerMessage.includes('exists') ||
+        lowerMessage.includes('unique')
+      ) {
+        // Show a user-friendly message for username errors
+        if (lowerMessage.includes('taken') || lowerMessage.includes('already') || lowerMessage.includes('exists')) {
+          setServerError('This username is already taken');
+        } else {
+          setServerError(errorMessage);
+        }
+      } else {
+        // For other errors, show the actual error message inline as well
+        // since most errors during profile completion are username-related
+        setServerError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -105,15 +155,40 @@ export function OnboardingFanProfileScreen() {
 
         <View style={styles.field}>
           <Text style={commonStyles.inputLabel}>Username *</Text>
-          <TextInput
-            style={commonStyles.input}
-            value={username}
-            onChangeText={setUsername}
-            placeholder="Choose a username"
-            placeholderTextColor={colors.grape[4]}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <View style={styles.usernameInputContainer}>
+            <TextInput
+              style={[
+                commonStyles.input,
+                styles.usernameInput,
+                (usernameError || serverError) && username ? styles.inputError : null,
+                isUsernameValid ? styles.inputValid : null,
+              ]}
+              value={username}
+              onChangeText={handleUsernameChange}
+              placeholder="Choose a username"
+              placeholderTextColor={colors.grape[4]}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {username.length > 0 && (
+              <View style={styles.validationIcon}>
+                {isUsernameValid ? (
+                  <Icon name="check-circle" size={20} color="#10b981" />
+                ) : (
+                  <Icon name="alert-circle" size={20} color="#ef4444" />
+                )}
+              </View>
+            )}
+          </View>
+          {serverError ? (
+            <Text style={styles.errorText}>{serverError}</Text>
+          ) : usernameError && username ? (
+            <Text style={styles.errorText}>{usernameError}</Text>
+          ) : username.length > 0 && isUsernameValid ? (
+            <Text style={styles.validText}>Username looks good!</Text>
+          ) : (
+            <Text style={styles.hintText}>Letters, numbers, and underscores only</Text>
+          )}
         </View>
 
         <View style={styles.field}>
@@ -156,7 +231,7 @@ export function OnboardingFanProfileScreen() {
         <Button
           title="Complete Profile"
           onPress={handleSubmit}
-          disabled={!username.trim()}
+          disabled={!isUsernameValid}
           loading={loading}
           fullWidth
           size="lg"
@@ -230,5 +305,39 @@ const styles = StyleSheet.create({
   },
   halfField: {
     flex: 1,
+  },
+  usernameInputContainer: {
+    position: 'relative',
+  },
+  usernameInput: {
+    paddingRight: 44,
+  },
+  validationIcon: {
+    position: 'absolute',
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  inputValid: {
+    borderColor: '#10b981',
+  },
+  errorText: {
+    fontSize: theme.fontSizes.xs,
+    color: '#ef4444',
+    marginTop: 4,
+  },
+  validText: {
+    fontSize: theme.fontSizes.xs,
+    color: '#10b981',
+    marginTop: 4,
+  },
+  hintText: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+    marginTop: 4,
   },
 });

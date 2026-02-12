@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
   songContainer: {
     backgroundColor: colors.grape[2],
-    borderRadius: theme.radii.md,
+    borderRadius: theme.radii.sm,
     padding: theme.spacing.sm,
     marginTop: theme.spacing.sm,
   },

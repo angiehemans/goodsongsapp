@@ -10,6 +10,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import {
+  Accordion,
   ActionIcon,
   Alert,
   Box,
@@ -133,7 +134,8 @@ export function RecommendationForm({
     const searchKey = `${trimmedTrack}|${trimmedArtist}`;
 
     // Check if we have enough input and it's a new search
-    const hasEnoughInput = trimmedTrack.length >= MIN_SEARCH_LENGTH || trimmedArtist.length >= MIN_SEARCH_LENGTH;
+    const hasEnoughInput =
+      trimmedTrack.length >= MIN_SEARCH_LENGTH || trimmedArtist.length >= MIN_SEARCH_LENGTH;
 
     if (hasEnoughInput && !isPrefilled && !selectedRelease && searchKey !== lastSearchKey) {
       setLastSearchKey(searchKey);
@@ -247,7 +249,7 @@ export function RecommendationForm({
 
   return (
     <Stack>
-      <Text size="sm" c="dimmed">
+      <Text size="sm" c="dimmed" mt="md">
         Share your favorite songs and help others discover great music!
       </Text>
 
@@ -271,7 +273,7 @@ export function RecommendationForm({
       {/* Song Search Section */}
       {showSearch && (
         <Box>
-          <Group grow mb="xs">
+          <Stack mb="xs">
             <TextInput
               placeholder="Song name..."
               leftSection={<IconSearch size={16} />}
@@ -286,7 +288,7 @@ export function RecommendationForm({
               value={artistQuery}
               onChange={(e) => setArtistQuery(e.target.value)}
             />
-          </Group>
+          </Stack>
 
           {/* Search Results */}
           {searchResults.length > 0 && (
@@ -328,7 +330,13 @@ export function RecommendationForm({
                           display: result.artwork_url ? 'none' : 'flex',
                         }}
                       >
-                        <img src="/logo-grape.svg" alt="Good Songs" width={24} height={24} style={{ opacity: 0.8 }} />
+                        <img
+                          src="/logo-grape.svg"
+                          alt="Good Songs"
+                          width={24}
+                          height={24}
+                          style={{ opacity: 0.8 }}
+                        />
                       </Center>
                       <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                         <Text size="sm" fw={500} lineClamp={1}>
@@ -346,17 +354,22 @@ export function RecommendationForm({
             </Paper>
           )}
 
-          {(trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && isSearching && searchResults.length === 0 && (
-            <Center py="md">
-              <Loader size="sm" />
-            </Center>
-          )}
+          {(trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) &&
+            isSearching &&
+            searchResults.length === 0 && (
+              <Center py="md">
+                <Loader size="sm" />
+              </Center>
+            )}
 
-          {hasSearched && !isSearching && searchResults.length === 0 && (trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && (
-            <Text size="sm" c="dimmed" ta="center" py="md">
-              No results found. Try a different search or enter details manually.
-            </Text>
-          )}
+          {hasSearched &&
+            !isSearching &&
+            searchResults.length === 0 &&
+            (trackQuery.length >= MIN_SEARCH_LENGTH || artistQuery.length >= MIN_SEARCH_LENGTH) && (
+              <Text size="sm" c="dimmed" ta="center" py="md">
+                No results found. Try a different search or enter details manually.
+              </Text>
+            )}
 
           <Text
             size="sm"
@@ -395,7 +408,13 @@ export function RecommendationForm({
                   bg="grape.1"
                   style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
                 >
-                  <img src="/logo-grape.svg" alt="Good Songs" width={32} height={32} style={{ opacity: 0.8 }} />
+                  <img
+                    src="/logo-grape.svg"
+                    alt="Good Songs"
+                    width={32}
+                    height={32}
+                    style={{ opacity: 0.8 }}
+                  />
                 </Center>
               )}
               <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
@@ -419,7 +438,9 @@ export function RecommendationForm({
       {/* Manual Entry Mode Header */}
       {manualEntry && !selectedRelease && !isPrefilled && (
         <Group justify="space-between" align="center">
-          <Text size="sm" fw={500}>Enter song details manually</Text>
+          <Text size="sm" fw={500}>
+            Enter song details manually
+          </Text>
           <Text
             size="sm"
             c="grape.6"
@@ -442,8 +463,8 @@ export function RecommendationForm({
 
       <form onSubmit={handleSubmit}>
         <Stack>
-          {/* Manual Entry Fields - Show when in manual entry mode or after selecting a song */}
-          {(manualEntry || selectedRelease || isPrefilled) && (
+          {/* Manual Entry Fields - Show directly only in manual entry mode */}
+          {manualEntry && !selectedRelease && !isPrefilled && (
             <>
               <Group grow>
                 <TextInput
@@ -473,7 +494,9 @@ export function RecommendationForm({
               {/* Artwork Selection */}
               {artworkLoading ? (
                 <Group gap="xs">
-                  <Text size="sm" c="dimmed">Loading artwork options...</Text>
+                  <Text size="sm" c="dimmed">
+                    Loading artwork options...
+                  </Text>
                   <Loader size="xs" />
                 </Group>
               ) : artworkOptions.length > 0 ? (
@@ -516,7 +539,9 @@ export function RecommendationForm({
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                      <Text size="sm" lineClamp={1}>{option.label}</Text>
+                      <Text size="sm" lineClamp={1}>
+                        {option.label}
+                      </Text>
                     </Group>
                   )}
                   searchable
@@ -534,32 +559,167 @@ export function RecommendationForm({
             </>
           )}
 
-          <MultiSelect
-            label="What did you like about this song?"
-            placeholder="Select aspects you enjoyed"
-            data={aspectOptions}
-            value={formData.liked_aspects.map((aspect) =>
-              typeof aspect === 'string' ? aspect : aspect.name
-            )}
-            onChange={(values) =>
-              setFormData({
-                ...formData,
-                liked_aspects: values as (string | { name: string })[],
-              })
-            }
-            classNames={{
-              option: classes.option,
-            }}
-          />
+          {/* Show form fields when a song is selected or prefilled */}
+          {(selectedRelease || isPrefilled) && (
+            <>
+              {/* Artwork Selection - outside Advanced */}
+              {artworkLoading ? (
+                <Group gap="xs">
+                  <Text size="sm" c="dimmed">
+                    Loading artwork options...
+                  </Text>
+                  <Loader size="xs" />
+                </Group>
+              ) : artworkOptions.length > 0 ? (
+                <Select
+                  label="Artwork"
+                  placeholder="Select artwork"
+                  leftSection={
+                    formData.artwork_url ? (
+                      <img
+                        src={formData.artwork_url}
+                        alt=""
+                        style={{ width: 20, height: 20, borderRadius: 2, objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <IconPhoto size={16} />
+                    )
+                  }
+                  data={artworkOptions.map((opt) => ({
+                    value: opt.url,
+                    label: `${opt.source_display}${opt.album_name ? ` - ${opt.album_name}` : ''}${opt.year ? ` (${opt.year})` : opt.release_date ? ` (${opt.release_date.slice(0, 4)})` : ''}`,
+                  }))}
+                  value={formData.artwork_url || null}
+                  onChange={(value) => {
+                    setFormData({ ...formData, artwork_url: value || '' });
+                    setArtworkError(false);
+                  }}
+                  renderOption={({ option }) => (
+                    <Group gap="sm" wrap="nowrap">
+                      <img
+                        src={option.value}
+                        alt=""
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 4,
+                          objectFit: 'cover',
+                          flexShrink: 0,
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Text size="sm" lineClamp={1}>
+                        {option.label}
+                      </Text>
+                    </Group>
+                  )}
+                  searchable
+                  clearable
+                  allowDeselect
+                />
+              ) : null}
 
-          <Textarea
-            label="Your Recommendation"
-            placeholder="Share why you love this song..."
-            minRows={4}
-            required
-            value={formData.review_text || ''}
-            onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
-          />
+              <MultiSelect
+                label="What did you like about this song?"
+                placeholder="Select aspects you enjoyed"
+                data={aspectOptions}
+                value={formData.liked_aspects.map((aspect) =>
+                  typeof aspect === 'string' ? aspect : aspect.name
+                )}
+                onChange={(values) =>
+                  setFormData({
+                    ...formData,
+                    liked_aspects: values as (string | { name: string })[],
+                  })
+                }
+                classNames={{
+                  option: classes.option,
+                }}
+              />
+
+              <Textarea
+                label="Your Recommendation"
+                placeholder="Share why you love this song..."
+                minRows={4}
+                required
+                value={formData.review_text || ''}
+                onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
+              />
+
+              {/* Advanced accordion for editing song details */}
+              <Accordion variant="contained" radius="md">
+                <Accordion.Item value="advanced">
+                  <Accordion.Control>
+                    <Text size="sm" c="dimmed">
+                      Advanced
+                    </Text>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Stack gap="sm">
+                      <Group grow>
+                        <TextInput
+                          label="Song Name"
+                          placeholder="Hey Jude"
+                          required
+                          value={formData.song_name || ''}
+                          onChange={(e) => setFormData({ ...formData, song_name: e.target.value })}
+                        />
+
+                        <TextInput
+                          label="Band/Artist Name"
+                          placeholder="The Beatles"
+                          required
+                          value={formData.band_name || ''}
+                          onChange={(e) => setFormData({ ...formData, band_name: e.target.value })}
+                        />
+                      </Group>
+
+                      <TextInput
+                        label="Song Link"
+                        placeholder="https://open.spotify.com/track/..."
+                        value={formData.song_link || ''}
+                        onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}
+                      />
+                    </Stack>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
+            </>
+          )}
+
+          {/* Show these fields for manual entry mode */}
+          {manualEntry && !selectedRelease && !isPrefilled && (
+            <>
+              <MultiSelect
+                label="What did you like about this song?"
+                placeholder="Select aspects you enjoyed"
+                data={aspectOptions}
+                value={formData.liked_aspects.map((aspect) =>
+                  typeof aspect === 'string' ? aspect : aspect.name
+                )}
+                onChange={(values) =>
+                  setFormData({
+                    ...formData,
+                    liked_aspects: values as (string | { name: string })[],
+                  })
+                }
+                classNames={{
+                  option: classes.option,
+                }}
+              />
+
+              <Textarea
+                label="Your Recommendation"
+                placeholder="Share why you love this song..."
+                minRows={4}
+                required
+                value={formData.review_text || ''}
+                onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
+              />
+            </>
+          )}
 
           <Group justify="flex-end">
             {onCancel && (
