@@ -146,7 +146,7 @@ export default function EventDetailPage() {
               mb="lg"
             >
               <ProfilePhoto
-                src={event.band.profile_picture_url || event.band.spotify_image_url}
+                src={event.band.profile_picture_url}
                 alt={event.band.name}
                 size={40}
                 fallback={event.band.name || 'B'}
