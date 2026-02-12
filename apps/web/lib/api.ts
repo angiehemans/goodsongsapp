@@ -77,6 +77,20 @@ export interface SignupData {
   password_confirmation: string;
 }
 
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ValidateTokenResponse {
+  valid: boolean;
+  error?: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+  auth_token: string;
+}
+
 export interface ReviewData {
   song_link: string;
   band_name: string;
@@ -784,6 +798,34 @@ class ApiClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }, // Override auth header for login
       body: JSON.stringify(credentials),
+    });
+  }
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    return this.makeRequest('/password/forgot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async validateResetToken(token: string): Promise<ValidateTokenResponse> {
+    return this.makeRequest(`/password/validate-token?token=${encodeURIComponent(token)}`);
+  }
+
+  async resetPassword(
+    token: string,
+    password: string,
+    passwordConfirmation: string
+  ): Promise<ResetPasswordResponse> {
+    return this.makeRequest('/password/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        password,
+        password_confirmation: passwordConfirmation,
+      }),
     });
   }
 
