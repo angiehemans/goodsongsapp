@@ -231,7 +231,8 @@ export function FeedScreen({ navigation, route }: Props) {
             // Check if this track's artwork or metadata changed
             if (
               prevTrack.album_art_url !== newTrack.album_art_url ||
-              prevTrack.metadata_status !== newTrack.metadata_status
+              prevTrack.metadata_status !== newTrack.metadata_status ||
+              prevTrack.has_preferred_artwork !== newTrack.has_preferred_artwork
             ) {
               hasChanges = true;
               return newTrack;
@@ -528,6 +529,11 @@ export function FeedScreen({ navigation, route }: Props) {
     const scrobbleId = getScrobbleId(selectedTrackForArtwork);
     if (!scrobbleId) return;
 
+    // Clear FastImage cache for the old artwork URL to ensure new artwork is fetched
+    if (selectedTrackForArtwork.album_art_url) {
+      FastImage.clearMemoryCache();
+    }
+
     await apiClient.setScrobbleArtwork(scrobbleId, artworkUrl);
     showSuccessBanner("Artwork updated!");
     fetchRecentlyPlayed();
@@ -539,6 +545,9 @@ export function FeedScreen({ navigation, route }: Props) {
 
     const scrobbleId = getScrobbleId(selectedTrackForArtwork);
     if (!scrobbleId) return;
+
+    // Clear FastImage cache to ensure default artwork is fetched
+    FastImage.clearMemoryCache();
 
     await apiClient.clearScrobbleArtwork(scrobbleId);
     showSuccessBanner("Artwork reset to default");

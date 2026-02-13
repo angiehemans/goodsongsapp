@@ -322,7 +322,7 @@ export default function AdminDashboardPage() {
         await apiClient.deleteBand(deleteTarget.id);
         setBands((prev) => prev.filter((b) => b.id !== deleteTarget.id));
       } else if (deleteTarget.type === 'review') {
-        await apiClient.deleteReview(deleteTarget.id);
+        await apiClient.adminDeleteReview(deleteTarget.id);
         setReviews((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       }
 

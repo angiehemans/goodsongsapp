@@ -1555,7 +1555,7 @@ class ApiClient {
     return this.makeRequest(`/admin/reviews?${params.toString()}`);
   }
 
-  async deleteReview(reviewId: number): Promise<{ message: string }> {
+  async adminDeleteReview(reviewId: number): Promise<{ message: string }> {
     return this.makeRequest(`/admin/reviews/${reviewId}`, {
       method: 'DELETE',
     });
