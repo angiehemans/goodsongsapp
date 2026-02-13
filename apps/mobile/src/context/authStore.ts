@@ -103,11 +103,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logout: async () => {
-      // Revoke the refresh token on the server
-      await apiClient.logout();
-
-      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
-
+      // Clear state immediately to ensure user is redirected to sign-in
+      // This prevents blank dashboards even if network calls fail
       set({
         user: null,
         token: null,
@@ -116,14 +113,20 @@ export const useAuthStore = create<AuthState>((set, get) => {
         isOnboardingComplete: false,
         accountType: null,
       });
+
+      // Clear stored tokens
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+
+      // Try to revoke the refresh token on the server (non-blocking)
+      try {
+        await apiClient.logout();
+      } catch {
+        // Ignore server errors - we've already cleared local state
+      }
     },
 
     logoutAllDevices: async () => {
-      // Revoke all tokens on the server
-      await apiClient.logoutAll();
-
-      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
-
+      // Clear state immediately to ensure user is redirected to sign-in
       set({
         user: null,
         token: null,
@@ -132,6 +135,16 @@ export const useAuthStore = create<AuthState>((set, get) => {
         isOnboardingComplete: false,
         accountType: null,
       });
+
+      // Clear stored tokens
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+
+      // Try to revoke all tokens on the server (non-blocking)
+      try {
+        await apiClient.logoutAll();
+      } catch {
+        // Ignore server errors - we've already cleared local state
+      }
     },
 
     loadAuth: async () => {
@@ -167,7 +180,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
         // If we get here, even the refresh failed
         await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
         apiClient.clearAllTokens();
-        set({ isLoading: false });
+        set({
+          isLoading: false,
+          isAuthenticated: false,
+          user: null,
+          token: null,
+          refreshToken: null,
+          isOnboardingComplete: false,
+          accountType: null,
+        });
       }
     },
 

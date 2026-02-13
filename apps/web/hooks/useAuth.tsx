@@ -23,6 +23,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Set up session expired callback to clear user state
+  useEffect(() => {
+    apiClient.setSessionExpiredCallback(() => {
+      setUser(null);
+    });
+  }, []);
+
   useEffect(() => {
     const token = apiClient.getAuthToken();
     if (token) {
@@ -37,7 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await apiClient.getProfile();
       setUser(userData);
     } catch (error) {
-      apiClient.removeAuthToken();
+      // Clear all tokens on failure (not just auth_token)
+      apiClient.clearAllTokens();
+      setUser(null);
     } finally {
       setIsLoading(false);
     }

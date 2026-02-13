@@ -631,6 +631,12 @@ export interface MusicBrainzSearchResponse {
 class ApiClient {
   private isRefreshing = false;
   private refreshPromise: Promise<string> | null = null;
+  private onSessionExpired: (() => void) | null = null;
+
+  // Set callback for when session expires (refresh token invalid)
+  setSessionExpiredCallback(callback: () => void) {
+    this.onSessionExpired = callback;
+  }
 
   private getApiUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
@@ -654,9 +660,10 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      // Refresh token is invalid - clear tokens and throw
+      // Refresh token is invalid - clear tokens and notify
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
+      this.onSessionExpired?.();
       throw new Error('Session expired. Please log in again.');
     }
 
