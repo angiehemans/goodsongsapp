@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   text_default: {
-    color: colors.grape[4],
+    color: colors.grape[6],
   },
   text_primary: {
     color: colors.grape[0],

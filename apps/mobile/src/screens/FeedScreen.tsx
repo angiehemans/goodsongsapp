@@ -74,17 +74,28 @@ export function FeedScreen({ navigation, route }: Props) {
   const tracksToDisplay = React.useMemo(() => {
     if (!nowPlaying) return recentlyPlayed;
 
+    // Check if we already have this track in recentlyPlayed with artwork
+    const existingTrack = recentlyPlayed.find(
+      (track) =>
+        track.name.toLowerCase() === nowPlaying.trackName.toLowerCase() &&
+        track.artist.toLowerCase() === nowPlaying.artistName.toLowerCase()
+    );
+
     // Convert nowPlaying to RecentlyPlayedTrack format
+    // Use artwork from existing track if available
     const nowPlayingTrack: RecentlyPlayedTrack = {
       name: nowPlaying.trackName,
       artist: nowPlaying.artistName,
       album: nowPlaying.albumName,
-      played_at: null,
+      played_at: existingTrack?.played_at ?? null,
       now_playing: true,
       source: 'scrobble',
-      album_art_url: null, // Will show loading state
-      loved: false,
-      metadata_status: 'pending',
+      album_art_url: existingTrack?.album_art_url ?? null,
+      loved: existingTrack?.loved ?? false,
+      metadata_status: existingTrack?.metadata_status ?? 'pending',
+      scrobble_id: existingTrack?.scrobble_id,
+      has_preferred_artwork: existingTrack?.has_preferred_artwork,
+      can_refresh_artwork: existingTrack?.can_refresh_artwork,
     };
 
     // Filter out the now playing track from recently played to avoid duplicates

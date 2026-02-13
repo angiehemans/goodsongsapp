@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,21 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from '@react-native-vector-icons/feather';
-import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState } from '@/components';
-import { theme, colors } from '@/theme';
-import { useAuthStore } from '@/context/authStore';
-import { apiClient } from '@/utils/api';
-import { fixImageUrl } from '@/utils/imageUrl';
-import { UserProfile, Review } from '@goodsongs/api-client';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "@react-native-vector-icons/feather";
+import {
+  Header,
+  ProfilePhoto,
+  Badge,
+  ReviewCard,
+  EmptyState,
+} from "@/components";
+import { theme, colors } from "@/theme";
+import { useAuthStore } from "@/context/authStore";
+import { apiClient } from "@/utils/api";
+import { fixImageUrl } from "@/utils/imageUrl";
+import { UserProfile, Review } from "@goodsongs/api-client";
 
 export function UserProfileScreen({ route, navigation }: any) {
   const { username } = route.params;
@@ -34,38 +40,45 @@ export function UserProfileScreen({ route, navigation }: any) {
 
   const isOwnProfile = currentUser?.username === username;
 
-  const fetchProfile = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
-    if (isLoadMore) {
-      setLoadingMoreReviews(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const userProfile = await apiClient.getUserProfile(username, page);
-      setProfile(userProfile);
-      setIsFollowing(userProfile.following ?? userProfile.is_following ?? false);
-
-      const newReviews = userProfile.reviews || [];
+  const fetchProfile = useCallback(
+    async (page: number = 1, isLoadMore: boolean = false) => {
       if (isLoadMore) {
-        setReviews((prev) => [...prev, ...newReviews]);
+        setLoadingMoreReviews(true);
       } else {
-        setReviews(newReviews);
+        setLoading(true);
       }
 
-      setHasMoreReviews(userProfile.reviews_pagination?.has_next_page || false);
-      setReviewsPage(page);
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-      if (!isLoadMore) {
-        setReviews([]);
+      try {
+        const userProfile = await apiClient.getUserProfile(username, page);
+        setProfile(userProfile);
+        setIsFollowing(
+          userProfile.following ?? userProfile.is_following ?? false,
+        );
+
+        const newReviews = userProfile.reviews || [];
+        if (isLoadMore) {
+          setReviews((prev) => [...prev, ...newReviews]);
+        } else {
+          setReviews(newReviews);
+        }
+
+        setHasMoreReviews(
+          userProfile.reviews_pagination?.has_next_page || false,
+        );
+        setReviewsPage(page);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        if (!isLoadMore) {
+          setReviews([]);
+        }
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMoreReviews(false);
       }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-      setLoadingMoreReviews(false);
-    }
-  }, [username]);
+    },
+    [username],
+  );
 
   useEffect(() => {
     fetchProfile();
@@ -90,20 +103,28 @@ export function UserProfileScreen({ route, navigation }: any) {
       if (isFollowing) {
         await apiClient.unfollowUser(profile.id);
         setIsFollowing(false);
-        setProfile(prev => prev ? {
-          ...prev,
-          followers_count: (prev.followers_count || 1) - 1
-        } : null);
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                followers_count: (prev.followers_count || 1) - 1,
+              }
+            : null,
+        );
       } else {
         await apiClient.followUser(profile.id);
         setIsFollowing(true);
-        setProfile(prev => prev ? {
-          ...prev,
-          followers_count: (prev.followers_count || 0) + 1
-        } : null);
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                followers_count: (prev.followers_count || 0) + 1,
+              }
+            : null,
+        );
       }
     } catch (error) {
-      console.error('Failed to toggle follow:', error);
+      console.error("Failed to toggle follow:", error);
     } finally {
       setFollowLoading(false);
     }
@@ -117,7 +138,7 @@ export function UserProfileScreen({ route, navigation }: any) {
           src={fixImageUrl(profile?.profile_image_url)}
           alt={profile?.username}
           size={72}
-          fallback={profile?.username || 'U'}
+          fallback={profile?.username || "U"}
         />
         <View style={styles.profileInfo}>
           <Text style={styles.username}>@{profile?.username || username}</Text>
@@ -137,27 +158,29 @@ export function UserProfileScreen({ route, navigation }: any) {
       {/* Follow Button */}
       {!isOwnProfile && profile && (
         <TouchableOpacity
-          style={[
-            styles.followButton,
-            isFollowing && styles.followingButton,
-          ]}
+          style={[styles.followButton, isFollowing && styles.followingButton]}
           onPress={handleFollowToggle}
           disabled={followLoading}
         >
           {followLoading ? (
-            <ActivityIndicator size="small" color={isFollowing ? colors.grape[6] : colors.grape[0]} />
+            <ActivityIndicator
+              size="small"
+              color={isFollowing ? colors.grape[6] : colors.grape[0]}
+            />
           ) : (
             <>
               <Icon
-                name={isFollowing ? 'user-check' : 'user-plus'}
+                name={isFollowing ? "user-check" : "user-plus"}
                 size={16}
                 color={isFollowing ? colors.grape[6] : colors.grape[0]}
               />
-              <Text style={[
-                styles.followButtonText,
-                isFollowing && styles.followingButtonText,
-              ]}>
-                {isFollowing ? 'Following' : 'Follow'}
+              <Text
+                style={[
+                  styles.followButtonText,
+                  isFollowing && styles.followingButtonText,
+                ]}
+              >
+                {isFollowing ? "Following" : "Follow"}
               </Text>
             </>
           )}
@@ -165,15 +188,17 @@ export function UserProfileScreen({ route, navigation }: any) {
       )}
 
       {/* Bio */}
-      {profile?.about_me && (
-        <Text style={styles.bio}>{profile.about_me}</Text>
-      )}
+      {profile?.about_me && <Text style={styles.bio}>{profile.about_me}</Text>}
 
       {/* Stats Badges */}
       <View style={styles.badgesRow}>
-        <Badge text={`${profile?.reviews_count || reviews.length} recommendation${(profile?.reviews_count || reviews.length) !== 1 ? 's' : ''}`} />
+        <Badge
+          text={`${profile?.reviews_count || reviews.length} recommendation${(profile?.reviews_count || reviews.length) !== 1 ? "s" : ""}`}
+        />
         {profile?.followers_count !== undefined && (
-          <Badge text={`${profile.followers_count} follower${profile.followers_count !== 1 ? 's' : ''}`} />
+          <Badge
+            text={`${profile.followers_count} follower${profile.followers_count !== 1 ? "s" : ""}`}
+          />
         )}
         {profile?.following_count !== undefined && (
           <Badge text={`${profile.following_count} following`} />
@@ -187,7 +212,7 @@ export function UserProfileScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <Header
           title=""
           showBackButton
@@ -201,12 +226,8 @@ export function UserProfileScreen({ route, navigation }: any) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <Header
-        title=""
-        showBackButton
-        onBackPress={() => navigation.goBack()}
-      />
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <Header title="" showBackButton onBackPress={() => navigation.goBack()} />
 
       <FlatList
         data={reviews}
@@ -215,11 +236,17 @@ export function UserProfileScreen({ route, navigation }: any) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
-              onPressBand={(slug: string) => navigation.navigate('BandProfile', { slug })}
+              onPressBand={(slug: string) =>
+                navigation.navigate("BandProfile", { slug })
+              }
               onPressReview={(review: Review) => {
-                const reviewUsername = review.author?.username || review.user?.username;
+                const reviewUsername =
+                  review.author?.username || review.user?.username;
                 if (reviewUsername) {
-                  navigation.navigate('ReviewDetail', { reviewId: review.id, username: reviewUsername });
+                  navigation.navigate("ReviewDetail", {
+                    reviewId: review.id,
+                    username: reviewUsername,
+                  });
                 }
               }}
             />
@@ -263,8 +290,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   listContent: {
     padding: theme.spacing.md,
@@ -273,8 +300,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
@@ -283,13 +310,13 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: theme.fontSizes.xl,
-    fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.primary,
+    fontFamily: theme.fonts.thecoaMedium,
+    color: theme.colors.secondary,
     lineHeight: 30,
   },
   locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.xs,
     marginTop: theme.spacing.xs,
   },
@@ -298,9 +325,9 @@ const styles = StyleSheet.create({
     color: colors.grape[5],
   },
   followButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -315,7 +342,7 @@ const styles = StyleSheet.create({
   },
   followButtonText: {
     fontSize: theme.fontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.grape[0],
   },
   followingButtonText: {
@@ -328,13 +355,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.spacing.xs,
     marginBottom: theme.spacing.lg,
   },
   sectionTitle: {
-    fontSize: theme.fontSizes['2xl'],
+    fontSize: theme.fontSizes["2xl"],
     fontFamily: theme.fonts.thecoaBold,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
@@ -345,6 +372,6 @@ const styles = StyleSheet.create({
   },
   loadingMore: {
     paddingVertical: theme.spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });

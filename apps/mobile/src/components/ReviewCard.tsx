@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react-native";
 import { Review } from "@goodsongs/api-client";
 import { ProfilePhoto } from "./ProfilePhoto";
-import { Badge } from "./Badge";
+import { Tag } from "./Tag";
 import { theme, colors } from "@/theme";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { apiClient } from "@/utils/api";
@@ -169,14 +169,13 @@ export function ReviewCard({
         {review.liked_aspects && review.liked_aspects.length > 0 && (
           <View style={styles.tagsRow}>
             {review.liked_aspects.slice(0, 3).map((aspect, index) => (
-              <Badge
-                style={styles.badgeStyle}
+              <Tag
                 key={index}
-                text={`#${
+                text={
                   typeof aspect === "string"
                     ? aspect
                     : aspect.name || String(aspect)
-                }`}
+                }
               />
             ))}
             {review.liked_aspects.length > 3 && (
@@ -323,11 +322,6 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: theme.fontSizes.xs,
     color: colors.grape[5],
-  },
-  badgeStyle: {
-    // borderColor: colors.grape[3],
-    // borderWidth: 1,
-    backgroundColor: colors.grape[0],
   },
   actionsRow: {
     flexDirection: "row",

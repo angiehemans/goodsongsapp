@@ -29,7 +29,7 @@ import {
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Review } from '@goodsongs/api-client';
-import { Header, ProfilePhoto, Badge, LoadingScreen } from '@/components';
+import { Header, ProfilePhoto, Tag, LoadingScreen } from '@/components';
 import { theme, colors } from '@/theme';
 import { useAuthStore } from '@/context/authStore';
 import { apiClient, ReviewComment } from '@/utils/api';
@@ -408,14 +408,13 @@ export function ReviewDetailScreen() {
               {review.liked_aspects && review.liked_aspects.length > 0 && (
                 <View style={styles.tagsRow}>
                   {review.liked_aspects.map((aspect, index) => (
-                    <Badge
-                      style={styles.badgeStyle}
+                    <Tag
                       key={index}
-                      text={`#${
+                      text={
                         typeof aspect === 'string'
                           ? aspect
                           : aspect.name || String(aspect)
-                      }`}
+                      }
                     />
                   ))}
                 </View>
@@ -716,9 +715,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     alignItems: 'center',
     marginTop: theme.spacing.sm,
-  },
-  badgeStyle: {
-    backgroundColor: colors.grape[0],
   },
   // Actions Row
   actionsRow: {
