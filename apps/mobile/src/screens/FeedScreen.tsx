@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  Pressable,
   ScrollView,
   Animated,
   Alert,
@@ -17,7 +18,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FastImage from "react-native-fast-image";
-import Icon from "@react-native-vector-icons/feather";
+import {
+  IconMusic,
+  IconVolume,
+  IconRefresh,
+  IconPlus,
+  IconSettings,
+  IconCircleCheck,
+  IconAlertCircle,
+} from "@tabler/icons-react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import {
@@ -26,6 +35,7 @@ import {
   LoadingScreen,
   EmptyState,
   Logo,
+  ArtworkPickerModal,
 } from "@/components";
 import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
@@ -67,6 +77,11 @@ export function FeedScreen({ navigation, route }: Props) {
     "Recommendation posted!",
   );
   const bannerOpacity = useRef(new Animated.Value(0)).current;
+
+  // Artwork picker modal state
+  const [artworkPickerVisible, setArtworkPickerVisible] = useState(false);
+  const [selectedTrackForArtwork, setSelectedTrackForArtwork] =
+    useState<RecentlyPlayedTrack | null>(null);
 
   // Animate success banner
   useEffect(() => {
@@ -160,16 +175,51 @@ export function FeedScreen({ navigation, route }: Props) {
   }, []);
 
   // Fetch recently played tracks (from any source)
-  const fetchRecentlyPlayed = useCallback(async () => {
-    setRecentlyPlayedLoading(true);
+  // silent mode updates tracks without showing loading state (for polling)
+  const fetchRecentlyPlayed = useCallback(async (silent = false) => {
+    if (!silent) {
+      setRecentlyPlayedLoading(true);
+    }
     try {
       const response = await apiClient.getRecentlyPlayed({ limit: 12 });
-      setRecentlyPlayed(response?.tracks || []);
+      const newTracks = response?.tracks || [];
+
+      if (silent) {
+        // In silent mode, only update tracks that have changed
+        // This prevents UI flicker and maintains scroll position
+        setRecentlyPlayed(prevTracks => {
+          // If lengths differ, just replace
+          if (prevTracks.length !== newTracks.length) {
+            return newTracks;
+          }
+          // Check if any track's metadata has updated
+          let hasChanges = false;
+          const updatedTracks = prevTracks.map((prevTrack, idx) => {
+            const newTrack = newTracks[idx];
+            // Check if this track's artwork or metadata changed
+            if (
+              prevTrack.album_art_url !== newTrack.album_art_url ||
+              prevTrack.metadata_status !== newTrack.metadata_status
+            ) {
+              hasChanges = true;
+              return newTrack;
+            }
+            return prevTrack;
+          });
+          return hasChanges ? updatedTracks : prevTracks;
+        });
+      } else {
+        setRecentlyPlayed(newTracks);
+      }
     } catch (error) {
       console.error("Failed to fetch recently played:", error);
-      setRecentlyPlayed([]);
+      if (!silent) {
+        setRecentlyPlayed([]);
+      }
     } finally {
-      setRecentlyPlayedLoading(false);
+      if (!silent) {
+        setRecentlyPlayedLoading(false);
+      }
     }
   }, []);
 
@@ -177,6 +227,22 @@ export function FeedScreen({ navigation, route }: Props) {
     fetchFeed(1, true);
     fetchRecentlyPlayed();
   }, [fetchFeed, fetchRecentlyPlayed]);
+
+  // Poll for pending artwork updates
+  // When tracks have metadata_status === 'pending', poll every 3 seconds
+  useEffect(() => {
+    const hasPendingTracks = recentlyPlayed.some(
+      track => track.metadata_status === 'pending'
+    );
+
+    if (!hasPendingTracks) return;
+
+    const pollInterval = setInterval(() => {
+      fetchRecentlyPlayed(true); // silent fetch
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [recentlyPlayed, fetchRecentlyPlayed]);
 
   // Handle success banner from CreateReview
   useEffect(() => {
@@ -216,7 +282,7 @@ export function FeedScreen({ navigation, route }: Props) {
         <View style={styles.recentlyPlayedSection}>
           <Text style={styles.sectionTitle}>Recently Played</Text>
           <View style={styles.connectLastFm}>
-            <Icon name="music" size={24} color={colors.grape[5]} />
+            <IconMusic size={24} color={colors.grape[5]} />
             <Text style={styles.connectText}>
               Connect Last.fm or enable scrobbling to see your recently played
               tracks
@@ -239,13 +305,27 @@ export function FeedScreen({ navigation, route }: Props) {
               key={`${track.name}-${track.artist}-${index}`}
               style={styles.trackCard}
             >
-              <View style={styles.artworkContainer}>
+              <Pressable
+                style={styles.artworkContainer}
+                onLongPress={() => handleArtworkLongPress(track)}
+                delayLongPress={400}
+              >
                 {track.album_art_url ? (
                   <FastImage
                     source={{ uri: fixImageUrl(track.album_art_url) || "" }}
                     style={styles.trackArtwork}
                     resizeMode={FastImage.resizeMode.cover}
                   />
+                ) : track.metadata_status === "pending" ? (
+                  <View
+                    style={[
+                      styles.trackArtwork,
+                      styles.trackArtworkPlaceholder,
+                    ]}
+                  >
+                    <Logo size={28} color={colors.grape[4]} />
+                    <Text style={styles.pendingArtworkText}>Loading artwork</Text>
+                  </View>
                 ) : (
                   <View
                     style={[
@@ -258,7 +338,12 @@ export function FeedScreen({ navigation, route }: Props) {
                 )}
                 {track.now_playing && (
                   <View style={styles.nowPlayingOverlay}>
-                    <Icon name="volume-2" size={28} color={colors.grape[0]} />
+                    <IconVolume size={28} color={colors.grape[0]} />
+                  </View>
+                )}
+                {track.has_preferred_artwork && (
+                  <View style={styles.preferredArtworkBadge}>
+                    <Text style={styles.preferredArtworkBadgeText}>Custom</Text>
                   </View>
                 )}
                 {!track.album_art_url && track.can_refresh_artwork && (
@@ -275,15 +360,11 @@ export function FeedScreen({ navigation, route }: Props) {
                     {refreshingArtworkId === getScrobbleId(track) ? (
                       <ActivityIndicator size="small" color={colors.grape[8]} />
                     ) : (
-                      <Icon
-                        name="refresh-cw"
-                        size={14}
-                        color={colors.grape[8]}
-                      />
+                      <IconRefresh size={14} color={colors.grape[8]} />
                     )}
                   </TouchableOpacity>
                 )}
-              </View>
+              </Pressable>
               <Text style={styles.trackName} numberOfLines={1}>
                 {track.name}
               </Text>
@@ -294,7 +375,7 @@ export function FeedScreen({ navigation, route }: Props) {
                 style={styles.recommendButton}
                 onPress={() => handleRecommendTrack(track)}
               >
-                <Icon name="plus" size={12} color={colors.grape[0]} />
+                <IconPlus size={12} color={colors.grape[0]} />
                 <Text style={styles.recommendButtonText}>Recommend</Text>
               </TouchableOpacity>
             </View>
@@ -396,6 +477,40 @@ export function FeedScreen({ navigation, route }: Props) {
     }
   };
 
+  // Handle long press on artwork to open picker
+  const handleArtworkLongPress = (track: RecentlyPlayedTrack) => {
+    // Only allow for scrobbles (not Last.fm tracks)
+    if (track.source !== "scrobble") {
+      return;
+    }
+    setSelectedTrackForArtwork(track);
+    setArtworkPickerVisible(true);
+  };
+
+  // Handle artwork selection from picker
+  const handleArtworkSelect = async (artworkUrl: string) => {
+    if (!selectedTrackForArtwork) return;
+
+    const scrobbleId = getScrobbleId(selectedTrackForArtwork);
+    if (!scrobbleId) return;
+
+    await apiClient.setScrobbleArtwork(scrobbleId, artworkUrl);
+    showSuccessBanner("Artwork updated!");
+    fetchRecentlyPlayed();
+  };
+
+  // Handle clearing preferred artwork
+  const handleClearPreferredArtwork = async () => {
+    if (!selectedTrackForArtwork) return;
+
+    const scrobbleId = getScrobbleId(selectedTrackForArtwork);
+    if (!scrobbleId) return;
+
+    await apiClient.clearScrobbleArtwork(scrobbleId);
+    showSuccessBanner("Artwork reset to default");
+    fetchRecentlyPlayed();
+  };
+
   if (loading && reviews.length === 0) {
     return <LoadingScreen />;
   }
@@ -409,7 +524,7 @@ export function FeedScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate("Settings")}
             style={styles.settingsButton}
           >
-            <Icon name="settings" size={24} color={colors.grape[8]} />
+            <IconSettings size={24} color={colors.grape[8]} />
           </TouchableOpacity>
         }
       />
@@ -473,7 +588,7 @@ export function FeedScreen({ navigation, route }: Props) {
             {currentUser && currentUser.email_confirmed === false && (
               <View style={styles.emailBanner}>
                 <View style={styles.emailBannerContent}>
-                  <Icon name="alert-circle" size={18} color="#c05621" />
+                  <IconAlertCircle size={18} color="#c05621" />
                   <View style={styles.emailBannerText}>
                     <Text style={styles.emailBannerTitle}>
                       Please confirm your email address
@@ -529,10 +644,26 @@ export function FeedScreen({ navigation, route }: Props) {
         <Animated.View
           style={[styles.successBanner, { opacity: bannerOpacity }]}
         >
-          <Icon name="check-circle" size={20} color={colors.grape[0]} />
+          <IconCircleCheck size={20} color={colors.grape[0]} />
           <Text style={styles.successText}>{successMessage}</Text>
         </Animated.View>
       )}
+
+      {/* Artwork Picker Modal */}
+      <ArtworkPickerModal
+        visible={artworkPickerVisible}
+        onClose={() => {
+          setArtworkPickerVisible(false);
+          setSelectedTrackForArtwork(null);
+        }}
+        onSelect={handleArtworkSelect}
+        trackName={selectedTrackForArtwork?.name || ""}
+        artistName={selectedTrackForArtwork?.artist || ""}
+        albumName={selectedTrackForArtwork?.album}
+        currentArtworkUrl={selectedTrackForArtwork?.album_art_url}
+        hasPreferredArtwork={selectedTrackForArtwork?.has_preferred_artwork}
+        onClearPreferred={handleClearPreferredArtwork}
+      />
     </SafeAreaView>
   );
 }
@@ -645,6 +776,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grape[2],
     justifyContent: "center",
     alignItems: "center",
+    gap: 2,
   },
   refreshArtworkButton: {
     position: "absolute",
@@ -667,6 +799,26 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.sm,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pendingArtworkText: {
+    fontSize: 9,
+    color: colors.grape[5],
+    marginTop: 4,
+    textAlign: "center",
+  },
+  preferredArtworkBadge: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+  },
+  preferredArtworkBadgeText: {
+    fontSize: 8,
+    color: colors.grape[0],
+    fontWeight: "600",
   },
   trackName: {
     fontSize: theme.fontSizes.sm,

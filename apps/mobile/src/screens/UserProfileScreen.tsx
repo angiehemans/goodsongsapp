@@ -34,11 +34,11 @@ export function UserProfileScreen({ route, navigation }: any) {
 
   const isOwnProfile = currentUser?.username === username;
 
-  const fetchProfile = useCallback(async (page: number = 1, loadMore: boolean = false) => {
-    if (!loadMore) {
-      setLoading(true);
-    } else {
+  const fetchProfile = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
+    if (isLoadMore) {
       setLoadingMoreReviews(true);
+    } else {
+      setLoading(true);
     }
 
     try {
@@ -46,18 +46,18 @@ export function UserProfileScreen({ route, navigation }: any) {
       setProfile(userProfile);
       setIsFollowing(userProfile.following ?? userProfile.is_following ?? false);
 
-      const reviewsList = userProfile.reviews || [];
-      if (loadMore) {
-        setReviews((prev) => [...prev, ...reviewsList]);
+      const newReviews = userProfile.reviews || [];
+      if (isLoadMore) {
+        setReviews((prev) => [...prev, ...newReviews]);
       } else {
-        setReviews(reviewsList);
+        setReviews(newReviews);
       }
 
       setHasMoreReviews(userProfile.reviews_pagination?.has_next_page || false);
       setReviewsPage(page);
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      if (!loadMore) {
+      if (!isLoadMore) {
         setReviews([]);
       }
     } finally {

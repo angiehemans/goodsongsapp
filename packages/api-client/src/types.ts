@@ -331,6 +331,7 @@ export interface RecentlyPlayedTrack {
   loved: boolean;
   metadata_status?: 'pending' | 'enriched' | 'not_found' | 'failed';
   can_refresh_artwork?: boolean;
+  has_preferred_artwork?: boolean;
 }
 
 export interface RecentlyPlayedResponse {

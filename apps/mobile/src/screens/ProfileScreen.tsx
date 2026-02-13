@@ -187,18 +187,41 @@ export function ProfileScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const fetchUserReviews = useCallback(async () => {
+  // Pagination state
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
+
+  const fetchUserReviews = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
+    if (!user?.username) return;
+
+    if (isLoadMore) {
+      setLoadingMoreReviews(true);
+    }
+
     try {
-      const userReviews = await apiClient.getUserReviews();
-      setReviews(userReviews || []);
+      const userProfile = await apiClient.getUserProfile(user.username, page);
+      const newReviews = userProfile.reviews || [];
+
+      if (isLoadMore) {
+        setReviews((prev) => [...prev, ...newReviews]);
+      } else {
+        setReviews(newReviews);
+      }
+
+      setHasMoreReviews(userProfile.reviews_pagination?.has_next_page || false);
+      setReviewsPage(page);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
-      setReviews([]);
+      if (!isLoadMore) {
+        setReviews([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMoreReviews(false);
     }
-  }, []);
+  }, [user?.username]);
 
   useEffect(() => {
     fetchUserReviews();
@@ -206,7 +229,13 @@ export function ProfileScreen({ navigation }: Props) {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchUserReviews();
+    fetchUserReviews(1, false);
+  };
+
+  const handleLoadMore = () => {
+    if (hasMoreReviews && !loadingMoreReviews) {
+      fetchUserReviews(reviewsPage + 1, true);
+    }
   };
 
   const handleStartEdit = () => {
@@ -292,8 +321,10 @@ export function ProfileScreen({ navigation }: Props) {
             tintColor={theme.colors.primary}
           />
         }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         ListHeaderComponent={
-          <ProfileViewHeader user={user} reviewCount={reviews.length} />
+          <ProfileViewHeader user={user} reviewCount={user?.reviews_count || reviews.length} />
         }
         ListEmptyComponent={
           <EmptyState
@@ -301,6 +332,13 @@ export function ProfileScreen({ navigation }: Props) {
             title="No recommendations yet"
             message="Share your first song recommendation!"
           />
+        }
+        ListFooterComponent={
+          loadingMoreReviews ? (
+            <View style={styles.loadingMore}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          ) : null
         }
       />
     </SafeAreaView>
@@ -443,5 +481,9 @@ const styles = StyleSheet.create({
   },
   reviewWrapper: {
     marginBottom: theme.spacing.md,
+  },
+  loadingMore: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
   },
 });

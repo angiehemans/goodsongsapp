@@ -1,6 +1,8 @@
 package com.goodsongs.scrobble
 
 import android.media.session.MediaController
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 
 class PlaybackTracker(
@@ -18,6 +20,12 @@ class PlaybackTracker(
         private set
     private var currentTrackStartTime: Long = 0
     private var currentDurationMs: Long? = null
+    private var currentTrackScrobbled: Boolean = false
+    private val handler = Handler(Looper.getMainLooper())
+    private var scrobbleRunnable: Runnable? = null
+
+    // Callback to notify when a scrobble happens (for sending events to RN)
+    var onScrobbleCallback: (() -> Unit)? = null
 
     /**
      * Called when a new media notification is received.
@@ -37,8 +45,12 @@ class PlaybackTracker(
             return false
         }
 
+        // Cancel any pending scrobble timer for the previous track
+        cancelScrobbleTimer()
+
         // Track changed — check if we should scrobble the previous one
-        scrobbled = if (prev != null) {
+        // (only if it wasn't already scrobbled by the timer)
+        scrobbled = if (prev != null && !currentTrackScrobbled) {
             tryScrobble(prev)
         } else {
             false
@@ -47,11 +59,15 @@ class PlaybackTracker(
         // Start tracking the new track
         currentTrack = newTrack
         currentTrackStartTime = System.currentTimeMillis()
+        currentTrackScrobbled = false
         currentDurationMs = if (controller != null) {
             metadataExtractor.getDurationFromController(controller)
         } else {
             null
         }
+
+        // Start timer to scrobble after 20 seconds
+        startScrobbleTimer(newTrack)
 
         Log.d(TAG, "Now tracking: ${newTrack.artistName} - ${newTrack.trackName}")
         return scrobbled
@@ -62,10 +78,17 @@ class PlaybackTracker(
      * Returns true if a scrobble was created.
      */
     fun onPlaybackStopped(): Boolean {
+        cancelScrobbleTimer()
         val track = currentTrack ?: return false
-        val scrobbled = tryScrobble(track)
+        // Only scrobble if not already scrobbled by the timer
+        val scrobbled = if (!currentTrackScrobbled) {
+            tryScrobble(track)
+        } else {
+            false
+        }
         currentTrack = null
         currentDurationMs = null
+        currentTrackScrobbled = false
         return scrobbled
     }
 
@@ -93,5 +116,32 @@ class PlaybackTracker(
         return a.trackName.equals(b.trackName, ignoreCase = true) &&
                 a.artistName.equals(b.artistName, ignoreCase = true) &&
                 a.sourceApp == b.sourceApp
+    }
+
+    /**
+     * Start a timer to scrobble the track after 20 seconds.
+     */
+    private fun startScrobbleTimer(track: TrackInfo) {
+        scrobbleRunnable = Runnable {
+            if (currentTrack != null && isSameTrack(currentTrack!!, track) && !currentTrackScrobbled) {
+                val scrobbleTrack = track.copy(
+                    playedAt = currentTrackStartTime,
+                    durationMs = currentDurationMs
+                )
+                storage.addPendingScrobble(scrobbleTrack)
+                currentTrackScrobbled = true
+                Log.d(TAG, "Scrobbled (after 20s): ${track.artistName} - ${track.trackName}")
+                onScrobbleCallback?.invoke()
+            }
+        }
+        handler.postDelayed(scrobbleRunnable!!, SCROBBLE_THRESHOLD_MS)
+    }
+
+    /**
+     * Cancel any pending scrobble timer.
+     */
+    private fun cancelScrobbleTimer() {
+        scrobbleRunnable?.let { handler.removeCallbacks(it) }
+        scrobbleRunnable = null
     }
 }

@@ -38,6 +38,9 @@ importers:
       '@react-navigation/native-stack':
         specifier: ^7.0.0
         version: 7.10.0(@react-navigation/native@7.1.28(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0))(react-native-safe-area-context@5.6.2(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0))(react-native-screens@4.10.0(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.6)(@react-native-community/cli@18.0.1(typescript@5.8.2))(@types/react@19.0.12)(react@19.0.0))(react@19.0.0)
+      '@tabler/icons-react-native':
+        specifier: ^3.36.1
+        version: 3.36.1(react@19.0.0)
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -2197,6 +2200,11 @@ packages:
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
+
+  '@tabler/icons-react-native@3.36.1':
+    resolution: {integrity: sha512-tM5lwRsqw3reatBfhaa7GbTMbfdSkgno2UiUBIGklG7SYTSmCe6ivQNrIl+DCabLSPzTlePmIb93taikMPIIPQ==}
+    peerDependencies:
+      react: '>= 16.5.1'
 
   '@tabler/icons-react@3.36.1':
     resolution: {integrity: sha512-/8nOXeNeMoze9xY/QyEKG65wuvRhkT3q9aytaur6Gj8bYU2A98YVJyLc9MRmc5nVvpy+bRlrrwK/Ykr8WGyUWg==}
@@ -9001,7 +9009,9 @@ snapshots:
       metro-runtime: 0.82.5
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-colors@0.79.2': {}
 
@@ -9344,6 +9354,11 @@ snapshots:
   '@swc/helpers@0.5.15':
     dependencies:
       tslib: 2.8.1
+
+  '@tabler/icons-react-native@3.36.1(react@19.0.0)':
+    dependencies:
+      '@tabler/icons': 3.36.1
+      react: 19.0.0
 
   '@tabler/icons-react@3.36.1(react@19.1.0)':
     dependencies:

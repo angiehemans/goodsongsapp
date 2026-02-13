@@ -713,7 +713,9 @@ class ApiClient {
       }
 
       // Check for token expiration and attempt refresh
-      if (response.status === 401 && error.error?.code === 'token_expired' && !isRetry) {
+      // Backend returns { error: "Token has expired", code: "token_expired" }
+      const errorCode = error.code || error.error?.code;
+      if (response.status === 401 && errorCode === 'token_expired' && !isRetry) {
         try {
           await this.handleTokenRefresh();
           // Retry the original request with new token
@@ -755,7 +757,9 @@ class ApiClient {
       }
 
       // Check for token expiration and attempt refresh
-      if (response.status === 401 && error.error?.code === 'token_expired' && !isRetry) {
+      // Backend returns { error: "Token has expired", code: "token_expired" }
+      const errorCode = error.code || error.error?.code;
+      if (response.status === 401 && errorCode === 'token_expired' && !isRetry) {
         try {
           await this.handleTokenRefresh();
           // Retry the original request with new token

@@ -9,3 +9,4 @@ export { LoadingScreen } from './LoadingScreen';
 export { EmptyState } from './EmptyState';
 export { Logo } from './Logo';
 export { MusicPlayer } from './MusicPlayer';
+export { ArtworkPickerModal } from './ArtworkPickerModal';

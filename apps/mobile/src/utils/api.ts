@@ -230,7 +230,9 @@ class MobileApiClient {
       }
 
       // Check for token expiration and attempt refresh
-      if (response.status === 401 && error.error?.code === 'token_expired' && !isRetry) {
+      // Backend returns { error: "Token has expired", code: "token_expired" }
+      const errorCode = error.code || error.error?.code;
+      if (response.status === 401 && errorCode === 'token_expired' && !isRetry) {
         try {
           await this.handleTokenRefresh();
           // Retry the original request with new token
@@ -604,6 +606,26 @@ class MobileApiClient {
   async refreshScrobbleArtwork(scrobbleId: number | string): Promise<RefreshArtworkResponse> {
     return this.request(`/api/v1/scrobbles/${scrobbleId}/refresh_artwork`, {
       method: 'POST',
+    });
+  }
+
+  // Set preferred artwork for a scrobble
+  async setScrobbleArtwork(
+    scrobbleId: number | string,
+    artworkUrl: string
+  ): Promise<{ message: string; artwork_url: string }> {
+    return this.request(`/api/v1/scrobbles/${scrobbleId}/artwork`, {
+      method: 'PATCH',
+      body: JSON.stringify({ artwork_url: artworkUrl }),
+    });
+  }
+
+  // Clear preferred artwork (revert to album art)
+  async clearScrobbleArtwork(
+    scrobbleId: number | string
+  ): Promise<{ message: string }> {
+    return this.request(`/api/v1/scrobbles/${scrobbleId}/artwork`, {
+      method: 'DELETE',
     });
   }
 

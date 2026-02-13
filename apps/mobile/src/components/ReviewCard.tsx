@@ -9,7 +9,13 @@ import {
   Share,
 } from "react-native";
 import FastImage from "react-native-fast-image";
-import Icon from "@react-native-vector-icons/feather";
+import {
+  IconExternalLink,
+  IconShare,
+  IconMessageCircle,
+  IconHeart,
+  IconHeartFilled,
+} from "@tabler/icons-react-native";
 import { Review } from "@goodsongs/api-client";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { Badge } from "./Badge";
@@ -149,7 +155,7 @@ export function ReviewCard({
               onPress={handleOpenLink}
               style={styles.linkButton}
             >
-              <Icon name="external-link" size={20} color={colors.grape[6]} />
+              <IconExternalLink size={20} color={colors.grape[6]} />
             </TouchableOpacity>
           )}
         </View>
@@ -192,12 +198,12 @@ export function ReviewCard({
             handleShare();
           }}
         >
-          <Icon name="share" size={22} color={colors.grape[6]} />
+          <IconShare size={22} color={colors.grape[6]} />
         </TouchableOpacity>
 
         {/* Comments Button */}
         <View style={styles.actionButton}>
-          <Icon name="message-circle" size={22} color={colors.grape[6]} />
+          <IconMessageCircle size={22} color={colors.grape[6]} />
           {commentsCount > 0 && (
             <Text style={styles.actionCount}>{commentsCount}</Text>
           )}
@@ -214,12 +220,10 @@ export function ReviewCard({
         >
           {isLiking ? (
             <ActivityIndicator size="small" color={colors.grape[6]} />
+          ) : isLiked ? (
+            <IconHeartFilled size={22} color="#ef4444" />
           ) : (
-            <Icon
-              name="heart"
-              size={22}
-              color={isLiked ? "#ef4444" : colors.grape[6]}
-            />
+            <IconHeart size={22} color={colors.grape[6]} />
           )}
           {likesCount > 0 && (
             <Text

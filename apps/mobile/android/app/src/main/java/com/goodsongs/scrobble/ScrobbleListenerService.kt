@@ -31,6 +31,11 @@ class ScrobbleListenerService : NotificationListenerService() {
         extractor = MetadataExtractor(storage)
         tracker = PlaybackTracker(storage, extractor)
         activeTracker = tracker
+
+        // Set callback for timer-based scrobbles (after 20 seconds)
+        tracker.onScrobbleCallback = {
+            sendScrobbleEvent()
+        }
     }
 
     override fun onListenerConnected() {

@@ -15,7 +15,16 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from '@react-native-vector-icons/feather';
+import {
+  IconAlertCircle,
+  IconMusic,
+  IconExternalLink,
+  IconHeart,
+  IconHeartFilled,
+  IconMessageCircle,
+  IconTrash,
+  IconSend,
+} from '@tabler/icons-react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Review } from '@goodsongs/api-client';
@@ -233,7 +242,7 @@ export function ReviewDetailScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <Header title="Review" showBackButton onBackPress={() => navigation.goBack()} />
         <View style={styles.errorContainer}>
-          <Icon name="alert-circle" size={48} color={colors.grape[4]} />
+          <IconAlertCircle size={48} color={colors.grape[4]} />
           <Text style={styles.errorText}>{error || 'Review not found'}</Text>
           <TouchableOpacity
             style={styles.backButton}
@@ -296,7 +305,7 @@ export function ReviewDetailScreen() {
               />
             ) : (
               <View style={[styles.artwork, styles.artworkPlaceholder]}>
-                <Icon name="music" size={28} color={colors.grape[4]} />
+                <IconMusic size={28} color={colors.grape[4]} />
               </View>
             )}
             <View style={styles.songDetails}>
@@ -309,7 +318,7 @@ export function ReviewDetailScreen() {
               </TouchableOpacity>
             </View>
             {review.song_link && (
-              <Icon name="external-link" size={20} color={colors.grape[6]} />
+              <IconExternalLink size={20} color={colors.grape[6]} />
             )}
           </TouchableOpacity>
 
@@ -341,12 +350,10 @@ export function ReviewDetailScreen() {
             >
               {isLiking ? (
                 <ActivityIndicator size="small" color={colors.grape[6]} />
+              ) : isLiked ? (
+                <IconHeartFilled size={22} color="#ef4444" />
               ) : (
-                <Icon
-                  name="heart"
-                  size={22}
-                  color={isLiked ? '#ef4444' : colors.grape[6]}
-                />
+                <IconHeart size={22} color={colors.grape[6]} />
               )}
               {likesCount > 0 && (
                 <Text style={[styles.actionCount, isLiked && styles.actionCountLiked]}>
@@ -356,7 +363,7 @@ export function ReviewDetailScreen() {
             </TouchableOpacity>
 
             <View style={styles.actionButton}>
-              <Icon name="message-circle" size={22} color={colors.grape[6]} />
+              <IconMessageCircle size={22} color={colors.grape[6]} />
               {comments.length > 0 && (
                 <Text style={styles.actionCount}>{comments.length}</Text>
               )}
@@ -420,7 +427,7 @@ export function ReviewDetailScreen() {
                               {deletingCommentId === comment.id ? (
                                 <ActivityIndicator size="small" color="#ef4444" />
                               ) : (
-                                <Icon name="trash-2" size={14} color="#ef4444" />
+                                <IconTrash size={14} color="#ef4444" />
                               )}
                             </TouchableOpacity>
                           )}
@@ -478,7 +485,7 @@ export function ReviewDetailScreen() {
               {isSubmittingComment ? (
                 <ActivityIndicator size="small" color={colors.grape[0]} />
               ) : (
-                <Icon name="send" size={18} color={colors.grape[0]} />
+                <IconSend size={18} color={colors.grape[0]} />
               )}
             </TouchableOpacity>
           </View>
