@@ -1,23 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { theme, colors } from '@/theme';
+import React from "react";
+import { View, Text, StyleSheet, ViewStyle } from "react-native";
+import { theme, colors } from "@/theme";
 
 interface BadgeProps {
   text: string;
-  variant?: 'default' | 'primary' | 'success' | 'warning';
-  size?: 'sm' | 'md';
+  variant?: "default" | "primary" | "success" | "warning";
+  size?: "sm" | "md";
   style?: ViewStyle;
 }
 
 export function Badge({
   text,
-  variant = 'default',
-  size = 'sm',
+  variant = "default",
+  size = "sm",
   style,
 }: BadgeProps) {
   return (
-    <View style={[styles.badge, styles[variant], styles[`size_${size}`], style]}>
-      <Text style={[styles.text, styles[`text_${variant}`], styles[`textSize_${size}`]]}>
+    <View
+      style={[styles.badge, styles[variant], styles[`size_${size}`], style]}
+    >
+      <Text
+        style={[
+          styles.text,
+          styles[`text_${variant}`],
+          styles[`textSize_${size}`],
+        ]}
+      >
         {text}
       </Text>
     </View>
@@ -37,10 +45,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grape[6],
   },
   success: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: "#D1FAE5",
   },
   warning: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: "#FEF3C7",
   },
 
   // Sizes
@@ -55,19 +63,19 @@ const styles = StyleSheet.create({
 
   // Text
   text: {
-    fontWeight: '500',
+    fontWeight: "500",
   },
   text_default: {
-    color: colors.grape[8],
+    color: colors.grape[4],
   },
   text_primary: {
     color: colors.grape[0],
   },
   text_success: {
-    color: '#065F46',
+    color: "#065F46",
   },
   text_warning: {
-    color: '#92400E',
+    color: "#92400E",
   },
   textSize_sm: {
     fontSize: theme.fontSizes.xs,

@@ -14,18 +14,7 @@ import {
   IconShare,
 } from '@tabler/icons-react';
 import html2canvas from 'html2canvas';
-import {
-  ActionIcon,
-  Badge,
-  Card,
-  Center,
-  Group,
-  Loader,
-  Menu,
-  Spoiler,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { ActionIcon, Card, Center, Group, Menu, Spoiler, Stack, Text } from '@mantine/core';
 import { CommentsDrawer } from '@/components/CommentsDrawer/CommentsDrawer';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { apiClient, Review } from '@/lib/api';
@@ -217,110 +206,107 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
           </Stack>
         </Group>
 
-        {/* Song Content Container */}
-        <div className={styles.songContainer}>
-          {/* Song Info */}
-          <Group gap="sm" justify="space-between" align="flex-start" mb="sm">
-            <Group gap="sm">
-              <Link href={reviewUrl} className={styles.artworkLink}>
-                {review.artwork_url && !artworkError ? (
-                  <img
-                    src={review.artwork_url}
-                    alt={`${review.song_name} artwork`}
-                    width={48}
-                    height={48}
-                    className={styles.artwork}
-                    onError={() => setArtworkError(true)}
-                  />
-                ) : (
-                  <Center
-                    w={48}
-                    h={48}
-                    bg="grape.1"
-                    style={{ borderRadius: 'var(--mantine-radius-sm)' }}
-                  >
-                    <img
-                      src="/logo-grape.svg"
-                      alt="Good Songs"
-                      width={32}
-                      height={32}
-                      style={{ opacity: 0.8 }}
-                    />
-                  </Center>
-                )}
-              </Link>
-              <Stack gap={2}>
-                <Text
-                  size="md"
-                  fw={500}
-                  c="gray.9"
-                  component={Link}
-                  href={reviewUrl}
-                  style={{ textDecoration: 'none' }}
-                  className={styles.songName}
+        {/* Song Row - with background */}
+        <div className={styles.songRow}>
+          <Group gap="sm">
+            <Link href={reviewUrl} className={styles.artworkLink}>
+              {review.artwork_url && !artworkError ? (
+                <img
+                  src={review.artwork_url}
+                  alt={`${review.song_name} artwork`}
+                  width={48}
+                  height={48}
+                  className={styles.artwork}
+                  onError={() => setArtworkError(true)}
+                />
+              ) : (
+                <Center
+                  w={48}
+                  h={48}
+                  bg="grape.1"
+                  style={{ borderRadius: 'var(--mantine-radius-sm)' }}
                 >
-                  {review.song_name}
+                  <img
+                    src="/logo-grape.svg"
+                    alt="Good Songs"
+                    width={32}
+                    height={32}
+                    style={{ opacity: 0.8 }}
+                  />
+                </Center>
+              )}
+            </Link>
+            <Stack gap={2}>
+              <Text
+                size="md"
+                fw={500}
+                c="gray.9"
+                component={Link}
+                href={reviewUrl}
+                style={{ textDecoration: 'none' }}
+                className={styles.songName}
+              >
+                {review.song_name}
+              </Text>
+              {review.band?.slug ? (
+                <Text
+                  size="sm"
+                  c="grape.6"
+                  component={Link}
+                  href={`/bands/${review.band.slug}`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  {review.band_name}
                 </Text>
-                {review.band?.slug ? (
-                  <Text
-                    size="sm"
-                    c="grape.6"
-                    component={Link}
-                    href={`/bands/${review.band.slug}`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    {review.band_name}
-                  </Text>
-                ) : (
-                  <Text size="sm" c="dimmed">
-                    {review.band_name}
-                  </Text>
-                )}
-              </Stack>
-            </Group>
-            {review.song_link && (
-              <a href={review.song_link} target="_blank" rel="noopener noreferrer">
-                <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
-              </a>
-            )}
-          </Group>
-
-          {/* Review Text */}
-          <Spoiler
-            maxHeight={60}
-            showLabel="Read more"
-            hideLabel="Show less"
-            styles={{
-              control: {
-                fontSize: 'var(--mantine-font-size-sm)',
-                color: 'var(--mantine-color-grape-4)',
-              },
-            }}
-          >
-            <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-              {review.review_text}
-            </Text>
-          </Spoiler>
-
-          {/* Tags */}
-          {review.liked_aspects && review.liked_aspects.length > 0 && (
-            <Group gap="xs" mt="sm">
-              {review.liked_aspects.slice(0, 3).map((aspect, index) => (
-                <Badge key={index} size="sm" variant="light" color="grape">
-                  {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
-                </Badge>
-              ))}
-              {review.liked_aspects.length > 3 && (
-                <Text size="xs" c="dimmed">
-                  +{review.liked_aspects.length - 3} more
+              ) : (
+                <Text size="sm" c="dimmed">
+                  {review.band_name}
                 </Text>
               )}
-            </Group>
+            </Stack>
+          </Group>
+          {review.song_link && (
+            <a href={review.song_link} target="_blank" rel="noopener noreferrer">
+              <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
+            </a>
           )}
         </div>
 
+        {/* Review Text */}
+        <Spoiler
+          maxHeight={60}
+          showLabel="Read more"
+          hideLabel="Show less"
+          styles={{
+            control: {
+              fontSize: 'var(--mantine-font-size-sm)',
+              color: 'var(--mantine-color-grape-4)',
+            },
+          }}
+        >
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+            {review.review_text}
+          </Text>
+        </Spoiler>
+
+        {/* Tags */}
+        {review.liked_aspects && review.liked_aspects.length > 0 && (
+          <Group gap="xs">
+            {review.liked_aspects.slice(0, 3).map((aspect, index) => (
+              <Text key={index} size="sm" className={styles.tag}>
+                #{typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
+              </Text>
+            ))}
+            {review.liked_aspects.length > 3 && (
+              <Text size="xs" c="dimmed">
+                +{review.liked_aspects.length - 3} more
+              </Text>
+            )}
+          </Group>
+        )}
+
         {/* Like, Comments, and Share Buttons */}
-        <Group gap="sm" justify="flex-end">
+        <Group gap="sm" justify="flex-end" pt="sm" className={styles.actionItems}>
           {/* Share Menu */}
           <Menu shadow="md" width={200} position="bottom-end">
             <Menu.Target>

@@ -7,7 +7,7 @@ export type AuthStackParamList = {
   Signup: undefined;
 };
 
-// CreateReview params for prefilling
+// CreateReview params for prefilling and editing
 export type CreateReviewParams = {
   song_link?: string;
   band_name?: string;
@@ -15,6 +15,11 @@ export type CreateReviewParams = {
   artwork_url?: string;
   band_lastfm_artist_name?: string;
   band_musicbrainz_id?: string;
+  // Edit mode params
+  reviewId?: number;
+  review_text?: string;
+  liked_aspects?: string[];
+  username?: string; // For navigating back after edit
 };
 
 // Home params for success banner

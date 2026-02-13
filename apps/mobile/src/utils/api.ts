@@ -401,6 +401,26 @@ class MobileApiClient {
     });
   }
 
+  async updateReview(
+    reviewId: number,
+    data: {
+      review_text?: string;
+      liked_aspects?: string[];
+      artwork_url?: string;
+    }
+  ): Promise<Review> {
+    return this.request(`/reviews/${reviewId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ review: data }),
+    });
+  }
+
+  async deleteReview(reviewId: number): Promise<{ message: string }> {
+    return this.request(`/reviews/${reviewId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Review Likes
   async likeReview(reviewId: number): Promise<{ likes_count: number }> {
     return this.request(`/reviews/${reviewId}/like`, { method: 'POST' });

@@ -18,11 +18,17 @@
   background-color: var(--mantine-color-grape-3);
 }
 
-.songContainer {
+.songRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   background-color: var(--mantine-color-grape-2);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-sm);
-  /* margin-top: var(--mantine-spacing-sm); */
+}
+
+.actionItems {
+  border-top: 2px dotted var(--mantine-color-grape-2);
 }
 
 .cardBorder {
@@ -288,4 +294,10 @@
 .postLogo {
   width: 18px;
   height: 18px;
+}
+
+/* Tag styling */
+.tag {
+  font-weight: 500;
+  color: var(--mantine-color-grape-4);
 }

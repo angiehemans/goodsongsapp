@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import {
   IconBrandInstagram,
   IconCheck,
+  IconEdit,
   IconExternalLink,
   IconHeart,
   IconHeartFilled,
@@ -20,7 +21,6 @@ import {
 import html2canvas from 'html2canvas';
 import {
   ActionIcon,
-  Badge,
   Center,
   Container,
   Divider,
@@ -65,6 +65,7 @@ export default function SingleReviewPage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
   const [commentsCount, setCommentsCount] = useState(0);
+
 
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
@@ -246,6 +247,14 @@ export default function SingleReviewPage() {
     return date.toLocaleDateString();
   };
 
+  // Check if user is the review owner
+  const isOwner = user && review && (
+    user.id === review.author?.id ||
+    user.id === review.user?.id ||
+    user.username === review.author?.username ||
+    user.username === review.user?.username
+  );
+
   useEffect(() => {
     async function fetchReview() {
       try {
@@ -306,6 +315,24 @@ export default function SingleReviewPage() {
   const authorUsername = review.author?.username || review.user?.username || username;
   const authorProfileImage = review.author?.profile_image_url;
 
+  // Get edit URL for navigating to create-review page in edit mode
+  const getEditUrl = () => {
+    const likedAspects = review.liked_aspects?.map((aspect) =>
+      typeof aspect === 'string' ? aspect : aspect.name || String(aspect)
+    ) || [];
+    const params = new URLSearchParams({
+      reviewId: String(review.id),
+      song_name: review.song_name,
+      band_name: review.band_name,
+      review_text: review.review_text,
+      username: authorUsername,
+    });
+    if (review.artwork_url) params.set('artwork_url', review.artwork_url);
+    if (review.song_link) params.set('song_link', review.song_link);
+    if (likedAspects.length > 0) params.set('liked_aspects', likedAspects.join(','));
+    return `/user/create-review?${params.toString()}`;
+  };
+
   // Format relative time
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -339,125 +366,111 @@ export default function SingleReviewPage() {
             <ProfilePhoto
               src={authorProfileImage}
               alt={authorUsername}
-              size={44}
+              size={36}
               fallback={authorUsername}
               href={`/users/${authorUsername}`}
             />
             <div className={styles.authorInfo}>
-              <Group gap={6} align="center">
-                <Text
-                  component={Link}
-                  href={`/users/${authorUsername}`}
-                  className={styles.authorName}
-                >
-                  {authorUsername}
-                </Text>
-                <Text c="dimmed" size="sm">
-                  ·
-                </Text>
-                <Text c="dimmed" size="sm">
-                  {getRelativeTime(review.created_at)}
-                </Text>
-              </Group>
+              <Text
+                component={Link}
+                href={`/users/${authorUsername}`}
+                className={styles.authorName}
+              >
+                @{authorUsername}
+              </Text>
+              <Text c="gray.5" size="xs">
+                {new Date(review.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Text>
             </div>
+            {isOwner && (
+              <ActionIcon
+                component={Link}
+                href={getEditUrl()}
+                variant="subtle"
+                color="grape.6"
+                size="sm"
+                aria-label="Edit review"
+              >
+                <IconEdit size={16} />
+              </ActionIcon>
+            )}
           </div>
 
-          {/* Song Card */}
-          <UnstyledButton
-            component={review.song_link ? 'a' : 'div'}
-            href={review.song_link || undefined}
-            target={review.song_link ? '_blank' : undefined}
-            rel={review.song_link ? 'noopener noreferrer' : undefined}
-            className={styles.songCard}
-          >
-            {review.artwork_url ? (
-              <img
-                src={review.artwork_url}
-                alt={`${review.song_name} artwork`}
-                className={styles.songArtwork}
-              />
-            ) : (
-              <div className={styles.songArtworkPlaceholder}>
-                <img src="/logo-grape.svg" alt="Good Songs" width={28} height={28} style={{ opacity: 0.8 }} />
-              </div>
-            )}
-            <div className={styles.songDetails}>
-              <Text className={styles.songName}>{review.song_name}</Text>
-              <Text className={styles.artistName}>{review.band_name}</Text>
-            </div>
+          {/* Song Row - with background */}
+          <div className={styles.songRow}>
+            <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
+              {review.artwork_url ? (
+                <img
+                  src={review.artwork_url}
+                  alt={`${review.song_name} artwork`}
+                  className={styles.songArtwork}
+                />
+              ) : (
+                <Center
+                  w={48}
+                  h={48}
+                  bg="grape.1"
+                  style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
+                >
+                  <img src="/logo-grape.svg" alt="Good Songs" width={32} height={32} style={{ opacity: 0.8 }} />
+                </Center>
+              )}
+              <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                <Text className={styles.songName}>{review.song_name}</Text>
+                {review.band?.slug ? (
+                  <Text
+                    size="sm"
+                    c="grape.6"
+                    component={Link}
+                    href={`/bands/${review.band.slug}`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {review.band_name}
+                  </Text>
+                ) : (
+                  <Text size="sm" c="dimmed">
+                    {review.band_name}
+                  </Text>
+                )}
+              </Stack>
+            </Group>
             {review.song_link && (
-              <IconExternalLink size={18} className={styles.songLinkIcon} />
+              <a href={review.song_link} target="_blank" rel="noopener noreferrer">
+                <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
+              </a>
             )}
-          </UnstyledButton>
+          </div>
 
           {/* Review Text */}
           <Text className={styles.reviewText}>{review.review_text}</Text>
 
           {/* Tags */}
           {review.liked_aspects && review.liked_aspects.length > 0 && (
-            <Group gap={8} className={styles.tags}>
+            <Group gap="xs">
               {review.liked_aspects.map((aspect, index) => (
-                <Badge
-                  key={index}
-                  variant="light"
-                  color="grape"
-                  size="sm"
-                  className={styles.tag}
-                >
-                  {typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
-                </Badge>
+                <Text key={index} size="sm" className={styles.tag}>
+                  #{typeof aspect === 'string' ? aspect : aspect.name || String(aspect)}
+                </Text>
               ))}
             </Group>
           )}
 
           {/* Actions Row */}
           <div className={styles.actionsRow}>
-            <Group gap="md">
-              <Group gap={4}>
-                <ActionIcon
-                  variant="subtle"
-                  color={isLiked ? 'red' : 'gray'}
-                  size="lg"
-                  onClick={handleLikeClick}
-                  loading={isLiking}
-                  aria-label={isLiked ? 'Unlike' : 'Like'}
-                >
-                  {isLiked ? <IconHeartFilled size={22} /> : <IconHeart size={22} />}
-                </ActionIcon>
-                {likesCount > 0 && (
-                  <Text size="sm" c="dimmed">
-                    {likesCount}
-                  </Text>
-                )}
-              </Group>
-
-              <Group gap={4}>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  aria-label="Comments"
-                >
-                  <IconMessage size={22} />
-                </ActionIcon>
-                {commentsCount > 0 && (
-                  <Text size="sm" c="dimmed">
-                    {commentsCount}
-                  </Text>
-                )}
-              </Group>
-            </Group>
-
+            {/* Share Menu */}
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <ActionIcon
                   variant="subtle"
-                  color="gray"
-                  size="lg"
+                  color="grape.6"
                   loading={generatingImage}
                   aria-label="Share"
                 >
-                  {copied ? <IconCheck size={22} /> : <IconShare size={22} />}
+                  {copied ? <IconCheck size={20} /> : <IconShare size={20} />}
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
@@ -483,6 +496,40 @@ export default function SingleReviewPage() {
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
+
+            {/* Comments Button */}
+            <Group gap={4}>
+              <ActionIcon
+                variant="subtle"
+                color="grape.6"
+                aria-label="Comments"
+              >
+                <IconMessage size={20} />
+              </ActionIcon>
+              {commentsCount > 0 && (
+                <Text size="sm" c="grape.6">
+                  {commentsCount}
+                </Text>
+              )}
+            </Group>
+
+            {/* Like Button */}
+            <Group gap={4}>
+              <ActionIcon
+                variant="subtle"
+                color={isLiked ? 'red' : 'grape.6'}
+                onClick={handleLikeClick}
+                loading={isLiking}
+                aria-label={isLiked ? 'Unlike' : 'Like'}
+              >
+                {isLiked ? <IconHeartFilled size={20} /> : <IconHeart size={20} />}
+              </ActionIcon>
+              {likesCount > 0 && (
+                <Text size="sm" c="grape.6">
+                  {likesCount}
+                </Text>
+              )}
+            </Group>
           </div>
 
         </div>

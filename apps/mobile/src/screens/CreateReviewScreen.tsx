@@ -64,6 +64,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
   const paramsRef = useRef(params);
   paramsRef.current = params;
 
+  // Edit mode detection
+  const isEditMode = !!params?.reviewId;
+
   // Search state
   const [trackQuery, setTrackQuery] = useState("");
   const [artistQuery, setArtistQuery] = useState("");
@@ -128,7 +131,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
         liked_aspects: [],
       };
 
-      // Prefill from params if available
+      // Prefill from params if available (for prefill or edit mode)
       if (currentParams?.song_name || currentParams?.band_name) {
         newFormData.song_link = currentParams.song_link || "";
         newFormData.band_name = currentParams.band_name || "";
@@ -137,24 +140,38 @@ export function CreateReviewScreen({ navigation, route }: any) {
         newFormData.band_lastfm_artist_name =
           currentParams.band_lastfm_artist_name;
         newFormData.band_musicbrainz_id = currentParams.band_musicbrainz_id;
+        // Prefill edit-specific fields
+        if (currentParams.review_text) {
+          newFormData.review_text = currentParams.review_text;
+        }
+        if (currentParams.liked_aspects) {
+          newFormData.liked_aspects = currentParams.liked_aspects;
+        }
         setIsPrefilled(true);
 
-        // Clear params after applying
-        setTimeout(() => {
-          navigation.setParams({
-            song_link: undefined,
-            band_name: undefined,
-            song_name: undefined,
-            artwork_url: undefined,
-            band_lastfm_artist_name: undefined,
-            band_musicbrainz_id: undefined,
-          });
-        }, 0);
+        // Only clear params if not in edit mode (we need reviewId to stay)
+        if (!currentParams.reviewId) {
+          setTimeout(() => {
+            navigation.setParams({
+              song_link: undefined,
+              band_name: undefined,
+              song_name: undefined,
+              artwork_url: undefined,
+              band_lastfm_artist_name: undefined,
+              band_musicbrainz_id: undefined,
+            });
+          }, 0);
+        }
       } else {
         setIsPrefilled(false);
       }
 
       setFormData(newFormData);
+
+      // Fetch artwork options in edit mode or when prefilled
+      if (currentParams?.song_name && currentParams?.band_name) {
+        fetchArtworkOptions(currentParams.song_name, currentParams.band_name);
+      }
     }, [navigation]),
   );
 
@@ -331,41 +348,63 @@ export function CreateReviewScreen({ navigation, route }: any) {
         .trim()
         .replace(/\*+$/, "")
         .trim();
-      await apiClient.createReview({
-        song_link: formData.song_link.trim() || "",
-        band_name: cleanBandName,
-        song_name: formData.song_name.trim(),
-        artwork_url: formData.artwork_url.trim() || undefined,
-        review_text: formData.review_text.trim(),
-        liked_aspects:
-          formData.liked_aspects.length > 0
-            ? formData.liked_aspects
-            : undefined,
-        band_lastfm_artist_name: formData.band_lastfm_artist_name,
-        band_musicbrainz_id: formData.band_musicbrainz_id,
-      });
 
-      // Reset state
-      setSubmitting(false);
-      setSelectedRelease(null);
-      setManualEntry(false);
-      setTrackQuery("");
-      setArtistQuery("");
-      lastSearchKey.current = "";
-      navigation.navigate("Home", { showSuccess: true });
+      if (isEditMode && params?.reviewId) {
+        // Update existing review
+        await apiClient.updateReview(params.reviewId, {
+          review_text: formData.review_text.trim(),
+          liked_aspects:
+            formData.liked_aspects.length > 0
+              ? formData.liked_aspects
+              : undefined,
+          artwork_url: formData.artwork_url.trim() || undefined,
+        });
+
+        // Reset state and go back to the review detail screen
+        setSubmitting(false);
+        navigation.goBack();
+      } else {
+        // Create new review
+        await apiClient.createReview({
+          song_link: formData.song_link.trim() || "",
+          band_name: cleanBandName,
+          song_name: formData.song_name.trim(),
+          artwork_url: formData.artwork_url.trim() || undefined,
+          review_text: formData.review_text.trim(),
+          liked_aspects:
+            formData.liked_aspects.length > 0
+              ? formData.liked_aspects
+              : undefined,
+          band_lastfm_artist_name: formData.band_lastfm_artist_name,
+          band_musicbrainz_id: formData.band_musicbrainz_id,
+        });
+
+        // Reset state
+        setSubmitting(false);
+        setSelectedRelease(null);
+        setManualEntry(false);
+        setTrackQuery("");
+        setArtistQuery("");
+        lastSearchKey.current = "";
+        navigation.navigate("Home", { showSuccess: true });
+      }
     } catch (error: any) {
       setSubmitting(false);
-      Alert.alert("Error", error.message || "Failed to post recommendation");
+      Alert.alert("Error", error.message || "Failed to save recommendation");
     }
   };
 
-  // Show search interface if no release is selected, not prefilled, and not in manual entry mode
+  // Show search interface if no release is selected, not prefilled, not in edit mode, and not in manual entry mode
   const showSearch =
-    !isPrefilled && !selectedRelease && !formData.song_name && !manualEntry;
+    !isPrefilled && !selectedRelease && !formData.song_name && !manualEntry && !isEditMode;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <Header title="Recommend" />
+      <Header
+        title={isEditMode ? "Edit Recommendation" : "Recommend"}
+        showBackButton={isEditMode}
+        onBackPress={isEditMode ? () => navigation.goBack() : undefined}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -378,9 +417,11 @@ export function CreateReviewScreen({ navigation, route }: any) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
         >
-          <Text style={styles.subtitle}>
-            Share your favorite songs and help others discover great music!
-          </Text>
+          {!isEditMode && (
+            <Text style={styles.subtitle}>
+              Share your favorite songs and help others discover great music!
+            </Text>
+          )}
 
           {/* Song Search Section */}
           {showSearch && (
@@ -553,7 +594,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                   </Text>
                 </View>
               </View>
-              {!isPrefilled && (
+              {!isPrefilled && !isEditMode && (
                 <TouchableOpacity
                   onPress={handleClearSelection}
                   style={styles.clearButton}
@@ -770,7 +811,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Submit Button */}
               <Button
-                title="Post Recommendation"
+                title={isEditMode ? "Save Changes" : "Post Recommendation"}
                 onPress={handleSubmit}
                 loading={submitting}
                 disabled={!isFormValid()}
@@ -983,7 +1024,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Submit Button */}
               <Button
-                title="Post Recommendation"
+                title={isEditMode ? "Save Changes" : "Post Recommendation"}
                 onPress={handleSubmit}
                 loading={submitting}
                 disabled={!isFormValid()}

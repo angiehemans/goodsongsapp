@@ -172,11 +172,11 @@ export function ReviewCard({
               <Badge
                 style={styles.badgeStyle}
                 key={index}
-                text={
+                text={`#${
                   typeof aspect === "string"
                     ? aspect
                     : aspect.name || String(aspect)
-                }
+                }`}
               />
             ))}
             {review.liked_aspects.length > 3 && (
@@ -241,7 +241,7 @@ export function ReviewCard({
 const styles = StyleSheet.create({
   card: {
     borderBottomWidth: 2,
-    borderBottomColor: colors.grape[5],
+    borderBottomColor: colors.grape[3],
   },
   authorRow: {
     flexDirection: "row",
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   authorName: {
-    fontSize: theme.fontSizes.sm,
+    fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
     color: colors.grape[6],
   },
@@ -262,12 +262,16 @@ const styles = StyleSheet.create({
     color: colors.grey[5],
   },
   songContainer: {
+    marginTop: theme.spacing.sm,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.grape[2],
+    borderStyle: "dotted",
+    paddingBottom: theme.spacing.md,
+  },
+  songRow: {
     backgroundColor: colors.grape[2],
     borderRadius: theme.radii.sm,
     padding: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
-  },
-  songRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
@@ -318,11 +322,12 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grey[5],
+    color: colors.grape[5],
   },
   badgeStyle: {
-    borderColor: colors.grape[3],
-    borderWidth: 1,
+    // borderColor: colors.grape[3],
+    // borderWidth: 1,
+    backgroundColor: colors.grape[0],
   },
   actionsRow: {
     flexDirection: "row",

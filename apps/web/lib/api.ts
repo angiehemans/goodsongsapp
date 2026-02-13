@@ -988,6 +988,26 @@ class ApiClient {
     });
   }
 
+  async updateReview(
+    reviewId: number,
+    data: {
+      review_text?: string;
+      liked_aspects?: string[];
+      artwork_url?: string;
+    }
+  ): Promise<Review> {
+    return this.makeRequest(`/reviews/${reviewId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ review: data }),
+    });
+  }
+
+  async deleteReview(reviewId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/reviews/${reviewId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async likeReview(reviewId: number): Promise<LikeResponse> {
     return this.makeRequest(`/reviews/${reviewId}/like`, {
       method: 'POST',

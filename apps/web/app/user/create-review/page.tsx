@@ -42,6 +42,11 @@ function CreateReviewForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Edit mode detection
+  const reviewId = searchParams.get('reviewId');
+  const isEditMode = !!reviewId;
+  const username = searchParams.get('username');
+
   // Redirect band accounts - they cannot create reviews
   useEffect(() => {
     if (!isLoading && !user) {
@@ -77,8 +82,12 @@ function CreateReviewForm() {
     const songLink = searchParams.get('song_link');
     const bandLastfmArtistName = searchParams.get('band_lastfm_artist_name');
     const bandMusicbrainzId = searchParams.get('band_musicbrainz_id');
+    // Edit mode fields
+    const reviewText = searchParams.get('review_text');
+    const likedAspectsParam = searchParams.get('liked_aspects');
+    const likedAspects = likedAspectsParam ? likedAspectsParam.split(',') : [];
 
-    if (songName || bandName || artworkUrl || songLink || bandLastfmArtistName || bandMusicbrainzId) {
+    if (songName || bandName || artworkUrl || songLink || bandLastfmArtistName || bandMusicbrainzId || reviewText || likedAspectsParam) {
       setFormData((prev) => ({
         ...prev,
         song_name: songName || prev.song_name,
@@ -87,6 +96,8 @@ function CreateReviewForm() {
         song_link: songLink || prev.song_link,
         band_lastfm_artist_name: bandLastfmArtistName || prev.band_lastfm_artist_name,
         band_musicbrainz_id: bandMusicbrainzId || prev.band_musicbrainz_id,
+        review_text: reviewText || prev.review_text,
+        liked_aspects: likedAspects.length > 0 ? likedAspects : prev.liked_aspects,
       }));
     }
   }, [searchParams]);
@@ -97,15 +108,36 @@ function CreateReviewForm() {
     setError(null);
 
     try {
-      await apiClient.createReview(formData);
+      if (isEditMode && reviewId) {
+        // Update existing review
+        await apiClient.updateReview(parseInt(reviewId, 10), {
+          review_text: formData.review_text,
+          liked_aspects: formData.liked_aspects.length > 0
+            ? formData.liked_aspects.map(a => typeof a === 'string' ? a : a.name)
+            : undefined,
+          artwork_url: formData.artwork_url || undefined,
+        });
 
-      notifications.show({
-        title: 'Recommendation created!',
-        message: 'Your recommendation has been successfully submitted.',
-        color: 'green',
-      });
+        notifications.show({
+          title: 'Recommendation updated!',
+          message: 'Your changes have been saved.',
+          color: 'green',
+        });
 
-      router.push('/user/dashboard');
+        // Navigate back to review detail
+        router.push(`/users/${username}/reviews/${reviewId}`);
+      } else {
+        // Create new review
+        await apiClient.createReview(formData);
+
+        notifications.show({
+          title: 'Recommendation created!',
+          message: 'Your recommendation has been successfully submitted.',
+          color: 'green',
+        });
+
+        router.push('/user/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -135,25 +167,27 @@ function CreateReviewForm() {
           <Group justify="space-between" align="center">
             <Group>
               <IconMusic size={32} color="var(--mantine-color-grape-6)" />
-              <Title order={1}>New Recommendation</Title>
+              <Title order={1}>{isEditMode ? 'Edit Recommendation' : 'New Recommendation'}</Title>
             </Group>
             <Button
               component={Link}
-              href="/user/dashboard"
+              href={isEditMode ? `/users/${username}/reviews/${reviewId}` : '/user/dashboard'}
               leftSection={<IconArrowLeft size={16} />}
               variant="outline"
             >
-              Back to Dashboard
+              {isEditMode ? 'Cancel' : 'Back to Dashboard'}
             </Button>
           </Group>
         </Paper>
 
         <Paper p="lg" radius="md">
-          <Text size="sm" c="dimmed" mb="lg">
-            Share your favorite songs and help others discover great music!
-          </Text>
+          {!isEditMode && (
+            <Text size="sm" c="dimmed" mb="lg">
+              Share your favorite songs and help others discover great music!
+            </Text>
+          )}
 
-          {(searchParams.get('song_name') || searchParams.get('band_name')) && (
+          {!isEditMode && (searchParams.get('song_name') || searchParams.get('band_name')) && (
             <Alert
               icon={<IconBrandLastfm size="1rem" />}
               title="Prefilled from Last.fm"
@@ -173,29 +207,33 @@ function CreateReviewForm() {
 
           <form onSubmit={handleSubmit}>
             <Stack>
+              {/* Song fields are disabled in edit mode */}
               <TextInput
                 label="Song Link"
                 placeholder="https://www.last.fm/music/Artist/_/Song"
-                required
+                required={!isEditMode}
                 value={formData.song_link}
                 onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}
+                disabled={isEditMode}
               />
 
               <Group grow>
                 <TextInput
                   label="Band/Artist Name"
                   placeholder="The Beatles"
-                  required
+                  required={!isEditMode}
                   value={formData.band_name}
                   onChange={(e) => setFormData({ ...formData, band_name: e.target.value })}
+                  disabled={isEditMode}
                 />
 
                 <TextInput
                   label="Song Name"
                   placeholder="Hey Jude"
-                  required
+                  required={!isEditMode}
                   value={formData.song_name}
                   onChange={(e) => setFormData({ ...formData, song_name: e.target.value })}
+                  disabled={isEditMode}
                 />
               </Group>
 
@@ -234,15 +272,19 @@ function CreateReviewForm() {
               />
 
               <Group justify="flex-end">
-                <Button component={Link} href="/user/dashboard" variant="outline">
+                <Button
+                  component={Link}
+                  href={isEditMode ? `/users/${username}/reviews/${reviewId}` : '/user/dashboard'}
+                  variant="outline"
+                >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   loading={isSubmitting}
-                  disabled={!formData.song_name || !formData.band_name || !formData.review_text}
+                  disabled={!formData.review_text || (!isEditMode && (!formData.song_name || !formData.band_name))}
                 >
-                  Create Recommendation
+                  {isEditMode ? 'Save Changes' : 'Create Recommendation'}
                 </Button>
               </Group>
             </Stack>

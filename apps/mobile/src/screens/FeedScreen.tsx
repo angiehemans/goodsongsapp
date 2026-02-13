@@ -39,6 +39,7 @@ import {
 } from "@/components";
 import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
+import { useScrobbleStore } from "@/context/scrobbleStore";
 import { apiClient } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
@@ -51,6 +52,7 @@ type Props = {
 
 export function FeedScreen({ navigation, route }: Props) {
   const { user: currentUser, refreshUser } = useAuthStore();
+  const nowPlaying = useScrobbleStore((state) => state.nowPlaying);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,6 +68,36 @@ export function FeedScreen({ navigation, route }: Props) {
   const [refreshingArtworkId, setRefreshingArtworkId] = useState<
     number | string | null
   >(null);
+
+  // Combine now playing with recently played tracks
+  // Shows currently playing track first, then recently played (excluding duplicates)
+  const tracksToDisplay = React.useMemo(() => {
+    if (!nowPlaying) return recentlyPlayed;
+
+    // Convert nowPlaying to RecentlyPlayedTrack format
+    const nowPlayingTrack: RecentlyPlayedTrack = {
+      name: nowPlaying.trackName,
+      artist: nowPlaying.artistName,
+      album: nowPlaying.albumName,
+      played_at: null,
+      now_playing: true,
+      source: 'scrobble',
+      album_art_url: null, // Will show loading state
+      loved: false,
+      metadata_status: 'pending',
+    };
+
+    // Filter out the now playing track from recently played to avoid duplicates
+    const filteredRecent = recentlyPlayed.filter(
+      (track) =>
+        !(
+          track.name.toLowerCase() === nowPlaying.trackName.toLowerCase() &&
+          track.artist.toLowerCase() === nowPlaying.artistName.toLowerCase()
+        )
+    );
+
+    return [nowPlayingTrack, ...filteredRecent];
+  }, [nowPlaying, recentlyPlayed]);
 
   // Email verification state
   const [resendLoading, setResendLoading] = useState(false);
@@ -276,8 +308,8 @@ export function FeedScreen({ navigation, route }: Props) {
       );
     }
 
-    // Show connection prompt only when there are no tracks
-    if (recentlyPlayed.length === 0) {
+    // Show connection prompt only when there are no tracks and nothing playing
+    if (tracksToDisplay.length === 0) {
       return (
         <View style={styles.recentlyPlayedSection}>
           <Text style={styles.sectionTitle}>Recently Played</Text>
@@ -294,13 +326,15 @@ export function FeedScreen({ navigation, route }: Props) {
 
     return (
       <View style={styles.recentlyPlayedSection}>
-        <Text style={styles.sectionTitle}>Recently Played</Text>
+        <Text style={styles.sectionTitle}>
+          {nowPlaying ? "Now Playing" : "Recently Played"}
+        </Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.recentlyPlayedList}
         >
-          {recentlyPlayed.map((track, index) => (
+          {tracksToDisplay.map((track, index) => (
             <View
               key={`${track.name}-${track.artist}-${index}`}
               style={styles.trackCard}
