@@ -329,6 +329,12 @@ export function ProfileScreen({ navigation }: Props) {
           <View style={styles.reviewWrapper}>
             <ReviewCard
               review={item}
+              onPressReview={(review: Review) =>
+                navigation.navigate("ReviewDetail", {
+                  reviewId: review.id,
+                  username: review.author?.username || review.user?.username || user?.username || '',
+                })
+              }
               onPressBand={(slug: string) =>
                 navigation.navigate("BandProfile", { slug })
               }

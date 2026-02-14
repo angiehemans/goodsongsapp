@@ -201,12 +201,16 @@ export function ReviewCard({
         </TouchableOpacity>
 
         {/* Comments Button */}
-        <View style={styles.actionButton}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => onPressReview?.(review)}
+          disabled={!onPressReview}
+        >
           <IconMessageCircle size={22} color={colors.grape[6]} />
           {commentsCount > 0 && (
             <Text style={styles.actionCount}>{commentsCount}</Text>
           )}
-        </View>
+        </TouchableOpacity>
 
         {/* Like Button */}
         <TouchableOpacity
