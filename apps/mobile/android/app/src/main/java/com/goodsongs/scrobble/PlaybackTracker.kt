@@ -18,11 +18,13 @@ class PlaybackTracker(
 
     var currentTrack: TrackInfo? = null
         private set
+    var currentExtendedMetadata: MetadataExtractor.ExtendedMetadata? = null
+        private set
     private var currentTrackStartTime: Long = 0
-    private var currentDurationMs: Long? = null
     private var currentTrackScrobbled: Boolean = false
     private val handler = Handler(Looper.getMainLooper())
     private var scrobbleRunnable: Runnable? = null
+    private var currentController: MediaController? = null
 
     // Callback to notify when a scrobble happens (for sending events to RN)
     var onScrobbleCallback: (() -> Unit)? = null
@@ -38,9 +40,10 @@ class PlaybackTracker(
         // Check if the track actually changed
         if (prev != null && isSameTrack(prev, newTrack)) {
             // Same track, just a notification update (e.g., play/pause state change)
-            // Update duration if we can now get it
-            if (currentDurationMs == null && controller != null) {
-                currentDurationMs = metadataExtractor.getDurationFromController(controller)
+            // Update extended metadata if we can now get it
+            if (currentExtendedMetadata == null && controller != null) {
+                currentExtendedMetadata = metadataExtractor.getExtendedMetadataFromController(controller)
+                currentController = controller
             }
             return false
         }
@@ -60,14 +63,15 @@ class PlaybackTracker(
         currentTrack = newTrack
         currentTrackStartTime = System.currentTimeMillis()
         currentTrackScrobbled = false
-        currentDurationMs = if (controller != null) {
-            metadataExtractor.getDurationFromController(controller)
+        currentController = controller
+        currentExtendedMetadata = if (controller != null) {
+            metadataExtractor.getExtendedMetadataFromController(controller)
         } else {
             null
         }
 
         // Start timer to scrobble after 20 seconds
-        startScrobbleTimer(newTrack)
+        startScrobbleTimer(newTrack, controller)
 
         Log.d(TAG, "Now tracking: ${newTrack.artistName} - ${newTrack.trackName}")
         return scrobbled
@@ -87,7 +91,8 @@ class PlaybackTracker(
             false
         }
         currentTrack = null
-        currentDurationMs = null
+        currentExtendedMetadata = null
+        currentController = null
         currentTrackScrobbled = false
         return scrobbled
     }
@@ -103,12 +108,22 @@ class PlaybackTracker(
             return false
         }
 
+        // Get fresh extended metadata if we have a controller
+        val extMeta = currentExtendedMetadata
+            ?: metadataExtractor.getExtendedMetadataFromController(currentController)
+
         val scrobbleTrack = track.copy(
             playedAt = currentTrackStartTime,
-            durationMs = currentDurationMs
+            durationMs = extMeta.durationMs,
+            albumArtist = extMeta.albumArtist,
+            genre = extMeta.genre,
+            year = extMeta.year,
+            releaseDate = extMeta.releaseDate,
+            artworkUri = extMeta.artworkUri,
+            albumArt = extMeta.albumArt
         )
         storage.addPendingScrobble(scrobbleTrack)
-        Log.d(TAG, "Scrobbled: ${track.artistName} - ${track.trackName}")
+        Log.d(TAG, "Scrobbled: ${track.artistName} - ${track.trackName} (artwork: ${if (extMeta.artworkUri != null) "uri" else if (extMeta.albumArt != null) "base64" else "none"})")
         return true
     }
 
@@ -121,16 +136,25 @@ class PlaybackTracker(
     /**
      * Start a timer to scrobble the track after 20 seconds.
      */
-    private fun startScrobbleTimer(track: TrackInfo) {
+    private fun startScrobbleTimer(track: TrackInfo, controller: MediaController?) {
         scrobbleRunnable = Runnable {
             if (currentTrack != null && isSameTrack(currentTrack!!, track) && !currentTrackScrobbled) {
+                // Get fresh extended metadata at scrobble time
+                val extMeta = metadataExtractor.getExtendedMetadataFromController(currentController)
+
                 val scrobbleTrack = track.copy(
                     playedAt = currentTrackStartTime,
-                    durationMs = currentDurationMs
+                    durationMs = extMeta.durationMs,
+                    albumArtist = extMeta.albumArtist,
+                    genre = extMeta.genre,
+                    year = extMeta.year,
+                    releaseDate = extMeta.releaseDate,
+                    artworkUri = extMeta.artworkUri,
+                    albumArt = extMeta.albumArt
                 )
                 storage.addPendingScrobble(scrobbleTrack)
                 currentTrackScrobbled = true
-                Log.d(TAG, "Scrobbled (after 20s): ${track.artistName} - ${track.trackName}")
+                Log.d(TAG, "Scrobbled (after 20s): ${track.artistName} - ${track.trackName} (artwork: ${if (extMeta.artworkUri != null) "uri" else if (extMeta.albumArt != null) "base64" else "none"})")
                 onScrobbleCallback?.invoke()
             }
         }

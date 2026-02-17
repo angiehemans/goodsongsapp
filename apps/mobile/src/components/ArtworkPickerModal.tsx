@@ -5,9 +5,8 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  FlatList,
+  ScrollView,
   ActivityIndicator,
-  Pressable,
   Dimensions,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -40,7 +39,8 @@ export function ArtworkPickerModal({
   onClearPreferred,
 }: ArtworkPickerModalProps) {
   const [loading, setLoading] = useState(false);
-  const [artworkOptions, setArtworkOptions] = useState<ArtworkOption[]>([]);
+  const [exactMatches, setExactMatches] = useState<ArtworkOption[]>([]);
+  const [artistCatalog, setArtistCatalog] = useState<ArtworkOption[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,8 @@ export function ArtworkPickerModal({
       fetchArtworkOptions();
     } else {
       // Reset state when modal closes
-      setArtworkOptions([]);
+      setExactMatches([]);
+      setArtistCatalog([]);
       setSelectedUrl(null);
       setError(null);
       setFailedImages(new Set());
@@ -63,7 +64,9 @@ export function ArtworkPickerModal({
     setError(null);
     try {
       const response = await apiClient.searchArtwork(trackName, artistName, albumName);
-      setArtworkOptions(response.artwork_options || []);
+      // Use the new sectioned response structure
+      setExactMatches(response.exact_matches || []);
+      setArtistCatalog(response.artist_catalog || []);
     } catch (err) {
       console.error('Failed to fetch artwork options:', err);
       setError('Failed to load artwork options');
@@ -106,7 +109,7 @@ export function ArtworkPickerModal({
     setFailedImages(prev => new Set(prev).add(url));
   }, []);
 
-  const renderArtworkItem = ({ item }: { item: ArtworkOption }) => {
+  const renderArtworkItem = (item: ArtworkOption, index: number) => {
     const isSelected = selectedUrl === item.url;
     const isCurrent = currentArtworkUrl && fixImageUrl(currentArtworkUrl) === fixImageUrl(item.url);
     const hasFailed = failedImages.has(item.url);
@@ -114,6 +117,7 @@ export function ArtworkPickerModal({
 
     return (
       <TouchableOpacity
+        key={`${item.url}-${index}`}
         style={[styles.artworkItem, isSelected && styles.artworkItemSelected]}
         onPress={() => setSelectedUrl(item.url)}
         activeOpacity={0.7}
@@ -152,6 +156,25 @@ export function ArtworkPickerModal({
       </TouchableOpacity>
     );
   };
+
+  const renderArtworkGrid = (items: ArtworkOption[]) => {
+    const rows: ArtworkOption[][] = [];
+    for (let i = 0; i < items.length; i += 2) {
+      rows.push(items.slice(i, i + 2));
+    }
+    return (
+      <View>
+        {rows.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.artworkRow}>
+            {row.map((item, index) => renderArtworkItem(item, rowIndex * 2 + index))}
+            {row.length === 1 && <View style={styles.artworkItemPlaceholderSpace} />}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const hasResults = exactMatches.length > 0 || artistCatalog.length > 0;
 
   return (
     <Modal
@@ -194,19 +217,31 @@ export function ArtworkPickerModal({
               <Text style={styles.retryButtonText}>Try Again</Text>
             </TouchableOpacity>
           </View>
-        ) : artworkOptions.length === 0 ? (
+        ) : !hasResults ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No artwork found for this track</Text>
           </View>
         ) : (
-          <FlatList
-            data={artworkOptions}
-            keyExtractor={(item, index) => `${item.url}-${index}`}
-            renderItem={renderArtworkItem}
-            numColumns={2}
-            contentContainerStyle={styles.listContent}
-            columnWrapperStyle={styles.columnWrapper}
-          />
+          <ScrollView contentContainerStyle={styles.listContent}>
+            {exactMatches.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Exact Matches</Text>
+                <Text style={styles.sectionSubtitle}>
+                  Artwork from albums containing this track
+                </Text>
+                {renderArtworkGrid(exactMatches)}
+              </View>
+            )}
+            {artistCatalog.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Artist Catalog</Text>
+                <Text style={styles.sectionSubtitle}>
+                  Other albums by {artistName}
+                </Text>
+                {renderArtworkGrid(artistCatalog)}
+              </View>
+            )}
+          </ScrollView>
         )}
 
         {/* Footer */}
@@ -325,15 +360,33 @@ const styles = StyleSheet.create({
   listContent: {
     padding: theme.spacing.md,
   },
-  columnWrapper: {
+  section: {
+    marginBottom: theme.spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: theme.fontSizes.base,
+    fontFamily: theme.fonts.thecoaBold,
+    color: colors.grape[8],
+    marginBottom: 2,
+  },
+  sectionSubtitle: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+    marginBottom: theme.spacing.sm,
+  },
+  artworkRow: {
+    flexDirection: 'row',
     gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  artworkItemPlaceholderSpace: {
+    width: ITEM_WIDTH,
   },
   artworkItem: {
     width: ITEM_WIDTH,
     borderRadius: theme.radii.md,
     overflow: 'hidden',
     backgroundColor: colors.grape[1],
-    marginBottom: theme.spacing.md,
   },
   artworkItemSelected: {
     borderWidth: 3,

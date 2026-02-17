@@ -1,10 +1,19 @@
 import { create } from 'zustand';
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 import { scrobbleNative } from '@/utils/scrobbleNative';
 import { apiClient } from '@/utils/api';
 import { ScrobbleStatus } from '@/types/scrobble';
 import type { AppScrobbleSetting, ScrobbleApiResponse, NowPlayingTrack, PendingScrobbleLocal } from '@/types/scrobble';
 import { useAuthStore } from './authStore';
+
+// Get device model from platform constants
+const getDeviceModel = (): string | undefined => {
+  if (Platform.OS === 'android') {
+    const { PlatformConstants } = NativeModules;
+    return PlatformConstants?.Model || PlatformConstants?.Brand || 'Android Device';
+  }
+  return undefined;
+};
 
 interface ScrobbleStoreState {
   status: ScrobbleStatus;
@@ -107,6 +116,9 @@ export const useScrobbleStore = create<ScrobbleStoreState>((set, get) => ({
       const BATCH_SIZE = 50;
       const syncedIds: string[] = [];
 
+      // Get device model for source_device field
+      const deviceModel = getDeviceModel();
+
       for (let i = 0; i < pending.length; i += BATCH_SIZE) {
         const batch = pending.slice(i, i + BATCH_SIZE);
         const apiScrobbles = batch.map((s) => ({
@@ -116,6 +128,14 @@ export const useScrobbleStore = create<ScrobbleStoreState>((set, get) => ({
           duration_ms: Math.max(s.durationMs || 30000, 30000),
           source_app: s.sourceApp,
           played_at: new Date(s.playedAt).toISOString(),
+          // Extended metadata
+          source_device: deviceModel,
+          album_artist: s.albumArtist || undefined,
+          genre: s.genre || undefined,
+          year: s.year && s.year > 0 ? s.year : undefined,
+          release_date: s.releaseDate || undefined,
+          artwork_uri: s.artworkUri || undefined,
+          album_art: s.albumArt || undefined,
         }));
 
         try {

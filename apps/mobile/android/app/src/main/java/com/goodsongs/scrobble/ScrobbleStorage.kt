@@ -31,6 +31,13 @@ class ScrobbleStorage(context: Context) {
             put("playedAt", track.playedAt)
             put("syncAttempts", 0)
             put("createdAt", System.currentTimeMillis())
+            // Extended metadata
+            put("albumArtist", track.albumArtist ?: "")
+            put("genre", track.genre ?: "")
+            put("year", track.year ?: 0)
+            put("releaseDate", track.releaseDate ?: "")
+            put("artworkUri", track.artworkUri ?: "")
+            put("albumArt", track.albumArt ?: "")
         }
         scrobbles.put(obj)
         prefs.edit().putString(KEY_PENDING_SCROBBLES, scrobbles.toString()).apply()
@@ -47,12 +54,19 @@ class ScrobbleStorage(context: Context) {
                     id = obj.getString("id"),
                     trackName = obj.getString("trackName"),
                     artistName = obj.getString("artistName"),
-                    albumName = obj.optString("albumName", null),
+                    albumName = obj.optString("albumName", null)?.takeIf { it.isNotBlank() },
                     durationMs = obj.optLong("durationMs", 0).takeIf { it > 0 },
                     sourceApp = obj.getString("sourceApp"),
                     playedAt = obj.getLong("playedAt"),
                     syncAttempts = obj.optInt("syncAttempts", 0),
-                    createdAt = obj.optLong("createdAt", 0)
+                    createdAt = obj.optLong("createdAt", 0),
+                    // Extended metadata
+                    albumArtist = obj.optString("albumArtist", null)?.takeIf { it.isNotBlank() },
+                    genre = obj.optString("genre", null)?.takeIf { it.isNotBlank() },
+                    year = obj.optInt("year", 0).takeIf { it > 0 },
+                    releaseDate = obj.optString("releaseDate", null)?.takeIf { it.isNotBlank() },
+                    artworkUri = obj.optString("artworkUri", null)?.takeIf { it.isNotBlank() },
+                    albumArt = obj.optString("albumArt", null)?.takeIf { it.isNotBlank() }
                 )
             )
         }
@@ -87,10 +101,10 @@ class ScrobbleStorage(context: Context) {
     fun getAppSettings(): List<AppScrobbleSetting> {
         val json = prefs.getString(KEY_APP_SETTINGS, null) ?: return DefaultApps.list
         val arr = JSONArray(json)
-        val result = mutableListOf<AppScrobbleSetting>()
+        val storedSettings = mutableListOf<AppScrobbleSetting>()
         for (i in 0 until arr.length()) {
             val obj = arr.getJSONObject(i)
-            result.add(
+            storedSettings.add(
                 AppScrobbleSetting(
                     packageName = obj.getString("packageName"),
                     displayName = obj.getString("displayName"),
@@ -98,7 +112,19 @@ class ScrobbleStorage(context: Context) {
                 )
             )
         }
-        return result
+
+        // Merge in any new apps from DefaultApps that aren't in stored settings
+        val storedPackages = storedSettings.map { it.packageName }.toSet()
+        val newApps = DefaultApps.list.filter { it.packageName !in storedPackages }
+
+        return if (newApps.isNotEmpty()) {
+            val merged = storedSettings + newApps
+            // Save the merged list for next time
+            saveAppSettings(merged)
+            merged
+        } else {
+            storedSettings
+        }
     }
 
     fun setAppEnabled(packageName: String, enabled: Boolean) {

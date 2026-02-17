@@ -233,6 +233,13 @@ export function DiscoverScreen({ navigation }: Props) {
     }
   };
 
+  const handlePressReview = (review: Review) => {
+    const username = review.author?.username || review.user?.username;
+    if (username) {
+      navigation.navigate("ReviewDetail", { reviewId: review.id, username });
+    }
+  };
+
   const renderUserItem = ({ item }: { item: UserProfile }) => (
     <TouchableOpacity
       style={styles.listItem}
@@ -300,6 +307,7 @@ export function DiscoverScreen({ navigation }: Props) {
         review={item}
         onPressAuthor={handleUserPress}
         onPressBand={(slug: string) => navigation.navigate("BandProfile", { slug })}
+        onPressReview={handlePressReview}
       />
     </View>
   );

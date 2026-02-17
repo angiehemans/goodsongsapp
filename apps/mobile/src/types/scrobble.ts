@@ -3,6 +3,8 @@ export interface NowPlayingTrack {
   artistName: string;
   albumName: string;
   sourceApp: string;
+  artworkUri?: string;
+  albumArt?: string; // base64 encoded
 }
 
 export interface ScrobbleTrack {
@@ -12,6 +14,14 @@ export interface ScrobbleTrack {
   duration_ms?: number;
   source_app: string;
   played_at: string; // ISO 8601
+  // Extended metadata
+  source_device?: string;
+  album_artist?: string;
+  genre?: string;
+  year?: number;
+  release_date?: string;
+  artwork_uri?: string;
+  album_art?: string; // base64 encoded
 }
 
 export interface AppScrobbleSetting {
@@ -77,4 +87,11 @@ export interface PendingScrobbleLocal {
   durationMs: number;
   sourceApp: string;
   playedAt: number;
+  // Extended metadata
+  albumArtist?: string;
+  genre?: string;
+  year?: number;
+  releaseDate?: string;
+  artworkUri?: string;
+  albumArt?: string;
 }

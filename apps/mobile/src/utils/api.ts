@@ -78,10 +78,13 @@ export interface ArtworkOption {
   size?: number;
   master_id?: number;
   year?: number;
+  match_type?: 'exact' | 'artist_catalog';
 }
 
 export interface ArtworkSearchResponse {
   artwork_options: ArtworkOption[];
+  exact_matches: ArtworkOption[];
+  artist_catalog: ArtworkOption[];
   query: {
     track: string;
     artist: string;

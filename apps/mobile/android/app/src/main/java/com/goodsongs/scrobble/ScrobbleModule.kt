@@ -108,6 +108,13 @@ class ScrobbleModule(reactContext: ReactApplicationContext) :
                     putDouble("durationMs", (s.durationMs ?: 0L).toDouble())
                     putString("sourceApp", s.sourceApp)
                     putDouble("playedAt", s.playedAt.toDouble())
+                    // Extended metadata
+                    putString("albumArtist", s.albumArtist ?: "")
+                    putString("genre", s.genre ?: "")
+                    putInt("year", s.year ?: 0)
+                    putString("releaseDate", s.releaseDate ?: "")
+                    putString("artworkUri", s.artworkUri ?: "")
+                    putString("albumArt", s.albumArt ?: "")
                 }
                 array.pushMap(map)
             }
@@ -119,13 +126,19 @@ class ScrobbleModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun getCurrentTrack(promise: Promise) {
-        val track = ScrobbleListenerService.activeTracker?.currentTrack
+        val tracker = ScrobbleListenerService.activeTracker
+        val track = tracker?.currentTrack
         if (track != null) {
+            // Get fresh extended metadata for artwork
+            val extMeta = tracker.currentExtendedMetadata
             val map = Arguments.createMap().apply {
                 putString("trackName", track.trackName)
                 putString("artistName", track.artistName)
                 putString("albumName", track.albumName ?: "")
                 putString("sourceApp", track.sourceApp)
+                // Include artwork if available
+                putString("artworkUri", extMeta?.artworkUri ?: "")
+                putString("albumArt", extMeta?.albumArt ?: "")
             }
             promise.resolve(map)
         } else {

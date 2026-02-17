@@ -78,21 +78,24 @@ export function FeedScreen({ navigation, route }: Props) {
     const existingTrack = recentlyPlayed.find(
       (track) =>
         track.name.toLowerCase() === nowPlaying.trackName.toLowerCase() &&
-        track.artist.toLowerCase() === nowPlaying.artistName.toLowerCase()
+        track.artist.toLowerCase() === nowPlaying.artistName.toLowerCase(),
     );
 
     // Convert nowPlaying to RecentlyPlayedTrack format
-    // Use artwork from existing track if available
+    // Use artwork from native (artworkUri or base64 albumArt), fallback to existing track
+    const nativeArtwork = nowPlaying.artworkUri || nowPlaying.albumArt || null;
     const nowPlayingTrack: RecentlyPlayedTrack = {
       name: nowPlaying.trackName,
       artist: nowPlaying.artistName,
       album: nowPlaying.albumName,
       played_at: existingTrack?.played_at ?? null,
       now_playing: true,
-      source: 'scrobble',
-      album_art_url: existingTrack?.album_art_url ?? null,
+      source: "scrobble",
+      album_art_url: nativeArtwork ?? existingTrack?.album_art_url ?? null,
       loved: existingTrack?.loved ?? false,
-      metadata_status: existingTrack?.metadata_status ?? 'pending',
+      metadata_status: nativeArtwork
+        ? "enriched"
+        : (existingTrack?.metadata_status ?? "pending"),
       scrobble_id: existingTrack?.scrobble_id,
       has_preferred_artwork: existingTrack?.has_preferred_artwork,
       can_refresh_artwork: existingTrack?.can_refresh_artwork,
@@ -104,7 +107,7 @@ export function FeedScreen({ navigation, route }: Props) {
         !(
           track.name.toLowerCase() === nowPlaying.trackName.toLowerCase() &&
           track.artist.toLowerCase() === nowPlaying.artistName.toLowerCase()
-        )
+        ),
     );
 
     return [nowPlayingTrack, ...filteredRecent];
@@ -230,7 +233,7 @@ export function FeedScreen({ navigation, route }: Props) {
       if (silent) {
         // In silent mode, only update tracks that have changed
         // This prevents UI flicker and maintains scroll position
-        setRecentlyPlayed(prevTracks => {
+        setRecentlyPlayed((prevTracks) => {
           // If lengths differ, just replace
           if (prevTracks.length !== newTracks.length) {
             return newTracks;
@@ -276,7 +279,7 @@ export function FeedScreen({ navigation, route }: Props) {
   // When tracks have metadata_status === 'pending', poll every 3 seconds
   useEffect(() => {
     const hasPendingTracks = recentlyPlayed.some(
-      track => track.metadata_status === 'pending'
+      (track) => track.metadata_status === "pending",
     );
 
     if (!hasPendingTracks) return;
@@ -370,7 +373,9 @@ export function FeedScreen({ navigation, route }: Props) {
                     ]}
                   >
                     <Logo size={28} color={colors.grape[4]} />
-                    <Text style={styles.pendingArtworkText}>Loading artwork</Text>
+                    <Text style={styles.pendingArtworkText}>
+                      Loading artwork
+                    </Text>
                   </View>
                 ) : (
                   <View
@@ -385,11 +390,6 @@ export function FeedScreen({ navigation, route }: Props) {
                 {track.now_playing && (
                   <View style={styles.nowPlayingOverlay}>
                     <IconVolume size={28} color={colors.grape[0]} />
-                  </View>
-                )}
-                {track.has_preferred_artwork && (
-                  <View style={styles.preferredArtworkBadge}>
-                    <Text style={styles.preferredArtworkBadgeText}>Custom</Text>
                   </View>
                 )}
                 {!track.album_art_url && track.can_refresh_artwork && (
@@ -503,8 +503,15 @@ export function FeedScreen({ navigation, route }: Props) {
     try {
       const response = await apiClient.refreshScrobbleArtwork(scrobbleId);
       if (response.status === "success" && response.artwork_url) {
+        // Optimistically update local state with new artwork
+        setRecentlyPlayed((prev) =>
+          prev.map((track) =>
+            track.scrobble_id === scrobbleId
+              ? { ...track, album_art_url: response.artwork_url, metadata_status: "enriched" as const }
+              : track
+          )
+        );
         showSuccessBanner(`Found artwork for "${trackName}"`);
-        fetchRecentlyPlayed();
       } else if (response.status === "not_found") {
         showSuccessBanner(`No artwork found for "${trackName}"`);
       } else {
@@ -540,14 +547,30 @@ export function FeedScreen({ navigation, route }: Props) {
     const scrobbleId = getScrobbleId(selectedTrackForArtwork);
     if (!scrobbleId) return;
 
+    // Optimistically update the local state immediately for instant UI feedback
+    setRecentlyPlayed((prev) =>
+      prev.map((track) =>
+        track.scrobble_id === scrobbleId
+          ? { ...track, album_art_url: artworkUrl, has_preferred_artwork: true }
+          : track
+      )
+    );
+
     // Clear FastImage cache for the old artwork URL to ensure new artwork is fetched
     if (selectedTrackForArtwork.album_art_url) {
       FastImage.clearMemoryCache();
     }
 
-    await apiClient.setScrobbleArtwork(scrobbleId, artworkUrl);
     showSuccessBanner("Artwork updated!");
-    fetchRecentlyPlayed();
+
+    // Save to API in background
+    try {
+      await apiClient.setScrobbleArtwork(scrobbleId, artworkUrl);
+    } catch (error) {
+      // Revert on failure
+      console.error('Failed to save artwork:', error);
+      fetchRecentlyPlayed();
+    }
   };
 
   // Handle clearing preferred artwork
@@ -560,9 +583,16 @@ export function FeedScreen({ navigation, route }: Props) {
     // Clear FastImage cache to ensure default artwork is fetched
     FastImage.clearMemoryCache();
 
-    await apiClient.clearScrobbleArtwork(scrobbleId);
     showSuccessBanner("Artwork reset to default");
-    fetchRecentlyPlayed();
+
+    // Clear to API and refetch to get the default artwork URL
+    try {
+      await apiClient.clearScrobbleArtwork(scrobbleId);
+      // Need to refetch to get the default artwork URL from the server
+      fetchRecentlyPlayed();
+    } catch (error) {
+      console.error('Failed to clear artwork:', error);
+    }
   };
 
   if (loading && reviews.length === 0) {
@@ -775,7 +805,7 @@ const styles = StyleSheet.create({
   },
   // Recently Played styles
   recentlyPlayedSection: {
-    marginBottom: theme.spacing.md,
+    marginVertical: theme.spacing.md,
   },
   sectionTitle: {
     fontSize: theme.fontSizes["2xl"],
@@ -859,20 +889,6 @@ const styles = StyleSheet.create({
     color: colors.grape[5],
     marginTop: 4,
     textAlign: "center",
-  },
-  preferredArtworkBadge: {
-    position: "absolute",
-    top: 4,
-    left: 4,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    borderRadius: 4,
-  },
-  preferredArtworkBadgeText: {
-    fontSize: 8,
-    color: colors.grape[0],
-    fontWeight: "600",
   },
   trackName: {
     fontSize: theme.fontSizes.sm,

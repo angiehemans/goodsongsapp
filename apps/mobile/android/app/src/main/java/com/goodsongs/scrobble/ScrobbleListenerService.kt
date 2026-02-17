@@ -28,7 +28,7 @@ class ScrobbleListenerService : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
         storage = ScrobbleStorage(applicationContext)
-        extractor = MetadataExtractor(storage)
+        extractor = MetadataExtractor(storage, applicationContext)
         tracker = PlaybackTracker(storage, extractor)
         activeTracker = tracker
 
@@ -100,11 +100,15 @@ class ScrobbleListenerService : NotificationListenerService() {
                 .currentReactContext ?: return
 
             val params = if (track != null) {
+                val extMeta = tracker.currentExtendedMetadata
                 Arguments.createMap().apply {
                     putString("trackName", track.trackName)
                     putString("artistName", track.artistName)
                     putString("albumName", track.albumName ?: "")
                     putString("sourceApp", track.sourceApp)
+                    // Include artwork if available
+                    putString("artworkUri", extMeta?.artworkUri ?: "")
+                    putString("albumArt", extMeta?.albumArt ?: "")
                 }
             } else {
                 Arguments.createMap() // empty = nothing playing

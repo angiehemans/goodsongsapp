@@ -179,18 +179,12 @@ export function ReviewDetailScreen() {
     const commentText = newComment.trim();
     setIsSubmittingComment(true);
     try {
-      const response = await apiClient.createReviewComment(reviewId, commentText);
-      const comment = {
-        ...response,
-        body: response.body || commentText,
-        created_at: response.created_at || new Date().toISOString(),
-        author: response.author || {
-          id: currentUser.id,
-          username: currentUser.username,
-          profile_image_url: currentUser.profile_image_url,
-        },
-      };
-      setComments((prev) => [...prev, comment]);
+      await apiClient.createReviewComment(reviewId, commentText);
+      // Refetch comments to get proper IDs from server
+      const response = await apiClient.getReviewComments(reviewId, 1);
+      setComments(response.comments);
+      setCommentsPage(1);
+      setHasMoreComments(response.pagination.has_next_page);
       setNewComment('');
     } catch (error) {
       console.error('Failed to post comment:', error);
@@ -506,7 +500,7 @@ export function ReviewDetailScreen() {
                           <Text style={styles.commentTime}>
                             {formatTimeAgo(comment.created_at)}
                           </Text>
-                          {currentUser?.id === commentAuthor.id && (
+                          {currentUser?.id === commentAuthor.id && comment.id && (
                             <TouchableOpacity
                               onPress={() => handleDeleteComment(comment.id)}
                               disabled={deletingCommentId === comment.id}

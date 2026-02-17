@@ -14,6 +14,9 @@ const API_URL = __DEV__
 export function fixImageUrl(url: string | null | undefined): string | undefined {
   if (!url || url.trim() === '') return undefined;
 
+  // Pass through data URIs (base64 images) unchanged
+  if (url.startsWith('data:')) return url;
+
   // Extract just the path from the URL if it's a localhost/127.0.0.1 URL
   // This handles cases where Rails returns URLs with wrong host/port
   const localhostMatch = url.match(/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(\/.*)/);
