@@ -3,6 +3,8 @@ package com.goodsongs.scrobble
 import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.app.Notification
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -24,6 +26,8 @@ class ScrobbleListenerService : NotificationListenerService() {
     private lateinit var storage: ScrobbleStorage
     private lateinit var extractor: MetadataExtractor
     private lateinit var tracker: PlaybackTracker
+    private val handler = Handler(Looper.getMainLooper())
+    private var pendingArtworkRetry: Runnable? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -64,12 +68,48 @@ class ScrobbleListenerService : NotificationListenerService() {
         if (scrobbled) {
             sendScrobbleEvent()
         }
+
+        // If artwork wasn't available, schedule a retry after 2 seconds
+        // (some apps don't have artwork ready immediately)
+        val extMeta = tracker.currentExtendedMetadata
+        if (extMeta?.artworkUri == null && extMeta?.albumArt == null) {
+            scheduleArtworkRetry(controller)
+        }
+    }
+
+    /**
+     * Schedule a retry to fetch artwork after a delay.
+     * Artwork may not be available immediately when a track starts.
+     */
+    private fun scheduleArtworkRetry(controller: MediaController?) {
+        // Cancel any pending retry
+        pendingArtworkRetry?.let { handler.removeCallbacks(it) }
+
+        pendingArtworkRetry = Runnable {
+            val currentTrack = tracker.currentTrack ?: return@Runnable
+
+            // Re-fetch extended metadata
+            val newExtMeta = extractor.getExtendedMetadataFromController(controller)
+
+            // If we got artwork this time, update and re-send Now Playing
+            if (newExtMeta.artworkUri != null || newExtMeta.albumArt != null) {
+                // Update the tracker's metadata
+                tracker.updateExtendedMetadata(newExtMeta)
+                sendNowPlayingEvent(currentTrack)
+                Log.d(TAG, "Artwork retry successful for ${currentTrack.trackName}")
+            }
+        }
+        handler.postDelayed(pendingArtworkRetry!!, 2000) // 2 second delay
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         if (sbn == null) return
         if (sbn.packageName !in DefaultApps.packageNames) return
         if (!storage.isScrobblingEnabled()) return
+
+        // Cancel any pending artwork retry
+        pendingArtworkRetry?.let { handler.removeCallbacks(it) }
+        pendingArtworkRetry = null
 
         val scrobbled = tracker.onPlaybackStopped()
         sendNowPlayingEvent(null)
@@ -101,10 +141,12 @@ class ScrobbleListenerService : NotificationListenerService() {
 
             val params = if (track != null) {
                 val extMeta = tracker.currentExtendedMetadata
+                // Use album from MediaMetadata if available (preferred over notification which may be playlist name)
+                val albumName = extMeta?.albumName ?: track.albumName
                 Arguments.createMap().apply {
                     putString("trackName", track.trackName)
                     putString("artistName", track.artistName)
-                    putString("albumName", track.albumName ?: "")
+                    putString("albumName", albumName ?: "")
                     putString("sourceApp", track.sourceApp)
                     // Include artwork if available
                     putString("artworkUri", extMeta?.artworkUri ?: "")

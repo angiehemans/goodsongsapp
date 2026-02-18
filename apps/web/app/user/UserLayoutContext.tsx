@@ -3,7 +3,16 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, Review } from '@/lib/api';
+import { useNotifications } from '@/contexts/NotificationContext';
+import {
+  apiClient,
+  Review,
+  FanDashboardResponse,
+  FanDashboardRecentlyPlayed,
+  FanDashboardFeedItem,
+  RecentlyPlayedTrack,
+  FollowingFeedItem,
+} from '@/lib/api';
 
 interface UserLayoutContextType {
   reviews: Review[];
@@ -13,6 +22,12 @@ interface UserLayoutContextType {
   isDataLoading: boolean;
   refreshReviews: () => Promise<void>;
   refreshFollowCounts: () => Promise<void>;
+  // Dashboard data for child components
+  dashboardData: FanDashboardResponse | null;
+  recentlyPlayedTracks: RecentlyPlayedTrack[];
+  followingFeedItems: FollowingFeedItem[];
+  unreadNotificationsCount: number;
+  refreshDashboard: () => Promise<void>;
 }
 
 const UserLayoutContext = createContext<UserLayoutContextType | null>(null);
@@ -29,12 +44,50 @@ interface UserLayoutProviderProps {
   children: ReactNode;
 }
 
+// Convert dashboard recently played to RecentlyPlayedTrack format
+function convertRecentlyPlayed(tracks: FanDashboardRecentlyPlayed[]): RecentlyPlayedTrack[] {
+  return tracks.map((track) => ({
+    name: track.name,
+    artist: track.artist,
+    album: track.album || '',
+    played_at: track.played_at,
+    now_playing: track.now_playing,
+    source: track.source,
+    album_art_url: track.album_art_url || null,
+    loved: false,
+    scrobble_id: track.scrobble_id,
+    metadata_status: track.metadata_status,
+    has_preferred_artwork: track.has_preferred_artwork,
+    can_refresh_artwork: track.can_refresh_artwork,
+  }));
+}
+
+// Convert dashboard feed preview to FollowingFeedItem format
+function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
+  return items.map((item) => ({
+    id: item.id,
+    song_name: item.song_name,
+    band_name: item.band_name,
+    artwork_url: item.artwork_url,
+    review_text: item.review_text,
+    created_at: item.created_at,
+    likes_count: item.likes_count,
+    comments_count: 0,
+    author: item.author,
+  }));
+}
+
 export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
+  const { setInitialCount: setNotificationInitialCount } = useNotifications();
   const router = useRouter();
+  const [dashboardData, setDashboardData] = useState<FanDashboardResponse | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [recentlyPlayedTracks, setRecentlyPlayedTracks] = useState<RecentlyPlayedTrack[]>([]);
+  const [followingFeedItems, setFollowingFeedItems] = useState<FollowingFeedItem[]>([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   // Auth redirects
@@ -55,51 +108,69 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
     }
   }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
-  const refreshReviews = useCallback(async () => {
+  // Fetch dashboard data (single optimized endpoint)
+  const refreshDashboard = useCallback(async () => {
     if (!user) return;
     try {
-      const userReviews = await apiClient.getUserReviews();
-      setReviews(userReviews);
-    } catch {
-      setReviews([]);
+      const data = await apiClient.getFanDashboard();
+      setDashboardData(data);
+      setFollowersCount(data.profile.followers_count);
+      setFollowingCount(data.profile.following_count);
+      setUnreadNotificationsCount(data.unread_notifications_count);
+      // Set notification count in the notification context
+      setNotificationInitialCount(data.unread_notifications_count);
+      setRecentlyPlayedTracks(convertRecentlyPlayed(data.recently_played));
+      setFollowingFeedItems(convertFeedItems(data.following_feed_preview));
+      // Convert recent_reviews to Review format for sidebar
+      setReviews(data.recent_reviews.map((r) => ({
+        id: r.id,
+        song_name: r.song_name,
+        band_name: r.band_name,
+        artwork_url: r.artwork_url || '',
+        created_at: r.created_at,
+        likes_count: r.likes_count,
+        comments_count: r.comments_count,
+      } as Review)));
+    } catch (error) {
+      console.error('Failed to fetch dashboard:', error);
     }
-  }, [user]);
+  }, [user, setNotificationInitialCount]);
+
+  // Keep these for backwards compatibility (they now just refresh the dashboard)
+  const refreshReviews = useCallback(async () => {
+    await refreshDashboard();
+  }, [refreshDashboard]);
 
   const refreshFollowCounts = useCallback(async () => {
-    if (!user) return;
-    try {
-      const [followers, following] = await Promise.all([
-        apiClient.getFollowers(),
-        apiClient.getFollowing(),
-      ]);
-      setFollowersCount(followers.length);
-      setFollowingCount(following.length);
-    } catch {
-      // Silently fail
-    }
-  }, [user]);
+    await refreshDashboard();
+  }, [refreshDashboard]);
 
-  // Initial data fetch
+  // Initial data fetch using optimized dashboard endpoint
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || isLoading) return;
+      if (!user || isLoading || isBand) return;
       setIsDataLoading(true);
-      await Promise.all([refreshReviews(), refreshFollowCounts()]);
+      await refreshDashboard();
       setIsDataLoading(false);
     };
     fetchData();
-  }, [user, isLoading, refreshReviews, refreshFollowCounts]);
+  }, [user, isLoading, isBand, refreshDashboard]);
 
   return (
     <UserLayoutContext.Provider
       value={{
         reviews,
-        reviewsCount: reviews.length,
+        reviewsCount: dashboardData?.profile.reviews_count ?? reviews.length,
         followersCount,
         followingCount,
         isDataLoading,
         refreshReviews,
         refreshFollowCounts,
+        dashboardData,
+        recentlyPlayedTracks,
+        followingFeedItems,
+        unreadNotificationsCount,
+        refreshDashboard,
       }}
     >
       {children}

@@ -211,6 +211,19 @@ export function MyBandProfileScreen({ navigation }: Props) {
     </View>
   );
 
+  // Memoized render function - must be defined before any early returns
+  const renderReviewItem = useCallback(({ item }: { item: Review }) => (
+    <View style={styles.reviewWrapper}>
+      <ReviewCard
+        review={item}
+        onPressAuthor={(username: string) =>
+          navigation.navigate('UserProfile', { username })
+        }
+        showBandInfo={false}
+      />
+    </View>
+  ), [navigation]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -252,17 +265,7 @@ export function MyBandProfileScreen({ navigation }: Props) {
       <FlatList
         data={reviews}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.reviewWrapper}>
-            <ReviewCard
-              review={item}
-              onPressAuthor={(username: string) =>
-                navigation.navigate('UserProfile', { username })
-              }
-              showBandInfo={false}
-            />
-          </View>
-        )}
+        renderItem={renderReviewItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -280,6 +283,10 @@ export function MyBandProfileScreen({ navigation }: Props) {
             message="When fans recommend your music, it will appear here."
           />
         }
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        initialNumToRender={10}
+        windowSize={5}
       />
     </SafeAreaView>
   );

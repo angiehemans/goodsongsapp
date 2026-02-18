@@ -99,6 +99,78 @@ export interface RefreshArtworkResponse {
   artwork_url?: string;
 }
 
+// Fan Dashboard types
+export interface FanDashboardProfile {
+  id: number;
+  username: string;
+  email: string;
+  about_me?: string;
+  profile_image_url?: string;
+  account_type: string;
+  display_name: string;
+  location?: string;
+  followers_count: number;
+  following_count: number;
+  reviews_count: number;
+  lastfm_connected: boolean;
+  lastfm_username?: string;
+  email_confirmed: boolean;
+  admin: boolean;
+}
+
+export interface FanDashboardReview {
+  id: number;
+  song_name: string;
+  band_name: string;
+  artwork_url?: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+}
+
+export interface FanDashboardFeedItem {
+  id: number;
+  song_name: string;
+  band_name: string;
+  artwork_url?: string;
+  review_text: string;
+  author: {
+    id: number;
+    username: string;
+    profile_image_url?: string;
+  };
+  created_at: string;
+  likes_count: number;
+}
+
+export interface FanDashboardRecentlyPlayed {
+  name: string;
+  artist: string;
+  album?: string;
+  played_at: string | null;
+  now_playing: boolean;
+  source: 'lastfm' | 'scrobble';
+  album_art_url?: string;
+  scrobble_id?: number | string;
+  metadata_status?: 'pending' | 'enriched' | 'not_found' | 'failed';
+  has_preferred_artwork?: boolean;
+  can_refresh_artwork?: boolean;
+}
+
+export interface FanDashboardStats {
+  total_scrobbles: number;
+  scrobbles_this_week: number;
+}
+
+export interface FanDashboardResponse {
+  profile: FanDashboardProfile;
+  unread_notifications_count: number;
+  recent_reviews: FanDashboardReview[];
+  recently_played: FanDashboardRecentlyPlayed[];
+  following_feed_preview: FanDashboardFeedItem[];
+  stats: FanDashboardStats;
+}
+
 // API base URL - configure this for your environment
 const API_URL = __DEV__
   ? 'http://localhost:3000' // Physical device via adb reverse, or emulator via 10.0.2.2
@@ -395,6 +467,7 @@ class MobileApiClient {
     artwork_url?: string;
     review_text: string;
     liked_aspects?: string[];
+    genres?: string[];
     band_lastfm_artist_name?: string;
     band_musicbrainz_id?: string;
   }): Promise<Review> {
@@ -778,6 +851,11 @@ class MobileApiClient {
     return this.request(`/auth/sessions/${sessionId}`, {
       method: 'DELETE',
     });
+  }
+
+  // Fan Dashboard - optimized single endpoint
+  async getFanDashboard(): Promise<FanDashboardResponse> {
+    return this.request('/api/v1/fan_dashboard');
   }
 }
 

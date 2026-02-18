@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { IconAlertCircle, IconBrandDiscord, IconMail } from '@tabler/icons-react';
-import { Alert, Button, Drawer, Group, Text } from '@mantine/core';
+import { Alert, Button, Drawer, Group, Text, Center, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { FollowingFeed } from '@/components/FollowingFeed/FollowingFeed';
 import { RecentlyPlayed } from '@/components/RecentlyPlayed/RecentlyPlayed';
 import { RecommendationForm } from '@/components/RecommendationForm/RecommendationForm';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserLayout } from '../../UserLayoutContext';
 import { apiClient } from '@/lib/api';
 
 export default function DashboardPage() {
   const { user, refreshUser } = useAuth();
+  const { recentlyPlayedTracks, followingFeedItems, isDataLoading } = useUserLayout();
 
   // Email confirmation resend state
   const [resendLoading, setResendLoading] = useState(false);
@@ -78,6 +80,15 @@ export default function DashboardPage() {
     setFormPrefill(null);
   };
 
+  // Show loading state while fetching dashboard
+  if (isDataLoading) {
+    return (
+      <Center py="xl">
+        <Loader size="lg" />
+      </Center>
+    );
+  }
+
   return (
     <>
       {/* Email Confirmation Warning */}
@@ -109,8 +120,11 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      {/* Recently Played Section */}
-      <RecentlyPlayed onRecommendTrack={handleOpenNewRecommendation} />
+      {/* Recently Played Section - data from UserLayoutContext */}
+      <RecentlyPlayed
+        onRecommendTrack={handleOpenNewRecommendation}
+        initialTracks={recentlyPlayedTracks.length > 0 ? recentlyPlayedTracks : undefined}
+      />
 
       {/* Discord Notice */}
       <Alert bg="blue.0" my="md" maw={700}>
@@ -133,8 +147,11 @@ export default function DashboardPage() {
         </Group>
       </Alert>
 
-      {/* Following Feed */}
-      <FollowingFeed title="From People You Follow" />
+      {/* Following Feed - data from UserLayoutContext */}
+      <FollowingFeed
+        title="From People You Follow"
+        initialFeedItems={followingFeedItems.length > 0 ? followingFeedItems : undefined}
+      />
 
       {/* New Recommendation Drawer */}
       <Drawer

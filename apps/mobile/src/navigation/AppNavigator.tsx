@@ -73,21 +73,8 @@ function AuthNavigator() {
 function MainNavigator() {
   const insets = useSafeAreaInsets();
   const { accountType } = useAuthStore();
-  const { unreadCount, fetchUnreadCount } = useNotificationStore();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const isBandAccount = accountType === 'band';
-
-  // Fetch unread count on mount and when app becomes active
-  useEffect(() => {
-    fetchUnreadCount();
-
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        fetchUnreadCount();
-      }
-    });
-
-    return () => subscription.remove();
-  }, [fetchUnreadCount]);
 
   return (
     <Tab.Navigator
@@ -191,6 +178,7 @@ function MainNavigator() {
 // Root Navigator
 export function AppNavigator() {
   const { isAuthenticated, isLoading, isOnboardingComplete, loadAuth } = useAuthStore();
+  const startPolling = useNotificationStore((state) => state.startPolling);
 
   useEffect(() => {
     loadAuth();
@@ -201,6 +189,13 @@ export function AppNavigator() {
       BootSplash.hide({ fade: true });
     }
   }, [isLoading]);
+
+  // Start notification polling when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const cleanup = startPolling(60000); // Poll every 60 seconds
+    return cleanup;
+  }, [isAuthenticated, startPolling]);
 
   // Listen for native scrobble events so auto-sync works from any screen
   // Also sync pending scrobbles when the app is opened or foregrounded

@@ -20,6 +20,13 @@ class PlaybackTracker(
         private set
     var currentExtendedMetadata: MetadataExtractor.ExtendedMetadata? = null
         private set
+
+    /**
+     * Update the extended metadata (e.g., when artwork becomes available after a delay).
+     */
+    fun updateExtendedMetadata(metadata: MetadataExtractor.ExtendedMetadata) {
+        currentExtendedMetadata = metadata
+    }
     private var currentTrackStartTime: Long = 0
     private var currentTrackScrobbled: Boolean = false
     private val handler = Handler(Looper.getMainLooper())
@@ -112,8 +119,11 @@ class PlaybackTracker(
         val extMeta = currentExtendedMetadata
             ?: metadataExtractor.getExtendedMetadataFromController(currentController)
 
+        // Use album from MediaMetadata if available (preferred over notification which may be playlist name)
+        val albumName = extMeta.albumName ?: track.albumName
         val scrobbleTrack = track.copy(
             playedAt = currentTrackStartTime,
+            albumName = albumName,
             durationMs = extMeta.durationMs,
             albumArtist = extMeta.albumArtist,
             genre = extMeta.genre,
@@ -123,7 +133,7 @@ class PlaybackTracker(
             albumArt = extMeta.albumArt
         )
         storage.addPendingScrobble(scrobbleTrack)
-        Log.d(TAG, "Scrobbled: ${track.artistName} - ${track.trackName} (artwork: ${if (extMeta.artworkUri != null) "uri" else if (extMeta.albumArt != null) "base64" else "none"})")
+        Log.d(TAG, "Scrobbled: ${track.artistName} - ${track.trackName} (album: ${albumName ?: "none"}, artwork: ${if (extMeta.artworkUri != null) "uri" else if (extMeta.albumArt != null) "base64" else "none"})")
         return true
     }
 
@@ -142,8 +152,11 @@ class PlaybackTracker(
                 // Get fresh extended metadata at scrobble time
                 val extMeta = metadataExtractor.getExtendedMetadataFromController(currentController)
 
+                // Use album from MediaMetadata if available (preferred over notification which may be playlist name)
+                val albumName = extMeta.albumName ?: track.albumName
                 val scrobbleTrack = track.copy(
                     playedAt = currentTrackStartTime,
+                    albumName = albumName,
                     durationMs = extMeta.durationMs,
                     albumArtist = extMeta.albumArtist,
                     genre = extMeta.genre,
@@ -154,7 +167,7 @@ class PlaybackTracker(
                 )
                 storage.addPendingScrobble(scrobbleTrack)
                 currentTrackScrobbled = true
-                Log.d(TAG, "Scrobbled (after 20s): ${track.artistName} - ${track.trackName} (artwork: ${if (extMeta.artworkUri != null) "uri" else if (extMeta.albumArt != null) "base64" else "none"})")
+                Log.d(TAG, "Scrobbled (after 20s): ${track.artistName} - ${track.trackName} (album: ${albumName ?: "none"}, artwork: ${if (extMeta.artworkUri != null) "uri" else if (extMeta.albumArt != null) "base64" else "none"})")
                 onScrobbleCallback?.invoke()
             }
         }

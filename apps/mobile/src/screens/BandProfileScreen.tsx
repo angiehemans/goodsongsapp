@@ -209,6 +209,17 @@ export function BandProfileScreen({ route, navigation }: any) {
     );
   };
 
+  // Memoized render function - must be defined before any early returns
+  const renderReviewItem = useCallback(({ item }: { item: Review }) => (
+    <View style={styles.reviewWrapper}>
+      <ReviewCard
+        review={item}
+        onPressAuthor={(username: string) => navigation.navigate('UserProfile', { username })}
+        showBandInfo={false}
+      />
+    </View>
+  ), [navigation]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -237,15 +248,7 @@ export function BandProfileScreen({ route, navigation }: any) {
       <FlatList
         data={reviews}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.reviewWrapper}>
-            <ReviewCard
-              review={item}
-              onPressAuthor={(username: string) => navigation.navigate('UserProfile', { username })}
-              showBandInfo={false}
-            />
-          </View>
-        )}
+        renderItem={renderReviewItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -263,6 +266,10 @@ export function BandProfileScreen({ route, navigation }: any) {
             message={`No one has recommended ${band?.name || 'this band'} yet. Be the first!`}
           />
         }
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        initialNumToRender={10}
+        windowSize={5}
       />
     </SafeAreaView>
   );

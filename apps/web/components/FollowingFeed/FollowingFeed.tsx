@@ -11,6 +11,8 @@ import styles from './FollowingFeed.module.css';
 interface FollowingFeedProps {
   /** Title to display above the feed */
   title?: string;
+  /** Initial feed items from dashboard endpoint */
+  initialFeedItems?: FollowingFeedItem[];
 }
 
 // Convert FollowingFeedItem to Review format for ReviewCard
@@ -33,11 +35,11 @@ function feedItemToReview(item: FollowingFeedItem): Review {
   };
 }
 
-export function FollowingFeed({ title = 'Following Feed' }: FollowingFeedProps) {
-  const [feedItems, setFeedItems] = useState<FollowingFeedItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: FollowingFeedProps) {
+  const [feedItems, setFeedItems] = useState<FollowingFeedItem[]>(initialFeedItems || []);
+  const [isLoading, setIsLoading] = useState(!initialFeedItems);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasNextPage, setHasNextPage] = useState(initialFeedItems ? initialFeedItems.length >= 5 : false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const fetchFeed = useCallback(async (page: number, append: boolean = false) => {
@@ -74,9 +76,12 @@ export function FollowingFeed({ title = 'Following Feed' }: FollowingFeedProps) 
     }
   }, []);
 
+  // Only fetch on mount if no initial items provided
   useEffect(() => {
-    fetchFeed(1);
-  }, [fetchFeed]);
+    if (!initialFeedItems) {
+      fetchFeed(1);
+    }
+  }, [fetchFeed, initialFeedItems]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isLoadingMore) {

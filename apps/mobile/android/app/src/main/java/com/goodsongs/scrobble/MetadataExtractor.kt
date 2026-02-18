@@ -72,6 +72,7 @@ class MetadataExtractor(
      */
     data class ExtendedMetadata(
         val durationMs: Long?,
+        val albumName: String?, // Actual album name from MediaMetadata (preferred over notification)
         val albumArtist: String?,
         val genre: String?,
         val year: Int?,
@@ -86,13 +87,13 @@ class MetadataExtractor(
     fun getExtendedMetadataFromController(controller: MediaController?): ExtendedMetadata {
         if (controller == null) {
             Log.d(TAG, "getExtendedMetadata: controller is null")
-            return ExtendedMetadata(null, null, null, null, null, null, null)
+            return ExtendedMetadata(null, null, null, null, null, null, null, null)
         }
 
         val metadata = controller.metadata
         if (metadata == null) {
             Log.d(TAG, "getExtendedMetadata: metadata is null")
-            return ExtendedMetadata(null, null, null, null, null, null, null)
+            return ExtendedMetadata(null, null, null, null, null, null, null, null)
         }
 
         Log.d(TAG, "getExtendedMetadata: extracting from ${controller.packageName}")
@@ -100,6 +101,11 @@ class MetadataExtractor(
         // Extract duration
         val duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)
             .takeIf { it > 0 }
+
+        // Extract album name (this is the actual album, not playlist name)
+        val albumName = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)
+            ?.trim()?.takeIf { it.isNotBlank() }
+        Log.d(TAG, "getExtendedMetadata: albumName = ${albumName ?: "null"}")
 
         // Extract album artist
         val albumArtist = metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
@@ -133,6 +139,7 @@ class MetadataExtractor(
 
         return ExtendedMetadata(
             durationMs = duration,
+            albumName = albumName,
             albumArtist = albumArtist,
             genre = genre,
             year = year,

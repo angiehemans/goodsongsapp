@@ -221,7 +221,7 @@ export function NotificationsScreen() {
     }
   };
 
-  const renderNotification = ({ item }: { item: Notification }) => {
+  const renderNotification = useCallback(({ item }: { item: Notification }) => {
     const notificationType = getNotificationType(item);
 
     return (
@@ -283,7 +283,7 @@ export function NotificationsScreen() {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [handleNotificationPress]);
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -337,6 +337,10 @@ export function NotificationsScreen() {
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.3}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        initialNumToRender={10}
+        windowSize={5}
       />
     </SafeAreaView>
   );

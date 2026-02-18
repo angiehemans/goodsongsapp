@@ -32,6 +32,32 @@ const LIKED_ASPECTS = [
   "Creativity",
 ];
 
+const GENRE_OPTIONS = [
+  "Alternative",
+  "Art Rock",
+  "Blues",
+  "Classical",
+  "Country",
+  "Disco",
+  "Electronic",
+  "Folk",
+  "Funk",
+  "Hip Hop",
+  "House",
+  "Indie",
+  "Jazz",
+  "Latin",
+  "Metal",
+  "Pop",
+  "Punk",
+  "R&B",
+  "Reggae",
+  "Rock",
+  "Soul",
+  "Techno",
+  "World",
+];
+
 interface FormData {
   song_link: string;
   band_name: string;
@@ -39,6 +65,7 @@ interface FormData {
   artwork_url: string;
   review_text: string;
   liked_aspects: string[];
+  genres: string[];
   band_lastfm_artist_name?: string;
   band_musicbrainz_id?: string;
 }
@@ -100,7 +127,10 @@ export function CreateReviewScreen({ navigation, route }: any) {
     artwork_url: "",
     review_text: "",
     liked_aspects: [],
+    genres: [],
   });
+  const [showGenrePicker, setShowGenrePicker] = useState(false);
+  const [customGenre, setCustomGenre] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // Reset form when screen is focused
@@ -129,7 +159,10 @@ export function CreateReviewScreen({ navigation, route }: any) {
         artwork_url: "",
         review_text: "",
         liked_aspects: [],
+        genres: [],
       };
+      setShowGenrePicker(false);
+      setCustomGenre("");
 
       // Prefill from params if available (for prefill or edit mode)
       if (currentParams?.song_name || currentParams?.band_name) {
@@ -283,6 +316,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
       artwork_url: "",
       review_text: prev.review_text,
       liked_aspects: prev.liked_aspects,
+      genres: prev.genres,
       band_lastfm_artist_name: undefined,
       band_musicbrainz_id: undefined,
     }));
@@ -325,6 +359,28 @@ export function CreateReviewScreen({ navigation, route }: any) {
         ? prev.liked_aspects.filter((a) => a !== aspect)
         : [...prev.liked_aspects, aspect],
     }));
+  };
+
+  const toggleGenre = (genre: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      genres: prev.genres.includes(genre)
+        ? prev.genres.filter((g) => g !== genre)
+        : prev.genres.length < 5
+          ? [...prev.genres, genre]
+          : prev.genres, // Max 5 genres
+    }));
+  };
+
+  const addCustomGenre = () => {
+    const trimmed = customGenre.trim();
+    if (trimmed && !formData.genres.includes(trimmed) && formData.genres.length < 5) {
+      setFormData((prev) => ({
+        ...prev,
+        genres: [...prev.genres, trimmed],
+      }));
+      setCustomGenre("");
+    }
   };
 
   const isFormValid = () => {
@@ -374,6 +430,10 @@ export function CreateReviewScreen({ navigation, route }: any) {
           liked_aspects:
             formData.liked_aspects.length > 0
               ? formData.liked_aspects
+              : undefined,
+          genres:
+            formData.genres.length > 0
+              ? formData.genres
               : undefined,
           band_lastfm_artist_name: formData.band_lastfm_artist_name,
           band_musicbrainz_id: formData.band_musicbrainz_id,
@@ -1019,6 +1079,105 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     keyboardType="url"
                     leftIcon="link"
                   />
+
+                  {/* Genres */}
+                  <View style={styles.genresSection}>
+                    <Text style={styles.label}>
+                      Genres {formData.genres.length > 0 && `(${formData.genres.length}/5)`}
+                    </Text>
+                    <Text style={styles.genreHint}>
+                      Select from common genres or add your own
+                    </Text>
+
+                    {/* Selected Genres */}
+                    {formData.genres.length > 0 && (
+                      <View style={styles.selectedGenres}>
+                        {formData.genres.map((genre) => (
+                          <TouchableOpacity
+                            key={genre}
+                            style={styles.selectedGenreChip}
+                            onPress={() => toggleGenre(genre)}
+                          >
+                            <Text style={styles.selectedGenreText}>{genre}</Text>
+                            <Icon name="x" size={14} color={colors.grape[0]} />
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Genre Picker Toggle */}
+                    <TouchableOpacity
+                      style={styles.genrePickerButton}
+                      onPress={() => setShowGenrePicker(!showGenrePicker)}
+                    >
+                      <Icon name="music" size={18} color={colors.grape[6]} />
+                      <Text style={styles.genrePickerButtonText}>
+                        {showGenrePicker ? "Hide genres" : "Select genres..."}
+                      </Text>
+                      <Icon
+                        name={showGenrePicker ? "chevron-up" : "chevron-down"}
+                        size={18}
+                        color={colors.grape[5]}
+                      />
+                    </TouchableOpacity>
+
+                    {showGenrePicker && (
+                      <View style={styles.genreOptionsList}>
+                        {/* Custom genre input */}
+                        <View style={styles.customGenreRow}>
+                          <RNTextInput
+                            style={styles.customGenreInput}
+                            placeholder="Add custom genre..."
+                            placeholderTextColor={colors.grape[4]}
+                            value={customGenre}
+                            onChangeText={setCustomGenre}
+                            onSubmitEditing={addCustomGenre}
+                            returnKeyType="done"
+                          />
+                          <TouchableOpacity
+                            style={[
+                              styles.addGenreButton,
+                              (!customGenre.trim() || formData.genres.length >= 5) &&
+                                styles.addGenreButtonDisabled,
+                            ]}
+                            onPress={addCustomGenre}
+                            disabled={!customGenre.trim() || formData.genres.length >= 5}
+                          >
+                            <Icon name="plus" size={16} color={colors.grape[0]} />
+                          </TouchableOpacity>
+                        </View>
+
+                        {/* Preset genres */}
+                        <View style={styles.genreOptionsGrid}>
+                          {GENRE_OPTIONS.map((genre) => {
+                            const isSelected = formData.genres.includes(genre);
+                            return (
+                              <TouchableOpacity
+                                key={genre}
+                                style={[
+                                  styles.genreChip,
+                                  isSelected && styles.genreChipSelected,
+                                ]}
+                                onPress={() => toggleGenre(genre)}
+                              >
+                                {isSelected && (
+                                  <Icon name="check" size={12} color={colors.grape[0]} />
+                                )}
+                                <Text
+                                  style={[
+                                    styles.genreChipText,
+                                    isSelected && styles.genreChipTextSelected,
+                                  ]}
+                                >
+                                  {genre}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
 
@@ -1354,5 +1513,111 @@ const styles = StyleSheet.create({
   },
   advancedContent: {
     marginBottom: theme.spacing.md,
+  },
+
+  // Genre styles
+  genresSection: {
+    marginTop: theme.spacing.sm,
+  },
+  genreHint: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+    marginBottom: theme.spacing.sm,
+  },
+  selectedGenres: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  selectedGenreChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radii.full,
+    backgroundColor: theme.colors.primary,
+  },
+  selectedGenreText: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[0],
+    fontWeight: "500",
+  },
+  genrePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.grape[0],
+    borderWidth: theme.borderWidth,
+    borderColor: colors.grape[6],
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    gap: theme.spacing.sm,
+  },
+  genrePickerButtonText: {
+    flex: 1,
+    fontSize: theme.fontSizes.base,
+    color: colors.grape[7],
+  },
+  genreOptionsList: {
+    marginTop: theme.spacing.xs,
+    backgroundColor: colors.grape[0],
+    borderWidth: 1,
+    borderColor: colors.grape[3],
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.sm,
+  },
+  customGenreRow: {
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  customGenreInput: {
+    flex: 1,
+    backgroundColor: colors.grape[1],
+    borderRadius: theme.radii.sm,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[8],
+  },
+  addGenreButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radii.sm,
+    paddingHorizontal: theme.spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addGenreButtonDisabled: {
+    backgroundColor: colors.grape[3],
+  },
+  genreOptionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.xs,
+  },
+  genreChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radii.full,
+    backgroundColor: colors.grape[1],
+    borderWidth: 1,
+    borderColor: colors.grape[3],
+  },
+  genreChipSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  genreChipText: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[6],
+  },
+  genreChipTextSelected: {
+    color: colors.grape[0],
+    fontWeight: "500",
   },
 });

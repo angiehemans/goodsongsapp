@@ -22,6 +22,7 @@ import {
   Paper,
   Select,
   Stack,
+  TagsInput,
   Text,
   Textarea,
   TextInput,
@@ -40,6 +41,32 @@ const aspectOptions = [
   { value: 'Instrumentation', label: 'Instrumentation' },
   { value: 'Energy', label: 'Energy' },
   { value: 'Creativity', label: 'Creativity' },
+];
+
+const genreOptions = [
+  'Alternative',
+  'Art Rock',
+  'Blues',
+  'Classical',
+  'Country',
+  'Disco',
+  'Electronic',
+  'Folk',
+  'Funk',
+  'Hip Hop',
+  'House',
+  'Indie',
+  'Jazz',
+  'Latin',
+  'Metal',
+  'Pop',
+  'Punk',
+  'R&B',
+  'Reggae',
+  'Rock',
+  'Soul',
+  'Techno',
+  'World',
 ];
 
 export interface RecommendationFormProps {
@@ -87,6 +114,7 @@ export function RecommendationForm({
     artwork_url: initialValues?.artwork_url || '',
     review_text: initialValues?.review_text || '',
     liked_aspects: initialValues?.liked_aspects || [],
+    genres: initialValues?.genres || [],
     band_lastfm_artist_name: initialValues?.band_lastfm_artist_name,
     band_musicbrainz_id: initialValues?.band_musicbrainz_id,
   });
@@ -227,6 +255,7 @@ export function RecommendationForm({
         artwork_url: '',
         review_text: '',
         liked_aspects: [],
+        genres: [],
         band_lastfm_artist_name: undefined,
         band_musicbrainz_id: undefined,
       });
@@ -681,6 +710,17 @@ export function RecommendationForm({
                         placeholder="https://open.spotify.com/track/..."
                         value={formData.song_link || ''}
                         onChange={(e) => setFormData({ ...formData, song_link: e.target.value })}
+                      />
+
+                      <TagsInput
+                        label="Genres"
+                        placeholder="Select or type genres"
+                        data={genreOptions}
+                        value={formData.genres || []}
+                        onChange={(values) => setFormData({ ...formData, genres: values })}
+                        clearable
+                        maxTags={5}
+                        description="Select from common genres or add your own"
                       />
                     </Stack>
                   </Accordion.Panel>

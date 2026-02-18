@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import {
   View,
   Text,
@@ -39,7 +39,7 @@ interface ReviewCardProps {
   onPressReview?: (review: Review) => void;
 }
 
-export function ReviewCard({
+export const ReviewCard = memo(function ReviewCard({
   review,
   onPressAuthor,
   onPressBand,
@@ -239,7 +239,7 @@ export function ReviewCard({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

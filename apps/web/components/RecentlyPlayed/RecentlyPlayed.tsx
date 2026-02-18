@@ -30,12 +30,13 @@ interface RecentlyPlayedProps {
     band_name?: string;
     artwork_url?: string;
   }) => void;
+  initialTracks?: RecentlyPlayedTrack[];
 }
 
-export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
+export function RecentlyPlayed({ onRecommendTrack, initialTracks }: RecentlyPlayedProps) {
   const { user } = useAuth();
-  const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayedTrack[]>(initialTracks || []);
+  const [loading, setLoading] = useState(!initialTracks);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [refreshingArtworkId, setRefreshingArtworkId] = useState<number | string | null>(null);
 
@@ -57,11 +58,12 @@ export function RecentlyPlayed({ onRecommendTrack }: RecentlyPlayedProps) {
     }
   }, [user]);
 
+  // Only fetch on mount if no initial tracks provided
   useEffect(() => {
-    if (user) {
+    if (user && !initialTracks) {
       fetchRecentlyPlayed();
     }
-  }, [user, fetchRecentlyPlayed]);
+  }, [user, fetchRecentlyPlayed, initialTracks]);
 
   const handleLastFmConnectionChange = (connected: boolean) => {
     if (connected) {

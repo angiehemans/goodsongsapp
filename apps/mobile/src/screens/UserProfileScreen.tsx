@@ -210,6 +210,28 @@ export function UserProfileScreen({ route, navigation }: any) {
     </View>
   );
 
+  // Memoized render function - must be defined before any early returns
+  const renderReviewItem = useCallback(({ item }: { item: Review }) => (
+    <View style={styles.reviewWrapper}>
+      <ReviewCard
+        review={item}
+        onPressBand={(slug: string) =>
+          navigation.navigate("BandProfile", { slug })
+        }
+        onPressReview={(review: Review) => {
+          const reviewUsername =
+            review.author?.username || review.user?.username;
+          if (reviewUsername) {
+            navigation.navigate("ReviewDetail", {
+              reviewId: review.id,
+              username: reviewUsername,
+            });
+          }
+        }}
+      />
+    </View>
+  ), [navigation]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
@@ -232,26 +254,7 @@ export function UserProfileScreen({ route, navigation }: any) {
       <FlatList
         data={reviews}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.reviewWrapper}>
-            <ReviewCard
-              review={item}
-              onPressBand={(slug: string) =>
-                navigation.navigate("BandProfile", { slug })
-              }
-              onPressReview={(review: Review) => {
-                const reviewUsername =
-                  review.author?.username || review.user?.username;
-                if (reviewUsername) {
-                  navigation.navigate("ReviewDetail", {
-                    reviewId: review.id,
-                    username: reviewUsername,
-                  });
-                }
-              }}
-            />
-          </View>
-        )}
+        renderItem={renderReviewItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -278,6 +281,10 @@ export function UserProfileScreen({ route, navigation }: any) {
             </View>
           ) : null
         }
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        initialNumToRender={10}
+        windowSize={5}
       />
     </SafeAreaView>
   );

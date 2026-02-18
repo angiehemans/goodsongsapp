@@ -282,6 +282,24 @@ export function ProfileScreen({ navigation }: Props) {
     }
   };
 
+  // Memoized render function - must be defined before any early returns
+  const renderReviewItem = useCallback(({ item }: { item: Review }) => (
+    <View style={styles.reviewWrapper}>
+      <ReviewCard
+        review={item}
+        onPressReview={(review: Review) =>
+          navigation.navigate("ReviewDetail", {
+            reviewId: review.id,
+            username: review.author?.username || review.user?.username || user?.username || '',
+          })
+        }
+        onPressBand={(slug: string) =>
+          navigation.navigate("BandProfile", { slug })
+        }
+      />
+    </View>
+  ), [navigation, user?.username]);
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -325,22 +343,7 @@ export function ProfileScreen({ navigation }: Props) {
       <FlatList
         data={reviews}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.reviewWrapper}>
-            <ReviewCard
-              review={item}
-              onPressReview={(review: Review) =>
-                navigation.navigate("ReviewDetail", {
-                  reviewId: review.id,
-                  username: review.author?.username || review.user?.username || user?.username || '',
-                })
-              }
-              onPressBand={(slug: string) =>
-                navigation.navigate("BandProfile", { slug })
-              }
-            />
-          </View>
-        )}
+        renderItem={renderReviewItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -372,6 +375,10 @@ export function ProfileScreen({ navigation }: Props) {
             </View>
           ) : null
         }
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        initialNumToRender={10}
+        windowSize={5}
       />
     </SafeAreaView>
   );

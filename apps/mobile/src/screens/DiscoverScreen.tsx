@@ -240,7 +240,7 @@ export function DiscoverScreen({ navigation }: Props) {
     }
   };
 
-  const renderUserItem = ({ item }: { item: UserProfile }) => (
+  const renderUserItem = useCallback(({ item }: { item: UserProfile }) => (
     <TouchableOpacity
       style={styles.listItem}
       onPress={() => handleUserPress(item.username)}
@@ -263,9 +263,9 @@ export function DiscoverScreen({ navigation }: Props) {
         <Badge text={`${item.reviews_count} recs`} />
       )}
     </TouchableOpacity>
-  );
+  ), [handleUserPress]);
 
-  const renderBandItem = ({ item }: { item: Band }) => {
+  const renderBandItem = useCallback(({ item }: { item: Band }) => {
     // Check if band has ANY image URL (before fixImageUrl processing)
     const hasImageUrl = !!(item.profile_picture_url || item.spotify_image_url);
 
@@ -299,20 +299,24 @@ export function DiscoverScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
     );
-  };
+  }, [navigation]);
 
-  const renderReviewItem = ({ item }: { item: Review }) => (
+  const handlePressBand = useCallback((slug: string) => {
+    navigation.navigate("BandProfile", { slug });
+  }, [navigation]);
+
+  const renderReviewItem = useCallback(({ item }: { item: Review }) => (
     <View style={styles.reviewItem}>
       <ReviewCard
         review={item}
         onPressAuthor={handleUserPress}
-        onPressBand={(slug: string) => navigation.navigate("BandProfile", { slug })}
+        onPressBand={handlePressBand}
         onPressReview={handlePressReview}
       />
     </View>
-  );
+  ), [handleUserPress, handlePressBand, handlePressReview]);
 
-  const renderEventItem = ({ item }: { item: Event }) => (
+  const renderEventItem = useCallback(({ item }: { item: Event }) => (
     <TouchableOpacity
       style={styles.eventItem}
       onPress={() => navigation.navigate("EventDetails", { eventId: item.id })}
@@ -335,7 +339,7 @@ export function DiscoverScreen({ navigation }: Props) {
         <Text style={styles.eventBand}>{item.band?.name}</Text>
       </View>
     </TouchableOpacity>
-  );
+  ), [navigation]);
 
   const getEmptyMessage = () => {
     switch (activeTab) {
@@ -374,6 +378,10 @@ export function DiscoverScreen({ navigation }: Props) {
             scrollEventThrottle={400}
             ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            initialNumToRender={10}
+            windowSize={5}
           />
         );
       case "bands":
@@ -394,6 +402,10 @@ export function DiscoverScreen({ navigation }: Props) {
             scrollEventThrottle={400}
             ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            initialNumToRender={10}
+            windowSize={5}
           />
         );
       case "reviews":
@@ -414,6 +426,10 @@ export function DiscoverScreen({ navigation }: Props) {
             scrollEventThrottle={400}
             ListFooterComponent={renderFooter}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={5}
+            initialNumToRender={5}
+            windowSize={5}
           />
         );
       case "events":
@@ -433,6 +449,10 @@ export function DiscoverScreen({ navigation }: Props) {
             onScroll={handleScroll}
             scrollEventThrottle={400}
             ListFooterComponent={renderFooter}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            initialNumToRender={10}
+            windowSize={5}
             ListEmptyComponent={<EmptyState {...emptyProps} />}
           />
         );

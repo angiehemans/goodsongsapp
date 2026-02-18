@@ -40,7 +40,8 @@ import {
 import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
 import { useScrobbleStore } from "@/context/scrobbleStore";
-import { apiClient } from "@/utils/api";
+import { useNotificationStore } from "@/context/notificationStore";
+import { apiClient, FanDashboardFeedItem, FanDashboardRecentlyPlayed } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { RootStackParamList, MainTabParamList } from "@/navigation/types";
@@ -53,6 +54,7 @@ type Props = {
 export function FeedScreen({ navigation, route }: Props) {
   const { user: currentUser, refreshUser } = useAuthStore();
   const nowPlaying = useScrobbleStore((state) => state.nowPlaying);
+  const setNotificationInitialCount = useNotificationStore((state) => state.setInitialCount);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -192,6 +194,66 @@ export function FeedScreen({ navigation, route }: Props) {
 
   const canResend = currentUser?.can_resend_confirmation && retryAfter === 0;
 
+  // Convert dashboard feed preview to Review format
+  const convertFeedPreviewToReviews = (feedItems: FanDashboardFeedItem[]): Review[] => {
+    return feedItems.map((item) => ({
+      id: item.id,
+      song_name: item.song_name,
+      band_name: item.band_name,
+      artwork_url: item.artwork_url,
+      review_text: item.review_text,
+      created_at: item.created_at,
+      likes_count: item.likes_count,
+      comments_count: 0,
+      author: {
+        id: item.author.id,
+        username: item.author.username,
+        profile_image_url: item.author.profile_image_url,
+      },
+    } as Review));
+  };
+
+  // Fetch initial dashboard data (optimized single endpoint)
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const response = await apiClient.getFanDashboard();
+
+      // Set notification count from dashboard (avoids extra API call)
+      setNotificationInitialCount(response.unread_notifications_count);
+
+      // Set recently played from dashboard
+      const tracks = response.recently_played.map((track: FanDashboardRecentlyPlayed) => ({
+        name: track.name,
+        artist: track.artist,
+        album: track.album || "",
+        played_at: track.played_at,
+        now_playing: track.now_playing,
+        source: track.source,
+        album_art_url: track.album_art_url || null,
+        loved: false,
+        scrobble_id: track.scrobble_id,
+        metadata_status: track.metadata_status,
+        has_preferred_artwork: track.has_preferred_artwork,
+        can_refresh_artwork: track.can_refresh_artwork,
+      })) as RecentlyPlayedTrack[];
+      setRecentlyPlayed(tracks);
+
+      // Set feed preview from dashboard
+      const feedReviews = convertFeedPreviewToReviews(response.following_feed_preview);
+      setReviews(feedReviews);
+      // Dashboard only returns preview, so we always have more
+      setHasMore(feedReviews.length >= 5);
+    } catch (error) {
+      console.error("Failed to fetch dashboard:", error);
+      setReviews([]);
+      setRecentlyPlayed([]);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+      setRecentlyPlayedLoading(false);
+    }
+  }, [setNotificationInitialCount]);
+
   const fetchFeed = useCallback(async (pageNum: number, refresh = false) => {
     try {
       const response = await apiClient.getFollowingFeed(pageNum);
@@ -270,10 +332,10 @@ export function FeedScreen({ navigation, route }: Props) {
     }
   }, []);
 
+  // Initial load uses optimized dashboard endpoint
   useEffect(() => {
-    fetchFeed(1, true);
-    fetchRecentlyPlayed();
-  }, [fetchFeed, fetchRecentlyPlayed]);
+    fetchDashboard();
+  }, [fetchDashboard]);
 
   // Poll for pending artwork updates
   // When tracks have metadata_status === 'pending', poll every 3 seconds
@@ -454,24 +516,41 @@ export function FeedScreen({ navigation, route }: Props) {
     [handleLoadMore],
   );
 
-  const handlePressAuthor = (username: string) => {
+  const handlePressAuthor = useCallback((username: string) => {
     if (username === currentUser?.username) {
       navigation.navigate("Main", { screen: "Profile" });
     } else {
       navigation.navigate("UserProfile", { username });
     }
-  };
+  }, [currentUser?.username, navigation]);
 
-  const handlePressBand = (slug: string) => {
+  const handlePressBand = useCallback((slug: string) => {
     navigation.navigate("BandProfile", { slug });
-  };
+  }, [navigation]);
 
-  const handlePressReview = (review: Review) => {
+  const handlePressReview = useCallback((review: Review) => {
     const username = review.author?.username || review.user?.username;
     if (username) {
       navigation.navigate("ReviewDetail", { reviewId: review.id, username });
     }
-  };
+  }, [navigation]);
+
+  // Memoized render function for FlatList - must be defined at top level, not inline
+  const renderReviewItem = useCallback(
+    ({ item }: { item: Review }) => (
+      <View style={styles.cardWrapper}>
+        <ReviewCard
+          review={item}
+          onPressAuthor={handlePressAuthor}
+          onPressBand={handlePressBand}
+          onPressReview={handlePressReview}
+        />
+      </View>
+    ),
+    [handlePressAuthor, handlePressBand, handlePressReview]
+  );
+
+  const keyExtractor = useCallback((item: Review) => item.id.toString(), []);
 
   const handleRecommendTrack = (track: RecentlyPlayedTrack) => {
     navigation.navigate("Main", {
@@ -615,18 +694,13 @@ export function FeedScreen({ navigation, route }: Props) {
 
       <FlatList
         data={reviews}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.cardWrapper}>
-            <ReviewCard
-              review={item}
-              onPressAuthor={handlePressAuthor}
-              onPressBand={handlePressBand}
-              onPressReview={handlePressReview}
-            />
-          </View>
-        )}
+        keyExtractor={keyExtractor}
+        renderItem={renderReviewItem}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        initialNumToRender={5}
+        windowSize={5}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

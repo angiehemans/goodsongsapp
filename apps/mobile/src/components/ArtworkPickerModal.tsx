@@ -194,6 +194,11 @@ export function ArtworkPickerModal({
             <Text style={styles.subtitle} numberOfLines={1}>
               {trackName} - {artistName}
             </Text>
+            {albumName && (
+              <Text style={styles.albumSubtitle} numberOfLines={1}>
+                {albumName}
+              </Text>
+            )}
           </View>
           <TouchableOpacity
             onPress={fetchArtworkOptions}
@@ -309,6 +314,11 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.sm,
     color: colors.grape[5],
     marginTop: 2,
+  },
+  albumSubtitle: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[4],
+    marginTop: 1,
   },
   refreshButton: {
     padding: theme.spacing.xs,
