@@ -332,6 +332,11 @@ export interface RecentlyPlayedTrack {
   metadata_status?: 'pending' | 'enriched' | 'not_found' | 'failed';
   can_refresh_artwork?: boolean;
   has_preferred_artwork?: boolean;
+  // Last.fm specific metadata (only present for source: 'lastfm')
+  lastfm_url?: string;
+  mbid_recording?: string;
+  mbid_artist?: string;
+  mbid_album?: string;
 }
 
 export interface RecentlyPlayedResponse {

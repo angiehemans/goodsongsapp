@@ -4,7 +4,7 @@ import { DateTimePicker } from '@mantine/dates';
 
 export const theme = createTheme({
   fontFamily: 'Inter, sans-serif',
-  headings: { fontFamily: 'aesthet-nova, serif' },
+  headings: { fontFamily: 'Thecoa, serif' },
   colors: {
     blue: generateColors('#0124B0'),
     grape: [
@@ -80,7 +80,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -97,7 +97,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -114,7 +114,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -131,7 +131,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -144,7 +144,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--mantine-color-grape-0)',
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
         },
         option: {
@@ -165,7 +165,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -178,7 +178,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--mantine-color-grape-0)',
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
         },
         option: {
@@ -199,7 +199,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -212,7 +212,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--mantine-color-grape-0)',
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
         },
         option: {
@@ -233,7 +233,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -246,7 +246,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--mantine-color-grape-0)',
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
         },
         option: {
@@ -267,7 +267,7 @@ export const theme = createTheme({
           borderWidth: '2px',
           borderColor: 'var(--mantine-color-grape-6)',
           backgroundColor: 'var(--mantine-color-grape-0)',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
           color: 'var(--mantine-color-grape-8)',
           '&[placeholder]': {
             color: 'var(--mantine-color-grape-4)',
@@ -282,7 +282,8 @@ export const theme = createTheme({
       defaultProps: {
         style: {
           borderWidth: '2px',
-          fontFamily: 'aesthet-nova, sans-serif',
+          fontFamily: 'Thecoa, sans-serif',
+          fontWeight: 400,
         },
       },
     },
@@ -294,7 +295,7 @@ export const theme = createTheme({
           padding: 'var(--mantine-spacing-md)',
         },
         title: {
-          fontFamily: 'aesthet-nova, serif',
+          fontFamily: 'Thecoa, serif',
           fontSize: 'var(--mantine-font-size-xl)',
           fontWeight: 600,
           color: 'var(--mantine-color-grape-9)',

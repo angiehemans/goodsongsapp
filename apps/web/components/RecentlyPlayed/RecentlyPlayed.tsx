@@ -258,6 +258,7 @@ export function RecentlyPlayed({ onRecommendTrack, initialTracks }: RecentlyPlay
                   fullWidth
                   mt={4}
                   leftSection={<IconPlus size={14} />}
+                  styles={{ root: { paddingLeft: 8, paddingRight: 8 } }}
                 >
                   Recommend
                 </Button>

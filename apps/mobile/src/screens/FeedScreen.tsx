@@ -41,7 +41,7 @@ import { theme, colors } from "@/theme";
 import { useAuthStore } from "@/context/authStore";
 import { useScrobbleStore } from "@/context/scrobbleStore";
 import { useNotificationStore } from "@/context/notificationStore";
-import { apiClient, FanDashboardFeedItem, FanDashboardRecentlyPlayed } from "@/utils/api";
+import { apiClient, FanDashboardFeedItem, FanDashboardRecentlyPlayed, CreateScrobbleFromLastfmData } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { RootStackParamList, MainTabParamList } from "@/navigation/types";
@@ -235,6 +235,11 @@ export function FeedScreen({ navigation, route }: Props) {
         metadata_status: track.metadata_status,
         has_preferred_artwork: track.has_preferred_artwork,
         can_refresh_artwork: track.can_refresh_artwork,
+        // Last.fm specific metadata
+        lastfm_url: track.lastfm_url,
+        mbid_recording: track.mbid_recording,
+        mbid_artist: track.mbid_artist,
+        mbid_album: track.mbid_album,
       })) as RecentlyPlayedTrack[];
       setRecentlyPlayed(tracks);
 
@@ -610,11 +615,8 @@ export function FeedScreen({ navigation, route }: Props) {
   };
 
   // Handle long press on artwork to open picker
+  // Works for both scrobbles and Last.fm tracks
   const handleArtworkLongPress = (track: RecentlyPlayedTrack) => {
-    // Only allow for scrobbles (not Last.fm tracks)
-    if (track.source !== "scrobble") {
-      return;
-    }
     setSelectedTrackForArtwork(track);
     setArtworkPickerVisible(true);
   };
@@ -623,38 +625,107 @@ export function FeedScreen({ navigation, route }: Props) {
   const handleArtworkSelect = async (artworkUrl: string) => {
     if (!selectedTrackForArtwork) return;
 
+    const isLastfmTrack = selectedTrackForArtwork.source === "lastfm";
     const scrobbleId = getScrobbleId(selectedTrackForArtwork);
-    if (!scrobbleId) return;
 
-    // Optimistically update the local state immediately for instant UI feedback
-    setRecentlyPlayed((prev) =>
-      prev.map((track) =>
-        track.scrobble_id === scrobbleId
-          ? { ...track, album_art_url: artworkUrl, has_preferred_artwork: true }
-          : track
-      )
-    );
+    // For scrobbles, we need a scrobble_id
+    if (!isLastfmTrack && !scrobbleId) return;
 
     // Clear FastImage cache for the old artwork URL to ensure new artwork is fetched
     if (selectedTrackForArtwork.album_art_url) {
       FastImage.clearMemoryCache();
     }
 
-    showSuccessBanner("Artwork updated!");
+    if (isLastfmTrack) {
+      // Convert Last.fm track to scrobble with preferred artwork
+      // Optimistically update the local state
+      setRecentlyPlayed((prev) =>
+        prev.map((track) =>
+          track.name === selectedTrackForArtwork.name &&
+          track.artist === selectedTrackForArtwork.artist &&
+          track.source === "lastfm"
+            ? {
+                ...track,
+                album_art_url: artworkUrl,
+                has_preferred_artwork: true,
+                source: "scrobble" as const, // Will become a scrobble after API call
+              }
+            : track
+        )
+      );
 
-    // Save to API in background
-    try {
-      await apiClient.setScrobbleArtwork(scrobbleId, artworkUrl);
-    } catch (error) {
-      // Revert on failure
-      console.error('Failed to save artwork:', error);
-      fetchRecentlyPlayed();
+      showSuccessBanner("Artwork updated!");
+
+      // Save to API - this converts the Last.fm track to a scrobble
+      try {
+        const data: CreateScrobbleFromLastfmData = {
+          track_name: selectedTrackForArtwork.name,
+          artist_name: selectedTrackForArtwork.artist,
+          album_name: selectedTrackForArtwork.album,
+          played_at: selectedTrackForArtwork.played_at,
+          preferred_artwork_url: artworkUrl,
+          original_artwork_url: selectedTrackForArtwork.album_art_url || undefined,
+          lastfm_url: selectedTrackForArtwork.lastfm_url,
+          mbid_recording: selectedTrackForArtwork.mbid_recording,
+          mbid_artist: selectedTrackForArtwork.mbid_artist,
+          mbid_album: selectedTrackForArtwork.mbid_album,
+          loved: selectedTrackForArtwork.loved,
+        };
+
+        const response = await apiClient.createScrobbleFromLastfm(data);
+
+        // Update the track with the new scrobble_id
+        // Response may have scrobble.id or id directly at root level
+        const newScrobbleId = response.scrobble?.id || (response as any).id;
+        if (newScrobbleId) {
+          setRecentlyPlayed((prev) =>
+            prev.map((track) =>
+              track.name === selectedTrackForArtwork.name &&
+              track.artist === selectedTrackForArtwork.artist
+                ? {
+                    ...track,
+                    scrobble_id: newScrobbleId,
+                    source: "scrobble" as const,
+                  }
+                : track
+            )
+          );
+        }
+      } catch (error) {
+        // Revert on failure
+        console.error('Failed to convert Last.fm track to scrobble:', error);
+        fetchRecentlyPlayed();
+      }
+    } else {
+      // Existing scrobble - just update the artwork
+      // Optimistically update the local state immediately for instant UI feedback
+      setRecentlyPlayed((prev) =>
+        prev.map((track) =>
+          track.scrobble_id === scrobbleId
+            ? { ...track, album_art_url: artworkUrl, has_preferred_artwork: true }
+            : track
+        )
+      );
+
+      showSuccessBanner("Artwork updated!");
+
+      // Save to API in background
+      try {
+        await apiClient.setScrobbleArtwork(scrobbleId!, artworkUrl);
+      } catch (error) {
+        // Revert on failure
+        console.error('Failed to save artwork:', error);
+        fetchRecentlyPlayed();
+      }
     }
   };
 
-  // Handle clearing preferred artwork
+  // Handle clearing preferred artwork (only for scrobbles, not Last.fm tracks)
   const handleClearPreferredArtwork = async () => {
     if (!selectedTrackForArtwork) return;
+
+    // Can only clear artwork for scrobbles, not Last.fm tracks
+    if (selectedTrackForArtwork.source === "lastfm") return;
 
     const scrobbleId = getScrobbleId(selectedTrackForArtwork);
     if (!scrobbleId) return;

@@ -155,6 +155,38 @@ export interface FanDashboardRecentlyPlayed {
   metadata_status?: 'pending' | 'enriched' | 'not_found' | 'failed';
   has_preferred_artwork?: boolean;
   can_refresh_artwork?: boolean;
+  // Last.fm specific metadata (only present for source: 'lastfm')
+  lastfm_url?: string;
+  mbid_recording?: string;
+  mbid_artist?: string;
+  mbid_album?: string;
+}
+
+// Create scrobble from Last.fm track
+export interface CreateScrobbleFromLastfmData {
+  track_name: string;
+  artist_name: string;
+  album_name?: string;
+  played_at?: string | null;
+  preferred_artwork_url: string;
+  original_artwork_url?: string;
+  lastfm_url?: string;
+  mbid_recording?: string;
+  mbid_artist?: string;
+  mbid_album?: string;
+  loved?: boolean;
+}
+
+export interface CreateScrobbleFromLastfmResponse {
+  scrobble: {
+    id: number;
+    track_name: string;
+    artist_name: string;
+    album_name?: string;
+    artwork_url?: string;
+    played_at?: string;
+  };
+  message: string;
 }
 
 export interface FanDashboardStats {
@@ -722,6 +754,16 @@ class MobileApiClient {
   ): Promise<{ message: string }> {
     return this.request(`/api/v1/scrobbles/${scrobbleId}/artwork`, {
       method: 'DELETE',
+    });
+  }
+
+  // Convert a Last.fm track to a scrobble with preferred artwork
+  async createScrobbleFromLastfm(
+    data: CreateScrobbleFromLastfmData
+  ): Promise<CreateScrobbleFromLastfmResponse> {
+    return this.request('/api/v1/scrobbles/from_lastfm', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 
