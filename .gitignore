@@ -133,3 +133,8 @@ dist
 
 # Turborepo
 .turbo
+
+# Firebase
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase-service-account.json
