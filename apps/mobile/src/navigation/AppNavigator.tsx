@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { AppState, Platform, View, Text, StyleSheet } from 'react-native';
 import BootSplash from 'react-native-bootsplash';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,10 @@ import { useAuthStore } from '@/context/authStore';
 import { useScrobbleStore } from '@/context/scrobbleStore';
 import { useNotificationStore } from '@/context/notificationStore';
 import { scrobbleNative } from '@/utils/scrobbleNative';
+import {
+  registerForPushNotifications,
+  setupNotificationHandlers,
+} from '@/utils/pushNotifications';
 import type { NowPlayingTrack } from '@/types/scrobble';
 import { theme, colors } from '@/theme';
 
@@ -175,10 +179,14 @@ function MainNavigator() {
   );
 }
 
+// Navigation ref for push notification navigation
+const navigationRef = React.createRef<NavigationContainerRef<RootStackParamList>>();
+
 // Root Navigator
 export function AppNavigator() {
   const { isAuthenticated, isLoading, isOnboardingComplete, loadAuth } = useAuthStore();
   const startPolling = useNotificationStore((state) => state.startPolling);
+  const fetchUnreadCount = useNotificationStore((state) => state.fetchUnreadCount);
 
   useEffect(() => {
     loadAuth();
@@ -196,6 +204,31 @@ export function AppNavigator() {
     const cleanup = startPolling(60000); // Poll every 60 seconds
     return cleanup;
   }, [isAuthenticated, startPolling]);
+
+  // Register for push notifications when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !isOnboardingComplete) return;
+
+    // Register device for push notifications
+    registerForPushNotifications();
+
+    // Set up notification handlers
+    const cleanup = setupNotificationHandlers(
+      // Navigation handler - called when user taps a notification
+      (screen, params) => {
+        if (navigationRef.current?.isReady()) {
+          // @ts-ignore - dynamic navigation
+          navigationRef.current.navigate(screen, params);
+        }
+      },
+      // Foreground notification handler - refresh notification count
+      () => {
+        fetchUnreadCount();
+      }
+    );
+
+    return cleanup;
+  }, [isAuthenticated, isOnboardingComplete, fetchUnreadCount]);
 
   // Listen for native scrobble events so auto-sync works from any screen
   // Also sync pending scrobbles when the app is opened or foregrounded
@@ -251,7 +284,7 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           isOnboardingComplete ? (

@@ -899,6 +899,27 @@ class MobileApiClient {
   async getFanDashboard(): Promise<FanDashboardResponse> {
     return this.request('/api/v1/fan_dashboard');
   }
+
+  // Push Notifications - Device Token Management
+
+  async registerDeviceToken(token: string, platform: string): Promise<{ message: string }> {
+    return this.request('/device_tokens', {
+      method: 'POST',
+      body: JSON.stringify({
+        device_token: {
+          token,
+          platform,
+        },
+      }),
+    });
+  }
+
+  async unregisterDeviceToken(token: string): Promise<{ message: string }> {
+    return this.request('/device_tokens', {
+      method: 'DELETE',
+      body: JSON.stringify({ token }),
+    });
+  }
 }
 
 export const apiClient = new MobileApiClient();

@@ -1,6 +1,8 @@
 # Push Notifications Setup Guide
 
-This guide covers setting up push notifications for the GoodSongs mobile app using Firebase Cloud Messaging (FCM) and Ruby on Rails.
+This guide covers setting up push notifications for the GoodSongs mobile app using Firebase Cloud Messaging (FCM) V1 API and Ruby on Rails.
+
+> **Note:** This guide uses the FCM V1 API with service account authentication. The legacy Cloud Messaging API (Server Key) was fully deprecated in June 2024.
 
 ## Overview
 
@@ -37,11 +39,23 @@ This guide covers setting up push notifications for the GoodSongs mobile app usi
 5. Download `google-services.json`
 6. Place it in `apps/mobile/android/app/google-services.json`
 
-### 1.3 Get Server Key for Rails
+### 1.3 Create Service Account for Rails (FCM V1 API)
 
-1. In Firebase Console → Project Settings → Cloud Messaging tab
-2. If "Cloud Messaging API (Legacy)" is disabled, click the three dots and enable it
-3. Copy the **Server Key** - you'll need this for Rails
+The legacy Cloud Messaging API is deprecated. Use the FCM V1 API with a service account:
+
+1. In Firebase Console → Project Settings → **Service accounts** tab
+2. Click **"Generate new private key"**
+3. Click **"Generate key"** to download the JSON file
+4. Rename it to `firebase-service-account.json`
+5. Place it in your Rails app at `config/firebase-service-account.json`
+6. **Important:** Add this file to `.gitignore` - never commit it to version control!
+
+```bash
+# Add to .gitignore
+config/firebase-service-account.json
+```
+
+Also note your **Project ID** from the Project Settings → General tab (e.g., `goodsongs-12345`)
 
 ---
 
@@ -56,21 +70,29 @@ pnpm add @react-native-firebase/app @react-native-firebase/messaging
 
 ### 2.2 Configure Android
 
-**android/build.gradle** - Add Google services plugin:
+**android/build.gradle** - Add Google services plugin (using plugins DSL):
 
 ```gradle
-buildscript {
-    dependencies {
-        // ... existing dependencies
-        classpath 'com.google.gms:google-services:4.4.0'
-    }
+plugins {
+    // ... existing plugins
+    id 'com.google.gms.google-services' version '4.4.4' apply false
 }
 ```
 
-**android/app/build.gradle** - Apply plugin at bottom:
+**android/app/build.gradle** - Apply plugin at top and add Firebase BOM:
 
 ```gradle
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
+
+// ... rest of config ...
+
+dependencies {
+    // ... existing dependencies
+    implementation platform('com.google.firebase:firebase-bom:34.9.0')
+}
 ```
 
 ### 2.3 Add Firebase Messaging to App
@@ -304,11 +326,11 @@ end
 ```ruby
 class PushNotificationService
   def initialize
+    # FCM V1 API uses service account authentication
     @fcm = FCM.new(
-      ENV['FIREBASE_SERVER_KEY'],
-      # For FCM v1 API (recommended):
-      # json_key_path: Rails.root.join('config', 'firebase-service-account.json'),
-      # project_name: 'your-project-id'
+      nil, # No server key needed for V1 API
+      Rails.root.join('config', 'firebase-service-account.json').to_s,
+      ENV['FIREBASE_PROJECT_ID']
     )
   end
 
@@ -322,39 +344,97 @@ class PushNotificationService
   def send_to_tokens(tokens, title:, body:, data: {})
     return if tokens.empty?
 
-    notification = {
-      title: title,
-      body: body
-    }
+    # FCM V1 API sends to one token at a time
+    responses = tokens.map do |token|
+      send_to_token(token, title: title, body: body, data: data)
+    end
 
-    response = @fcm.send_v1(
-      tokens,
-      notification: notification,
-      data: data.transform_values(&:to_s)
-    )
-
-    handle_response(response)
+    handle_responses(responses, tokens)
   end
 
   private
 
-  def handle_response(response)
-    # Remove invalid tokens
-    if response[:not_registered_ids].present?
-      DeviceToken.where(token: response[:not_registered_ids]).destroy_all
+  def send_to_token(token, title:, body:, data: {})
+    message = {
+      token: token,
+      notification: {
+        title: title,
+        body: body
+      },
+      data: data.transform_values(&:to_s),
+      # Android-specific options
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'default',
+          click_action: 'FLUTTER_NOTIFICATION_CLICK'
+        }
+      },
+      # iOS-specific options (APNs)
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1
+          }
+        }
+      }
+    }
+
+    @fcm.send_v1(message)
+  rescue StandardError => e
+    Rails.logger.error("FCM send failed for token #{token[0..10]}...: #{e.message}")
+    { error: e.message, token: token }
+  end
+
+  def handle_responses(responses, tokens)
+    responses.each_with_index do |response, index|
+      next unless response.is_a?(Hash)
+
+      # Handle invalid/unregistered tokens
+      if response[:status_code] == 404 ||
+         response.dig(:body, 'error', 'code') == 404 ||
+         response.dig(:body, 'error', 'status') == 'NOT_FOUND'
+        DeviceToken.where(token: tokens[index]).destroy_all
+        Rails.logger.info("Removed invalid FCM token: #{tokens[index][0..10]}...")
+      end
     end
 
-    response
+    responses
   end
 end
 ```
 
-### 3.6 Add Environment Variable
+### 3.6 Configure Environment Variables
 
-Add to your environment (`.env` or Rails credentials):
+Add to your environment (`.env`):
 
+```bash
+# Your Firebase project ID (found in Firebase Console → Project Settings → General)
+FIREBASE_PROJECT_ID=goodsongs-12345
 ```
-FIREBASE_SERVER_KEY=your_server_key_here
+
+For production, you can also set the service account JSON as an environment variable instead of a file:
+
+```bash
+# Alternative: Set the entire JSON as an env var (useful for Heroku, Railway, etc.)
+FIREBASE_SERVICE_ACCOUNT_JSON='{"type":"service_account","project_id":"...",...}'
+```
+
+If using the environment variable approach, update the service initialization:
+
+```ruby
+def initialize
+  credentials = if ENV['FIREBASE_SERVICE_ACCOUNT_JSON'].present?
+    # Parse JSON from environment variable
+    StringIO.new(ENV['FIREBASE_SERVICE_ACCOUNT_JSON'])
+  else
+    # Use file path
+    Rails.root.join('config', 'firebase-service-account.json').to_s
+  end
+
+  @fcm = FCM.new(nil, credentials, ENV['FIREBASE_PROJECT_ID'])
+end
 ```
 
 ### 3.7 Send Notifications from Models/Jobs
@@ -469,22 +549,60 @@ end
 In Rails console:
 
 ```ruby
-fcm = FCM.new(ENV['FIREBASE_SERVER_KEY'])
+# Initialize FCM with V1 API
+fcm = FCM.new(
+  nil,
+  Rails.root.join('config', 'firebase-service-account.json').to_s,
+  ENV['FIREBASE_PROJECT_ID']
+)
+
 # Use a real device token from your database
 token = DeviceToken.last.token
-response = fcm.send_v1(
-  [token],
-  notification: { title: 'Test', body: 'Hello from Rails!' }
-)
+
+# Build the message (V1 API format)
+message = {
+  token: token,
+  notification: {
+    title: 'Test',
+    body: 'Hello from Rails!'
+  },
+  data: {
+    type: 'test'
+  }
+}
+
+response = fcm.send_v1(message)
 puts response
 ```
 
-### 4.2 Test from Mobile App
+### 4.2 Test Using the Service
+
+```ruby
+# Test with your PushNotificationService
+user = User.find_by(email: 'test@example.com')
+PushNotificationService.new.send_to_user(
+  user,
+  title: 'Test Notification',
+  body: 'This is a test from Rails!',
+  data: { type: 'test' }
+)
+```
+
+### 4.3 Test from Mobile App
 
 1. Build and run the app: `pnpm android`
 2. Log in and check Metro logs for "FCM Token: ..."
 3. Verify token is saved in database: `DeviceToken.last`
 4. Send a test notification from Rails console
+
+### 4.4 Test from Firebase Console
+
+1. Go to Firebase Console → Engage → Messaging
+2. Click "Create your first campaign" → "Firebase Notification messages"
+3. Enter a title and body
+4. Click "Send test message"
+5. Enter your device's FCM token (from `DeviceToken.last.token`)
+6. Click "Test"
 
 ---
 
@@ -508,10 +626,25 @@ See: https://rnfirebase.io/messaging/usage/ios-setup
 - Check that `google-services.json` is in the correct location
 - Ensure the package name matches your Firebase app
 
+### Service account authentication failing
+- Verify `firebase-service-account.json` exists and is valid JSON
+- Check that `FIREBASE_PROJECT_ID` matches your Firebase project
+- Ensure the service account has the "Firebase Cloud Messaging API Admin" role
+
 ### Notifications not arriving
-- Verify the server key is correct
+- Verify the service account JSON is correct
 - Check if the device token is valid (not expired)
-- Test with Firebase Console's "Cloud Messaging" → "Send test message"
+- Test with Firebase Console's "Messaging" → "Send test message"
+- Check Rails logs for FCM response errors
+
+### "PERMISSION_DENIED" errors
+- Go to Google Cloud Console → APIs & Services → Enable APIs
+- Enable "Firebase Cloud Messaging API" (not the legacy one)
+- Ensure your service account has proper IAM roles
+
+### "INVALID_ARGUMENT" errors
+- The device token may be malformed or from a different Firebase project
+- Verify the token was generated by the same Firebase project
 
 ### Background notifications not working
 - Android: Check battery optimization settings
@@ -521,15 +654,30 @@ See: https://rnfirebase.io/messaging/usage/ios-setup
 
 ## Security Considerations
 
-1. **Never expose the Firebase Server Key** in client code
-2. **Validate user ownership** before sending notifications
-3. **Rate limit** notification sending to prevent abuse
-4. **Clean up old tokens** periodically (tokens expire/change)
+1. **Never commit the service account JSON** to version control - add it to `.gitignore`
+2. **Use environment variables** for the service account in production (Heroku, Railway, etc.)
+3. **Validate user ownership** before sending notifications
+4. **Rate limit** notification sending to prevent abuse
+5. **Clean up old tokens** periodically (tokens expire/change)
+6. **Restrict service account permissions** - only grant Firebase Cloud Messaging roles
+
+---
+
+## Migration from Legacy API
+
+If you were using the legacy API with a Server Key:
+
+1. Delete the `FIREBASE_SERVER_KEY` environment variable
+2. Create a service account as described in section 1.3
+3. Add `FIREBASE_PROJECT_ID` environment variable
+4. Update `PushNotificationService` to use the new initialization
+5. The message format is slightly different - see section 3.5
 
 ---
 
 ## Resources
 
-- [Firebase Cloud Messaging Docs](https://firebase.google.com/docs/cloud-messaging)
+- [Firebase Cloud Messaging V1 API Docs](https://firebase.google.com/docs/cloud-messaging/migrate-v1)
+- [FCM V1 HTTP Protocol](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages/send)
 - [React Native Firebase](https://rnfirebase.io/messaging/usage)
 - [FCM Ruby Gem](https://github.com/decision-labs/fcm)

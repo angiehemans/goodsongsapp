@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AccountType, normalizeAccountType } from '@goodsongs/api-client';
 import { apiClient } from '@/utils/api';
+import { unregisterFromPushNotifications } from '@/utils/pushNotifications';
 
 export interface AuthState {
   user: User | null;
@@ -103,6 +104,13 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logout: async () => {
+      // Unregister push notifications before clearing auth
+      try {
+        await unregisterFromPushNotifications();
+      } catch {
+        // Ignore errors - continue with logout
+      }
+
       // Clear state immediately to ensure user is redirected to sign-in
       // This prevents blank dashboards even if network calls fail
       set({
@@ -126,6 +134,13 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logoutAllDevices: async () => {
+      // Unregister push notifications before clearing auth
+      try {
+        await unregisterFromPushNotifications();
+      } catch {
+        // Ignore errors - continue with logout
+      }
+
       // Clear state immediately to ensure user is redirected to sign-in
       set({
         user: null,
