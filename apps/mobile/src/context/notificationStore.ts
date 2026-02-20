@@ -6,17 +6,21 @@ interface NotificationState {
   unreadCount: number;
   isLoading: boolean;
   isInitialized: boolean;
+  isPaused: boolean;
   fetchUnreadCount: () => Promise<void>;
   setInitialCount: (count: number) => void;
   clearUnreadCount: () => void;
   refreshCount: () => Promise<void>;
   startPolling: (intervalMs?: number) => () => void;
+  pausePolling: () => void;
+  resumePolling: () => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   unreadCount: 0,
   isLoading: false,
   isInitialized: false,
+  isPaused: false,
 
   fetchUnreadCount: async () => {
     // Skip if already initialized from dashboard
@@ -44,12 +48,26 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
   // Always fetches count from API (used for polling)
   refreshCount: async () => {
+    // Skip refresh if paused (e.g., user is viewing notifications)
+    if (get().isPaused) return;
+
     try {
       const response = await apiClient.getUnreadNotificationCount();
-      set({ unreadCount: response?.unread_count ?? 0 });
+      // Double-check we're still not paused after the async call
+      if (!get().isPaused) {
+        set({ unreadCount: response?.unread_count ?? 0 });
+      }
     } catch (error) {
       // Silently fail during polling
     }
+  },
+
+  pausePolling: () => {
+    set({ isPaused: true });
+  },
+
+  resumePolling: () => {
+    set({ isPaused: false });
   },
 
   // Start polling with AppState awareness (only polls when app is active)

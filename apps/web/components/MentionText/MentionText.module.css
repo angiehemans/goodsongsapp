@@ -1,0 +1,9 @@
+.mention {
+  color: var(--mantine-color-grape-6);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.mention:hover {
+  text-decoration: underline;
+}

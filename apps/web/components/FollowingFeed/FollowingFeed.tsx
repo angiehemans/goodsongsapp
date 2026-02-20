@@ -24,6 +24,8 @@ function feedItemToReview(item: FollowingFeedItem): Review {
     artwork_url: item.artwork_url || '',
     song_link: item.song_link || '',
     review_text: item.review_text,
+    formatted_review_text: item.formatted_review_text,
+    mentions: item.mentions,
     liked_aspects: item.liked_aspects || [],
     created_at: item.created_at,
     updated_at: item.created_at,

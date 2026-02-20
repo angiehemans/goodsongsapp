@@ -115,12 +115,44 @@ class ScrobbleModule(reactContext: ReactApplicationContext) :
                     putString("releaseDate", s.releaseDate ?: "")
                     putString("artworkUri", s.artworkUri ?: "")
                     putString("albumArt", s.albumArt ?: "")
+                    putInt("syncAttempts", s.syncAttempts)
                 }
                 array.pushMap(map)
             }
             promise.resolve(array)
         } catch (e: Exception) {
             promise.resolve(Arguments.createArray())
+        }
+    }
+
+    @ReactMethod
+    fun incrementSyncAttempts(ids: ReadableArray, promise: Promise) {
+        try {
+            val idSet = mutableSetOf<String>()
+            for (i in 0 until ids.size()) {
+                ids.getString(i)?.let { idSet.add(it) }
+            }
+            storage.incrementSyncAttempts(idSet)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERR_INCREMENT_ATTEMPTS", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun removeScrobblesExceedingRetries(maxRetries: Int, promise: Promise) {
+        try {
+            val pending = storage.getPendingScrobbles()
+            val idsToRemove = pending
+                .filter { it.syncAttempts >= maxRetries }
+                .map { it.id }
+                .toSet()
+            if (idsToRemove.isNotEmpty()) {
+                storage.removeSyncedScrobbles(idsToRemove)
+            }
+            promise.resolve(idsToRemove.size)
+        } catch (e: Exception) {
+            promise.reject("ERR_REMOVE_EXCEEDED", e.message)
         }
     }
 

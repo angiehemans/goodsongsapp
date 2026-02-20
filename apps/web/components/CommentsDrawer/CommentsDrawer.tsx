@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconSend, IconTrash } from '@tabler/icons-react';
+import { IconArrowBackUp, IconHeart, IconHeartFilled, IconSend, IconTrash } from '@tabler/icons-react';
 import {
   ActionIcon,
   Button,
@@ -12,8 +12,9 @@ import {
   Loader,
   Stack,
   Text,
-  Textarea,
 } from '@mantine/core';
+import { MentionText } from '@/components/MentionText/MentionText';
+import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, ReviewComment } from '@/lib/api';
@@ -41,6 +42,8 @@ export function CommentsDrawer({
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [likingId, setLikingId] = useState<number | null>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
 
   // Load comments when drawer opens
   useEffect(() => {
@@ -118,6 +121,47 @@ export function CommentsDrawer({
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleLikeComment = async (comment: ReviewComment) => {
+    if (likingId !== null) return;
+
+    setLikingId(comment.id);
+    try {
+      if (comment.liked_by_current_user) {
+        const response = await apiClient.unlikeComment(comment.id);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id
+              ? { ...c, liked_by_current_user: false, likes_count: response.likes_count }
+              : c
+          )
+        );
+      } else {
+        const response = await apiClient.likeComment(comment.id);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id
+              ? { ...c, liked_by_current_user: true, likes_count: response.likes_count }
+              : c
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike comment:', error);
+    } finally {
+      setLikingId(null);
+    }
+  };
+
+  const handleReply = (username: string) => {
+    setNewComment(`@${username} `);
+    // Scroll input into view and focus
+    setTimeout(() => {
+      inputContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const textarea = inputContainerRef.current?.querySelector('textarea');
+      textarea?.focus();
+    }, 100);
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -214,9 +258,52 @@ export function CommentsDrawer({
                             </ActionIcon>
                           )}
                         </Group>
-                        <Text size="sm" className={styles.commentBody}>
-                          {comment.body}
-                        </Text>
+                        <Group gap="sm" align="flex-start" wrap="nowrap">
+                          <MentionText
+                            text={comment.formatted_body || comment.body}
+                            size="sm"
+                            className={styles.commentBody}
+                            style={{ flex: 1 }}
+                          />
+                          {/* Comment Actions */}
+                          <Group gap={4} align="center" wrap="nowrap">
+                            {/* Reply Button */}
+                            {user && (
+                              <ActionIcon
+                                variant="subtle"
+                                color="gray"
+                                size="xs"
+                                onClick={() => handleReply(author.username)}
+                                title="Reply"
+                              >
+                                <IconArrowBackUp size={14} />
+                              </ActionIcon>
+                            )}
+                            {/* Like Button */}
+                            <ActionIcon
+                              variant="subtle"
+                              color={comment.liked_by_current_user ? 'red' : 'gray'}
+                              size="xs"
+                              onClick={() => handleLikeComment(comment)}
+                              loading={likingId === comment.id}
+                              disabled={!user}
+                            >
+                              {comment.liked_by_current_user ? (
+                                <IconHeartFilled size={14} />
+                              ) : (
+                                <IconHeart size={14} />
+                              )}
+                            </ActionIcon>
+                            {comment.likes_count > 0 && (
+                              <Text
+                                size="xs"
+                                c={comment.liked_by_current_user ? 'red' : 'dimmed'}
+                              >
+                                {comment.likes_count}
+                              </Text>
+                            )}
+                          </Group>
+                        </Group>
                       </Stack>
                     </Group>
                   </div>
@@ -236,23 +323,16 @@ export function CommentsDrawer({
 
         {/* Comment Input */}
         {user ? (
-          <div className={styles.inputContainer}>
+          <div ref={inputContainerRef} className={styles.inputContainer}>
             <Group gap="sm" align="flex-end">
-              <Textarea
-                placeholder="Add a comment..."
+              <MentionTextarea
+                placeholder="Add a comment... Use @ to mention users"
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                onChange={setNewComment}
                 maxLength={300}
                 minRows={1}
                 maxRows={4}
                 autosize
-                style={{ flex: 1 }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmitComment();
-                  }
-                }}
               />
               <ActionIcon
                 variant="filled"

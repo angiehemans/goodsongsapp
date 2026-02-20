@@ -107,6 +107,8 @@ export interface Review extends ReviewData {
   id: number;
   created_at: string;
   updated_at: string;
+  formatted_review_text?: string;
+  mentions?: MentionUser[];
   user?: {
     id: number;
     username: string;
@@ -126,11 +128,30 @@ export interface Review extends ReviewData {
   comments_count?: number;
 }
 
+// User mention in reviews/comments
+export interface MentionUser {
+  user_id: number;
+  username: string;
+  display_name: string;
+}
+
+// User search result for mention autocomplete
+export interface UserSearchResult {
+  id: number;
+  username: string;
+  display_name: string;
+  profile_image_url?: string;
+}
+
 export interface ReviewComment {
   id: number;
   body: string;
+  formatted_body?: string;
+  mentions?: MentionUser[];
   created_at: string;
   updated_at: string;
+  likes_count: number;
+  liked_by_current_user: boolean;
   author: {
     id: number;
     username: string;
@@ -190,6 +211,8 @@ export interface FollowingFeedItem {
   artwork_url?: string;
   song_link?: string;
   review_text: string;
+  formatted_review_text?: string;
+  mentions?: MentionUser[];
   liked_aspects?: (string | { name: string })[];
   created_at: string;
   author: {
@@ -225,8 +248,8 @@ export interface NotificationActor {
 
 export interface Notification {
   id: number;
-  notification_type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment';
-  type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment';  // Alternative field name from API
+  notification_type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment' | 'mention';
+  type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment' | 'mention';  // Alternative field name from API
   message: string;
   read: boolean;
   created_at: string;
@@ -671,6 +694,8 @@ export interface FanDashboardFeedItem {
   };
   created_at: string;
   likes_count: number;
+  comments_count: number;
+  liked_by_current_user?: boolean;
 }
 
 export interface FanDashboardRecentlyPlayed {
@@ -1099,10 +1124,12 @@ class ApiClient {
   }
 
   async createReviewComment(reviewId: number, body: string): Promise<ReviewComment> {
-    return this.makeRequest(`/reviews/${reviewId}/comments`, {
+    const response = await this.makeRequest<{ comment: ReviewComment; comments_count: number }>(`/reviews/${reviewId}/comments`, {
       method: 'POST',
       body: JSON.stringify({ comment: { body } }),
     });
+    // API returns { message, comment, comments_count } - extract the comment
+    return response.comment;
   }
 
   async updateReviewComment(reviewId: number, commentId: number, body: string): Promise<ReviewComment> {
@@ -1114,6 +1141,18 @@ class ApiClient {
 
   async deleteReviewComment(reviewId: number, commentId: number): Promise<{ message: string }> {
     return this.makeRequest(`/reviews/${reviewId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async likeComment(commentId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/comments/${commentId}/like`, {
+      method: 'POST',
+    });
+  }
+
+  async unlikeComment(commentId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/comments/${commentId}/like`, {
       method: 'DELETE',
     });
   }
@@ -1852,6 +1891,14 @@ class ApiClient {
   // Fan Dashboard - optimized single endpoint
   async getFanDashboard(): Promise<FanDashboardResponse> {
     return this.makeRequest('/api/v1/fan_dashboard');
+  }
+
+  // User search for mention autocomplete
+  async searchUsers(query: string): Promise<{ users: UserSearchResult[] }> {
+    if (query.length < 2) {
+      return { users: [] };
+    }
+    return this.makeRequest(`/users/search?q=${encodeURIComponent(query)}`);
   }
 }
 

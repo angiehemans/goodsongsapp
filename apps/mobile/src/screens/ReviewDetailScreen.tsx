@@ -1,22 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
   ActivityIndicator,
   Linking,
   Share,
-} from 'react-native';
-import FastImage from 'react-native-fast-image';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import FastImage from "react-native-fast-image";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import {
   IconAlertCircle,
+  IconArrowBackUp,
   IconExternalLink,
   IconHeart,
   IconHeartFilled,
@@ -25,26 +29,38 @@ import {
   IconSend,
   IconEdit,
   IconShare,
-} from '@tabler/icons-react-native';
-import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Review } from '@goodsongs/api-client';
-import { Header, ProfilePhoto, Tag, LoadingScreen } from '@/components';
-import { theme, colors } from '@/theme';
-import { useAuthStore } from '@/context/authStore';
-import { apiClient, ReviewComment } from '@/utils/api';
-import { fixImageUrl } from '@/utils/imageUrl';
-import { RootStackParamList, HomeStackParamList } from '@/navigation/types';
+} from "@tabler/icons-react-native";
+import {
+  RouteProp,
+  useRoute,
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Review } from "@goodsongs/api-client";
+import {
+  Header,
+  ProfilePhoto,
+  Tag,
+  LoadingScreen,
+  MentionText,
+  MentionTextInput,
+} from "@/components";
+import { theme, colors } from "@/theme";
+import { useAuthStore } from "@/context/authStore";
+import { apiClient, ReviewComment } from "@/utils/api";
+import { fixImageUrl } from "@/utils/imageUrl";
+import { RootStackParamList, HomeStackParamList } from "@/navigation/types";
 
-type ReviewDetailRouteProp = RouteProp<HomeStackParamList, 'ReviewDetail'>;
+type ReviewDetailRouteProp = RouteProp<HomeStackParamList, "ReviewDetail">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 };
 
@@ -70,9 +86,13 @@ export function ReviewDetailScreen() {
   const [commentsPage, setCommentsPage] = useState(1);
   const [hasMoreComments, setHasMoreComments] = useState(false);
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
+    null,
+  );
+  const [likingCommentId, setLikingCommentId] = useState<number | null>(null);
+  const [inputKey, setInputKey] = useState(0);
 
   // Fetch review - refetches when screen is focused (including when returning from edit)
   useFocusEffect(
@@ -89,9 +109,9 @@ export function ReviewDetailScreen() {
             setLoading(false);
           }
         } catch (err) {
-          console.error('Failed to fetch review:', err);
+          console.error("Failed to fetch review:", err);
           if (isMounted) {
-            setError('Review not found');
+            setError("Review not found");
             setLoading(false);
           }
         }
@@ -102,33 +122,36 @@ export function ReviewDetailScreen() {
       return () => {
         isMounted = false;
       };
-    }, [reviewId])
+    }, [reviewId]),
   );
 
   // Load comments
-  const loadComments = useCallback(async (page: number, reset: boolean = false) => {
-    if (reset) {
-      setCommentsLoading(true);
-    } else {
-      setLoadingMoreComments(true);
-    }
-
-    try {
-      const response = await apiClient.getReviewComments(reviewId, page);
+  const loadComments = useCallback(
+    async (page: number, reset: boolean = false) => {
       if (reset) {
-        setComments(response.comments);
+        setCommentsLoading(true);
       } else {
-        setComments((prev) => [...prev, ...response.comments]);
+        setLoadingMoreComments(true);
       }
-      setHasMoreComments(response.pagination.has_next_page);
-      setCommentsPage(page);
-    } catch (error) {
-      console.error('Failed to load comments:', error);
-    } finally {
-      setCommentsLoading(false);
-      setLoadingMoreComments(false);
-    }
-  }, [reviewId]);
+
+      try {
+        const response = await apiClient.getReviewComments(reviewId, page);
+        if (reset) {
+          setComments(response.comments);
+        } else {
+          setComments((prev) => [...prev, ...response.comments]);
+        }
+        setHasMoreComments(response.pagination.has_next_page);
+        setCommentsPage(page);
+      } catch (error) {
+        console.error("Failed to load comments:", error);
+      } finally {
+        setCommentsLoading(false);
+        setLoadingMoreComments(false);
+      }
+    },
+    [reviewId],
+  );
 
   useEffect(() => {
     loadComments(1, true);
@@ -150,8 +173,8 @@ export function ReviewDetailScreen() {
         setLikesCount(response.likes_count);
       }
     } catch (error) {
-      console.error('Failed to like/unlike review:', error);
-      Alert.alert('Error', 'Failed to update like status');
+      console.error("Failed to like/unlike review:", error);
+      Alert.alert("Error", "Failed to update like status");
     } finally {
       setIsLiking(false);
     }
@@ -161,14 +184,15 @@ export function ReviewDetailScreen() {
   const handleShare = async () => {
     if (!review) return;
     try {
-      const authorName = review.author?.username || review.user?.username || username;
+      const authorName =
+        review.author?.username || review.user?.username || username;
       const shareUrl = `https://goodsongs.app/users/${authorName}/reviews/${review.id}`;
       await Share.share({
         message: `Check out this song recommendation on GoodSongs: "${review.song_name}" by ${review.band_name}\n\n${shareUrl}`,
         url: shareUrl,
       });
     } catch (error) {
-      console.error('Failed to share:', error);
+      console.error("Failed to share:", error);
     }
   };
 
@@ -185,40 +209,87 @@ export function ReviewDetailScreen() {
       setComments(response.comments);
       setCommentsPage(1);
       setHasMoreComments(response.pagination.has_next_page);
-      setNewComment('');
+      setNewComment("");
+      setInputKey((k) => k + 1);
+      Keyboard.dismiss();
     } catch (error) {
-      console.error('Failed to post comment:', error);
-      Alert.alert('Error', 'Failed to post comment');
+      console.error("Failed to post comment:", error);
+      Alert.alert("Error", "Failed to post comment");
     } finally {
       setIsSubmittingComment(false);
+    }
+  };
+
+  // Handle like/unlike comment
+  const handleLikeComment = async (comment: ReviewComment) => {
+    if (likingCommentId !== null) return;
+
+    setLikingCommentId(comment.id);
+    try {
+      if (comment.liked_by_current_user) {
+        const response = await apiClient.unlikeComment(comment.id);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id
+              ? {
+                  ...c,
+                  liked_by_current_user: false,
+                  likes_count: response.likes_count,
+                }
+              : c,
+          ),
+        );
+      } else {
+        const response = await apiClient.likeComment(comment.id);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id
+              ? {
+                  ...c,
+                  liked_by_current_user: true,
+                  likes_count: response.likes_count,
+                }
+              : c,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Failed to like/unlike comment:", error);
+    } finally {
+      setLikingCommentId(null);
     }
   };
 
   // Handle delete comment
   const handleDeleteComment = async (commentId: number) => {
     Alert.alert(
-      'Delete Comment',
-      'Are you sure you want to delete this comment?',
+      "Delete Comment",
+      "Are you sure you want to delete this comment?",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             setDeletingCommentId(commentId);
             try {
               await apiClient.deleteReviewComment(reviewId, commentId);
               setComments((prev) => prev.filter((c) => c.id !== commentId));
             } catch (error) {
-              console.error('Failed to delete comment:', error);
-              Alert.alert('Error', 'Failed to delete comment');
+              console.error("Failed to delete comment:", error);
+              Alert.alert("Error", "Failed to delete comment");
             } finally {
               setDeletingCommentId(null);
             }
           },
         },
-      ]
+      ],
     );
+  };
+
+  // Handle reply to comment
+  const handleReply = (username: string) => {
+    setNewComment(`@${username} `);
   };
 
   // Format time ago for comments
@@ -227,26 +298,27 @@ export function ReviewDetailScreen() {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 60) return "just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 604800)}w`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   // Handle author press
   const handleAuthorPress = (authorUsername: string) => {
     if (authorUsername === currentUser?.username) {
-      navigation.navigate('Main', { screen: 'Profile' });
+      navigation.navigate("Main", { screen: "Profile" });
     } else {
-      navigation.navigate('UserProfile', { username: authorUsername });
+      navigation.navigate("UserProfile", { username: authorUsername });
     }
   };
 
   // Handle band press
   const handleBandPress = (slug: string) => {
-    navigation.navigate('BandProfile', { slug });
+    navigation.navigate("BandProfile", { slug });
   };
 
   // Handle open link
@@ -266,12 +338,13 @@ export function ReviewDetailScreen() {
   // Navigate to edit screen
   const handleEditReview = () => {
     if (review) {
-      const likedAspects = review.liked_aspects?.map((aspect) =>
-        typeof aspect === 'string' ? aspect : aspect.name || String(aspect)
-      ) || [];
+      const likedAspects =
+        review.liked_aspects?.map((aspect) =>
+          typeof aspect === "string" ? aspect : aspect.name || String(aspect),
+        ) || [];
 
-      navigation.navigate('Main', {
-        screen: 'CreateReview',
+      navigation.navigate("Main", {
+        screen: "CreateReview",
         params: {
           reviewId: review.id,
           song_name: review.song_name,
@@ -287,12 +360,13 @@ export function ReviewDetailScreen() {
   };
 
   // Check if current user is the review owner
-  const isOwner = currentUser && review && (
-    currentUser.id === review.author?.id ||
-    currentUser.id === review.user?.id ||
-    currentUser.username === review.author?.username ||
-    currentUser.username === review.user?.username
-  );
+  const isOwner =
+    currentUser &&
+    review &&
+    (currentUser.id === review.author?.id ||
+      currentUser.id === review.user?.id ||
+      currentUser.username === review.author?.username ||
+      currentUser.username === review.user?.username);
 
   if (loading) {
     return <LoadingScreen />;
@@ -300,11 +374,15 @@ export function ReviewDetailScreen() {
 
   if (error || !review) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <Header title="Review" showBackButton onBackPress={() => navigation.goBack()} />
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <Header
+          title="Review"
+          showBackButton
+          onBackPress={() => navigation.goBack()}
+        />
         <View style={styles.errorContainer}>
           <IconAlertCircle size={48} color={colors.grape[4]} />
-          <Text style={styles.errorText}>{error || 'Review not found'}</Text>
+          <Text style={styles.errorText}>{error || "Review not found"}</Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -316,22 +394,30 @@ export function ReviewDetailScreen() {
     );
   }
 
-  const authorUsername = review.author?.username || review.user?.username || username;
+  const authorUsername =
+    review.author?.username || review.user?.username || username;
   const authorProfileImage = review.author?.profile_image_url;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <Header title="Review" showBackButton onBackPress={() => navigation.goBack()} />
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <Header
+        title="Review"
+        showBackButton
+        onBackPress={() => navigation.goBack()}
+      />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior="padding"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          extraScrollHeight={100}
+          enableOnAndroid
+          enableResetScrollToCoords={false}
         >
           {/* Review Card - matching ReviewCard component design */}
           <View style={styles.card}>
@@ -348,7 +434,9 @@ export function ReviewDetailScreen() {
               />
               <View style={styles.authorInfo}>
                 <Text style={styles.authorName}>@{authorUsername}</Text>
-                <Text style={styles.dateText}>{formatDate(review.created_at)}</Text>
+                <Text style={styles.dateText}>
+                  {formatDate(review.created_at)}
+                </Text>
               </View>
               {isOwner && (
                 <TouchableOpacity
@@ -367,7 +455,7 @@ export function ReviewDetailScreen() {
                 <View style={styles.songInfo}>
                   {review.artwork_url ? (
                     <FastImage
-                      source={{ uri: fixImageUrl(review.artwork_url) || '' }}
+                      source={{ uri: fixImageUrl(review.artwork_url) || "" }}
                       style={styles.artwork}
                       resizeMode={FastImage.resizeMode.cover}
                     />
@@ -379,7 +467,9 @@ export function ReviewDetailScreen() {
                       {review.song_name}
                     </Text>
                     <TouchableOpacity
-                      onPress={() => review.band?.slug && handleBandPress(review.band.slug)}
+                      onPress={() =>
+                        review.band?.slug && handleBandPress(review.band.slug)
+                      }
                       disabled={!review.band?.slug}
                     >
                       <Text style={styles.bandName} numberOfLines={1}>
@@ -389,14 +479,22 @@ export function ReviewDetailScreen() {
                   </View>
                 </View>
                 {review.song_link && (
-                  <TouchableOpacity onPress={handleOpenLink} style={styles.linkButton}>
+                  <TouchableOpacity
+                    onPress={handleOpenLink}
+                    style={styles.linkButton}
+                  >
                     <IconExternalLink size={20} color={colors.grape[6]} />
                   </TouchableOpacity>
                 )}
               </View>
 
               {/* Review Text - full text, not truncated */}
-              <Text style={styles.reviewText}>{review.review_text}</Text>
+              <MentionText
+                text={
+                  (review as any).formatted_review_text || review.review_text
+                }
+                style={styles.reviewText}
+              />
 
               {/* Tags */}
               {review.liked_aspects && review.liked_aspects.length > 0 && (
@@ -405,7 +503,7 @@ export function ReviewDetailScreen() {
                     <Tag
                       key={index}
                       text={
-                        typeof aspect === 'string'
+                        typeof aspect === "string"
                           ? aspect
                           : aspect.name || String(aspect)
                       }
@@ -418,7 +516,10 @@ export function ReviewDetailScreen() {
             {/* Actions Row */}
             <View style={styles.actionsRow}>
               {/* Share Button */}
-              <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleShare}
+              >
                 <IconShare size={22} color={colors.grape[6]} />
               </TouchableOpacity>
 
@@ -444,7 +545,12 @@ export function ReviewDetailScreen() {
                   <IconHeart size={22} color={colors.grape[6]} />
                 )}
                 {likesCount > 0 && (
-                  <Text style={[styles.actionCount, isLiked && styles.actionCountLiked]}>
+                  <Text
+                    style={[
+                      styles.actionCount,
+                      isLiked && styles.actionCountLiked,
+                    ]}
+                  >
                     {likesCount}
                   </Text>
                 )}
@@ -473,13 +579,18 @@ export function ReviewDetailScreen() {
                 {comments.map((comment, index) => {
                   const commentAuthor = comment.author || {
                     id: 0,
-                    username: 'unknown',
+                    username: "unknown",
                     profile_image_url: undefined,
                   };
                   return (
-                    <View key={comment.id ?? `comment-${index}`} style={styles.commentItem}>
+                    <View
+                      key={comment.id ?? `comment-${index}`}
+                      style={styles.commentItem}
+                    >
                       <TouchableOpacity
-                        onPress={() => handleAuthorPress(commentAuthor.username)}
+                        onPress={() =>
+                          handleAuthorPress(commentAuthor.username)
+                        }
                       >
                         <ProfilePhoto
                           src={commentAuthor.profile_image_url}
@@ -491,7 +602,9 @@ export function ReviewDetailScreen() {
                       <View style={styles.commentContent}>
                         <View style={styles.commentHeader}>
                           <TouchableOpacity
-                            onPress={() => handleAuthorPress(commentAuthor.username)}
+                            onPress={() =>
+                              handleAuthorPress(commentAuthor.username)
+                            }
                           >
                             <Text style={styles.commentAuthor}>
                               @{commentAuthor.username}
@@ -500,21 +613,75 @@ export function ReviewDetailScreen() {
                           <Text style={styles.commentTime}>
                             {formatTimeAgo(comment.created_at)}
                           </Text>
-                          {currentUser?.id === commentAuthor.id && comment.id && (
+                          {currentUser?.id === commentAuthor.id &&
+                            comment.id && (
+                              <TouchableOpacity
+                                onPress={() => handleDeleteComment(comment.id)}
+                                disabled={deletingCommentId === comment.id}
+                                style={styles.deleteButton}
+                              >
+                                {deletingCommentId === comment.id ? (
+                                  <ActivityIndicator
+                                    size="small"
+                                    color="#ef4444"
+                                  />
+                                ) : (
+                                  <IconTrash size={14} color="#ef4444" />
+                                )}
+                              </TouchableOpacity>
+                            )}
+                        </View>
+                        <View style={styles.commentBodyRow}>
+                          <MentionText
+                            text={comment.formatted_body || comment.body}
+                            style={styles.commentBody}
+                          />
+                          {/* Comment Actions */}
+                          <View style={styles.commentActions}>
+                            {/* Reply Button */}
+                            {currentUser && (
+                              <TouchableOpacity
+                                style={styles.commentActionButton}
+                                onPress={() =>
+                                  handleReply(commentAuthor.username)
+                                }
+                              >
+                                <IconArrowBackUp
+                                  size={14}
+                                  color={colors.grape[5]}
+                                />
+                              </TouchableOpacity>
+                            )}
+                            {/* Like Button */}
                             <TouchableOpacity
-                              onPress={() => handleDeleteComment(comment.id)}
-                              disabled={deletingCommentId === comment.id}
-                              style={styles.deleteButton}
+                              style={styles.commentActionButton}
+                              onPress={() => handleLikeComment(comment)}
+                              disabled={likingCommentId === comment.id}
                             >
-                              {deletingCommentId === comment.id ? (
-                                <ActivityIndicator size="small" color="#ef4444" />
+                              {likingCommentId === comment.id ? (
+                                <ActivityIndicator
+                                  size="small"
+                                  color={colors.grape[5]}
+                                />
+                              ) : comment.liked_by_current_user ? (
+                                <IconHeartFilled size={14} color="#ef4444" />
                               ) : (
-                                <IconTrash size={14} color="#ef4444" />
+                                <IconHeart size={14} color={colors.grape[5]} />
+                              )}
+                              {comment.likes_count > 0 && (
+                                <Text
+                                  style={[
+                                    styles.commentLikeCount,
+                                    comment.liked_by_current_user &&
+                                      styles.commentLikeCountLiked,
+                                  ]}
+                                >
+                                  {comment.likes_count}
+                                </Text>
                               )}
                             </TouchableOpacity>
-                          )}
+                          </View>
                         </View>
-                        <Text style={styles.commentBody}>{comment.body}</Text>
                       </View>
                     </View>
                   );
@@ -529,37 +696,45 @@ export function ReviewDetailScreen() {
                     {loadingMoreComments ? (
                       <ActivityIndicator size="small" color={colors.grape[6]} />
                     ) : (
-                      <Text style={styles.loadMoreText}>Load more comments</Text>
+                      <Text style={styles.loadMoreText}>
+                        Load more comments
+                      </Text>
                     )}
                   </TouchableOpacity>
                 )}
               </View>
             )}
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
-        {/* Comment Input */}
+        {/* Comment Input - Fixed at bottom */}
         {currentUser ? (
-          <View style={[styles.commentInputContainer, { paddingBottom: theme.spacing.md + insets.bottom }]}>
+          <View
+            style={[
+              styles.commentInputContainer,
+              { paddingBottom: theme.spacing.md + insets.bottom },
+            ]}
+          >
             <ProfilePhoto
               src={currentUser.profile_image_url}
-              alt={currentUser.username || ''}
+              alt={currentUser.username || ""}
               size={36}
-              fallback={currentUser.username || '?'}
+              fallback={currentUser.username || "?"}
             />
-            <TextInput
+            <MentionTextInput
+              key={inputKey}
               style={styles.commentInput}
-              placeholder="Add a comment..."
+              placeholder="Add a comment... Use @ to mention"
               placeholderTextColor={colors.grape[4]}
               value={newComment}
               onChangeText={setNewComment}
               maxLength={300}
-              multiline
             />
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                (!newComment.trim() || isSubmittingComment) && styles.sendButtonDisabled,
+                (!newComment.trim() || isSubmittingComment) &&
+                  styles.sendButtonDisabled,
               ]}
               onPress={handleSubmitComment}
               disabled={!newComment.trim() || isSubmittingComment}
@@ -572,7 +747,12 @@ export function ReviewDetailScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={[styles.loginPrompt, { paddingBottom: theme.spacing.md + insets.bottom }]}>
+          <View
+            style={[
+              styles.loginPrompt,
+              { paddingBottom: theme.spacing.md + insets.bottom },
+            ]}
+          >
             <Text style={styles.loginPromptText}>
               Log in to leave a comment
             </Text>
@@ -599,15 +779,15 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.spacing.xl,
     gap: theme.spacing.md,
   },
   errorText: {
     fontSize: theme.fontSizes.base,
     color: colors.grape[6],
-    textAlign: 'center',
+    textAlign: "center",
   },
   backButton: {
     backgroundColor: theme.colors.primary,
@@ -618,7 +798,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: colors.grape[0],
     fontSize: theme.fontSizes.base,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   // Card - matching ReviewCard design
   card: {
@@ -627,8 +807,8 @@ const styles = StyleSheet.create({
   },
   // Author Row
   authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
   },
@@ -653,21 +833,21 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     borderBottomWidth: 2,
     borderBottomColor: colors.grape[2],
-    borderStyle: 'dotted',
+    borderStyle: "dotted",
     paddingBottom: theme.spacing.md,
   },
   songRow: {
     backgroundColor: colors.grape[2],
     borderRadius: theme.radii.sm,
     padding: theme.spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: theme.spacing.sm,
   },
   songInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.sm,
     flex: 1,
   },
@@ -704,23 +884,23 @@ const styles = StyleSheet.create({
   },
   // Tags
   tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.spacing.xs,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: theme.spacing.sm,
   },
   // Actions Row
   actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.xs,
     padding: theme.spacing.xs,
   },
@@ -729,7 +909,7 @@ const styles = StyleSheet.create({
     color: colors.grape[6],
   },
   actionCountLiked: {
-    color: '#ef4444',
+    color: "#ef4444",
   },
   // Comments Section
   commentsSection: {
@@ -743,36 +923,36 @@ const styles = StyleSheet.create({
   },
   commentsLoading: {
     padding: theme.spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   noComments: {
     padding: theme.spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   noCommentsText: {
     fontSize: theme.fontSizes.sm,
     color: colors.grape[5],
-    textAlign: 'center',
+    textAlign: "center",
   },
   commentsList: {
     gap: theme.spacing.md,
   },
   commentItem: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   commentContent: {
     flex: 1,
   },
   commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.xs,
     marginBottom: 4,
   },
   commentAuthor: {
     fontSize: theme.fontSizes.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.grape[7],
   },
   commentTime: {
@@ -780,27 +960,53 @@ const styles = StyleSheet.create({
     color: colors.grape[5],
   },
   deleteButton: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
     padding: 4,
   },
+  commentBodyRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.sm,
+  },
   commentBody: {
+    flex: 1,
     fontSize: theme.fontSizes.sm,
     color: colors.grey[8],
     lineHeight: 20,
   },
+  commentActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  commentActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+  },
+  commentLikeCount: {
+    fontSize: theme.fontSizes.xs,
+    color: colors.grape[5],
+  },
+  commentLikeCountLiked: {
+    color: "#ef4444",
+  },
   loadMoreButton: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.sm,
   },
   loadMoreText: {
     fontSize: theme.fontSizes.sm,
     color: colors.grape[6],
-    fontWeight: '500',
+    fontWeight: "500",
   },
   // Comment Input
   commentInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "center",
     gap: theme.spacing.sm,
     padding: theme.spacing.md,
     borderTopWidth: 1,
@@ -815,22 +1021,22 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     fontSize: theme.fontSizes.base,
     color: colors.grape[8],
-    maxHeight: 100,
+    textAlignVertical: "top",
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   sendButtonDisabled: {
     backgroundColor: colors.grape[3],
   },
   loginPrompt: {
     padding: theme.spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: colors.grape[2],
   },

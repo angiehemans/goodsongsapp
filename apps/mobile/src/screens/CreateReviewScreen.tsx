@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "@react-native-vector-icons/feather";
-import { Header, TextInput, Button } from "@/components";
+import { Header, TextInput, Button, MentionTextInput } from "@/components";
 import { theme, colors } from "@/theme";
 import { apiClient, ArtworkOption, DiscogsSearchResult } from "@/utils/api";
 import { fixImageUrl } from "@/utils/imageUrl";
@@ -846,9 +846,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
               <View style={styles.reviewSection}>
                 <Text style={styles.label}>Your Recommendation *</Text>
                 <View style={styles.textAreaContainer}>
-                  <RNTextInput
+                  <MentionTextInput
                     style={styles.textArea}
-                    placeholder="Share why you love this song..."
+                    placeholder="Share why you love this song... Use @ to mention"
                     placeholderTextColor={colors.grape[4]}
                     value={formData.review_text}
                     onChangeText={(text: string) =>
@@ -1004,9 +1004,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
               <View style={styles.reviewSection}>
                 <Text style={styles.label}>Your Recommendation *</Text>
                 <View style={styles.textAreaContainer}>
-                  <RNTextInput
+                  <MentionTextInput
                     style={styles.textArea}
-                    placeholder="Share why you love this song..."
+                    placeholder="Share why you love this song... Use @ to mention"
                     placeholderTextColor={colors.grape[4]}
                     value={formData.review_text}
                     onChangeText={(text: string) =>

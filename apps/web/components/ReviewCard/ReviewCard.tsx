@@ -16,6 +16,7 @@ import {
 import html2canvas from 'html2canvas';
 import { ActionIcon, Card, Center, Group, Menu, Spoiler, Stack, Text } from '@mantine/core';
 import { CommentsDrawer } from '@/components/CommentsDrawer/CommentsDrawer';
+import { MentionText } from '@/components/MentionText/MentionText';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { apiClient, Review } from '@/lib/api';
 import styles from './ReviewCard.module.css';
@@ -284,9 +285,11 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
             },
           }}
         >
-          <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-            {review.review_text}
-          </Text>
+          <MentionText
+            text={review.formatted_review_text || review.review_text}
+            size="sm"
+            style={{ whiteSpace: 'pre-wrap' }}
+          />
         </Spoiler>
 
         {/* Tags */}

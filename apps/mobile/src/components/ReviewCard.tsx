@@ -18,6 +18,7 @@ import {
 } from "@tabler/icons-react-native";
 import { Review } from "@goodsongs/api-client";
 import { ProfilePhoto } from "./ProfilePhoto";
+import { MentionText } from "./MentionText";
 import { Tag } from "./Tag";
 import { theme, colors } from "@/theme";
 import { fixImageUrl } from "@/utils/imageUrl";
@@ -161,9 +162,11 @@ export const ReviewCard = memo(function ReviewCard({
         </View>
 
         {/* Review Text */}
-        <Text style={styles.reviewText} numberOfLines={3}>
-          {review.review_text}
-        </Text>
+        <MentionText
+          text={(review as any).formatted_review_text || review.review_text}
+          style={styles.reviewText}
+          numberOfLines={3}
+        />
 
         {/* Tags */}
         {review.liked_aspects && review.liked_aspects.length > 0 && (

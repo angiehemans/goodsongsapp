@@ -72,7 +72,8 @@ function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
     review_text: item.review_text,
     created_at: item.created_at,
     likes_count: item.likes_count,
-    comments_count: 0,
+    liked_by_current_user: item.liked_by_current_user,
+    comments_count: item.comments_count,
     author: item.author,
   }));
 }

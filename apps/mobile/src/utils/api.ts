@@ -25,14 +25,29 @@ export interface DiscoverPagination {
 export interface ReviewComment {
   id: number;
   body: string;
+  formatted_body?: string;
   created_at: string;
   updated_at: string;
+  likes_count: number;
+  liked_by_current_user: boolean;
   author: {
     id: number;
     username: string;
     display_name?: string;
     profile_image_url?: string;
   };
+  mentions?: {
+    user_id: number;
+    username: string;
+    display_name: string;
+  }[];
+}
+
+export interface UserSearchResult {
+  id: number;
+  username: string;
+  display_name: string;
+  profile_image_url?: string;
 }
 import type {
   ScrobbleTrack,
@@ -141,6 +156,8 @@ export interface FanDashboardFeedItem {
   };
   created_at: string;
   likes_count: number;
+  comments_count: number;
+  liked_by_current_user?: boolean;
 }
 
 export interface FanDashboardRecentlyPlayed {
@@ -568,6 +585,22 @@ class MobileApiClient {
     });
   }
 
+  async likeComment(
+    commentId: number
+  ): Promise<{ message: string; liked: boolean; likes_count: number }> {
+    return this.request(`/comments/${commentId}/like`, {
+      method: 'POST',
+    });
+  }
+
+  async unlikeComment(
+    commentId: number
+  ): Promise<{ message: string; liked: boolean; likes_count: number }> {
+    return this.request(`/comments/${commentId}/like`, {
+      method: 'DELETE',
+    });
+  }
+
   // User Reviews with pagination
   async getUserReviewsPaginated(
     userId: number,
@@ -608,6 +641,14 @@ class MobileApiClient {
 
   async markAllNotificationsAsRead(): Promise<{ message: string }> {
     return this.request('/notifications/read_all', { method: 'PATCH' });
+  }
+
+  // User Search (for mentions)
+  async searchUsers(query: string): Promise<{ users: UserSearchResult[] }> {
+    if (query.length < 2) {
+      return { users: [] };
+    }
+    return this.request(`/users/search?q=${encodeURIComponent(query)}`);
   }
 
   // Profile Update

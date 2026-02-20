@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   TextInput as RNTextInput,
@@ -7,11 +7,11 @@ import {
   TextInputProps as RNTextInputProps,
   ViewStyle,
   TouchableOpacity,
-} from 'react-native';
-import Icon from '@react-native-vector-icons/feather';
-import { theme, colors } from '@/theme';
+} from "react-native";
+import Icon from "@react-native-vector-icons/feather";
+import { theme, colors } from "@/theme";
 
-type IconName = React.ComponentProps<typeof Icon>['name'];
+type IconName = React.ComponentProps<typeof Icon>["name"];
 
 interface TextInputProps extends RNTextInputProps {
   label?: string;
@@ -51,7 +51,7 @@ export function TextInput({
           style={[styles.input, leftIcon && styles.inputWithLeftIcon]}
           placeholderTextColor={colors.grape[4]}
           secureTextEntry={isPassword && !isPasswordVisible}
-          autoCapitalize={isPassword ? 'none' : props.autoCapitalize}
+          autoCapitalize={isPassword ? "none" : props.autoCapitalize}
           autoCorrect={isPassword ? false : props.autoCorrect}
           {...props}
         />
@@ -61,7 +61,7 @@ export function TextInput({
             style={styles.rightIconButton}
           >
             <Icon
-              name={isPasswordVisible ? 'eye-off' : 'eye'}
+              name={isPasswordVisible ? "eye-off" : "eye"}
               size={18}
               color={colors.grape[6]}
             />
@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
     borderColor: colors.grape[6],

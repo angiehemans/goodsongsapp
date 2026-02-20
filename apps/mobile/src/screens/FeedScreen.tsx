@@ -204,7 +204,8 @@ export function FeedScreen({ navigation, route }: Props) {
       review_text: item.review_text,
       created_at: item.created_at,
       likes_count: item.likes_count,
-      comments_count: 0,
+      liked_by_current_user: item.liked_by_current_user,
+      comments_count: item.comments_count,
       author: {
         id: item.author.id,
         username: item.author.username,

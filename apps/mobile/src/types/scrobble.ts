@@ -87,6 +87,7 @@ export interface PendingScrobbleLocal {
   durationMs: number;
   sourceApp: string;
   playedAt: number;
+  syncAttempts: number;
   // Extended metadata
   albumArtist?: string;
   genre?: string;

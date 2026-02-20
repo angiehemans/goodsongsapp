@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { IconBell, IconCheck, IconChecks, IconHeart, IconMessage, IconMusic, IconUserPlus } from '@tabler/icons-react';
+import { IconAt, IconBell, IconCheck, IconChecks, IconHeart, IconMessage, IconMusic, IconUserPlus } from '@tabler/icons-react';
 import {
   ActionIcon,
   Badge,
@@ -194,6 +194,7 @@ export default function NotificationsPage() {
         return `/users/${notification.actor.username}`;
       case 'review_like':
       case 'review_comment':
+      case 'mention':
         // Link to the review page if we have review info
         if (notification.review?.id && user) {
           return `/users/${user.username}/reviews/${notification.review.id}`;
@@ -214,6 +215,8 @@ export default function NotificationsPage() {
         return <IconHeart size={12} color="white" />;
       case 'review_comment':
         return <IconMessage size={12} color="white" />;
+      case 'mention':
+        return <IconAt size={12} color="white" />;
       default:
         return <IconBell size={12} color="white" />;
     }
@@ -229,6 +232,8 @@ export default function NotificationsPage() {
         return 'var(--mantine-color-red-6)';
       case 'review_comment':
         return 'var(--mantine-color-green-6)';
+      case 'mention':
+        return 'var(--mantine-color-orange-6)';
       default:
         return 'var(--mantine-color-gray-6)';
     }
@@ -254,6 +259,15 @@ export default function NotificationsPage() {
         const songName = notification.review?.song_name || notification.song_name;
         if (songName) return `commented on "${songName}"`;
         return 'commented on your recommendation';
+      }
+      case 'mention': {
+        const songName = notification.review?.song_name || notification.song_name;
+        if (notification.comment) {
+          if (songName) return `mentioned you in a comment on "${songName}"`;
+          return 'mentioned you in a comment';
+        }
+        if (songName) return `mentioned you in "${songName}"`;
+        return 'mentioned you';
       }
       default:
         return 'interacted with you';
@@ -416,7 +430,8 @@ export default function NotificationsPage() {
                         </Text>
 
                         {/* Line 3: Comment preview (if applicable) */}
-                        {getNotificationType(notification) === 'review_comment' &&
+                        {(getNotificationType(notification) === 'review_comment' ||
+                          getNotificationType(notification) === 'mention') &&
                           notification.comment?.body && (
                             <Text size="sm" c="dark" lineClamp={2} fs="italic">
                               "{notification.comment.body}"

@@ -15,11 +15,11 @@ import {
   Paper,
   Stack,
   Text,
-  Textarea,
   TextInput,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, ReviewData } from '@/lib/api';
 import classes from './reviews.module.css';
@@ -262,14 +262,17 @@ function CreateReviewForm() {
                 }}
               />
 
-              <Textarea
-                label="Your Recommendation"
-                placeholder="Share why you love this song..."
-                minRows={4}
-                required
-                value={formData.review_text}
-                onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
-              />
+              <div>
+                <Text component="label" size="sm" fw={500} mb={4} display="block">
+                  Your Recommendation <span style={{ color: 'var(--mantine-color-red-6)' }}>*</span>
+                </Text>
+                <MentionTextarea
+                  placeholder="Share why you love this song... Use @ to mention users"
+                  minRows={4}
+                  value={formData.review_text}
+                  onChange={(value) => setFormData({ ...formData, review_text: value })}
+                />
+              </div>
 
               <Group justify="flex-end">
                 <Button

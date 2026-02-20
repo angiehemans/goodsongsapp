@@ -24,11 +24,11 @@ import {
   Stack,
   TagsInput,
   Text,
-  Textarea,
   TextInput,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
+import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { apiClient, ArtworkOption, DiscogsSearchResult, ReviewData } from '@/lib/api';
 import classes from './RecommendationForm.module.css';
 
@@ -668,14 +668,17 @@ export function RecommendationForm({
                 }}
               />
 
-              <Textarea
-                label="Your Recommendation"
-                placeholder="Share why you love this song..."
-                minRows={4}
-                required
-                value={formData.review_text || ''}
-                onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
-              />
+              <div>
+                <Text component="label" size="sm" fw={500} mb={4} display="block">
+                  Your Recommendation <span style={{ color: 'var(--mantine-color-red-6)' }}>*</span>
+                </Text>
+                <MentionTextarea
+                  placeholder="Share why you love this song... Use @ to mention users"
+                  minRows={4}
+                  value={formData.review_text || ''}
+                  onChange={(value) => setFormData({ ...formData, review_text: value })}
+                />
+              </div>
 
               {/* Advanced accordion for editing song details */}
               <Accordion variant="contained" radius="md">
@@ -750,14 +753,17 @@ export function RecommendationForm({
                 }}
               />
 
-              <Textarea
-                label="Your Recommendation"
-                placeholder="Share why you love this song..."
-                minRows={4}
-                required
-                value={formData.review_text || ''}
-                onChange={(e) => setFormData({ ...formData, review_text: e.target.value })}
-              />
+              <div>
+                <Text component="label" size="sm" fw={500} mb={4} display="block">
+                  Your Recommendation <span style={{ color: 'var(--mantine-color-red-6)' }}>*</span>
+                </Text>
+                <MentionTextarea
+                  placeholder="Share why you love this song... Use @ to mention users"
+                  minRows={4}
+                  value={formData.review_text || ''}
+                  onChange={(value) => setFormData({ ...formData, review_text: value })}
+                />
+              </div>
             </>
           )}
 

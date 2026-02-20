@@ -22,6 +22,8 @@ class MetadataExtractor(
     companion object {
         private const val TAG = "MetadataExtractor"
         private const val MAX_ARTWORK_SIZE = 4 * 1024 * 1024 // 4MB limit for base64 (leaves room under 5MB API limit)
+        private const val MAX_ARTWORK_DIMENSION = 300 // Max width/height for artwork
+        private const val WEBP_QUALITY = 75 // WebP quality (75 looks similar to JPEG 85 but smaller)
     }
 
     /**
@@ -228,13 +230,22 @@ class MetadataExtractor(
                 return null
             }
 
-            // Scale down if too large (max 500x500 to keep base64 size reasonable)
-            val scaledBitmap = scaleBitmapIfNeeded(bitmap, 500)
+            // Scale down to max dimensions to keep file size small
+            val scaledBitmap = scaleBitmapIfNeeded(bitmap, MAX_ARTWORK_DIMENSION)
 
-            // Convert to base64 JPEG
+            // Convert to base64 WebP (smaller than JPEG at same quality)
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // Android 11+ has WEBP_LOSSY for better control
+                scaledBitmap.compress(Bitmap.CompressFormat.WEBP_LOSSY, WEBP_QUALITY, outputStream)
+            } else {
+                // Older Android uses WEBP (lossy for photos)
+                @Suppress("DEPRECATION")
+                scaledBitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, outputStream)
+            }
             val bytes = outputStream.toByteArray()
+
+            Log.d(TAG, "getArtworkBase64: compressed to ${bytes.size} bytes (${scaledBitmap.width}x${scaledBitmap.height})")
 
             // Check size limit
             if (bytes.size > MAX_ARTWORK_SIZE) {
@@ -243,7 +254,7 @@ class MetadataExtractor(
             }
 
             val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-            return "data:image/jpeg;base64,$base64"
+            return "data:image/webp;base64,$base64"
         } catch (e: Exception) {
             Log.w(TAG, "Failed to extract artwork: ${e.message}")
             return null

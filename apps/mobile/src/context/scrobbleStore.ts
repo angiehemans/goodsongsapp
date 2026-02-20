@@ -40,6 +40,9 @@ interface ScrobbleStoreState {
 
 let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Max number of sync attempts before giving up on a scrobble
+const MAX_SYNC_RETRIES = 5;
+
 export const useScrobbleStore = create<ScrobbleStoreState>((set, get) => ({
   status: ScrobbleStatus.notSetUp,
   appSettings: [],
@@ -110,17 +113,53 @@ export const useScrobbleStore = create<ScrobbleStoreState>((set, get) => ({
 
     set({ syncing: true });
     try {
+      // Remove any scrobbles that have exceeded max retries
+      const removedCount = await scrobbleNative.removeScrobblesExceedingRetries(MAX_SYNC_RETRIES);
+      if (removedCount > 0) {
+        console.log(`Removed ${removedCount} scrobbles that exceeded ${MAX_SYNC_RETRIES} retry attempts`);
+      }
+
       const pending = await scrobbleNative.getRecentPendingScrobbles(1000);
       if (pending.length === 0) return true;
 
-      const BATCH_SIZE = 50;
       const syncedIds: string[] = [];
+      const failedIds: string[] = [];
 
       // Get device model for source_device field
       const deviceModel = getDeviceModel();
 
-      for (let i = 0; i < pending.length; i += BATCH_SIZE) {
-        const batch = pending.slice(i, i + BATCH_SIZE);
+      // Estimate payload size for a batch of scrobbles
+      const estimatePayloadSize = (scrobbles: typeof pending) => {
+        return scrobbles.reduce((total, s) => {
+          const baseSize = 300; // Approximate size of base fields in JSON
+          const artworkSize = s.albumArt?.length || 0;
+          const uriSize = s.artworkUri?.length || 0;
+          return total + baseSize + artworkSize + uriSize;
+        }, 0);
+      };
+
+      // Target max ~500KB per request to stay well under HTTP limits
+      const MAX_PAYLOAD_BYTES = 500 * 1024;
+      const DEFAULT_BATCH_SIZE = 50;
+      const MIN_BATCH_SIZE = 5;
+
+      let i = 0;
+      while (i < pending.length) {
+        // Calculate optimal batch size for this segment
+        let batchSize = DEFAULT_BATCH_SIZE;
+        const testBatch = pending.slice(i, i + DEFAULT_BATCH_SIZE);
+        const estimatedSize = estimatePayloadSize(testBatch);
+
+        if (estimatedSize > MAX_PAYLOAD_BYTES) {
+          // Reduce batch size proportionally, with a minimum of MIN_BATCH_SIZE
+          batchSize = Math.max(
+            MIN_BATCH_SIZE,
+            Math.floor(DEFAULT_BATCH_SIZE * (MAX_PAYLOAD_BYTES / estimatedSize))
+          );
+          console.log(`Large payload detected (~${Math.round(estimatedSize / 1024)}KB), reducing batch size to ${batchSize}`);
+        }
+
+        const batch = pending.slice(i, i + batchSize);
         const apiScrobbles = batch.map((s) => ({
           track_name: s.trackName,
           artist_name: s.artistName,
@@ -139,15 +178,40 @@ export const useScrobbleStore = create<ScrobbleStoreState>((set, get) => ({
         }));
 
         try {
-          await apiClient.submitScrobbles(apiScrobbles);
-          syncedIds.push(...batch.map((s) => s.id));
+          const response = await apiClient.submitScrobbles(apiScrobbles);
+
+          if (response.data?.accepted > 0) {
+            // Only mark as synced if API actually accepted them
+            syncedIds.push(...batch.map((s) => s.id));
+            console.log(`Synced ${response.data.accepted} scrobbles (${response.data.rejected} rejected)`);
+          } else if (response.data?.rejected > 0) {
+            // All were rejected - log but don't retry (likely invalid data)
+            console.warn(`All ${response.data.rejected} scrobbles in batch were rejected by API`);
+            // Still remove them to prevent infinite retry of bad data
+            syncedIds.push(...batch.map((s) => s.id));
+          } else {
+            // Unexpected response - don't remove, will retry
+            console.warn('Unexpected API response:', response);
+            failedIds.push(...batch.map((s) => s.id));
+          }
         } catch (error) {
-          console.warn('Failed to sync scrobble batch:', error);
+          console.warn(`Failed to sync scrobble batch (${batch.length} tracks):`, error);
+          // Track failed IDs and increment their retry count
+          const batchIds = batch.map((s) => s.id);
+          failedIds.push(...batchIds);
+          await scrobbleNative.incrementSyncAttempts(batchIds);
         }
+
+        i += batchSize;
       }
 
+      // Only remove successfully synced scrobbles
       if (syncedIds.length > 0) {
         await scrobbleNative.removeSyncedScrobbles(syncedIds);
+      }
+
+      if (failedIds.length > 0) {
+        console.warn(`${failedIds.length} scrobbles failed to sync and will retry`);
       }
 
       await get().refreshPendingCount();

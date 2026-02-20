@@ -23,7 +23,9 @@ type NotificationType =
   | "new_follower"
   | "new_review"
   | "review_like"
-  | "review_comment";
+  | "review_comment"
+  | "comment_like"
+  | "mention";
 
 interface NotificationActor {
   id: number;
@@ -72,7 +74,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export function NotificationsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user: currentUser } = useAuthStore();
-  const { clearUnreadCount } = useNotificationStore();
+  const { clearUnreadCount, pausePolling, resumePolling } = useNotificationStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -110,11 +112,27 @@ export function NotificationsScreen() {
   );
 
   useEffect(() => {
+    // Pause polling while viewing notifications to prevent count from refreshing
+    pausePolling();
+
     fetchNotifications(1);
-    // Mark all as read when viewing and clear badge
-    apiClient.markAllNotificationsAsRead().catch(() => {});
-    clearUnreadCount();
-  }, [fetchNotifications, clearUnreadCount]);
+
+    // Mark all as read and clear badge
+    const markAsRead = async () => {
+      try {
+        await apiClient.markAllNotificationsAsRead();
+      } catch {
+        // Ignore errors
+      }
+      clearUnreadCount();
+    };
+    markAsRead();
+
+    // Resume polling when leaving the screen
+    return () => {
+      resumePolling();
+    };
+  }, [fetchNotifications, clearUnreadCount, pausePolling, resumePolling]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -135,7 +153,7 @@ export function NotificationsScreen() {
 
   const getNotificationIcon = (
     type: NotificationType | undefined,
-  ): "user-plus" | "music" | "heart" | "message-circle" | "bell" => {
+  ): "user-plus" | "music" | "heart" | "message-circle" | "bell" | "at-sign" => {
     switch (type) {
       case "new_follower":
         return "user-plus";
@@ -143,8 +161,12 @@ export function NotificationsScreen() {
         return "music";
       case "review_like":
         return "heart";
+      case "comment_like":
+        return "heart";
       case "review_comment":
         return "message-circle";
+      case "mention":
+        return "at-sign";
       default:
         return "bell";
     }
@@ -158,8 +180,12 @@ export function NotificationsScreen() {
         return styles.reviewBadge;
       case "review_like":
         return styles.likeBadge;
+      case "comment_like":
+        return styles.likeBadge;
       case "review_comment":
         return styles.commentBadge;
+      case "mention":
+        return styles.mentionBadge;
       default:
         return styles.defaultBadge;
     }
@@ -169,6 +195,12 @@ export function NotificationsScreen() {
     type: NotificationType | undefined,
     notification: Notification,
   ): string => {
+    // Use the message from the API if available
+    if (notification.message) {
+      return notification.message;
+    }
+
+    // Fallback to generating text based on type
     switch (type) {
       case "new_follower":
         return "started following you";
@@ -184,11 +216,23 @@ export function NotificationsScreen() {
       }
       case "review_like":
         return "liked your recommendation";
+      case "comment_like":
+        return "liked your comment";
       case "review_comment": {
         const songName =
           notification.review?.song_name || notification.song_name;
         if (songName) return `commented on "${songName}"`;
         return "commented on your recommendation";
+      }
+      case "mention": {
+        const songName =
+          notification.review?.song_name || notification.song_name;
+        if (notification.comment) {
+          if (songName) return `mentioned you in a comment on "${songName}"`;
+          return "mentioned you in a comment";
+        }
+        if (songName) return `mentioned you in "${songName}"`;
+        return "mentioned you";
       }
       default:
         return "interacted with you";
@@ -211,6 +255,8 @@ export function NotificationsScreen() {
         break;
       case "review_like":
       case "review_comment":
+      case "comment_like":
+      case "mention":
         if (notification.review?.id && currentUser) {
           navigation.navigate("ReviewDetail", {
             reviewId: notification.review.id,
@@ -275,11 +321,13 @@ export function NotificationsScreen() {
           </Text>
 
           {/* Line 3: Comment preview (if applicable) */}
-          {notificationType === "review_comment" && item.comment?.body && (
-            <Text style={styles.commentPreview} numberOfLines={2}>
-              "{item.comment.body}"
-            </Text>
-          )}
+          {(notificationType === "review_comment" ||
+            notificationType === "mention") &&
+            item.comment?.body && (
+              <Text style={styles.commentPreview} numberOfLines={2}>
+                "{item.comment.body}"
+              </Text>
+            )}
         </View>
       </TouchableOpacity>
     );
@@ -398,6 +446,9 @@ const styles = StyleSheet.create({
   },
   commentBadge: {
     backgroundColor: "#10b981",
+  },
+  mentionBadge: {
+    backgroundColor: "#f97316",
   },
   defaultBadge: {
     backgroundColor: colors.grape[5],

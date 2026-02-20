@@ -55,6 +55,16 @@ export const scrobbleNative = {
     return ScrobbleNative.removeSyncedScrobbles(ids);
   },
 
+  async incrementSyncAttempts(ids: string[]): Promise<boolean> {
+    if (!ScrobbleNative) return false;
+    return ScrobbleNative.incrementSyncAttempts(ids);
+  },
+
+  async removeScrobblesExceedingRetries(maxRetries: number): Promise<number> {
+    if (!ScrobbleNative) return 0;
+    return ScrobbleNative.removeScrobblesExceedingRetries(maxRetries);
+  },
+
   async getCurrentTrack(): Promise<NowPlayingTrack | null> {
     if (!ScrobbleNative) return null;
     return ScrobbleNative.getCurrentTrack();

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
+  IconArrowBackUp,
   IconBrandInstagram,
   IconCheck,
   IconEdit,
@@ -29,11 +30,12 @@ import {
   Menu,
   Stack,
   Text,
-  Textarea,
   Title,
   UnstyledButton,
 } from '@mantine/core';
 import { Header } from '@/components/Header/Header';
+import { MentionText } from '@/components/MentionText/MentionText';
+import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Review, ReviewComment } from '@/lib/api';
@@ -64,11 +66,13 @@ export default function SingleReviewPage() {
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [likingCommentId, setLikingCommentId] = useState<number | null>(null);
   const [commentsCount, setCommentsCount] = useState(0);
 
 
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
+  const commentInputRef = useRef<HTMLDivElement>(null);
 
   // Proxy external images to avoid CORS issues with html2canvas
   const getProxiedImageUrl = (url: string | undefined) => {
@@ -233,6 +237,47 @@ export default function SingleReviewPage() {
     } finally {
       setDeletingCommentId(null);
     }
+  };
+
+  const handleLikeComment = async (comment: ReviewComment) => {
+    if (likingCommentId !== null) return;
+
+    setLikingCommentId(comment.id);
+    try {
+      if (comment.liked_by_current_user) {
+        const response = await apiClient.unlikeComment(comment.id);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id
+              ? { ...c, liked_by_current_user: false, likes_count: response.likes_count }
+              : c
+          )
+        );
+      } else {
+        const response = await apiClient.likeComment(comment.id);
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id
+              ? { ...c, liked_by_current_user: true, likes_count: response.likes_count }
+              : c
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike comment:', error);
+    } finally {
+      setLikingCommentId(null);
+    }
+  };
+
+  const handleReply = (username: string) => {
+    setNewComment(`@${username} `);
+    // Scroll input into view and focus
+    setTimeout(() => {
+      commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const textarea = commentInputRef.current?.querySelector('textarea');
+      textarea?.focus();
+    }, 100);
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -446,7 +491,10 @@ export default function SingleReviewPage() {
           </div>
 
           {/* Review Text */}
-          <Text className={styles.reviewText}>{review.review_text}</Text>
+          <MentionText
+            text={review.formatted_review_text || review.review_text}
+            className={styles.reviewText}
+          />
 
           {/* Tags */}
           {review.liked_aspects && review.liked_aspects.length > 0 && (
@@ -542,7 +590,7 @@ export default function SingleReviewPage() {
 
           {/* Comment Input */}
           {user ? (
-            <div className={styles.commentInput}>
+            <div ref={commentInputRef} className={styles.commentInput}>
               <Group gap="sm" align="flex-end">
                 <ProfilePhoto
                   src={user.profile_image_url}
@@ -550,21 +598,14 @@ export default function SingleReviewPage() {
                   size={36}
                   fallback={user.username}
                 />
-                <Textarea
-                  placeholder="Add a comment..."
+                <MentionTextarea
+                  placeholder="Add a comment... Use @ to mention users"
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  onChange={setNewComment}
                   maxLength={300}
                   minRows={1}
                   maxRows={4}
                   autosize
-                  style={{ flex: 1 }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmitComment();
-                    }
-                  }}
                 />
                 <ActionIcon
                   variant="filled"
@@ -643,9 +684,51 @@ export default function SingleReviewPage() {
                             </ActionIcon>
                           )}
                         </Group>
-                        <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                          {comment.body}
-                        </Text>
+                        <Group gap="sm" align="flex-start" wrap="nowrap">
+                          <MentionText
+                            text={comment.formatted_body || comment.body}
+                            size="sm"
+                            style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', flex: 1 }}
+                          />
+                          {/* Comment Actions */}
+                          <Group gap={4} align="center" wrap="nowrap">
+                            {/* Reply Button */}
+                            {user && (
+                              <ActionIcon
+                                variant="subtle"
+                                color="gray"
+                                size="xs"
+                                onClick={() => handleReply(author.username)}
+                                title="Reply"
+                              >
+                                <IconArrowBackUp size={14} />
+                              </ActionIcon>
+                            )}
+                            {/* Like Button */}
+                            <ActionIcon
+                              variant="subtle"
+                              color={comment.liked_by_current_user ? 'red' : 'gray'}
+                              size="xs"
+                              onClick={() => handleLikeComment(comment)}
+                              loading={likingCommentId === comment.id}
+                              disabled={!user}
+                            >
+                              {comment.liked_by_current_user ? (
+                                <IconHeartFilled size={14} />
+                              ) : (
+                                <IconHeart size={14} />
+                              )}
+                            </ActionIcon>
+                            {comment.likes_count > 0 && (
+                              <Text
+                                size="xs"
+                                c={comment.liked_by_current_user ? 'red' : 'dimmed'}
+                              >
+                                {comment.likes_count}
+                              </Text>
+                            )}
+                          </Group>
+                        </Group>
                       </Stack>
                     </Group>
                   </div>
