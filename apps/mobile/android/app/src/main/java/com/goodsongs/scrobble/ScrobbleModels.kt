@@ -51,7 +51,8 @@ object DefaultApps {
         AppScrobbleSetting("com.bandcamp.android", "Bandcamp", true),
         AppScrobbleSetting("com.soundcloud.android", "SoundCloud", true),
         AppScrobbleSetting("tv.plex.labs.plexamp", "Plexamp", true),
-        AppScrobbleSetting("app.symfonik.music.player", "Symfonium", true)
+        AppScrobbleSetting("app.symfonik.music.player", "Symfonium", true),
+        AppScrobbleSetting("deezer.android.app", "Deezer", true)
     )
 
     val packageNames = list.map { it.packageName }.toSet()

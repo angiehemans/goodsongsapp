@@ -414,6 +414,12 @@ class MetadataExtractor(
                 }
             }
 
+            // Deezer: text = "Artist Name", subText = album info
+            "deezer.android.app" -> {
+                // Deezer typically shows artist in text field
+                Pair(text, subText)
+            }
+
             else -> Pair(text, subText)
         }
     }
