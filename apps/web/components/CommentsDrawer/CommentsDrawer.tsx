@@ -2,17 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconArrowBackUp, IconHeart, IconHeartFilled, IconSend, IconTrash } from '@tabler/icons-react';
 import {
-  ActionIcon,
-  Button,
-  Center,
-  Drawer,
-  Group,
-  Loader,
-  Stack,
-  Text,
-} from '@mantine/core';
+  IconArrowBackUp,
+  IconHeart,
+  IconHeartFilled,
+  IconSend,
+  IconTrash,
+} from '@tabler/icons-react';
+import { ActionIcon, Button, Center, Drawer, Group, Loader, Stack, Text } from '@mantine/core';
 import { MentionText } from '@/components/MentionText/MentionText';
 import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
@@ -219,7 +216,11 @@ export function CommentsDrawer({
           ) : (
             <Stack gap="md">
               {comments.map((comment, index) => {
-                const author = comment.author || { id: 0, username: 'unknown', profile_image_url: undefined };
+                const author = comment.author || {
+                  id: 0,
+                  username: 'unknown',
+                  profile_image_url: undefined,
+                };
                 return (
                   <div key={comment.id ?? `comment-${index}`} className={styles.comment}>
                     <Group gap="sm" align="flex-start">
@@ -295,10 +296,7 @@ export function CommentsDrawer({
                               )}
                             </ActionIcon>
                             {comment.likes_count > 0 && (
-                              <Text
-                                size="xs"
-                                c={comment.liked_by_current_user ? 'red' : 'dimmed'}
-                              >
+                              <Text size="xs" c={comment.liked_by_current_user ? 'red' : 'dimmed'}>
                                 {comment.likes_count}
                               </Text>
                             )}
@@ -326,7 +324,7 @@ export function CommentsDrawer({
           <div ref={inputContainerRef} className={styles.inputContainer}>
             <Group gap="sm" align="flex-end">
               <MentionTextarea
-                placeholder="Add a comment... Use @ to mention users"
+                placeholder="Add a comment"
                 value={newComment}
                 onChange={setNewComment}
                 maxLength={300}

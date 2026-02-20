@@ -69,7 +69,6 @@ export default function SingleReviewPage() {
   const [likingCommentId, setLikingCommentId] = useState<number | null>(null);
   const [commentsCount, setCommentsCount] = useState(0);
 
-
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLDivElement>(null);
@@ -175,29 +174,32 @@ export default function SingleReviewPage() {
   };
 
   // Load comments
-  const loadComments = useCallback(async (page: number, reset: boolean = false) => {
-    if (reset) {
-      setCommentsLoading(true);
-    } else {
-      setLoadingMoreComments(true);
-    }
-
-    try {
-      const response = await apiClient.getReviewComments(parseInt(reviewId, 10), page);
+  const loadComments = useCallback(
+    async (page: number, reset: boolean = false) => {
       if (reset) {
-        setComments(response.comments);
+        setCommentsLoading(true);
       } else {
-        setComments((prev) => [...prev, ...response.comments]);
+        setLoadingMoreComments(true);
       }
-      setHasMoreComments(response.pagination.has_next_page);
-      setCommentsPage(page);
-    } catch (error) {
-      console.error('Failed to load comments:', error);
-    } finally {
-      setCommentsLoading(false);
-      setLoadingMoreComments(false);
-    }
-  }, [reviewId]);
+
+      try {
+        const response = await apiClient.getReviewComments(parseInt(reviewId, 10), page);
+        if (reset) {
+          setComments(response.comments);
+        } else {
+          setComments((prev) => [...prev, ...response.comments]);
+        }
+        setHasMoreComments(response.pagination.has_next_page);
+        setCommentsPage(page);
+      } catch (error) {
+        console.error('Failed to load comments:', error);
+      } finally {
+        setCommentsLoading(false);
+        setLoadingMoreComments(false);
+      }
+    },
+    [reviewId]
+  );
 
   const handleSubmitComment = async () => {
     if (!newComment.trim() || isSubmittingComment || !user) return;
@@ -293,12 +295,13 @@ export default function SingleReviewPage() {
   };
 
   // Check if user is the review owner
-  const isOwner = user && review && (
-    user.id === review.author?.id ||
-    user.id === review.user?.id ||
-    user.username === review.author?.username ||
-    user.username === review.user?.username
-  );
+  const isOwner =
+    user &&
+    review &&
+    (user.id === review.author?.id ||
+      user.id === review.user?.id ||
+      user.username === review.author?.username ||
+      user.username === review.user?.username);
 
   useEffect(() => {
     async function fetchReview() {
@@ -362,9 +365,10 @@ export default function SingleReviewPage() {
 
   // Get edit URL for navigating to create-review page in edit mode
   const getEditUrl = () => {
-    const likedAspects = review.liked_aspects?.map((aspect) =>
-      typeof aspect === 'string' ? aspect : aspect.name || String(aspect)
-    ) || [];
+    const likedAspects =
+      review.liked_aspects?.map((aspect) =>
+        typeof aspect === 'string' ? aspect : aspect.name || String(aspect)
+      ) || [];
     const params = new URLSearchParams({
       reviewId: String(review.id),
       song_name: review.song_name,
@@ -461,7 +465,13 @@ export default function SingleReviewPage() {
                   bg="grape.1"
                   style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
                 >
-                  <img src="/logo-grape.svg" alt="Good Songs" width={32} height={32} style={{ opacity: 0.8 }} />
+                  <img
+                    src="/logo-grape.svg"
+                    alt="Good Songs"
+                    width={32}
+                    height={32}
+                    style={{ opacity: 0.8 }}
+                  />
                 </Center>
               )}
               <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
@@ -547,11 +557,7 @@ export default function SingleReviewPage() {
 
             {/* Comments Button */}
             <Group gap={4}>
-              <ActionIcon
-                variant="subtle"
-                color="grape.6"
-                aria-label="Comments"
-              >
+              <ActionIcon variant="subtle" color="grape.6" aria-label="Comments">
                 <IconMessage size={20} />
               </ActionIcon>
               {commentsCount > 0 && (
@@ -579,7 +585,6 @@ export default function SingleReviewPage() {
               )}
             </Group>
           </div>
-
         </div>
 
         {/* Comments Section */}
@@ -599,7 +604,7 @@ export default function SingleReviewPage() {
                   fallback={user.username}
                 />
                 <MentionTextarea
-                  placeholder="Add a comment... Use @ to mention users"
+                  placeholder="Add a comment"
                   value={newComment}
                   onChange={setNewComment}
                   maxLength={300}
@@ -624,7 +629,10 @@ export default function SingleReviewPage() {
             </div>
           ) : (
             <Text size="sm" c="dimmed" ta="center" py="md">
-              <Link href="/login" style={{ color: 'var(--mantine-color-grape-6)', fontWeight: 500 }}>
+              <Link
+                href="/login"
+                style={{ color: 'var(--mantine-color-grape-6)', fontWeight: 500 }}
+              >
                 Log in
               </Link>{' '}
               to leave a comment
@@ -645,7 +653,11 @@ export default function SingleReviewPage() {
           ) : (
             <Stack gap="md">
               {comments.map((comment, index) => {
-                const author = comment.author || { id: 0, username: 'unknown', profile_image_url: undefined };
+                const author = comment.author || {
+                  id: 0,
+                  username: 'unknown',
+                  profile_image_url: undefined,
+                };
                 return (
                   <div key={comment.id ?? `comment-${index}`} className={styles.comment}>
                     <Group gap="sm" align="flex-start">
@@ -664,7 +676,10 @@ export default function SingleReviewPage() {
                               fw={500}
                               component={Link}
                               href={`/users/${author.username}`}
-                              style={{ textDecoration: 'none', color: 'var(--mantine-color-grape-7)' }}
+                              style={{
+                                textDecoration: 'none',
+                                color: 'var(--mantine-color-grape-7)',
+                              }}
                             >
                               @{author.username}
                             </Text>
@@ -720,10 +735,7 @@ export default function SingleReviewPage() {
                               )}
                             </ActionIcon>
                             {comment.likes_count > 0 && (
-                              <Text
-                                size="xs"
-                                c={comment.liked_by_current_user ? 'red' : 'dimmed'}
-                              >
+                              <Text size="xs" c={comment.liked_by_current_user ? 'red' : 'dimmed'}>
                                 {comment.likes_count}
                               </Text>
                             )}

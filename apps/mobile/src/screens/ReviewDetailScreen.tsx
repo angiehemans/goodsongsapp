@@ -724,7 +724,7 @@ export function ReviewDetailScreen() {
             <MentionTextInput
               key={inputKey}
               style={styles.commentInput}
-              placeholder="Add a comment... Use @ to mention"
+              placeholder="Add a comment"
               placeholderTextColor={colors.grape[4]}
               value={newComment}
               onChangeText={setNewComment}
