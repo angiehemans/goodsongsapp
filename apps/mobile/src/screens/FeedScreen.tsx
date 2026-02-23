@@ -156,8 +156,8 @@ export function FeedScreen({ navigation, route }: Props) {
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active") {
-        // Refresh dashboard data when app becomes active
-        fetchDashboard();
+        // Refresh dashboard data silently when app becomes active
+        fetchDashboard(true);
         // Also refresh user if email not confirmed (in case they just confirmed)
         if (currentUser?.email_confirmed === false) {
           refreshUser();
@@ -222,7 +222,8 @@ export function FeedScreen({ navigation, route }: Props) {
   };
 
   // Fetch initial dashboard data (optimized single endpoint)
-  const fetchDashboard = useCallback(async () => {
+  // silent mode updates data without affecting loading states (for background refresh)
+  const fetchDashboard = useCallback(async (silent = false) => {
     try {
       const response = await apiClient.getFanDashboard();
 
@@ -258,12 +259,18 @@ export function FeedScreen({ navigation, route }: Props) {
       setHasMore(feedReviews.length >= 5);
     } catch (error) {
       console.error("Failed to fetch dashboard:", error);
-      setReviews([]);
-      setRecentlyPlayed([]);
-      setHasMore(false);
+      // Only clear data on initial load, not on silent refresh
+      if (!silent) {
+        setReviews([]);
+        setRecentlyPlayed([]);
+        setHasMore(false);
+      }
     } finally {
-      setLoading(false);
-      setRecentlyPlayedLoading(false);
+      // Only update loading states on initial load
+      if (!silent) {
+        setLoading(false);
+        setRecentlyPlayedLoading(false);
+      }
     }
   }, [setNotificationInitialCount]);
 
@@ -359,7 +366,8 @@ export function FeedScreen({ navigation, route }: Props) {
         isFirstFocus.current = false;
         return;
       }
-      fetchDashboard();
+      // Use silent mode to avoid UI blinking
+      fetchDashboard(true);
     }, [fetchDashboard])
   );
 

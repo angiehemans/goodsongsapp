@@ -90,8 +90,8 @@ android {
         applicationId "com.goodsongs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "0.1.7"
+        versionCode 9
+        versionName "0.2.0"
     }
     signingConfigs {
         debug {
