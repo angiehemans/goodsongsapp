@@ -28,7 +28,7 @@ import {
   IconAlertCircle,
 } from "@tabler/icons-react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
+import { RouteProp, useFocusEffect } from "@react-navigation/native";
 import {
   Header,
   ReviewCard,
@@ -152,15 +152,20 @@ export function FeedScreen({ navigation, route }: Props) {
     }
   }, [showSuccess, bannerOpacity]);
 
-  // Refresh user when app returns to foreground (e.g. after confirming email)
+  // Refresh dashboard when app returns to foreground
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active" && currentUser?.email_confirmed === false) {
-        refreshUser();
+      if (nextState === "active") {
+        // Refresh dashboard data when app becomes active
+        fetchDashboard();
+        // Also refresh user if email not confirmed (in case they just confirmed)
+        if (currentUser?.email_confirmed === false) {
+          refreshUser();
+        }
       }
     });
     return () => subscription.remove();
-  }, [currentUser?.email_confirmed, refreshUser]);
+  }, [currentUser?.email_confirmed, refreshUser, fetchDashboard]);
 
   // Email resend countdown timer
   useEffect(() => {
@@ -344,6 +349,19 @@ export function FeedScreen({ navigation, route }: Props) {
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
+
+  // Refresh dashboard when screen regains focus (e.g. navigating back from another screen)
+  const isFirstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      // Skip the initial focus since fetchDashboard is already called above
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      fetchDashboard();
+    }, [fetchDashboard])
+  );
 
   // Poll for pending artwork updates
   // When tracks have metadata_status === 'pending', poll every 3 seconds
