@@ -1,10 +1,138 @@
 
-export type AccountType = 'fan' | 'band' | 'admin';
+// New RBAC types
+export type Role = 'fan' | 'band' | 'blogger';
 
-// Helper to normalize account_type from API (can be number or string)
+// Admin plan response from GET /admin/plans
+export interface AdminPlan {
+  id: number;
+  key: string;
+  name: string;
+  role: Role;
+  price_cents_monthly: number;
+  price_cents_annual: number;
+  active: boolean;
+  abilities_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Admin plan detail response from GET /admin/plans/:id
+export interface AdminPlanDetail extends AdminPlan {
+  abilities: Ability[];
+}
+
+// Simple plan reference used in user profile, compare, etc.
+export interface Plan {
+  key: string;
+  name: string;
+  role?: Role;
+  monthly_price?: number;
+  annual_price?: number;
+  abilities?: string[];
+}
+
+export interface Ability {
+  id?: number;
+  key: string;
+  name: string;
+  description?: string;
+  category?: string;
+  plans?: { key: string; name: string }[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Response from GET /admin/plans/compare
+export interface PlansCompareResponse {
+  plans: { key: string; name: string; role: Role }[];
+  abilities: PlansCompareAbility[];
+}
+
+// Ability row in compare matrix - has dynamic plan keys as boolean properties
+export interface PlansCompareAbility {
+  ability: {
+    key: string;
+    name: string;
+    category: string;
+  };
+  [planKey: string]: boolean | { key: string; name: string; category: string };
+}
+
+// Response from GET /admin/abilities
+export interface AdminAbilitiesResponse {
+  abilities: Ability[] | Record<string, Ability[]>;
+}
+
+// Response from GET /admin/abilities/categories
+export interface AbilityCategoriesResponse {
+  categories: string[];
+}
+
+// Data for creating an ability via POST /admin/abilities
+export interface AbilityCreateData {
+  key: string;
+  name: string;
+  description?: string;
+  category: string;
+}
+
+// Data for updating an ability via PATCH /admin/abilities/:id
+export interface AbilityUpdateData {
+  name?: string;
+  description?: string;
+  category?: string;
+}
+
+// Data for updating a plan via PATCH /admin/plans/:id
+export interface AdminPlanUpdateData {
+  name?: string;
+  price_cents_monthly?: number;
+  price_cents_annual?: number;
+  active?: boolean;
+}
+
+export interface UpgradeRequiredError {
+  code: 'upgrade_required';
+  message: string;
+  required_ability: string;
+  upgrade_options: Plan[];
+}
+
+// Legacy type - kept for backwards compatibility
+export type AccountType = 'fan' | 'band' | 'music_blogger' | 'admin';
+
+/**
+ * Helper to normalize role from API (can be number or string)
+ * Handles both new 'role' field and legacy 'account_type' field
+ *
+ * Mapping:
+ * - 'fan' | 0 → 'fan'
+ * - 'band' | 1 → 'band'
+ * - 'blogger' | 'music_blogger' | 3 → 'blogger'
+ */
+export function normalizeRole(
+  roleOrAccountType: Role | AccountType | number | undefined | null
+): Role | null {
+  if (roleOrAccountType === 'fan' || roleOrAccountType === 0) return 'fan';
+  if (roleOrAccountType === 'band' || roleOrAccountType === 1) return 'band';
+  if (
+    roleOrAccountType === 'blogger' ||
+    roleOrAccountType === 'music_blogger' ||
+    roleOrAccountType === 3
+  ) {
+    return 'blogger';
+  }
+  return null;
+}
+
+/**
+ * @deprecated Use `normalizeRole` instead
+ * Helper to normalize account_type from API (can be number or string)
+ */
 export function normalizeAccountType(accountType: AccountType | number | undefined | null): AccountType | null {
   if (accountType === 'fan' || accountType === 0) return 'fan';
   if (accountType === 'band' || accountType === 1) return 'band';
+  if (accountType === 'music_blogger' || accountType === 3) return 'music_blogger';
   if (accountType === 'admin' || accountType === 2) return 'admin';
   return null;
 }
@@ -22,6 +150,12 @@ export interface User {
   bands_count?: number;
   lastfm_connected?: boolean;
   lastfm_username?: string | null;
+  // New RBAC fields
+  role?: Role;
+  plan?: Plan;
+  abilities?: string[];
+  // Legacy field - kept for backwards compatibility
+  /** @deprecated Use `role` instead */
   account_type?: AccountType | number;  // API returns 0 for fan, 1 for band
   onboarding_completed?: boolean;
   primary_band?: Band;
@@ -193,6 +327,11 @@ export interface UserProfile {
   is_following?: boolean;  // Whether the current user follows this user
   followers_count?: number;
   following_count?: number;
+  // New RBAC field
+  role?: Role;
+  // Legacy field - kept for backwards compatibility
+  /** @deprecated Use `role` instead */
+  account_type?: AccountType | number;  // 0=fan, 1=band, 3=music_blogger/blogger
 }
 
 export interface FollowUser {
@@ -496,7 +635,12 @@ export interface AdminUserUpdateData {
   region?: string;
   admin?: boolean;
   disabled?: boolean;
-  account_type?: 'fan' | 'band';
+  // New RBAC field
+  role?: Role;
+  plan_key?: string;
+  // Legacy field - kept for backwards compatibility
+  /** @deprecated Use `role` instead */
+  account_type?: 'fan' | 'band' | 'music_blogger';
   lastfm_username?: string;
   onboarding_completed?: boolean;
   profile_image?: File;
@@ -1899,6 +2043,104 @@ class ApiClient {
       return { users: [] };
     }
     return this.makeRequest(`/users/search?q=${encodeURIComponent(query)}`);
+  }
+
+  // Admin RBAC Methods
+
+  // GET /admin/plans - List all plans
+  async getAdminPlans(): Promise<{ plans: AdminPlan[] }> {
+    return this.makeRequest('/admin/plans');
+  }
+
+  // GET /admin/plans/:id - Get single plan with abilities
+  async getAdminPlan(planId: number): Promise<{ plan: AdminPlanDetail }> {
+    return this.makeRequest(`/admin/plans/${planId}`);
+  }
+
+  // PATCH /admin/plans/:id - Update a plan
+  async updateAdminPlan(
+    planId: number,
+    data: AdminPlanUpdateData
+  ): Promise<{ message: string; plan: AdminPlanDetail }> {
+    return this.makeRequest(`/admin/plans/${planId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // GET /admin/plans/compare - Compare matrix
+  async getAdminPlanCompare(): Promise<PlansCompareResponse> {
+    return this.makeRequest('/admin/plans/compare');
+  }
+
+  // POST /admin/plans/:id/abilities/:ability_id - Add ability to plan
+  async addAbilityToPlan(
+    planId: number,
+    abilityId: number
+  ): Promise<{ message: string; plan: AdminPlanDetail }> {
+    return this.makeRequest(`/admin/plans/${planId}/abilities/${abilityId}`, {
+      method: 'POST',
+    });
+  }
+
+  // DELETE /admin/plans/:id/abilities/:ability_id - Remove ability from plan
+  async removeAbilityFromPlan(
+    planId: number,
+    abilityId: number
+  ): Promise<{ message: string; plan: AdminPlanDetail }> {
+    return this.makeRequest(`/admin/plans/${planId}/abilities/${abilityId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // GET /admin/abilities - List all abilities
+  async getAdminAbilities(grouped?: boolean): Promise<AdminAbilitiesResponse> {
+    const params = grouped ? '?grouped=true' : '';
+    return this.makeRequest(`/admin/abilities${params}`);
+  }
+
+  // GET /admin/abilities/categories - List valid categories
+  async getAbilityCategories(): Promise<AbilityCategoriesResponse> {
+    return this.makeRequest('/admin/abilities/categories');
+  }
+
+  // GET /admin/abilities/:id - Get single ability
+  async getAdminAbility(abilityId: number): Promise<{ ability: Ability }> {
+    return this.makeRequest(`/admin/abilities/${abilityId}`);
+  }
+
+  // POST /admin/abilities - Create new ability
+  async createAbility(data: AbilityCreateData): Promise<{ message: string; ability: Ability }> {
+    return this.makeRequest('/admin/abilities', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // PATCH /admin/abilities/:id - Update ability
+  async updateAbility(
+    abilityId: number,
+    data: AbilityUpdateData
+  ): Promise<{ message: string; ability: Ability }> {
+    return this.makeRequest(`/admin/abilities/${abilityId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // DELETE /admin/abilities/:id - Delete ability (only if not used by any plans)
+  async deleteAbility(abilityId: number): Promise<{ message: string }> {
+    return this.makeRequest(`/admin/abilities/${abilityId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Update user's plan
+  async updateUserPlan(userId: number, planKey: string): Promise<User> {
+    return this.makeRequest(`/admin/users/${userId}/plan`, {
+      method: 'PATCH',
+      body: JSON.stringify({ plan_key: planKey }),
+    });
   }
 }
 

@@ -38,6 +38,7 @@ import {
   apiClient,
   Band,
   Review,
+  Role,
   User,
 } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
@@ -74,7 +75,7 @@ export function AdminUserDrawer({
   const [region, setRegion] = useState('');
   const [admin, setAdmin] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const [accountType, setAccountType] = useState<string>('fan');
+  const [role, setRole] = useState<string>('fan');
   const [lastfmUsername, setLastfmUsername] = useState('');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -100,13 +101,13 @@ export function AdminUserDrawer({
       setRegion(data.user.region || '');
       setAdmin(data.user.admin || false);
       setDisabled(data.user.disabled || false);
-      setAccountType(
-        typeof data.user.account_type === 'number'
-          ? data.user.account_type === 0
-            ? 'fan'
-            : 'band'
-          : data.user.account_type || 'fan'
-      );
+      // Normalize role: prefer role field, fall back to account_type
+      const rawRole = data.user.role ?? data.user.account_type;
+      let normalizedRole = 'fan';
+      if (rawRole === 'fan' || rawRole === 0) normalizedRole = 'fan';
+      else if (rawRole === 'band' || rawRole === 1) normalizedRole = 'band';
+      else if (rawRole === 'blogger' || rawRole === 'music_blogger' || rawRole === 3) normalizedRole = 'blogger';
+      setRole(normalizedRole);
       setLastfmUsername(data.user.lastfm_username || '');
       setOnboardingCompleted(data.user.onboarding_completed || false);
       const imageUrl = fixImageUrl(data.user.profile_image_url);
@@ -174,7 +175,7 @@ export function AdminUserDrawer({
         city,
         region,
         disabled,
-        account_type: accountType as 'fan' | 'band',
+        role: role as Role,
         lastfm_username: lastfmUsername, // send empty string to clear
         onboarding_completed: onboardingCompleted,
       };
@@ -304,7 +305,7 @@ export function AdminUserDrawer({
             {username && (
               <Button
                 component={Link}
-                href={`/users/${username}`}
+                href={role === 'blogger' ? `/blogs/${username}` : `/users/${username}`}
                 target="_blank"
                 variant="light"
                 size="xs"
@@ -383,12 +384,13 @@ export function AdminUserDrawer({
                   </Group>
 
                   <Select
-                    label="Account Type"
-                    value={accountType}
-                    onChange={(value) => setAccountType(value || 'fan')}
+                    label="Role"
+                    value={role}
+                    onChange={(value) => setRole(value || 'fan')}
                     data={[
                       { value: 'fan', label: 'Fan' },
                       { value: 'band', label: 'Band' },
+                      { value: 'blogger', label: 'Blogger' },
                     ]}
                   />
 

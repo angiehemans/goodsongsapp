@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   IconArrowLeft,
   IconMusic,
@@ -26,8 +26,7 @@ import { AdminUserDetail, apiClient, Review } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
 
 export default function AdminUserDetailPage() {
-  const { user, isLoading, isOnboardingComplete, isAdmin } = useAuth();
-  const router = useRouter();
+  const { user, isAdmin } = useAuth();
   const params = useParams();
   const userId = params.id as string;
 
@@ -35,23 +34,6 @@ export default function AdminUserDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-      return;
-    }
-
-    if (!isLoading && user && !isOnboardingComplete) {
-      router.push('/onboarding');
-      return;
-    }
-
-    if (!isLoading && user && !isAdmin) {
-      router.push('/user/dashboard');
-      return;
-    }
-  }, [user, isLoading, isOnboardingComplete, isAdmin, router]);
 
   const fetchUserData = useCallback(async () => {
     if (!user || !isAdmin || !userId) return;
@@ -73,20 +55,10 @@ export default function AdminUserDetailPage() {
   }, [user, isAdmin, userId]);
 
   useEffect(() => {
-    if (user && isAdmin && isOnboardingComplete && userId) {
+    if (user && isAdmin && userId) {
       fetchUserData();
     }
-  }, [user, isAdmin, isOnboardingComplete, userId, fetchUserData]);
-
-  if (isLoading) {
-    return (
-      <Container>
-        <Center py="xl">
-          <Loader size="lg" />
-        </Center>
-      </Container>
-    );
-  }
+  }, [user, isAdmin, userId, fetchUserData]);
 
   if (!user || !isAdmin) {
     return null;
@@ -98,12 +70,12 @@ export default function AdminUserDetailPage() {
         {/* Back Button */}
         <Button
           component={Link}
-          href="/admin"
+          href="/admin/users"
           variant="subtle"
           leftSection={<IconArrowLeft size={16} />}
           w="fit-content"
         >
-          Back to Admin Dashboard
+          Back to Users
         </Button>
 
         {dataLoading ? (

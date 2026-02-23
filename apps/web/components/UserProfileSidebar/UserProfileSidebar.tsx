@@ -5,7 +5,7 @@ import { Badge, Flex, Group, Spoiler, Stack, Text, Title } from '@mantine/core';
 import { FollowButton } from '@/components/FollowButton/FollowButton';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, UserProfile } from '@/lib/api';
+import { apiClient, normalizeRole, UserProfile } from '@/lib/api';
 import styles from './UserProfileSidebar.module.css';
 
 interface UserProfileSidebarProps {
@@ -22,6 +22,9 @@ export function UserProfileSidebar({
   const [hasCheckedFollow, setHasCheckedFollow] = useState(false);
 
   const isOwnProfile = user?.id === profile.id;
+  // Normalize role: prefer role field, fall back to account_type
+  const role = normalizeRole(profile.role ?? profile.account_type);
+  const isBlogger = role === 'blogger';
 
   // Check follow status when user is available (client-side with auth token)
   useEffect(() => {
@@ -98,6 +101,11 @@ export function UserProfileSidebar({
         </Spoiler>
       )}
       <Group gap="xs">
+        {isBlogger && (
+          <Badge color="teal" variant="light" fw="500" tt="capitalize" bg="teal.1">
+            Blogger
+          </Badge>
+        )}
         <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
           {profile.reviews?.length ?? profile.reviews_count ?? 0} recommendation
           {(profile.reviews?.length ?? profile.reviews_count ?? 0) !== 1 ? 's' : ''}

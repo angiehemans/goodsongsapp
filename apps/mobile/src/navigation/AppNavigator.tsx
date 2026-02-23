@@ -76,9 +76,9 @@ function AuthNavigator() {
 // Main Tab Navigator (Home, Discover, Profile)
 function MainNavigator() {
   const insets = useSafeAreaInsets();
-  const { accountType } = useAuthStore();
+  const { role } = useAuthStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
-  const isBandAccount = accountType === 'band';
+  const isBandAccount = role === 'band';
 
   return (
     <Tab.Navigator

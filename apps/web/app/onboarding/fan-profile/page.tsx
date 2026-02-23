@@ -21,7 +21,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconCheck, IconMapPin, IconUpload, IconUser } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, normalizeAccountType } from '@/lib/api';
+import { apiClient, normalizeRole } from '@/lib/api';
 
 // Username can only contain letters, numbers, and underscores
 const isValidUsername = (value: string): boolean => {
@@ -75,13 +75,13 @@ export default function FanProfilePage() {
     }
   }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
-  // Redirect if user hasn't selected account type yet, or selected band
+  // Redirect if user hasn't selected role yet, or selected band
   useEffect(() => {
     if (!isLoading && user) {
-      const normalizedType = normalizeAccountType(user.account_type);
-      if (!normalizedType) {
+      const normalizedRole = normalizeRole(user.role ?? user.account_type);
+      if (!normalizedRole) {
         router.push('/onboarding');
-      } else if (normalizedType === 'band') {
+      } else if (normalizedRole === 'band') {
         router.push('/onboarding/band-profile');
       }
     }
@@ -176,7 +176,7 @@ export default function FanProfilePage() {
     );
   }
 
-  if (!user || normalizeAccountType(user.account_type) !== 'fan') {
+  if (!user || normalizeRole(user.role ?? user.account_type) !== 'fan') {
     return null;
   }
 

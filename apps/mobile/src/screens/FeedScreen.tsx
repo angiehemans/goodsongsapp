@@ -54,6 +54,8 @@ type Props = {
 export function FeedScreen({ navigation, route }: Props) {
   const { user: currentUser, refreshUser } = useAuthStore();
   const nowPlaying = useScrobbleStore((state) => state.nowPlaying);
+  const pendingCount = useScrobbleStore((state) => state.pendingCount);
+  const syncing = useScrobbleStore((state) => state.syncing);
   const setNotificationInitialCount = useNotificationStore((state) => state.setInitialCount);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -359,6 +361,17 @@ export function FeedScreen({ navigation, route }: Props) {
     return () => clearInterval(pollInterval);
   }, [recentlyPlayed, fetchRecentlyPlayed]);
 
+  // Track when sync completes to refresh recently played
+  const wasSyncingRef = useRef(false);
+
+  useEffect(() => {
+    if (wasSyncingRef.current && !syncing) {
+      // Sync completed, refresh recently played to show new tracks
+      fetchRecentlyPlayed();
+    }
+    wasSyncingRef.current = syncing;
+  }, [syncing, fetchRecentlyPlayed]);
+
   // Handle success banner from CreateReview
   useEffect(() => {
     if (route.params?.showSuccess) {
@@ -412,6 +425,15 @@ export function FeedScreen({ navigation, route }: Props) {
         <Text style={styles.sectionTitle}>
           {nowPlaying ? "Now Playing" : "Recently Played"}
         </Text>
+        {/* Offline sync notice */}
+        {syncing && pendingCount > 0 && (
+          <View style={styles.syncingNotice}>
+            <ActivityIndicator size="small" color={colors.grape[6]} />
+            <Text style={styles.syncingNoticeText}>
+              Loading {pendingCount} {pendingCount === 1 ? 'track' : 'tracks'} played while offline
+            </Text>
+          </View>
+        )}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -1065,6 +1087,21 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.thecoa,
     includeFontPadding: false,
     textAlignVertical: "center",
+  },
+  syncingNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    backgroundColor: colors.grape[1],
+    borderRadius: theme.radii.md,
+  },
+  syncingNoticeText: {
+    fontSize: theme.fontSizes.sm,
+    color: colors.grape[6],
   },
   successBanner: {
     position: "absolute",

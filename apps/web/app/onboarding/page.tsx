@@ -16,7 +16,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { IconUsers, IconMicrophone2 } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, AccountType, normalizeAccountType } from '@/lib/api';
+import { apiClient, AccountType, normalizeRole } from '@/lib/api';
 
 export default function OnboardingPage() {
   const { user, isLoading, refreshUser, isOnboardingComplete, isBand } = useAuth();
@@ -37,17 +37,17 @@ export default function OnboardingPage() {
     }
   }, [user, isLoading, isOnboardingComplete, isBand, router]);
 
-  // If account type is set but onboarding not complete, redirect to appropriate profile page
-  // Only redirect if account_type is explicitly 'fan' or 'band' (not null/undefined/empty)
+  // If role is set but onboarding not complete, redirect to appropriate profile page
+  // Only redirect if role is explicitly 'fan' or 'band' (not null/undefined/empty)
   useEffect(() => {
     if (!isLoading && user && !isOnboardingComplete) {
-      const normalizedType = normalizeAccountType(user.account_type);
-      if (normalizedType === 'fan') {
+      const normalizedRole = normalizeRole(user.role ?? user.account_type);
+      if (normalizedRole === 'fan') {
         router.push('/onboarding/fan-profile');
-      } else if (normalizedType === 'band') {
+      } else if (normalizedRole === 'band') {
         router.push('/onboarding/band-profile');
       }
-      // If account_type is null/undefined, stay on this page to let user choose
+      // If role is null/undefined, stay on this page to let user choose
     }
   }, [user, isLoading, isOnboardingComplete, router]);
 
@@ -88,9 +88,9 @@ export default function OnboardingPage() {
     return null;
   }
 
-  // If account type already selected (fan or band), show loading while redirecting
-  const normalizedUserType = normalizeAccountType(user.account_type);
-  if ((normalizedUserType === 'fan' || normalizedUserType === 'band') && !isOnboardingComplete) {
+  // If role already selected (fan or band), show loading while redirecting
+  const normalizedUserRole = normalizeRole(user.role ?? user.account_type);
+  if ((normalizedUserRole === 'fan' || normalizedUserRole === 'band') && !isOnboardingComplete) {
     return (
       <Container size={600} my={40}>
         <Center py="xl">

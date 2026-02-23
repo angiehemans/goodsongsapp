@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, AccountType, normalizeAccountType } from '@goodsongs/api-client';
+import { User, Role, Plan, normalizeRole } from '@goodsongs/api-client';
 import { apiClient } from '@/utils/api';
 import { unregisterFromPushNotifications } from '@/utils/pushNotifications';
 
@@ -11,7 +11,13 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   isOnboardingComplete: boolean;
-  accountType: AccountType | null;
+  // New RBAC fields
+  role: Role | null;
+  plan: Plan | null;
+  abilities: string[];
+  can: (ability: string) => boolean;
+  /** @deprecated Use `role` instead */
+  accountType: Role | null;
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
@@ -45,6 +51,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
     isLoading: true,
     isAuthenticated: false,
     isOnboardingComplete: false,
+    role: null,
+    plan: null,
+    abilities: [],
+    can: (ability: string) => get().abilities.includes(ability),
     accountType: null,
 
     login: async (email: string, password: string) => {
@@ -61,7 +71,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
 
       const user = await apiClient.getProfile();
-      const accountType = normalizeAccountType(user.account_type);
+      // Normalize role: prefer user.role, fall back to user.account_type
+      const role = normalizeRole(user.role ?? user.account_type);
 
       set({
         token,
@@ -69,7 +80,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         user,
         isAuthenticated: true,
         isOnboardingComplete: user.onboarding_completed ?? false,
-        accountType,
+        role,
+        plan: user.plan ?? null,
+        abilities: user.abilities ?? [],
+        accountType: role, // Backwards compatibility
       });
     },
 
@@ -91,7 +105,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
 
       const user = await apiClient.getProfile();
-      const accountType = normalizeAccountType(user.account_type);
+      // Normalize role: prefer user.role, fall back to user.account_type
+      const role = normalizeRole(user.role ?? user.account_type);
 
       set({
         token,
@@ -99,7 +114,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         user,
         isAuthenticated: true,
         isOnboardingComplete: user.onboarding_completed ?? false,
-        accountType,
+        role,
+        plan: user.plan ?? null,
+        abilities: user.abilities ?? [],
+        accountType: role, // Backwards compatibility
       });
     },
 
@@ -119,6 +137,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
         refreshToken: null,
         isAuthenticated: false,
         isOnboardingComplete: false,
+        role: null,
+        plan: null,
+        abilities: [],
         accountType: null,
       });
 
@@ -148,6 +169,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
         refreshToken: null,
         isAuthenticated: false,
         isOnboardingComplete: false,
+        role: null,
+        plan: null,
+        abilities: [],
         accountType: null,
       });
 
@@ -176,7 +200,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
           }
 
           const user = await apiClient.getProfile();
-          const accountType = normalizeAccountType(user.account_type);
+          // Normalize role: prefer user.role, fall back to user.account_type
+          const role = normalizeRole(user.role ?? user.account_type);
 
           set({
             token,
@@ -184,7 +209,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
             user,
             isAuthenticated: true,
             isOnboardingComplete: user.onboarding_completed ?? false,
-            accountType,
+            role,
+            plan: user.plan ?? null,
+            abilities: user.abilities ?? [],
+            accountType: role, // Backwards compatibility
             isLoading: false,
           });
         } else {
@@ -202,6 +230,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
           token: null,
           refreshToken: null,
           isOnboardingComplete: false,
+          role: null,
+          plan: null,
+          abilities: [],
           accountType: null,
         });
       }
@@ -213,12 +244,16 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
       try {
         const user = await apiClient.getProfile();
-        const accountType = normalizeAccountType(user.account_type);
+        // Normalize role: prefer user.role, fall back to user.account_type
+        const role = normalizeRole(user.role ?? user.account_type);
 
         set({
           user,
           isOnboardingComplete: user.onboarding_completed ?? false,
-          accountType,
+          role,
+          plan: user.plan ?? null,
+          abilities: user.abilities ?? [],
+          accountType: role, // Backwards compatibility
         });
       } catch (error) {
         // If refresh fails, log out
@@ -227,11 +262,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     setUser: (user: User) => {
-      const accountType = normalizeAccountType(user.account_type);
+      // Normalize role: prefer user.role, fall back to user.account_type
+      const role = normalizeRole(user.role ?? user.account_type);
       set({
         user,
         isOnboardingComplete: user.onboarding_completed ?? false,
-        accountType,
+        role,
+        plan: user.plan ?? null,
+        abilities: user.abilities ?? [],
+        accountType: role, // Backwards compatibility
       });
     },
   };

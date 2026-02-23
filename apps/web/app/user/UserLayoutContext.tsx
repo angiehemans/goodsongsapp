@@ -79,7 +79,7 @@ function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
 }
 
 export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
-  const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand, isBlogger } = useAuth();
   const { setInitialCount: setNotificationInitialCount } = useNotifications();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<FanDashboardResponse | null>(null);
@@ -103,11 +103,13 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
       return;
     }
 
-    if (!isLoading && user && isBand) {
+    // Band users should be redirected to band dashboard
+    // Bloggers stay on fan-style dashboard (blogger-dashboard)
+    if (!isLoading && user && isBand && !isBlogger) {
       router.push('/user/band-dashboard');
       return;
     }
-  }, [user, isLoading, isOnboardingComplete, isBand, router]);
+  }, [user, isLoading, isOnboardingComplete, isBand, isBlogger, router]);
 
   // Fetch dashboard data (single optimized endpoint)
   const refreshDashboard = useCallback(async () => {
@@ -147,15 +149,16 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   }, [refreshDashboard]);
 
   // Initial data fetch using optimized dashboard endpoint
+  // Bloggers use the same dashboard data as fans
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || isLoading || isBand) return;
+      if (!user || isLoading || (isBand && !isBlogger)) return;
       setIsDataLoading(true);
       await refreshDashboard();
       setIsDataLoading(false);
     };
     fetchData();
-  }, [user, isLoading, isBand, refreshDashboard]);
+  }, [user, isLoading, isBand, isBlogger, refreshDashboard]);
 
   return (
     <UserLayoutContext.Provider

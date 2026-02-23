@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { apiClient, User, AccountType } from '@/lib/api';
+import { apiClient, User, Role, Plan, normalizeRole } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -9,8 +9,16 @@ interface AuthContextType {
   isOnboardingComplete: boolean;
   isFan: boolean;
   isBand: boolean;
+  isBlogger: boolean;
+  /** @deprecated Use `isBlogger` instead */
+  isMusicBlogger: boolean;
   isAdmin: boolean;
-  accountType: AccountType | null;
+  role: Role | null;
+  plan: Plan | null;
+  abilities: string[];
+  can: (ability: string) => boolean;
+  /** @deprecated Use `role` instead */
+  accountType: Role | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
   logout: () => void;
@@ -85,17 +93,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isOnboardingComplete = user?.onboarding_completed ?? false;
 
-  // Handle account_type as either string ('fan'/'band') or number (0/1)
-  const rawAccountType = user?.account_type;
-  const accountType: AccountType | null =
-    rawAccountType === 'fan' || rawAccountType === 0 ? 'fan' :
-    rawAccountType === 'band' || rawAccountType === 1 ? 'band' :
-    rawAccountType === 'admin' || rawAccountType === 2 ? 'admin' :
-    null;
+  // Normalize role: prefer user.role, fall back to user.account_type
+  const role = normalizeRole(user?.role ?? user?.account_type);
 
-  const isFan = accountType === 'fan';
-  const isBand = accountType === 'band';
-  // Admin is a separate flag, not an account type
+  // Plan and abilities from user object
+  const plan = user?.plan ?? null;
+  const abilities = user?.abilities ?? [];
+
+  // Helper to check if user has a specific ability
+  const can = (ability: string): boolean => {
+    return abilities.includes(ability);
+  };
+
+  const isFan = role === 'fan';
+  const isBand = role === 'band';
+  const isBlogger = role === 'blogger';
+  // Alias for backwards compatibility
+  const isMusicBlogger = isBlogger;
+  // Admin is a separate flag, not a role
   const isAdmin = user?.admin === true;
 
   return (
@@ -105,8 +120,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isOnboardingComplete,
       isFan,
       isBand,
+      isBlogger,
+      isMusicBlogger,
       isAdmin,
-      accountType,
+      role,
+      plan,
+      abilities,
+      can,
+      accountType: role, // Backwards compatibility alias
       login,
       signup,
       logout,

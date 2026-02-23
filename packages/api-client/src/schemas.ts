@@ -87,7 +87,10 @@ export const completeBandProfileDataSchema = z.object({
   youtube_music_link: z.string().url().optional().or(z.literal('')),
 });
 
-// Account type schema
+// Role schema (new RBAC)
+export const roleSchema = z.enum(['fan', 'band', 'blogger']);
+
+// Account type schema (legacy - kept for backwards compatibility)
 export const accountTypeSchema = z.enum(['fan', 'band', 'admin']);
 
 export const setAccountTypeDataSchema = z.object({
@@ -105,3 +108,4 @@ export type ProfileUpdateDataInput = z.infer<typeof profileUpdateDataSchema>;
 export type CompleteFanProfileDataInput = z.infer<typeof completeFanProfileDataSchema>;
 export type CompleteBandProfileDataInput = z.infer<typeof completeBandProfileDataSchema>;
 export type AccountTypeInput = z.infer<typeof accountTypeSchema>;
+export type RoleInput = z.infer<typeof roleSchema>;

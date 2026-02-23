@@ -1,7 +1,16 @@
 // Shared types for the GoodSongs API
 // These types are used by both web and mobile apps
 
-export type AccountType = 'fan' | 'band' | 'admin';
+// New RBAC types
+export type Role = 'fan' | 'band' | 'blogger';
+
+export interface Plan {
+  key: string;
+  name: string;
+}
+
+// Legacy type - kept for backwards compatibility during migration
+export type AccountType = 'fan' | 'band' | 'music_blogger' | 'admin';
 
 export interface User {
   id: number;
@@ -16,6 +25,12 @@ export interface User {
   bands_count?: number;
   lastfm_connected?: boolean;
   lastfm_username?: string | null;
+  // New RBAC fields
+  role?: Role;
+  plan?: Plan;
+  abilities?: string[];
+  // Legacy field - kept for backwards compatibility
+  /** @deprecated Use `role` instead */
   account_type?: AccountType | number;
   onboarding_completed?: boolean;
   primary_band?: Band;
@@ -123,6 +138,11 @@ export interface UserProfile {
   following?: boolean;
   followers_count?: number;
   following_count?: number;
+  // New RBAC field
+  role?: Role;
+  // Legacy field - kept for backwards compatibility
+  /** @deprecated Use `role` instead */
+  account_type?: AccountType | number;  // 0=fan, 1=band, 3=music_blogger/blogger
 }
 
 export interface FollowUser {
