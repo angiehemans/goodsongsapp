@@ -38,7 +38,7 @@ export function ProfileHeader({
   return (
     <Paper p="lg" radius="md" withBorder>
       <Group align="flex-start">
-        <Avatar size="xl" src={imageUrl} color="grape.6">
+        <Avatar size="xl" src={imageUrl} color="grape">
           {fallbackText}
         </Avatar>
         

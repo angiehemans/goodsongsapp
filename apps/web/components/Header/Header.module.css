@@ -1,6 +1,6 @@
 .header {
-  background-color: var(--mantine-color-grape-0);
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-header-bg);
+  border-bottom: 2px solid var(--gs-header-border);
 }
 
 .headerLink {

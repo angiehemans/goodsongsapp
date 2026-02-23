@@ -17,12 +17,12 @@
 }
 
 .comment:hover {
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .username {
   text-decoration: none;
-  color: var(--mantine-color-grape-7);
+  color: var(--gs-text-secondary);
 }
 
 .username:hover {
@@ -36,16 +36,16 @@
 
 .inputContainer {
   padding-top: var(--mantine-spacing-md);
-  border-top: 1px solid var(--mantine-color-grape-2);
+  border-top: 1px solid var(--gs-border-subtle);
 }
 
 .loginPrompt {
   padding: var(--mantine-spacing-md);
-  border-top: 1px solid var(--mantine-color-grape-2);
+  border-top: 1px solid var(--gs-border-subtle);
 }
 
 .loginLink {
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-interactive-muted);
   font-weight: 500;
 }
 

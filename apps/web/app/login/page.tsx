@@ -116,7 +116,7 @@ export default function LoginPage() {
                   mt="xl" 
                   loading={loading}
                   type="submit"
-                  color="grape.9"
+                  color="grape"
                 >
                   Sign in
                 </Button>

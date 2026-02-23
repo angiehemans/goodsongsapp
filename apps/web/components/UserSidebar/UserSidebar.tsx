@@ -193,7 +193,7 @@ export function UserSidebar({
                   </div>
                 </div>
               ) : (
-                <Avatar size="72px" color="grape.6">
+                <Avatar size="72px">
                   {user.username?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
                 </Avatar>
               )}
@@ -206,7 +206,6 @@ export function UserSidebar({
                   <ActionIcon
                     {...props}
                     variant="filled"
-                    color="grape.6"
                     size="md"
                     radius="xl"
                     style={{
@@ -226,7 +225,7 @@ export function UserSidebar({
                 New image selected: {editProfileImage.name}
               </Text>
             )}
-            <Title order={2} c="blue.8" fw={500} lh={1}>
+            <Title order={2} fw={500} lh={1} style={{ color: 'var(--gs-text-primary)' }}>
               @{user.username || 'username'}
             </Title>
           </Group>
@@ -260,6 +259,11 @@ export function UserSidebar({
               loading={isSaving}
               leftSection={<IconCheck size={16} />}
               flex={1}
+              style={{
+                backgroundColor: 'var(--gs-btn-primary-bg)',
+                color: 'var(--gs-btn-primary-text)',
+                fontFamily: 'var(--gs-font-display)',
+              }}
             >
               Save
             </Button>
@@ -291,11 +295,11 @@ export function UserSidebar({
           href={user.username ? `/users/${user.username}` : undefined}
         />
         <Stack gap="xs" flex={1}>
-          <Title order={2} c="blue.8" fw={500} lh={1}>
+          <Title order={2} fw={500} lh={1} style={{ color: 'var(--gs-text-primary)' }}>
             {user.username ? `@${user.username}` : 'Welcome!'}
           </Title>
           {(user.city || user.region) && (
-            <Text c="blue.7" size="sm" lh={1}>
+            <Text size="sm" lh={1} style={{ color: 'var(--gs-text-secondary)' }}>
               {[user.city, user.region].filter(Boolean).join(', ')}
             </Text>
           )}
@@ -309,18 +313,18 @@ export function UserSidebar({
           styles={{
             control: {
               fontSize: 'var(--mantine-font-size-sm)',
-              color: 'var(--mantine-color-grape-4)',
+              color: 'var(--gs-text-muted)',
             },
           }}
         >
-          <Text size="sm" c="gray.7" style={{ whiteSpace: 'pre-wrap' }}>
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', color: 'var(--gs-text-secondary)' }}>
             {user.about_me}
           </Text>
         </Spoiler>
       )}
       {/* {badgeText && (
         <Group gap="xs">
-          <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
+          <Badge color="grape" variant="light" fw="500" tt="capitalize" >
             {badgeText}
           </Badge>
         </Group>
@@ -333,6 +337,9 @@ export function UserSidebar({
         <Button
           onClick={onNewRecommendation}
           leftSection={<IconPlus size={16} />}
+          color="var(--gs-btn-primary-bg)"
+          style={{ color: 'var(--gs-btn-primary-text)', fontFamily: 'Thecoa', fontWeight: '500' }}
+          // variant="white"
         >
           New Recommendation
         </Button>

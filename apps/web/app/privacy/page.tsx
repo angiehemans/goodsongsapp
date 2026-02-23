@@ -30,10 +30,10 @@ export default function PrivacyPolicyPage() {
       <Box className={styles.hero}>
         <Container size="md">
           <Stack align="center" gap="md">
-            <Title order={1} size="3rem" c="blue.9" ta="center">
+            <Title order={1} size="3rem" style={{ color: 'var(--gs-text-heading)' }} ta="center">
               Privacy Policy
             </Title>
-            <Text size="lg" c="grape.6" ta="center">
+            <Text size="lg" style={{ color: 'var(--gs-text-accent)' }} ta="center">
               Last Updated: February 10, 2026
             </Text>
           </Stack>
@@ -355,17 +355,17 @@ export default function PrivacyPolicyPage() {
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Flex gap="sm" mb="md" align="center">
                 <IconMusic size={28} color="var(--mantine-color-grape-0)" />
-                <Text c="grape.0" fw={700} size="xl">
+                <Text style={{ color: 'var(--gs-text-inverse)' }} fw={700} size="xl">
                   goodsongs
                 </Text>
               </Flex>
-              <Text c="blue.3" size="sm">
+              <Text style={{ color: 'var(--gs-text-heading-light)' }} size="sm">
                 Where bands and fans belong. Share the music you love, discover what&apos;s next.
               </Text>
             </Grid.Col>
 
             <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Text c="grape.0" fw={600} mb="md">
+              <Text style={{ color: 'var(--gs-text-inverse)' }} fw={600} mb="md">
                 Quick Links
               </Text>
               <Stack gap="xs">
@@ -385,7 +385,7 @@ export default function PrivacyPolicyPage() {
             </Grid.Col>
 
             <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Text c="grape.0" fw={600} mb="md">
+              <Text style={{ color: 'var(--gs-text-inverse)' }} fw={600} mb="md">
                 Legal
               </Text>
               <Stack gap="xs">
@@ -400,7 +400,7 @@ export default function PrivacyPolicyPage() {
           </Grid>
 
           <Box className={styles.footerBottom}>
-            <Text c="blue.4" size="sm" ta="center">
+            <Text style={{ color: 'var(--gs-text-heading-light)' }} size="sm" ta="center">
               &copy; 2026 Goodsongs. Made for music lovers, by music lovers.
             </Text>
           </Box>

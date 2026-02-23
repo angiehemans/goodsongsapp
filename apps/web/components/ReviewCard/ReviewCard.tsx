@@ -184,10 +184,9 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
               <Text
                 size="sm"
                 fw={500}
-                c="grape.6"
                 component={Link}
                 href={`/users/${authorUsername}`}
-                style={{ textDecoration: 'none' }}
+                style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                 className={styles.authorName}
               >
                 @{authorUsername}
@@ -197,7 +196,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
                 @unknown
               </Text>
             )}
-            <Text size="xs" c="gray.5">
+            <Text size="xs" style={{ color: 'var(--gs-text-tertiary)' }}>
               {new Date(review.created_at).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -224,8 +223,10 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
                 <Center
                   w={48}
                   h={48}
-                  bg="grape.1"
-                  style={{ borderRadius: 'var(--mantine-radius-sm)' }}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    backgroundColor: 'var(--gs-bg-accent)',
+                  }}
                 >
                   <img
                     src="/logo-grape.svg"
@@ -241,10 +242,9 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
               <Text
                 size="md"
                 fw={500}
-                c="gray.9"
                 component={Link}
                 href={reviewUrl}
-                style={{ textDecoration: 'none' }}
+                style={{ textDecoration: 'none', color: 'var(--gs-text-primary)' }}
                 className={styles.songName}
               >
                 {review.song_name}
@@ -252,10 +252,9 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
               {review.band?.slug ? (
                 <Text
                   size="sm"
-                  c="grape.6"
                   component={Link}
                   href={`/bands/${review.band.slug}`}
-                  style={{ textDecoration: 'none' }}
+                  style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                 >
                   {review.band_name}
                 </Text>
@@ -281,7 +280,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
           styles={{
             control: {
               fontSize: 'var(--mantine-font-size-sm)',
-              color: 'var(--mantine-color-grape-4)',
+              color: 'var(--gs-text-muted)',
             },
           }}
         >
@@ -315,7 +314,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
             <Menu.Target>
               <ActionIcon
                 variant="subtle"
-                color="grape.6"
+                color="grape"
                 aria-label="Share review"
                 loading={generatingImage}
               >
@@ -350,14 +349,14 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
           <Group gap={4}>
             <ActionIcon
               variant="subtle"
-              color="grape.6"
+              color="grape"
               onClick={() => setCommentsDrawerOpen(true)}
               aria-label="View comments"
             >
               <IconMessage size={20} />
             </ActionIcon>
             {commentsCount > 0 && (
-              <Text size="sm" c="grape.6">
+              <Text size="sm" style={{ color: 'var(--gs-text-accent)' }}>
                 {commentsCount}
               </Text>
             )}
@@ -367,7 +366,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
           <Group gap={4}>
             <ActionIcon
               variant="subtle"
-              color={isLiked ? 'red' : 'grape.6'}
+              color={isLiked ? 'red' : 'grape'}
               onClick={handleLikeClick}
               loading={isLiking}
               aria-label={isLiked ? 'Unlike review' : 'Like review'}
@@ -375,7 +374,7 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
               {isLiked ? <IconHeartFilled size={20} /> : <IconHeart size={20} />}
             </ActionIcon>
             {likesCount > 0 && (
-              <Text size="sm" c="grape.6">
+              <Text size="sm" style={{ color: 'var(--gs-text-accent)' }}>
                 {likesCount}
               </Text>
             )}

@@ -330,7 +330,7 @@ export default function NotificationsPage() {
           <Box maw={700}>
             <Group justify="space-between" align="center" mb="md" mt="md">
               <Group gap="sm">
-                <Title order={2} c="blue.8" fw={500}>
+                <Title order={2} style={{ color: 'var(--gs-text-heading)' }} fw={500}>
                   Notifications
                 </Title>
                 {localUnreadCount > 0 && (
@@ -416,7 +416,7 @@ export default function NotificationsPage() {
                       <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                         {/* Line 1: @username · time */}
                         <Group gap="xs" wrap="nowrap">
-                          <Text size="sm" fw={notification.read ? 500 : 700} c="blue.8">
+                          <Text size="sm" fw={notification.read ? 500 : 700} style={{ color: 'var(--gs-text-heading)' }}>
                             @{notification.actor.username}
                           </Text>
                           <Text size="xs" c="dimmed">

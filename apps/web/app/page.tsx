@@ -66,7 +66,7 @@ export default function HomePage() {
             <Stack align="center" gap={0}>
               <Title className={styles.heroTitle}>share some</Title>
               <Title className={styles.heroTitle}>goodsongs</Title>
-              <Text size="lg" mt="xl" maw={600} ta="center" c="grape.7">
+              <Text size="lg" mt="xl" maw={600} ta="center" style={{ color: 'var(--gs-text-secondary)' }}>
                 A platform that brings artists and fans together. Share the songs you love. Discover
                 your next obsession. Connect with the music community.
               </Text>
@@ -88,10 +88,10 @@ export default function HomePage() {
         <Container size="lg">
           <div data-animate className={styles.animateSection}>
             <Stack align="center" mb={60}>
-              <Title order={2} size="3rem" ta="center" c="blue.9">
+              <Title order={2} size="3rem" ta="center" style={{ color: 'var(--gs-text-heading)' }}>
                 For Fans
               </Title>
-              <Text size="lg" c="grape.6" ta="center" maw={500}>
+              <Text size="lg" style={{ color: 'var(--gs-text-accent)' }} ta="center" maw={500}>
                 Everything you need to share the music you love and discover what's next.
               </Text>
             </Stack>
@@ -104,10 +104,10 @@ export default function HomePage() {
                 <Box className={styles.featureIcon}>
                   <IconHeart size={32} />
                 </Box>
-                <Title order={3} size="1.5rem" c="blue.9" mb="sm">
+                <Title order={3} size="1.5rem" style={{ color: 'var(--gs-text-heading)' }} mb="sm">
                   Recommend Songs
                 </Title>
-                <Text c="grape.7">
+                <Text style={{ color: 'var(--gs-text-secondary)' }}>
                   Share the tracks you can't stop playing. Highlight what you love and help others
                   discover their next favorite song.
                 </Text>
@@ -119,10 +119,10 @@ export default function HomePage() {
                 <Box className={styles.featureIcon}>
                   <IconSearch size={32} />
                 </Box>
-                <Title order={3} size="1.5rem" c="blue.9" mb="sm">
+                <Title order={3} size="1.5rem" style={{ color: 'var(--gs-text-heading)' }} mb="sm">
                   Discover Music
                 </Title>
-                <Text c="grape.7">
+                <Text style={{ color: 'var(--gs-text-secondary)' }}>
                   Find your next obsession through community recommendations, trending tracks, and
                   personalized suggestions.
                 </Text>
@@ -134,10 +134,10 @@ export default function HomePage() {
                 <Box className={styles.featureIcon}>
                   <IconUsers size={32} />
                 </Box>
-                <Title order={3} size="1.5rem" c="blue.9" mb="sm">
+                <Title order={3} size="1.5rem" style={{ color: 'var(--gs-text-heading)' }} mb="sm">
                   Follow Friends
                 </Title>
-                <Text c="grape.7">
+                <Text style={{ color: 'var(--gs-text-secondary)' }}>
                   Follow friends and tastemakers to see what they're listening to. Build a feed of
                   recommendations from people you trust.
                 </Text>
@@ -153,10 +153,10 @@ export default function HomePage() {
         <Container size="lg">
           <div data-animate className={styles.animateSection}>
             <Stack align="center" mb={60}>
-              <Title order={2} size="3rem" ta="center" c="grape.0">
+              <Title order={2} size="3rem" ta="center" style={{ color: 'var(--gs-text-inverse)' }}>
                 For Bands
               </Title>
-              <Text size="lg" c="blue.3" ta="center" maw={500}>
+              <Text size="lg" style={{ color: 'var(--gs-text-heading-light)' }} ta="center" maw={500}>
                 Tools to manage your music career and connect with fans who love what you do.
               </Text>
             </Stack>
@@ -169,10 +169,10 @@ export default function HomePage() {
                 <Box className={styles.featureIconDark}>
                   <IconMessageCircle size={28} />
                 </Box>
-                <Title order={3} size="1.25rem" c="grape.0" mb="xs">
+                <Title order={3} size="1.25rem" style={{ color: 'var(--gs-text-inverse)' }} mb="xs">
                   See Fan Feedback
                 </Title>
-                <Text size="sm" c="blue.3">
+                <Text size="sm" style={{ color: 'var(--gs-text-heading-light)' }}>
                   Get real feedback from fans who love your music. See what aspects resonate most.
                 </Text>
               </Box>
@@ -183,10 +183,10 @@ export default function HomePage() {
                 <Box className={styles.featureIconDark}>
                   <IconCalendarEvent size={28} />
                 </Box>
-                <Title order={3} size="1.25rem" c="grape.0" mb="xs">
+                <Title order={3} size="1.25rem" style={{ color: 'var(--gs-text-inverse)' }} mb="xs">
                   Event Management
                 </Title>
-                <Text size="sm" c="blue.3">
+                <Text size="sm" style={{ color: 'var(--gs-text-heading-light)' }}>
                   List your shows, manage venues, and let fans know where to find you.
                 </Text>
               </Box>
@@ -197,10 +197,10 @@ export default function HomePage() {
                 <Box className={styles.featureIconDark}>
                   <IconChartBar size={28} />
                 </Box>
-                <Title order={3} size="1.25rem" c="grape.0" mb="xs">
+                <Title order={3} size="1.25rem" style={{ color: 'var(--gs-text-inverse)' }} mb="xs">
                   Fan Analytics
                 </Title>
-                <Text size="sm" c="blue.3">
+                <Text size="sm" style={{ color: 'var(--gs-text-heading-light)' }}>
                   Understand your audience. See who's recommending your music and where they're
                   located.
                 </Text>
@@ -212,10 +212,10 @@ export default function HomePage() {
                 <Box className={styles.featureIconDark}>
                   <IconMail size={28} />
                 </Box>
-                <Title order={3} size="1.25rem" c="grape.0" mb="xs">
+                <Title order={3} size="1.25rem" style={{ color: 'var(--gs-text-inverse)' }} mb="xs">
                   Mailing Lists
                 </Title>
-                <Text size="sm" c="blue.3">
+                <Text size="sm" style={{ color: 'var(--gs-text-heading-light)' }}>
                   Build your mailing list and keep fans updated on new releases and shows.
                 </Text>
               </Box>
@@ -225,7 +225,7 @@ export default function HomePage() {
 
           <div data-animate className={styles.animateSection}>
             <Flex justify="center" mt={60}>
-              <Button component={Link} href="/signup" size="lg" color="grape.3" c="blue.9">
+              <Button component={Link} href="/signup" size="lg" color="grape" variant="light">
                 Create Band Profile
               </Button>
             </Flex>
@@ -238,10 +238,10 @@ export default function HomePage() {
         <Container size="sm">
           <div data-animate className={styles.animateSection}>
             <Stack align="center">
-              <Title order={2} size="2.5rem" ta="center" c="blue.9">
+              <Title order={2} size="2.5rem" ta="center" style={{ color: 'var(--gs-text-heading)' }}>
                 Join the Community
               </Title>
-              <Text size="lg" c="grape.6" ta="center" maw={450}>
+              <Text size="lg" style={{ color: 'var(--gs-text-accent)' }} ta="center" maw={450}>
                 Sign up now to start sharing your favorite songs!
               </Text>
 
@@ -263,17 +263,17 @@ export default function HomePage() {
             <Grid.Col span={{ base: 12, sm: 4 }}>
               <Group gap="sm" mb="md">
                 <IconMusic size={28} color="var(--mantine-color-grape-0)" />
-                <Text c="grape.0" fw={700} size="xl">
+                <Text style={{ color: 'var(--gs-text-inverse)' }} fw={700} size="xl">
                   goodsongs
                 </Text>
               </Group>
-              <Text c="blue.3" size="sm">
+              <Text style={{ color: 'var(--gs-text-heading-light)' }} size="sm">
                 Where bands and fans belong. Share the music you love, discover what's next.
               </Text>
             </Grid.Col>
 
             <Grid.Col span={{ base: 6, sm: 4 }}>
-              <Text c="grape.0" fw={600} mb="md">
+              <Text style={{ color: 'var(--gs-text-inverse)' }} fw={600} mb="md">
                 Quick Links
               </Text>
               <Stack gap="xs">
@@ -290,7 +290,7 @@ export default function HomePage() {
             </Grid.Col>
 
             <Grid.Col span={{ base: 6, sm: 4 }}>
-              <Text c="grape.0" fw={600} mb="md">
+              <Text style={{ color: 'var(--gs-text-inverse)' }} fw={600} mb="md">
                 Legal
               </Text>
               <Stack gap="xs">
@@ -306,7 +306,7 @@ export default function HomePage() {
           </div>
 
           <Box className={styles.footerBottom}>
-            <Text c="blue.4" size="sm" ta="center">
+            <Text style={{ color: 'var(--gs-text-heading-light)' }} size="sm" ta="center">
               &copy; 2026 Goodsongs. Made for music lovers, by music lovers.
             </Text>
           </Box>

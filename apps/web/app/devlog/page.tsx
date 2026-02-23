@@ -320,10 +320,10 @@ export default function DevlogPage() {
       <Box className={styles.hero}>
         <Container size="lg">
           <Stack align="center" gap="md">
-            <Title order={1} size="3.5rem" c="blue.9" ta="center">
+            <Title order={1} size="3.5rem" style={{ color: 'var(--gs-text-heading)' }} ta="center">
               Development Log
             </Title>
-            <Text size="xl" c="grape.7" ta="center" maw={600}>
+            <Text size="xl" style={{ color: 'var(--gs-text-secondary)' }} ta="center" maw={600}>
               Track our progress as we build the ultimate music discovery platform. See what&apos;s
               live and what&apos;s coming next.
             </Text>
@@ -349,10 +349,10 @@ export default function DevlogPage() {
       <Box className={styles.sectionLight} py={60}>
         <Container size="lg">
           <Stack align="center" mb={40}>
-            <Title order={2} size="2.5rem" ta="center" c="blue.9">
+            <Title order={2} size="2.5rem" ta="center" style={{ color: 'var(--gs-text-heading)' }}>
               What We&apos;ve Built
             </Title>
-            <Text size="lg" c="grape.6" ta="center" maw={500}>
+            <Text size="lg" style={{ color: 'var(--gs-text-accent)' }} ta="center" maw={500}>
               Features available now on web and mobile
             </Text>
           </Stack>
@@ -363,7 +363,7 @@ export default function DevlogPage() {
                 <Box mb="xl">
                   <Box className={styles.categoryHeader}>
                     <Box className={styles.categoryIcon}>{category.icon}</Box>
-                    <Title order={3} size="1.5rem" c="blue.9">
+                    <Title order={3} size="1.5rem" style={{ color: 'var(--gs-text-heading)' }}>
                       {category.title}
                     </Title>
                   </Box>
@@ -373,12 +373,12 @@ export default function DevlogPage() {
                       <Box key={feature.name} className={styles.featureItem}>
                         <Box style={{ flex: 1 }}>
                           <Group justify="space-between" align="flex-start" mb={4}>
-                            <Text fw={600} c="blue.9" size="sm">
+                            <Text fw={600} style={{ color: 'var(--gs-text-heading)' }} size="sm">
                               {feature.name}
                             </Text>
                             <PlatformBadge platform={feature.platform} />
                           </Group>
-                          <Text size="xs" c="grape.7">
+                          <Text size="xs" style={{ color: 'var(--gs-text-secondary)' }}>
                             {feature.description}
                           </Text>
                         </Box>
@@ -396,10 +396,10 @@ export default function DevlogPage() {
       <Box className={styles.sectionDark} py={60}>
         <Container size="lg">
           <Stack align="center" mb={40}>
-            <Title order={2} size="2.5rem" ta="center" c="grape.0">
+            <Title order={2} size="2.5rem" ta="center" style={{ color: 'var(--gs-text-inverse)' }}>
               Roadmap
             </Title>
-            <Text size="lg" c="blue.3" ta="center" maw={500}>
+            <Text size="lg" style={{ color: 'var(--gs-text-heading-light)' }} ta="center" maw={500}>
               What&apos;s next for Goodsongs
             </Text>
           </Stack>
@@ -409,10 +409,10 @@ export default function DevlogPage() {
               <Grid.Col key={phase.title} span={{ base: 12, md: 4 }}>
                 <Box className={styles.timelineItemDark}>
                   <Box className={styles.timelineDotDark} />
-                  <Title order={3} size="1.25rem" c="grape.0" mb="xs">
+                  <Title order={3} size="1.25rem" style={{ color: 'var(--gs-text-inverse)' }} mb="xs">
                     {phase.title}
                   </Title>
-                  <Text size="sm" c="blue.3" mb="md">
+                  <Text size="sm" style={{ color: 'var(--gs-text-heading-light)' }} mb="md">
                     {phase.description}
                   </Text>
                   <Stack gap="sm">
@@ -420,10 +420,10 @@ export default function DevlogPage() {
                       <Box key={item} className={styles.featureItemDark}>
                         <IconRocket
                           size={16}
-                          color="var(--mantine-color-grape-3)"
+                          color="var(--gs-text-heading-light)"
                           style={{ flexShrink: 0, marginTop: 2 }}
                         />
-                        <Text size="sm" c="grape.0">
+                        <Text size="sm" style={{ color: 'var(--gs-text-inverse)' }}>
                           {item}
                         </Text>
                       </Box>
@@ -440,7 +440,7 @@ export default function DevlogPage() {
       <Box className={styles.sectionLight} py={60}>
         <Container size="lg">
           <Stack align="center" mb={40}>
-            <Title order={2} size="2rem" ta="center" c="blue.9">
+            <Title order={2} size="2rem" ta="center" style={{ color: 'var(--gs-text-heading)' }}>
               Platform Coverage
             </Title>
           </Stack>
@@ -453,10 +453,10 @@ export default function DevlogPage() {
               >
                 <Stack align="center" gap="xs">
                   <IconDeviceDesktop size={48} color="var(--mantine-color-blue-6)" />
-                  <Title order={3} c="blue.9">
+                  <Title order={3} style={{ color: 'var(--gs-text-heading)' }}>
                     Web App
                   </Title>
-                  <Text c="grape.7" ta="center" size="sm">
+                  <Text style={{ color: 'var(--gs-text-secondary)' }} ta="center" size="sm">
                     Full-featured Next.js application with admin panel
                   </Text>
                 </Stack>
@@ -469,10 +469,10 @@ export default function DevlogPage() {
               >
                 <Stack align="center" gap="xs">
                   <IconBrandAndroid size={48} color="var(--mantine-color-green-6)" />
-                  <Title order={3} c="blue.9">
+                  <Title order={3} style={{ color: 'var(--gs-text-heading)' }}>
                     Android
                   </Title>
-                  <Text c="grape.7" ta="center" size="sm">
+                  <Text style={{ color: 'var(--gs-text-secondary)' }} ta="center" size="sm">
                     React Native app with scrobbling support
                   </Text>
                 </Stack>
@@ -485,10 +485,10 @@ export default function DevlogPage() {
               >
                 <Stack align="center" gap="xs">
                   <IconDeviceMobile size={48} color="var(--mantine-color-grape-6)" />
-                  <Title order={3} c="blue.9">
+                  <Title order={3} style={{ color: 'var(--gs-text-heading)' }}>
                     iOS
                   </Title>
-                  <Text c="grape.7" ta="center" size="sm">
+                  <Text style={{ color: 'var(--gs-text-secondary)' }} ta="center" size="sm">
                     React Native app (scrobbling coming soon)
                   </Text>
                 </Stack>
@@ -505,17 +505,17 @@ export default function DevlogPage() {
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <Group gap="sm" mb="md">
                 <IconMusic size={28} color="var(--mantine-color-grape-0)" />
-                <Text c="grape.0" fw={700} size="xl">
+                <Text style={{ color: 'var(--gs-text-inverse)' }} fw={700} size="xl">
                   goodsongs
                 </Text>
               </Group>
-              <Text c="blue.3" size="sm">
+              <Text style={{ color: 'var(--gs-text-heading-light)' }} size="sm">
                 Where bands and fans belong. Share the music you love, discover what&apos;s next.
               </Text>
             </Grid.Col>
 
             <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Text c="grape.0" fw={600} mb="md">
+              <Text style={{ color: 'var(--gs-text-inverse)' }} fw={600} mb="md">
                 Quick Links
               </Text>
               <Stack gap="xs">
@@ -535,7 +535,7 @@ export default function DevlogPage() {
             </Grid.Col>
 
             <Grid.Col span={{ base: 6, sm: 3 }}>
-              <Text c="grape.0" fw={600} mb="md">
+              <Text style={{ color: 'var(--gs-text-inverse)' }} fw={600} mb="md">
                 Resources
               </Text>
               <Stack gap="xs">
@@ -553,7 +553,7 @@ export default function DevlogPage() {
           </Grid>
 
           <Box className={styles.footerBottom}>
-            <Text c="blue.4" size="sm" ta="center">
+            <Text style={{ color: 'var(--gs-text-heading-light)' }} size="sm" ta="center">
               &copy; 2026 Goodsongs. Made for music lovers, by music lovers.
             </Text>
           </Box>

@@ -1,6 +1,6 @@
 .container {
   min-height: 100vh;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .content {
@@ -12,7 +12,7 @@
   height: 200px;
   border-radius: var(--mantine-radius-lg);
   overflow: hidden;
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
 }
 
 .eventImage {
@@ -27,7 +27,7 @@
 }
 
 .bandRow {
-  background-color: var(--mantine-color-grape-1);
+  background-color: var(--gs-bg-surface);
   border-radius: var(--mantine-radius-md);
   text-decoration: none;
   color: inherit;
@@ -35,31 +35,31 @@
 }
 
 .bandRow:hover {
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
 }
 
 .infoSection {
-  background-color: var(--mantine-color-grape-1);
+  background-color: var(--gs-bg-surface);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-md);
 }
 
 .venueSection {
-  background-color: var(--mantine-color-grape-1);
+  background-color: var(--gs-bg-surface);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-md);
   transition: background-color 0.15s ease;
 }
 
 .venueSection:hover {
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
 }
 
 .iconContainer {
   width: 40px;
   height: 40px;
   border-radius: var(--mantine-radius-md);
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
   display: flex;
   align-items: center;
   justify-content: center;

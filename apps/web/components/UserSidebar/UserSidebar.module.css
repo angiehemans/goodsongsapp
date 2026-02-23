@@ -1,7 +1,7 @@
 .container {
   position: relative;
   width: 300px;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 @media (max-width: 768px) {
@@ -16,8 +16,8 @@
   height: 72px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: var(--mantine-color-grape-6);
-  border: 2px solid var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-accent);
+  border: 2px solid var(--gs-border-subtle);
 }
 
 .profilePhotoBlend {
@@ -34,7 +34,7 @@
 }
 
 .userMenu {
-  border-top: 2px solid var(--mantine-color-grape-3);
+  border-top: 2px solid var(--gs-border-default);
   padding-top: var(--mantine-spacing-sm);
 }
 
@@ -51,8 +51,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--mantine-color-grape-0);
-  border-top: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-bg-app);
+  border-top: 2px solid var(--gs-border-default);
   padding: 8px 0;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   z-index: 1000;
@@ -80,7 +80,7 @@
   padding: 4px 8px;
   border-radius: var(--mantine-radius-sm);
   text-decoration: none;
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-nav-text);
   transition:
     background-color 150ms ease,
     color 150ms ease;
@@ -88,12 +88,12 @@
 }
 
 .mobileNavButton:hover {
-  background-color: var(--mantine-color-grape-1);
+  background-color: var(--gs-nav-bg-hover);
 }
 
 .mobileNavButtonActive {
-  color: var(--mantine-color-grape-9);
-  background-color: var(--mantine-color-grape-2);
+  color: var(--gs-nav-text-active);
+  background-color: var(--gs-nav-bg-active);
 }
 
 .mobileNavButtonAdmin {

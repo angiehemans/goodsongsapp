@@ -104,7 +104,7 @@ export default function OnboardingPage() {
     <Container size={600} my={40}>
       <Stack gap="xl">
         <Stack gap="xs" ta="center">
-          <Title order={1} c="grape.8">
+          <Title order={1} style={{ color: 'var(--gs-text-primary)' }}>
             Welcome to Goodsongs!
           </Title>
           <Text c="dimmed" size="lg">
@@ -133,15 +133,15 @@ export default function OnboardingPage() {
                   Discover new music, connect your Last.fm account, and share your favorite song recommendations with the community.
                 </Text>
                 <Group gap="xs" mt="xs">
-                  <Text size="xs" c="grape.6" fw={500}>
+                  <Text size="xs" style={{ color: 'var(--gs-text-accent)' }} fw={500}>
                     Connect Last.fm
                   </Text>
                   <Text size="xs" c="dimmed">•</Text>
-                  <Text size="xs" c="grape.6" fw={500}>
+                  <Text size="xs" style={{ color: 'var(--gs-text-accent)' }} fw={500}>
                     Write Recommendations
                   </Text>
                   <Text size="xs" c="dimmed">•</Text>
-                  <Text size="xs" c="grape.6" fw={500}>
+                  <Text size="xs" style={{ color: 'var(--gs-text-accent)' }} fw={500}>
                     Discover Music
                   </Text>
                 </Group>
@@ -169,15 +169,15 @@ export default function OnboardingPage() {
                   Manage your band profile, track recommendations from fans, and connect with your audience.
                 </Text>
                 <Group gap="xs" mt="xs">
-                  <Text size="xs" c="grape.6" fw={500}>
+                  <Text size="xs" style={{ color: 'var(--gs-text-accent)' }} fw={500}>
                     Band Profile
                   </Text>
                   <Text size="xs" c="dimmed">•</Text>
-                  <Text size="xs" c="grape.6" fw={500}>
+                  <Text size="xs" style={{ color: 'var(--gs-text-accent)' }} fw={500}>
                     Track Recommendations
                   </Text>
                   <Text size="xs" c="dimmed">•</Text>
-                  <Text size="xs" c="grape.6" fw={500}>
+                  <Text size="xs" style={{ color: 'var(--gs-text-accent)' }} fw={500}>
                     Connect with Fans
                   </Text>
                 </Group>
@@ -189,7 +189,7 @@ export default function OnboardingPage() {
         <Button
           size="lg"
           fullWidth
-          color="grape.9"
+          color="grape"
           disabled={!selectedType}
           loading={submitting}
           onClick={handleContinue}

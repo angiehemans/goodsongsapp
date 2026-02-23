@@ -134,7 +134,7 @@ export function RecentlyPlayed({ onRecommendTrack, initialTracks }: RecentlyPlay
     <>
       <Group justify="space-between" align="center" my="md" maw={700}>
         <Group gap="xs">
-          <Title order={2} c="blue.8" fw={500}>
+          <Title order={2} style={{ color: 'var(--gs-text-heading)' }} fw={500}>
             Recently Played
           </Title>
         </Group>

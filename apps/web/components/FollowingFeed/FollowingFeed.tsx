@@ -114,7 +114,7 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
   if (isLoading) {
     return (
       <div className={styles.container}>
-        <Title order={2} mb="sm" c="blue.8" fw={500}>
+        <Title order={2} mb="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
           {title}
         </Title>
         <Center py="xl">
@@ -127,7 +127,7 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
   if (feedItems.length === 0) {
     return (
       <div className={styles.container}>
-        <Title order={2} mb="sm" c="blue.8" fw={500}>
+        <Title order={2} mb="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
           {title}
         </Title>
         <Paper p="lg" radius="md">
@@ -149,7 +149,7 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
 
   return (
     <div className={styles.container}>
-      <Title order={2} mb="sm" c="blue.8" fw={500}>
+      <Title order={2} mb="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
         {title}
       </Title>
       <Stack gap={0}>

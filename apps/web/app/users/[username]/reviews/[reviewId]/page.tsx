@@ -440,7 +440,7 @@ export default function SingleReviewPage() {
                 component={Link}
                 href={getEditUrl()}
                 variant="subtle"
-                color="grape.6"
+                color="grape"
                 size="sm"
                 aria-label="Edit review"
               >
@@ -462,8 +462,7 @@ export default function SingleReviewPage() {
                 <Center
                   w={48}
                   h={48}
-                  bg="grape.1"
-                  style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
+                  style={{ backgroundColor: 'var(--gs-bg-accent)', borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
                 >
                   <img
                     src="/logo-grape.svg"
@@ -479,10 +478,9 @@ export default function SingleReviewPage() {
                 {review.band?.slug ? (
                   <Text
                     size="sm"
-                    c="grape.6"
                     component={Link}
                     href={`/bands/${review.band.slug}`}
-                    style={{ textDecoration: 'none' }}
+                    style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                   >
                     {review.band_name}
                   </Text>
@@ -495,7 +493,7 @@ export default function SingleReviewPage() {
             </Group>
             {review.song_link && (
               <a href={review.song_link} target="_blank" rel="noopener noreferrer">
-                <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
+                <IconExternalLink size={24} color="var(--gs-text-accent)" />
               </a>
             )}
           </div>
@@ -524,7 +522,7 @@ export default function SingleReviewPage() {
               <Menu.Target>
                 <ActionIcon
                   variant="subtle"
-                  color="grape.6"
+                  color="grape"
                   loading={generatingImage}
                   aria-label="Share"
                 >
@@ -557,11 +555,11 @@ export default function SingleReviewPage() {
 
             {/* Comments Button */}
             <Group gap={4}>
-              <ActionIcon variant="subtle" color="grape.6" aria-label="Comments">
+              <ActionIcon variant="subtle" color="grape" aria-label="Comments">
                 <IconMessage size={20} />
               </ActionIcon>
               {commentsCount > 0 && (
-                <Text size="sm" c="grape.6">
+                <Text size="sm" style={{ color: 'var(--gs-text-accent)' }}>
                   {commentsCount}
                 </Text>
               )}
@@ -571,7 +569,7 @@ export default function SingleReviewPage() {
             <Group gap={4}>
               <ActionIcon
                 variant="subtle"
-                color={isLiked ? 'red' : 'grape.6'}
+                color={isLiked ? 'red' : 'grape'}
                 onClick={handleLikeClick}
                 loading={isLiking}
                 aria-label={isLiked ? 'Unlike' : 'Like'}
@@ -579,7 +577,7 @@ export default function SingleReviewPage() {
                 {isLiked ? <IconHeartFilled size={20} /> : <IconHeart size={20} />}
               </ActionIcon>
               {likesCount > 0 && (
-                <Text size="sm" c="grape.6">
+                <Text size="sm" style={{ color: 'var(--gs-text-accent)' }}>
                   {likesCount}
                 </Text>
               )}

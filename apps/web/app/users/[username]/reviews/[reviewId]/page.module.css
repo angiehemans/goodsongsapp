@@ -22,7 +22,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+  border-bottom: 2px solid var(--gs-border-default);
   padding-bottom: 16px;
 }
 
@@ -45,7 +45,7 @@
   font-family: var(--mantine-font-family-headings);
   font-weight: 500;
   font-size: 14px;
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-text-muted);
   text-decoration: none;
 }
 
@@ -58,7 +58,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-sm);
 }
@@ -94,7 +94,7 @@
 /* Tags */
 .tag {
   font-weight: 500;
-  color: var(--mantine-color-grape-4);
+  color: var(--gs-text-tag);
 }
 
 /* Actions Row */
@@ -104,12 +104,12 @@
   justify-content: flex-end;
   gap: var(--mantine-spacing-sm);
   padding-top: var(--mantine-spacing-md);
-  border-top: 2px dotted var(--mantine-color-grape-2);
+  border-top: 2px dotted var(--gs-border-dotted);
 }
 
 /* Link Button for error state */
 .linkButton {
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-interactive-muted);
   font-weight: 500;
   font-size: 14px;
 }
@@ -131,9 +131,9 @@
   height: 960px;
   background: linear-gradient(
     180deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-2) 50%,
-    var(--mantine-color-grape-3) 100%
+    var(--gs-gradient-start) 0%,
+    var(--gs-gradient-mid) 50%,
+    var(--gs-gradient-end) 100%
   );
   display: flex;
   align-items: center;
@@ -166,8 +166,8 @@
   border-radius: 16px;
   background: linear-gradient(
     135deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-3) 100%
+    var(--gs-gradient-start) 0%,
+    var(--gs-gradient-end) 100%
   );
   display: flex;
   align-items: center;
@@ -253,9 +253,9 @@
   height: 540px;
   background: linear-gradient(
     180deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-2) 50%,
-    var(--mantine-color-grape-3) 100%
+    var(--gs-gradient-start) 0%,
+    var(--gs-gradient-mid) 50%,
+    var(--gs-gradient-end) 100%
   );
   display: flex;
   align-items: center;
@@ -288,8 +288,8 @@
   border-radius: 16px;
   background: linear-gradient(
     135deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-3) 100%
+    var(--gs-gradient-start) 0%,
+    var(--gs-gradient-end) 100%
   );
   display: flex;
   align-items: center;
@@ -388,11 +388,11 @@
 }
 
 .comment:hover {
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .loadMoreButton {
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-interactive-muted);
   font-weight: 500;
   font-size: 14px;
   padding: 8px 16px;

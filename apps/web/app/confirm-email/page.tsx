@@ -70,13 +70,13 @@ function ConfirmEmailContent() {
   }, [token, router, refreshUser]);
 
   return (
-    <Center mih="100vh" bg="grape.0">
+    <Center mih="100vh" style={{ backgroundColor: 'var(--gs-bg-accent)' }}>
       <Paper p="xl" radius="md" withBorder shadow="md" w={400}>
         <Stack align="center" gap="md">
           {status === 'loading' && (
             <>
               <Loader size="lg" color="grape" />
-              <Title order={2} ta="center" c="grape.8">
+              <Title order={2} ta="center" style={{ color: 'var(--gs-text-primary)' }}>
                 Confirming your email...
               </Title>
               <Text c="dimmed" ta="center">
@@ -132,7 +132,7 @@ export default function ConfirmEmailPage() {
   return (
     <Suspense
       fallback={
-        <Center mih="100vh" bg="grape.0">
+        <Center mih="100vh" style={{ backgroundColor: 'var(--gs-bg-accent)' }}>
           <Loader size="lg" color="grape" />
         </Center>
       }

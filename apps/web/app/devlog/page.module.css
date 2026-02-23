@@ -1,7 +1,7 @@
 /* Page wrapper */
 .page {
   min-height: 100vh;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Fixed Navigation */
@@ -11,7 +11,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
   border-bottom: 2px solid var(--mantine-color-blue-9);
 }
 
@@ -34,12 +34,12 @@
   padding-top: 120px;
   padding-bottom: 60px;
   text-align: center;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Section Styles */
 .sectionLight {
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .sectionDark {
@@ -60,7 +60,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
   border: 2px solid var(--mantine-color-blue-9);
   color: var(--mantine-color-blue-9);
 }
@@ -72,8 +72,8 @@
   align-items: center;
   justify-content: center;
   background-color: var(--mantine-color-blue-8);
-  border: 2px solid var(--mantine-color-grape-3);
-  color: var(--mantine-color-grape-0);
+  border: 2px solid var(--gs-border-default);
+  color: var(--gs-text-inverse);
 }
 
 /* Feature Item */
@@ -82,8 +82,8 @@
   align-items: flex-start;
   gap: 12px;
   padding: 1rem;
-  background-color: var(--mantine-color-grape-1);
-  border: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-bg-surface);
+  border: 2px solid var(--gs-border-default);
   margin-bottom: 0.75rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -106,7 +106,7 @@
 
 .featureItemDark:hover {
   transform: translateX(4px);
-  box-shadow: 4px 4px 0 var(--mantine-color-grape-3);
+  box-shadow: 4px 4px 0 var(--gs-border-default);
 }
 
 /* Status Badges */
@@ -127,9 +127,9 @@
 }
 
 .badgeMobile {
-  background-color: var(--mantine-color-grape-1);
-  border-color: var(--mantine-color-grape-6);
-  color: var(--mantine-color-grape-9);
+  background-color: var(--gs-bg-surface);
+  border-color: var(--gs-interactive-muted);
+  color: var(--gs-text-primary);
 }
 
 .badgeBoth {
@@ -149,7 +149,7 @@
   position: relative;
   padding-left: 2rem;
   padding-bottom: 2rem;
-  border-left: 3px solid var(--mantine-color-grape-4);
+  border-left: 3px solid var(--gs-text-placeholder);
 }
 
 .timelineItem:last-child {
@@ -162,8 +162,8 @@
   top: 0;
   width: 18px;
   height: 18px;
-  background-color: var(--mantine-color-grape-0);
-  border: 3px solid var(--mantine-color-grape-6);
+  background-color: var(--gs-bg-app);
+  border: 3px solid var(--gs-interactive-muted);
   border-radius: 50%;
 }
 
@@ -185,7 +185,7 @@
   width: 18px;
   height: 18px;
   background-color: var(--mantine-color-blue-9);
-  border: 3px solid var(--mantine-color-grape-3);
+  border: 3px solid var(--gs-border-default);
   border-radius: 50%;
 }
 
@@ -203,7 +203,7 @@
 }
 
 .footerLink:hover {
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
 }
 
 .footerBottom {

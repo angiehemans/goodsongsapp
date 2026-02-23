@@ -596,7 +596,7 @@ export default function AdminPlansPage() {
                                 <Table.Td colSpan={(compareData.plans?.length ?? 0) + 1}>
                                   <Group gap="xs">
                                     <IconCategory size={18} color="var(--mantine-color-grape-6)" />
-                                    <Text fw={700} size="md" c="grape.7" tt="uppercase">
+                                    <Text fw={700} size="md" tt="uppercase" style={{ color: 'var(--gs-text-secondary)' }}>
                                       {category}
                                     </Text>
                                   </Group>

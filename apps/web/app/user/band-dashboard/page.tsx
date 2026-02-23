@@ -326,7 +326,7 @@ export default function BandDashboardPage() {
 
           {/* Events Section */}
           <Group justify="space-between" align="center" my="sm">
-            <Title order={2} c="blue.8" fw={500}>
+            <Title order={2} style={{ color: 'var(--gs-text-heading)' }} fw={500}>
               <Group gap="xs">
                 <IconCalendarEvent size={24} />
                 Events
@@ -404,7 +404,7 @@ export default function BandDashboardPage() {
           )}
 
           {/* Fan Recommendations */}
-          <Title order={2} my="sm" c="blue.8" fw={500}>
+          <Title order={2} my="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
             Fan Recommendations
           </Title>
 

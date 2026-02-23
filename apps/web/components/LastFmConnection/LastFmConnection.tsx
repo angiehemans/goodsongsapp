@@ -155,11 +155,11 @@ export function LastFmConnection({ onConnectionChange }: LastFmConnectionProps) 
   }
 
   return (
-    <Paper p="md" radius="md" bg="grape.0" maw={700}>
+    <Paper p="md" radius="md" maw={700} style={{ backgroundColor: 'var(--gs-bg-accent)' }}>
       <Stack gap="sm">
         <Group gap="xs">
-          <IconBrandLastfm size={20} color="var(--mantine-color-grape-6)" />
-          <Title order={4} c="grape.8">
+          <IconBrandLastfm size={20} style={{ color: 'var(--gs-text-accent)' }} />
+          <Title order={4} style={{ color: 'var(--gs-text-primary)' }}>
             Connect Your Last.fm
           </Title>
         </Group>
@@ -208,8 +208,8 @@ export function LastFmConnection({ onConnectionChange }: LastFmConnectionProps) 
                   href="https://www.last.fm/about/trackmymusic"
                   target="_blank"
                   rel="noopener noreferrer"
-                  c="grape.6"
                   td="underline"
+                  style={{ color: 'var(--gs-text-accent)' }}
                 >
                   last.fm/about/trackmymusic
                 </Text>

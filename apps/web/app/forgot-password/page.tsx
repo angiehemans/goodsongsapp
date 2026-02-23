@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
                 mt="xl"
                 loading={loading}
                 type="submit"
-                color="grape.9"
+                color="grape"
               >
                 Send Reset Link
               </Button>

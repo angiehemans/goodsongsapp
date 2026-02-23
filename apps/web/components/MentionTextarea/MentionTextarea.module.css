@@ -39,7 +39,7 @@
 
 .suggestion:hover,
 .suggestion.selected {
-  background-color: var(--mantine-color-grape-light);
+  background-color: var(--gs-bg-surface-hover);
 }
 
 .userInfo {

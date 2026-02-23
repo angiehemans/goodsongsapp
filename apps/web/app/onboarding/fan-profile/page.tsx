@@ -184,7 +184,7 @@ export default function FanProfilePage() {
     <Container size={500} my={40}>
       <Stack gap="xl">
         <Stack gap="xs" ta="center">
-          <Title order={1} c="grape.8">
+          <Title order={1} style={{ color: 'var(--gs-text-primary)' }}>
             Complete Your Profile
           </Title>
           <Text c="dimmed" size="lg">
@@ -200,7 +200,7 @@ export default function FanProfilePage() {
                 <Avatar
                   size={100}
                   src={previewUrl}
-                  color="grape.6"
+                  color="grape"
                 >
                   {username ? username.charAt(0).toUpperCase() : <IconUser size={40} />}
                 </Avatar>
@@ -277,7 +277,7 @@ export default function FanProfilePage() {
                 type="submit"
                 size="lg"
                 fullWidth
-                color="grape.9"
+                color="grape"
                 loading={submitting}
                 disabled={!isUsernameValid}
                 mt="md"

@@ -221,8 +221,7 @@ export default function AdminReviewsPage() {
                               component={Link}
                               href={`/bands/${review.band.slug}`}
                               size="sm"
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
+                              style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                             >
                               {review.band.name}
                             </Text>
@@ -238,8 +237,7 @@ export default function AdminReviewsPage() {
                               component={Link}
                               href={`/users/${review.author.username}`}
                               size="sm"
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
+                              style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                             >
                               @{review.author.username}
                             </Text>

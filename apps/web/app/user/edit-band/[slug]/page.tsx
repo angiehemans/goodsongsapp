@@ -180,7 +180,7 @@ export default function EditBandPage() {
                 style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover' }}
               />
             ) : (
-              <Avatar size={64} color="grape.6">
+              <Avatar size={64} color="grape">
                 {band?.name.charAt(0).toUpperCase()}
               </Avatar>
             )}

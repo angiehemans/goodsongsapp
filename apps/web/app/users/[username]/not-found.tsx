@@ -8,10 +8,10 @@ export default function NotFound() {
   return (
     <Container size="sm" py="xl">
       <Stack align="center" gap="xl" py="xl">
-        <IconMusic size={80} color="var(--mantine-color-grape-4)" stroke={1.5} />
+        <IconMusic size={80} color="var(--gs-text-muted)" stroke={1.5} />
 
         <Stack align="center" gap="xs">
-          <Title order={1} ta="center" c="grape.6">
+          <Title order={1} ta="center" style={{ color: 'var(--gs-text-accent)' }}>
             Whoops! No one here...
           </Title>
           <Text size="lg" ta="center" c="dimmed" maw={400}>

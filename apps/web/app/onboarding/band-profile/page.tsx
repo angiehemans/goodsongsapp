@@ -138,7 +138,7 @@ export default function BandProfilePage() {
     <Container size={600} my={40}>
       <Stack gap="xl">
         <Stack gap="xs" ta="center">
-          <Title order={1} c="grape.8">
+          <Title order={1} style={{ color: 'var(--gs-text-primary)' }}>
             Set Up Your Band Profile
           </Title>
           <Text c="dimmed" size="lg">
@@ -154,7 +154,7 @@ export default function BandProfilePage() {
                 <Avatar
                   size={100}
                   src={previewUrl}
-                  color="grape.6"
+                  color="grape"
                 >
                   {name ? name.charAt(0).toUpperCase() : <IconMicrophone2 size={40} />}
                 </Avatar>
@@ -259,7 +259,7 @@ export default function BandProfilePage() {
                 type="submit"
                 size="lg"
                 fullWidth
-                color="grape.9"
+                color="grape"
                 loading={submitting}
                 disabled={!name.trim()}
                 mt="md"

@@ -2,8 +2,8 @@
   position: relative;
   border-radius: 50%;
   overflow: hidden;
-  background-color: var(--mantine-color-grape-6);
-  border: 2px solid var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-accent);
+  border: 2px solid var(--gs-border-subtle);
 }
 
 .blend {

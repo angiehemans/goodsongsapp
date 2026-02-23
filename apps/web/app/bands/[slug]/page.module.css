@@ -18,7 +18,7 @@
 .bandBackground {
   position: relative;
   width: 300px;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 @media (max-width: 768px) {

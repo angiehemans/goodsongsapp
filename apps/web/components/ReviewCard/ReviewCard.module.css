@@ -7,28 +7,28 @@
 .artwork {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
+  border-radius: var(--mantine-radius-xs);
   object-fit: cover;
 }
 
 .artworkPlaceholder {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
-  background-color: var(--mantine-color-grape-3);
+  border-radius: var(--mantine-radius-xs);
+  background-color: var(--gs-bg-placeholder);
 }
 
 .songRow {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-sm);
 }
 
 .actionItems {
-  border-top: 2px dotted var(--mantine-color-grape-2);
+  border-top: 2px dotted var(--gs-border-dotted);
 }
 
 .cardBorder {
@@ -36,7 +36,7 @@
   border-radius: 0;
   background: none;
   padding: none;
-  border-bottom: 2px solid var(--mantine-color-grape-5);
+  border-bottom: 2px solid var(--gs-border-accent);
 }
 
 .authorName,
@@ -52,14 +52,15 @@
 }
 
 /* Instagram Story (9:16 aspect ratio - 1080x1920) */
+/* Note: Social share images use gradient tokens that stay light-themed for export */
 .storyContainer {
   width: 540px;
   height: 960px;
   background: linear-gradient(
     180deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-2) 50%,
-    var(--mantine-color-grape-3) 100%
+    var(--gs-gradient-start) 0%,
+    var(--gs-gradient-mid) 50%,
+    var(--gs-gradient-end) 100%
   );
   display: flex;
   align-items: center;
@@ -90,11 +91,7 @@
   width: 280px;
   height: 280px;
   border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-3) 100%
-  );
+  background: linear-gradient(135deg, var(--gs-gradient-start) 0%, var(--gs-gradient-end) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,7 +107,7 @@
   font-size: 32px;
   font-weight: 700;
   font-family: var(--mantine-font-family-headings);
-  color: var(--mantine-color-grey-9);
+  color: var(--mantine-color-gray-9);
   margin: 0 0 8px 0;
   line-height: 1.2;
 }
@@ -118,7 +115,7 @@
 .storyArtistName {
   font-size: 20px;
   font-family: var(--mantine-font-family);
-  color: var(--mantine-color-grey-6);
+  color: var(--mantine-color-gray-6);
   margin: 0;
   font-weight: 500;
 }
@@ -152,7 +149,7 @@
   align-items: center;
   gap: 12px;
   font-size: 20px;
-  color: var(--mantine-color-grey-7);
+  color: var(--mantine-color-gray-7);
   font-weight: 500;
 }
 
@@ -179,9 +176,9 @@
   height: 540px;
   background: linear-gradient(
     180deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-2) 50%,
-    var(--mantine-color-grape-3) 100%
+    var(--gs-gradient-start) 0%,
+    var(--gs-gradient-mid) 50%,
+    var(--gs-gradient-end) 100%
   );
   display: flex;
   align-items: center;
@@ -212,11 +209,7 @@
   width: 160px;
   height: 160px;
   border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    var(--mantine-color-grape-1) 0%,
-    var(--mantine-color-grape-3) 100%
-  );
+  background: linear-gradient(135deg, var(--gs-gradient-start) 0%, var(--gs-gradient-end) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,7 +225,7 @@
   font-size: 22px;
   font-weight: 700;
   font-family: var(--mantine-font-family-headings);
-  color: var(--mantine-color-grey-9);
+  color: var(--mantine-color-gray-9);
   margin: 0 0 4px 0;
   line-height: 1.2;
 }
@@ -240,7 +233,7 @@
 .postArtistName {
   font-size: 14px;
   font-family: var(--mantine-font-family);
-  color: var(--mantine-color-grey-6);
+  color: var(--mantine-color-gray-6);
   margin: 0;
   font-weight: 500;
 }
@@ -276,7 +269,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: var(--mantine-color-grey-7);
+  color: var(--mantine-color-gray-7);
   font-weight: 500;
 }
 
@@ -299,5 +292,5 @@
 /* Tag styling */
 .tag {
   font-weight: 500;
-  color: var(--mantine-color-grape-4);
+  color: var(--gs-text-tag);
 }

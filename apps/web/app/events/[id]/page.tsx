@@ -130,7 +130,7 @@ export default function EventDetailPage() {
           )}
 
           {/* Event Title */}
-          <Title order={2} c="grape.9" mb="md" className={styles.eventTitle}>
+          <Title order={2} style={{ color: 'var(--gs-text-primary)' }} mb="md" className={styles.eventTitle}>
             {event.name}
           </Title>
 
@@ -151,10 +151,10 @@ export default function EventDetailPage() {
                 size={40}
                 fallback={event.band.name || 'B'}
               />
-              <Text fw={600} c="grape.9" style={{ flex: 1 }}>
+              <Text fw={600} style={{ color: 'var(--gs-text-primary)', flex: 1 }}>
                 {event.band.name}
               </Text>
-              <IconChevronRight size={20} color="var(--mantine-color-grape-5)" />
+              <IconChevronRight size={20} color="var(--gs-text-muted)" />
             </Flex>
           )}
 
@@ -166,7 +166,7 @@ export default function EventDetailPage() {
               </Box>
               <Stack gap={2} style={{ flex: 1 }}>
                 <Text size="xs" c="dimmed">Date</Text>
-                <Text fw={500} c="grape.9">{formatDate(event.event_date)}</Text>
+                <Text fw={500} style={{ color: 'var(--gs-text-primary)' }}>{formatDate(event.event_date)}</Text>
               </Stack>
             </Group>
 
@@ -176,7 +176,7 @@ export default function EventDetailPage() {
               </Box>
               <Stack gap={2} style={{ flex: 1 }}>
                 <Text size="xs" c="dimmed">Time</Text>
-                <Text fw={500} c="grape.9">{formatTime(event.event_date)}</Text>
+                <Text fw={500} style={{ color: 'var(--gs-text-primary)' }}>{formatTime(event.event_date)}</Text>
               </Stack>
             </Group>
           </Box>
@@ -195,12 +195,12 @@ export default function EventDetailPage() {
                 </Box>
                 <Stack gap={2} style={{ flex: 1 }}>
                   <Text size="xs" c="dimmed">Venue</Text>
-                  <Text fw={500} c="grape.9">{event.venue.name}</Text>
+                  <Text fw={500} style={{ color: 'var(--gs-text-primary)' }}>{event.venue.name}</Text>
                   {venueAddress && (
                     <Text size="sm" c="dimmed">{venueAddress}</Text>
                   )}
                 </Stack>
-                <IconExternalLink size={16} color="var(--mantine-color-grape-5)" />
+                <IconExternalLink size={16} color="var(--gs-text-muted)" />
               </Group>
             </Box>
           )}
@@ -234,7 +234,7 @@ export default function EventDetailPage() {
           {/* Description */}
           {event.description && (
             <Box mb="lg">
-              <Title order={4} c="grape.9" mb="sm">About</Title>
+              <Title order={4} style={{ color: 'var(--gs-text-primary)' }} mb="sm">About</Title>
               <Text c="gray.7" style={{ lineHeight: 1.6 }}>
                 {event.description}
               </Text>

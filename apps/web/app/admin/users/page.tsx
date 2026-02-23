@@ -255,8 +255,7 @@ export default function AdminUsersPage() {
                               {u.username ? (
                                 <Text
                                   size="sm"
-                                  c="grape.6"
-                                  style={{ textDecoration: 'none' }}
+                                  style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                                 >
                                   {u.username}
                                 </Text>

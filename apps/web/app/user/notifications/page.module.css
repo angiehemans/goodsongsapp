@@ -17,7 +17,7 @@
 
 .sidebar {
   width: 300px;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 @media (max-width: 768px) {
@@ -27,7 +27,7 @@
 }
 
 .notificationCard {
-  background-color: var(--mantine-color-grape-1);
+  background-color: var(--gs-bg-surface);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-sm);
   margin-bottom: var(--mantine-spacing-sm);
@@ -38,13 +38,13 @@
 }
 
 .notificationCard:hover {
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
 }
 
 .notificationCardUnread {
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-notification-unread);
 }
 
 .notificationCardUnread:hover {
-  background-color: var(--mantine-color-grape-3);
+  background-color: var(--gs-notification-unread-hover);
 }

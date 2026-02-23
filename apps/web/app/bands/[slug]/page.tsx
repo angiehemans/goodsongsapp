@@ -132,11 +132,11 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
               fallback={band.name}
             />
             <Stack gap="xs" flex={1}>
-              <Title order={2} c="blue.8" fw={500} lh={1}>
+              <Title order={2} style={{ color: 'var(--gs-text-heading)' }} fw={500} lh={1}>
                 {band.name}
               </Title>
               {(band.city || band.region || band.location) && (
-                <Text c="blue.7" size="sm" lh={1}>
+                <Text style={{ color: 'var(--gs-text-heading)' }} size="sm" lh={1}>
                   {band.city || band.region
                     ? [band.city, band.region].filter(Boolean).join(', ')
                     : band.location}
@@ -152,17 +152,17 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
               styles={{
                 control: {
                   fontSize: 'var(--mantine-font-size-sm)',
-                  color: 'var(--mantine-color-grape-4)',
+                  color: 'var(--gs-text-muted)',
                 },
               }}
             >
-              <Text c="gray.7" size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="sm" style={{ whiteSpace: 'pre-wrap', color: 'var(--gs-text-secondary)' }}>
                 {band.about}
               </Text>
             </Spoiler>
           )}
           <Group gap="xs">
-            <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
+            <Badge color="grape" variant="light" fw="500" tt="capitalize" >
               {reviewsCount} recommendation{reviewsCount !== 1 ? 's' : ''}
             </Badge>
           </Group>
@@ -183,7 +183,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
           {/* Events Section - Above Recommendations */}
           {upcomingEvents.length > 0 && (
             <>
-              <Title order={2} my="sm" c="blue.8" fw={500}>
+              <Title order={2} my="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
                 <Group gap="xs">
                   <IconCalendarEvent size={24} />
                   Upcoming Events
@@ -198,7 +198,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
           )}
 
           {/* Recommendations Section */}
-          <Title order={2} my="sm" c="blue.8" fw={500}>
+          <Title order={2} my="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
             Recommendations
           </Title>
 

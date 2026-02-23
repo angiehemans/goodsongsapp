@@ -101,7 +101,7 @@ export default function AdminLayout({
         <Group h="100%" px="md" justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <Text size="lg" fw={700} c="grape.7">
+            <Text size="lg" fw={700} style={{ color: 'var(--gs-text-accent)' }}>
               Admin Panel
             </Text>
           </Group>

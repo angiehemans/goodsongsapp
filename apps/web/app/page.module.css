@@ -54,7 +54,7 @@
 /* Page wrapper */
 .page {
   min-height: 100vh;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Fixed Navigation */
@@ -64,7 +64,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
   border-bottom: 2px solid var(--mantine-color-blue-9);
 }
 
@@ -91,7 +91,7 @@
   text-align: center;
   overflow: hidden;
   padding-top: 60px;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .hero::before {
@@ -132,7 +132,7 @@
 
 /* Section Styles */
 .sectionLight {
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .sectionDark {
@@ -141,8 +141,8 @@
 
 /* Feature Cards - Light */
 .featureCard {
-  background-color: var(--mantine-color-grape-1);
-  border: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-bg-surface);
+  border: 2px solid var(--gs-border-default);
   padding: 2rem;
   height: 100%;
   transition:
@@ -161,7 +161,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
   border: 2px solid var(--mantine-color-blue-9);
   margin-bottom: 1rem;
   color: var(--mantine-color-blue-9);
@@ -180,7 +180,7 @@
 
 .featureCardDark:hover {
   transform: translateY(-4px);
-  box-shadow: 4px 4px 0 var(--mantine-color-grape-3);
+  box-shadow: 4px 4px 0 var(--gs-border-default);
 }
 
 .featureIconDark {
@@ -190,9 +190,9 @@
   align-items: center;
   justify-content: center;
   background-color: var(--mantine-color-blue-7);
-  border: 2px solid var(--mantine-color-grape-3);
+  border: 2px solid var(--gs-border-default);
   margin-bottom: 1rem;
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
 }
 
 /* Footer */
@@ -209,7 +209,7 @@
 }
 
 .footerLink:hover {
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
 }
 
 .footerBottom {
@@ -225,7 +225,7 @@
   justify-content: center;
   background-color: var(--mantine-color-blue-8);
   border: 2px solid var(--mantine-color-blue-6);
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
   cursor: pointer;
   transition:
     background-color 0.2s ease,
@@ -234,13 +234,13 @@
 
 .socialIcon:hover {
   background-color: var(--mantine-color-blue-7);
-  border-color: var(--mantine-color-grape-3);
+  border-color: var(--gs-border-default);
 }
 
 /* Legacy styles for compatibility */
 .header {
-  background-color: var(--mantine-color-grape-0);
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-bg-app);
+  border-bottom: 2px solid var(--gs-border-default);
 }
 
 .headerLink {
@@ -249,7 +249,7 @@
 }
 
 .userInfo {
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+  border-bottom: 2px solid var(--gs-border-default);
 }
 
 .avatar {

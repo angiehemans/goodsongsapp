@@ -364,8 +364,8 @@ export default function AdminBandsPage() {
                               </Avatar>
                               <Text
                                 size="sm"
-                                c={band.disabled ? 'dimmed' : 'grape.6'}
-                                style={{ textDecoration: 'none' }}
+                                style={{ textDecoration: 'none', color: band.disabled ? undefined : 'var(--gs-text-accent)' }}
+                                c={band.disabled ? 'dimmed' : undefined}
                               >
                                 {band.name}
                               </Text>
@@ -419,8 +419,7 @@ export default function AdminBandsPage() {
                               component={Link}
                               href={`/users/${band.owner.username}`}
                               size="sm"
-                              c="grape.6"
-                              style={{ textDecoration: 'none' }}
+                              style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
                             >
                               @{band.owner.username}
                             </Text>

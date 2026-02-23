@@ -50,3 +50,106 @@ html, body {
     padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* =============================================================================
+   DARK MODE OVERRIDES - Use gray colors instead of purple
+   ============================================================================= */
+
+[data-mantine-color-scheme="dark"] {
+  /* Remap grape color palette to gray in dark mode */
+  --mantine-color-grape-0: var(--mantine-color-gray-9);
+  --mantine-color-grape-1: var(--mantine-color-gray-8);
+  --mantine-color-grape-2: var(--mantine-color-gray-7);
+  --mantine-color-grape-3: var(--mantine-color-gray-6);
+  --mantine-color-grape-4: var(--mantine-color-gray-5);
+  --mantine-color-grape-5: var(--mantine-color-gray-4);
+  --mantine-color-grape-6: var(--mantine-color-gray-3);
+  --mantine-color-grape-7: var(--mantine-color-gray-2);
+  --mantine-color-grape-8: var(--mantine-color-gray-1);
+  --mantine-color-grape-9: var(--mantine-color-gray-0);
+
+  /* Override grape component colors to gray */
+  --mantine-color-grape-filled: var(--mantine-color-gray-0);
+  --mantine-color-grape-filled-hover: var(--mantine-color-gray-2);
+  --mantine-color-grape-light: var(--mantine-color-gray-7);
+  --mantine-color-grape-light-hover: var(--mantine-color-gray-6);
+  --mantine-color-grape-light-color: var(--mantine-color-gray-0);
+  --mantine-color-grape-outline: var(--mantine-color-gray-5);
+  --mantine-color-grape-outline-hover: var(--mantine-color-gray-8);
+
+  /* Primary color overrides */
+  --mantine-primary-color-filled: var(--mantine-color-gray-0);
+  --mantine-primary-color-filled-hover: var(--mantine-color-gray-2);
+  --mantine-primary-color-light: var(--mantine-color-gray-7);
+  --mantine-primary-color-light-hover: var(--mantine-color-gray-6);
+  --mantine-primary-color-light-color: var(--mantine-color-gray-0);
+}
+
+/* Button overrides for dark mode */
+[data-mantine-color-scheme="dark"] .mantine-Button-root[data-variant="light"] {
+  background-color: var(--mantine-color-gray-7) !important;
+  color: var(--mantine-color-gray-0) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Button-root[data-variant="light"]:hover {
+  background-color: var(--mantine-color-gray-6) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Button-root[data-variant="outline"] {
+  border-color: var(--mantine-color-gray-5) !important;
+  color: var(--mantine-color-gray-0) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Button-root[data-variant="outline"]:hover {
+  background-color: var(--mantine-color-gray-8) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Button-root[data-variant="subtle"] {
+  color: var(--mantine-color-gray-0) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Button-root[data-variant="subtle"]:hover {
+  background-color: var(--mantine-color-gray-7) !important;
+}
+
+/* ActionIcon overrides for dark mode */
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="filled"] {
+  background-color: var(--mantine-color-gray-6) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="filled"]:hover {
+  background-color: var(--mantine-color-gray-5) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="light"] {
+  background-color: var(--mantine-color-gray-7) !important;
+  color: var(--mantine-color-gray-0) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="light"]:hover {
+  background-color: var(--mantine-color-gray-6) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="outline"] {
+  border-color: var(--mantine-color-gray-5) !important;
+  color: var(--mantine-color-gray-0) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="outline"]:hover {
+  background-color: var(--mantine-color-gray-8) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="subtle"] {
+  color: var(--mantine-color-gray-0) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-ActionIcon-root[data-variant="subtle"]:hover {
+  background-color: var(--mantine-color-gray-7) !important;
+}
+
+/* Badge overrides for dark mode */
+[data-mantine-color-scheme="dark"] .mantine-Badge-root[data-variant="filled"] {
+  background-color: var(--mantine-color-gray-6) !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Badge-root[data-variant="light"] {
+  background-color: var(--mantine-color-gray-7) !important;
+  color: var(--mantine-color-gray-0) !important;
+}
+
+/* Loader override for dark mode */
+[data-mantine-color-scheme="dark"] .mantine-Loader-root {
+  --loader-color: var(--mantine-color-gray-4) !important;
+}
+
+/* Avatar override for dark mode */
+[data-mantine-color-scheme="dark"] .mantine-Avatar-root {
+  --avatar-bg: var(--mantine-color-gray-7) !important;
+}

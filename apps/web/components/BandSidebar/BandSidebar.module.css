@@ -1,7 +1,7 @@
 .container {
   position: relative;
   width: 300px;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 @media (max-width: 768px) {
@@ -16,8 +16,8 @@
   height: 72px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: var(--mantine-color-grape-6);
-  border: 2px solid var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-accent);
+  border: 2px solid var(--gs-border-subtle);
 }
 
 .profilePhotoBlend {
@@ -34,7 +34,7 @@
 }
 
 .userMenu {
-  border-top: 2px solid var(--mantine-color-grape-3);
+  border-top: 2px solid var(--gs-border-default);
   padding-top: var(--mantine-spacing-sm);
 }
 

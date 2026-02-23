@@ -1,7 +1,7 @@
 .card {
   display: flex;
   flex-direction: column;
-  background-color: var(--mantine-color-grape-1);
+  background-color: var(--gs-bg-surface);
   border-radius: var(--mantine-radius-md);
   text-decoration: none;
   color: inherit;
@@ -9,7 +9,7 @@
 }
 
 .card:hover {
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
 }
 
 .dateBadge {
@@ -19,20 +19,20 @@
   justify-content: center;
   min-width: 48px;
   padding: var(--mantine-spacing-sm);
-  background-color: var(--mantine-color-grape-2);
+  background-color: var(--gs-bg-surface-alt);
   border-radius: var(--mantine-radius-md);
 }
 
 .dateDay {
   font-size: var(--mantine-font-size-xl);
   font-weight: 700;
-  color: var(--mantine-color-grape-9);
+  color: var(--gs-text-primary);
   line-height: 1;
 }
 
 .dateMonth {
   font-size: var(--mantine-font-size-xs);
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-text-muted);
   text-transform: uppercase;
   font-weight: 600;
 }

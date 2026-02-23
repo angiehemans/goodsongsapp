@@ -151,7 +151,7 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
                 <Avatar 
                   size={80}
                   src={currentImageUrl}
-                  color="grape.6"
+                  color="grape"
                 >
                   {!currentImageUrl && user?.username?.charAt(0).toUpperCase()}
                 </Avatar>
@@ -164,7 +164,7 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
                     <ActionIcon
                       {...props}
                       variant="filled"
-                      color="grape.6"
+                      color="grape"
                       size="sm"
                       radius="xl"
                       style={{

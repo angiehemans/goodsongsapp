@@ -71,11 +71,11 @@ export function UserProfileSidebar({
           fallback={profile.username}
         />
         <Stack gap="xs" flex={1}>
-          <Title order={2} c="blue.8" fw={500} lh={1}>
+          <Title order={2} fw={500} lh={1} style={{ color: 'var(--gs-text-primary)' }}>
             @{profile.username}
           </Title>
           {(profile.city || profile.region || profile.location) && (
-            <Text c="blue.7" size="sm" lh={1}>
+            <Text size="sm" lh={1} style={{ color: 'var(--gs-text-secondary)' }}>
               {profile.city || profile.region
                 ? [profile.city, profile.region].filter(Boolean).join(', ')
                 : profile.location}
@@ -91,27 +91,27 @@ export function UserProfileSidebar({
           styles={{
             control: {
               fontSize: 'var(--mantine-font-size-sm)',
-              color: 'var(--mantine-color-grape-4)',
+              color: 'var(--gs-text-muted)',
             },
           }}
         >
-          <Text c="gray.7" size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', color: 'var(--gs-text-secondary)' }}>
             {profile.about_me}
           </Text>
         </Spoiler>
       )}
       <Group gap="xs">
         {isBlogger && (
-          <Badge color="teal" variant="light" fw="500" tt="capitalize" bg="teal.1">
+          <Badge color="teal" variant="light" fw="500" tt="capitalize">
             Blogger
           </Badge>
         )}
-        <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
+        <Badge color="grape" variant="light" fw="500" tt="capitalize">
           {profile.reviews?.length ?? profile.reviews_count ?? 0} recommendation
           {(profile.reviews?.length ?? profile.reviews_count ?? 0) !== 1 ? 's' : ''}
         </Badge>
         {profile.followers_count !== undefined && (
-          <Badge color="blue" variant="light" fw="500" tt="capitalize" bg="blue.1">
+          <Badge color="blue" variant="light" fw="500" tt="capitalize">
             {profile.followers_count} follower{profile.followers_count !== 1 ? 's' : ''}
           </Badge>
         )}

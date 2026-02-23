@@ -1,5 +1,5 @@
 .mention {
-  color: var(--mantine-color-grape-6);
+  color: var(--gs-interactive-muted);
   text-decoration: none;
   font-weight: 500;
 }

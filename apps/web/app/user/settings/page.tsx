@@ -156,7 +156,7 @@ export default function SettingsPage() {
 
         {/* Main Content */}
         <Flex direction="column" px="md" pb="lg" flex={1} maw={700}>
-          <Title order={2} my="sm" c="blue.8" fw={500}>
+          <Title order={2} my="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
             Settings
           </Title>
 

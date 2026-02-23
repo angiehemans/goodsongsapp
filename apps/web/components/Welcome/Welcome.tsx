@@ -4,7 +4,7 @@ import classes from './Welcome.module.css';
 export function Welcome() {
   return (
     <>
-      <Title className={classes.title} c="blue.9" ta="center" mt={100}>
+      <Title className={classes.title} style={{ color: 'var(--gs-text-heading)' }} ta="center" mt={100}>
         GoodSongs
       </Title>
       <Text c="dimmed" ta="center" size="lg" maw={580} mx="auto" mt="xl">

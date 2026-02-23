@@ -1,7 +1,7 @@
 /* Page wrapper */
 .page {
   min-height: 100vh;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Fixed Navigation */
@@ -11,7 +11,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
   border-bottom: 2px solid var(--mantine-color-blue-9);
 }
 
@@ -34,12 +34,12 @@
   padding-top: 120px;
   padding-bottom: 20px;
   text-align: center;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Section Styles */
 .sectionLight {
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .sectionDark {
@@ -48,8 +48,8 @@
 
 /* Content Cards */
 .contentCard {
-  background-color: var(--mantine-color-grape-1);
-  border: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-bg-surface);
+  border: 2px solid var(--gs-border-default);
   padding: 2.5rem;
 }
 
@@ -72,12 +72,12 @@
   color: var(--mantine-color-blue-9);
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+  border-bottom: 2px solid var(--gs-border-default);
 }
 
 .sectionTitleDark {
   font-size: 1.75rem;
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--mantine-color-blue-6);
@@ -85,7 +85,7 @@
 
 /* Text Styles */
 .paragraph {
-  color: var(--mantine-color-grape-8);
+  color: var(--gs-text-secondary);
   line-height: 1.8;
   margin-bottom: 1rem;
   font-size: 1.0625rem;
@@ -96,7 +96,7 @@
 }
 
 .paragraphDark {
-  color: var(--mantine-color-grape-1);
+  color: var(--gs-text-inverse);
   line-height: 1.8;
   margin-bottom: 1rem;
   font-size: 1.0625rem;
@@ -108,7 +108,7 @@
 
 /* Link Styles */
 .link {
-  color: var(--mantine-color-grape-7);
+  color: var(--gs-text-secondary);
   text-decoration: underline;
   transition: color 0.2s ease;
   font-weight: 500;
@@ -132,7 +132,7 @@
 }
 
 .footerLink:hover {
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
 }
 
 .footerBottom {

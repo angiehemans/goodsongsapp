@@ -45,7 +45,7 @@ export function EventCard({
 
       {/* Event Details */}
       <Stack gap={2} flex={1} style={{ minWidth: 0 }}>
-        <Text fw={600} c="grape.9" lineClamp={1}>
+        <Text fw={600} lineClamp={1} style={{ color: 'var(--gs-text-primary)' }}>
           {event.name}
         </Text>
         <Text size="sm" c="dimmed" lineClamp={1}>
@@ -53,7 +53,7 @@ export function EventCard({
           {venueLocation && ` · ${venueLocation}`}
         </Text>
         {showBand && event.band && (
-          <Text size="sm" c="grape.6" fw={500}>
+          <Text size="sm" fw={500} style={{ color: 'var(--gs-text-accent)' }}>
             {event.band.name}
           </Text>
         )}

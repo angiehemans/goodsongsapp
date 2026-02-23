@@ -193,7 +193,7 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
                   </div>
                 </div>
               ) : (
-                <Avatar size="72px" color="grape.6">
+                <Avatar size="72px" color="grape">
                   {editName.charAt(0).toUpperCase() || 'B'}
                 </Avatar>
               )}
@@ -206,7 +206,7 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
                   <ActionIcon
                     {...props}
                     variant="filled"
-                    color="grape.6"
+                    color="grape"
                     size="md"
                     radius="xl"
                     style={{
@@ -345,11 +345,11 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
           href={`/bands/${band.slug}`}
         />
         <Stack gap="xs" flex={1}>
-          <Title order={2} c="blue.8" fw={500} lh={1}>
+          <Title order={2} fw={500} lh={1} style={{ color: 'var(--gs-text-primary)' }}>
             {band.name}
           </Title>
           {(band.city || band.region || band.location) && (
-            <Text c="blue.7" size="sm" lh={1}>
+            <Text size="sm" lh={1} style={{ color: 'var(--gs-text-secondary)' }}>
               {band.city || band.region
                 ? [band.city, band.region].filter(Boolean).join(', ')
                 : band.location}
@@ -365,18 +365,18 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
           styles={{
             control: {
               fontSize: 'var(--mantine-font-size-sm)',
-              color: 'var(--mantine-color-grape-4)',
+              color: 'var(--gs-text-muted)',
             },
           }}
         >
-          <Text size="sm" c="gray.7" style={{ whiteSpace: 'pre-wrap' }}>
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', color: 'var(--gs-text-secondary)' }}>
             {band.about}
           </Text>
         </Spoiler>
       )}
       {badgeText && (
         <Group gap="xs">
-          <Badge color="grape" variant="light" fw="500" tt="capitalize" bg="grape.1">
+          <Badge color="grape" variant="light" fw="500" tt="capitalize">
             {badgeText}
           </Badge>
         </Group>

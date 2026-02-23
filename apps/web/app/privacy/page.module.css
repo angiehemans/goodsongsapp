@@ -1,7 +1,7 @@
 /* Page wrapper */
 .page {
   min-height: 100vh;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Fixed Navigation */
@@ -11,7 +11,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
   border-bottom: 2px solid var(--mantine-color-blue-9);
 }
 
@@ -34,17 +34,17 @@
   padding-top: 120px;
   padding-bottom: 40px;
   text-align: center;
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 /* Content Section */
 .content {
-  background-color: var(--mantine-color-grape-0);
+  background-color: var(--gs-bg-app);
 }
 
 .policyContent {
-  background-color: var(--mantine-color-grape-1);
-  border: 2px solid var(--mantine-color-grape-3);
+  background-color: var(--gs-bg-surface);
+  border: 2px solid var(--gs-border-default);
   padding: 2.5rem;
 }
 
@@ -68,7 +68,7 @@
   color: var(--mantine-color-blue-9);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--mantine-color-grape-3);
+  border-bottom: 2px solid var(--gs-border-default);
 }
 
 .subsectionTitle {
@@ -80,7 +80,7 @@
 
 /* Text Styles */
 .paragraph {
-  color: var(--mantine-color-grape-8);
+  color: var(--gs-text-secondary);
   line-height: 1.7;
   margin-bottom: 1rem;
 }
@@ -91,7 +91,7 @@
 
 /* List Styles */
 .list {
-  color: var(--mantine-color-grape-8);
+  color: var(--gs-text-secondary);
   line-height: 1.7;
   margin: 0;
   padding-left: 1.5rem;
@@ -112,7 +112,7 @@
 
 /* Link Styles */
 .link {
-  color: var(--mantine-color-grape-7);
+  color: var(--gs-text-secondary);
   text-decoration: underline;
   transition: color 0.2s ease;
 }
@@ -135,7 +135,7 @@
 }
 
 .footerLink:hover {
-  color: var(--mantine-color-grape-0);
+  color: var(--gs-text-inverse);
 }
 
 .footerBottom {

@@ -208,7 +208,7 @@ export default function DiscoverPage() {
       <Flex className={styles.content}>
         {/* Sidebar */}
         <Box className={styles.sidebar} p="md">
-          <Title order={2} c="blue.8" fw={500} mb="md">
+          <Title order={2} style={{ color: 'var(--gs-text-heading)' }} fw={500} mb="md">
             Discover
           </Title>
 

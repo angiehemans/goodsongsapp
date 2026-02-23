@@ -108,7 +108,7 @@ export default async function BloggerProfilePage({
 
           {/* Recommendations Section */}
           <Flex direction="column" px="md" pb="lg" w="100%" maw={700}>
-            <Title order={2} my="sm" c="blue.8" fw={500}>
+            <Title order={2} my="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
               Recommendations
             </Title>
 

@@ -21,7 +21,7 @@ export function EmptyState({
   title,
   description,
   action,
-  iconColor = 'grape.6',
+  iconColor = 'grape',
   iconSize = 48,
 }: EmptyStateProps) {
   return (

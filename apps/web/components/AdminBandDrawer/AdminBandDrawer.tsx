@@ -351,9 +351,8 @@ export function AdminBandDrawer({
                 href={`/users/${bandDetail.owner.username}`}
                 target="_blank"
                 size="sm"
-                c="grape.6"
                 fw={500}
-                style={{ textDecoration: 'none' }}
+                style={{ textDecoration: 'none', color: 'var(--gs-text-accent)' }}
               >
                 @{bandDetail.owner.username}
               </Text>

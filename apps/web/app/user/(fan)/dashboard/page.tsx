@@ -127,15 +127,15 @@ export default function DashboardPage() {
       />
 
       {/* Discord Notice */}
-      <Alert bg="blue.0" my="md" maw={700}>
+      <Alert style={{ backgroundColor: 'var(--gs-bg-notice)' }} my="md" maw={700}>
         <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-          <Text size="sm">
+          <Text size="sm" style={{ color: 'var(--gs-text-notice)' }}>
             Want to give us feedback or join the Android beta test? Join our Discord community!
           </Text>
           <Button
             size="xs"
             variant="light"
-            color="blue"
+            color="grape"
             component="a"
             href="https://discord.gg/33MCPDwws"
             target="_blank"

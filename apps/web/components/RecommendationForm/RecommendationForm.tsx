@@ -283,12 +283,7 @@ export function RecommendationForm({
       </Text>
 
       {showPrefilledAlert && isPrefilled && (
-        <Alert
-          icon={<IconBrandLastfm size="1rem" />}
-          title="Prefilled from Last.fm"
-          color="grape"
-          variant="light"
-        >
+        <Alert color="grape" variant="light">
           This form has been prefilled with track information from your recently played songs.
         </Alert>
       )}
@@ -352,11 +347,11 @@ export function RecommendationForm({
                       <Center
                         w={40}
                         h={40}
-                        bg="grape.1"
                         style={{
                           borderRadius: 'var(--mantine-radius-sm)',
                           flexShrink: 0,
                           display: result.artwork_url ? 'none' : 'flex',
+                          backgroundColor: 'var(--gs-bg-accent)',
                         }}
                       >
                         <img
@@ -402,10 +397,9 @@ export function RecommendationForm({
 
           <Text
             size="sm"
-            c="grape.6"
             ta="center"
             py="xs"
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', color: 'var(--gs-text-accent)' }}
             onClick={() => setManualEntry(true)}
           >
             Can't find your song? Enter details manually
@@ -415,7 +409,7 @@ export function RecommendationForm({
 
       {/* Selected Release Display */}
       {(selectedRelease || isPrefilled) && (
-        <Paper p="sm" bg="grape.0" radius="md">
+        <Paper p="sm" radius="md" style={{ backgroundColor: 'var(--gs-bg-accent)' }}>
           <Group justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
               {formData.artwork_url && !artworkError ? (
@@ -434,8 +428,11 @@ export function RecommendationForm({
                 <Center
                   w={48}
                   h={48}
-                  bg="grape.1"
-                  style={{ borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    flexShrink: 0,
+                    backgroundColor: 'var(--gs-bg-accent)',
+                  }}
                 >
                   <img
                     src="/logo-grape.svg"
@@ -472,8 +469,7 @@ export function RecommendationForm({
           </Text>
           <Text
             size="sm"
-            c="grape.6"
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', color: 'var(--gs-text-accent)' }}
             onClick={() => {
               setManualEntry(false);
               setFormData((prev) => ({
