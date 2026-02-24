@@ -372,12 +372,27 @@ export interface FollowingFeedItem {
     id: number;
     slug: string;
     name: string;
+    preferred_band_link?: string;
+    spotify_link?: string;
+    apple_music_link?: string;
+    youtube_music_link?: string;
+    bandcamp_link?: string;
+    soundcloud_link?: string;
   };
   likes_count?: number;
   liked_by_current_user?: boolean;
   comments_count?: number;
   streaming_links?: StreamingLinks;
   songlink_url?: string;
+  songlink_search_url?: string;
+  track?: {
+    id: string;
+    name: string;
+    preferred_track_link?: string;
+    streaming_links?: StreamingLinks;
+    songlink_url?: string;
+    songlink_search_url?: string;
+  };
 }
 
 export interface FollowingFeedResponse {
