@@ -15,7 +15,9 @@ import {
 } from "react-native";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { apiClient, UserSearchResult } from "@/utils/api";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 
 interface MentionTextInputProps extends Omit<TextInputProps, "onChangeText"> {
   value: string;
@@ -32,6 +34,8 @@ export function MentionTextInput({
   maxHeight = 120,
   ...textInputProps
 }: MentionTextInputProps) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<UserSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -175,7 +179,7 @@ export function MentionTextInput({
   const renderSuggestionItem = useCallback(
     ({ item }: { item: UserSearchResult }) => (
       <TouchableOpacity
-        style={styles.suggestionItem}
+        style={[styles.suggestionItem, themedStyles.suggestionItem]}
         onPress={() => insertMention(item)}
         activeOpacity={0.7}
       >
@@ -185,16 +189,16 @@ export function MentionTextInput({
           size={28}
         />
         <View style={styles.suggestionInfo}>
-          <Text style={styles.suggestionUsername}>@{item.username}</Text>
+          <Text style={[styles.suggestionUsername, themedStyles.suggestionUsername]}>@{item.username}</Text>
           {item.display_name !== item.username && (
-            <Text style={styles.suggestionDisplayName}>
+            <Text style={[styles.suggestionDisplayName, themedStyles.suggestionDisplayName]}>
               {item.display_name}
             </Text>
           )}
         </View>
       </TouchableOpacity>
     ),
-    [insertMention],
+    [insertMention, themedStyles],
   );
 
   // Flatten the style to extract layout props for wrapper vs input props
@@ -229,15 +233,15 @@ export function MentionTextInput({
 
       {/* Suggestions dropdown - absolute positioned above input */}
       {showSuggestions && (
-        <View style={styles.suggestionsContainer}>
+        <View style={[styles.suggestionsContainer, themedStyles.suggestionsContainer]}>
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={styles.loadingText}>Searching...</Text>
+              <ActivityIndicator size="small" color={themeColors.btnPrimaryBg} />
+              <Text style={[styles.loadingText, themedStyles.loadingText]}>Searching...</Text>
             </View>
           ) : suggestions.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyText, themedStyles.emptyText]}>
                 {mentionQuery.length < 2
                   ? "Type at least 2 characters"
                   : "No users found"}
@@ -258,6 +262,29 @@ export function MentionTextInput({
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    suggestionsContainer: {
+      backgroundColor: colors.bgApp,
+      borderColor: colors.borderDefault,
+    },
+    suggestionItem: {
+      borderBottomColor: colors.bgSurfaceAlt,
+    },
+    suggestionUsername: {
+      color: colors.textPrimary,
+    },
+    suggestionDisplayName: {
+      color: colors.textMuted,
+    },
+    loadingText: {
+      color: colors.textMuted,
+    },
+    emptyText: {
+      color: colors.textMuted,
+    },
+  });
+
 const styles = StyleSheet.create({
   suggestionsContainer: {
     position: "absolute",
@@ -265,11 +292,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     maxHeight: 200,
-    backgroundColor: colors.grape[0],
     borderRadius: theme.radii.md,
     marginBottom: theme.spacing.xs,
     borderWidth: 1,
-    borderColor: colors.grape[3],
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -285,7 +310,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.sm,
     gap: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.grape[2],
   },
   suggestionInfo: {
     flex: 1,
@@ -293,11 +317,9 @@ const styles = StyleSheet.create({
   suggestionUsername: {
     fontSize: theme.fontSizes.sm,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.grape[8],
   },
   suggestionDisplayName: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
   },
   loadingContainer: {
     flexDirection: "row",
@@ -308,7 +330,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   emptyContainer: {
     padding: theme.spacing.md,
@@ -316,6 +337,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
 });

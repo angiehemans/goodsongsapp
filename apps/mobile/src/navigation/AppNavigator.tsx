@@ -1,25 +1,29 @@
-import React, { useEffect, useRef } from 'react';
-import { AppState, Platform, View, Text, StyleSheet } from 'react-native';
-import BootSplash from 'react-native-bootsplash';
-import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from '@react-native-vector-icons/feather';
+import React, { useEffect, useRef } from "react";
+import { AppState, Platform, View, Text, StyleSheet } from "react-native";
+import BootSplash from "react-native-bootsplash";
+import {
+  NavigationContainer,
+  NavigationContainerRef,
+} from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Icon from "@react-native-vector-icons/feather";
 
-type IconName = React.ComponentProps<typeof Icon>['name'];
+type IconName = React.ComponentProps<typeof Icon>["name"];
 
-import { LoadingScreen } from '@/components';
-import { useAuthStore } from '@/context/authStore';
-import { useScrobbleStore } from '@/context/scrobbleStore';
-import { useNotificationStore } from '@/context/notificationStore';
-import { scrobbleNative } from '@/utils/scrobbleNative';
+import { LoadingScreen } from "@/components";
+import { useAuthStore } from "@/context/authStore";
+import { useScrobbleStore } from "@/context/scrobbleStore";
+import { useNotificationStore } from "@/context/notificationStore";
+import { useThemeStore } from "@/context/themeStore";
+import { scrobbleNative } from "@/utils/scrobbleNative";
 import {
   registerForPushNotifications,
   setupNotificationHandlers,
-} from '@/utils/pushNotifications';
-import type { NowPlayingTrack } from '@/types/scrobble';
-import { theme, colors } from '@/theme';
+} from "@/utils/pushNotifications";
+import type { NowPlayingTrack } from "@/types/scrobble";
+import { theme } from "@/theme";
 
 import {
   WelcomeScreen,
@@ -45,13 +49,13 @@ import {
   OnboardingFanProfileScreen,
   OnboardingBandProfileScreen,
   ReviewDetailScreen,
-} from '@/screens';
+} from "@/screens";
 
 import {
   RootStackParamList,
   AuthStackParamList,
   MainTabParamList,
-} from './types';
+} from "./types";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -59,11 +63,13 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Auth Navigator (Welcome, Login, Signup)
 function AuthNavigator() {
+  const themeColors = useThemeStore((state) => state.colors);
+
   return (
     <AuthStack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.grape[0] },
+        contentStyle: { backgroundColor: themeColors.bgApp },
       }}
     >
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
@@ -78,7 +84,8 @@ function MainNavigator() {
   const insets = useSafeAreaInsets();
   const { role } = useAuthStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
-  const isBandAccount = role === 'band';
+  const themeColors = useThemeStore((state) => state.colors);
+  const isBandAccount = role === "band";
 
   return (
     <Tab.Navigator
@@ -88,36 +95,36 @@ function MainNavigator() {
           let iconName: IconName;
 
           switch (route.name) {
-            case 'Home':
-              iconName = isBandAccount ? 'bar-chart-2' : 'home';
+            case "Home":
+              iconName = isBandAccount ? "bar-chart-2" : "home";
               break;
-            case 'Discover':
-              iconName = 'compass';
+            case "Discover":
+              iconName = "compass";
               break;
-            case 'CreateReview':
-              iconName = 'plus-circle';
+            case "CreateReview":
+              iconName = "plus-circle";
               break;
-            case 'CreateEvent':
-              iconName = 'calendar';
+            case "CreateEvent":
+              iconName = "calendar";
               break;
-            case 'Notifications':
-              iconName = 'bell';
+            case "Notifications":
+              iconName = "bell";
               break;
-            case 'Profile':
-              iconName = isBandAccount ? 'music' : 'user';
+            case "Profile":
+              iconName = isBandAccount ? "music" : "user";
               break;
             default:
-              iconName = 'circle';
+              iconName = "circle";
           }
 
           // Add badge for notifications
-          if (route.name === 'Notifications' && unreadCount > 0) {
+          if (route.name === "Notifications" && unreadCount > 0) {
             return (
               <View>
                 <Icon name={iconName} size={size} color={color} />
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>
-                    {unreadCount > 99 ? '99+' : unreadCount}
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </Text>
                 </View>
               </View>
@@ -126,12 +133,12 @@ function MainNavigator() {
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: colors.grey[5],
+        tabBarActiveTintColor: themeColors.tabBarActive,
+        tabBarInactiveTintColor: themeColors.tabBarInactive,
         tabBarStyle: {
-          backgroundColor: colors.grape[0],
-          borderTopColor: colors.grape[2],
-          borderTopWidth: 1,
+          backgroundColor: themeColors.tabBarBg,
+          // borderTopColor: themeColors.textInverse,
+          // borderTopWidth: 2,
           paddingTop: 8,
           paddingBottom: 8 + insets.bottom,
           height: 60 + insets.bottom,
@@ -145,48 +152,52 @@ function MainNavigator() {
       <Tab.Screen
         name="Home"
         component={isBandAccount ? BandDashboardScreen : FeedScreen}
-        options={{ tabBarLabel: isBandAccount ? 'Dashboard' : 'Home' }}
+        options={{ tabBarLabel: isBandAccount ? "Dashboard" : "Home" }}
       />
       <Tab.Screen
         name="Discover"
         component={DiscoverScreen}
-        options={{ tabBarLabel: 'Discover' }}
+        options={{ tabBarLabel: "Discover" }}
       />
       {isBandAccount ? (
         <Tab.Screen
           name="CreateEvent"
           component={CreateEventScreen}
-          options={{ tabBarLabel: 'Event' }}
+          options={{ tabBarLabel: "Event" }}
         />
       ) : (
         <Tab.Screen
           name="CreateReview"
           component={CreateReviewScreen}
-          options={{ tabBarLabel: 'Recommend' }}
+          options={{ tabBarLabel: "Recommend" }}
         />
       )}
       <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
-        options={{ tabBarLabel: 'Alerts' }}
+        options={{ tabBarLabel: "Alerts" }}
       />
       <Tab.Screen
         name="Profile"
         component={isBandAccount ? MyBandProfileScreen : ProfileScreen}
-        options={{ tabBarLabel: isBandAccount ? 'Band' : 'Profile' }}
+        options={{ tabBarLabel: isBandAccount ? "Band" : "Profile" }}
       />
     </Tab.Navigator>
   );
 }
 
 // Navigation ref for push notification navigation
-const navigationRef = React.createRef<NavigationContainerRef<RootStackParamList>>();
+const navigationRef =
+  React.createRef<NavigationContainerRef<RootStackParamList>>();
 
 // Root Navigator
 export function AppNavigator() {
-  const { isAuthenticated, isLoading, isOnboardingComplete, loadAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, isOnboardingComplete, loadAuth } =
+    useAuthStore();
   const startPolling = useNotificationStore((state) => state.startPolling);
-  const fetchUnreadCount = useNotificationStore((state) => state.fetchUnreadCount);
+  const fetchUnreadCount = useNotificationStore(
+    (state) => state.fetchUnreadCount,
+  );
 
   useEffect(() => {
     loadAuth();
@@ -224,7 +235,7 @@ export function AppNavigator() {
       // Foreground notification handler - refresh notification count
       () => {
         fetchUnreadCount();
-      }
+      },
     );
 
     return cleanup;
@@ -234,7 +245,7 @@ export function AppNavigator() {
   // Also sync pending scrobbles when the app is opened or foregrounded
   const hassynced = useRef(false);
   useEffect(() => {
-    if (!isAuthenticated || Platform.OS !== 'android') return;
+    if (!isAuthenticated || Platform.OS !== "android") return;
     hassynced.current = false;
 
     // Flush any scrobbles accumulated while the app was closed
@@ -252,8 +263,8 @@ export function AppNavigator() {
     hassynced.current = true;
 
     // Sync again each time the app comes back to the foreground
-    const appStateSub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && hassynced.current) {
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "active" && hassynced.current) {
         flushPending();
       }
     });
@@ -265,7 +276,7 @@ export function AppNavigator() {
     });
 
     const nowPlayingSub = scrobbleNative.onNowPlaying((event) => {
-      if (event && 'trackName' in event && event.trackName) {
+      if (event && "trackName" in event && event.trackName) {
         useScrobbleStore.getState().setNowPlaying(event as NowPlayingTrack);
       } else {
         useScrobbleStore.getState().setNowPlaying(null);
@@ -293,54 +304,63 @@ export function AppNavigator() {
               <RootStack.Screen
                 name="Settings"
                 component={SettingsScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="EditProfile"
                 component={EditProfileScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="UserProfile"
                 component={UserProfileScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="BandProfile"
                 component={BandProfileScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="EditBand"
                 component={EditBandScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="EventDetails"
                 component={EventDetailsScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="ScrobblePermission"
                 component={ScrobblePermissionScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="ScrobbleSettings"
                 component={ScrobbleSettingsScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
               <RootStack.Screen
                 name="ReviewDetail"
                 component={ReviewDetailScreen}
-                options={{ presentation: 'card' }}
+                options={{ presentation: "card" }}
               />
             </>
           ) : (
             <>
-              <RootStack.Screen name="OnboardingAccountType" component={OnboardingAccountTypeScreen} />
-              <RootStack.Screen name="OnboardingFanProfile" component={OnboardingFanProfileScreen} />
-              <RootStack.Screen name="OnboardingBandProfile" component={OnboardingBandProfileScreen} />
+              <RootStack.Screen
+                name="OnboardingAccountType"
+                component={OnboardingAccountTypeScreen}
+              />
+              <RootStack.Screen
+                name="OnboardingFanProfile"
+                component={OnboardingFanProfileScreen}
+              />
+              <RootStack.Screen
+                name="OnboardingBandProfile"
+                component={OnboardingBandProfileScreen}
+              />
             </>
           )
         ) : (
@@ -353,20 +373,20 @@ export function AppNavigator() {
 
 const styles = StyleSheet.create({
   badge: {
-    position: 'absolute',
+    position: "absolute",
     right: -8,
     top: -4,
-    backgroundColor: '#ef4444',
+    backgroundColor: "#ef4444",
     borderRadius: 10,
     minWidth: 18,
     height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

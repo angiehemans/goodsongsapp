@@ -10,12 +10,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Button } from '@/components';
 import { apiClient } from '@/utils/api';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OnboardingAccountType'>;
 
 export function OnboardingAccountTypeScreen({ navigation }: Props) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
   const [selected, setSelected] = useState<'fan' | 'band' | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,36 +42,36 @@ export function OnboardingAccountTypeScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, themedStyles.container]}>
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome to Good Songs</Text>
-        <Text style={styles.subtitle}>What best describes you?</Text>
+        <Text style={[styles.title, themedStyles.title]}>Welcome to Good Songs</Text>
+        <Text style={[styles.subtitle, themedStyles.subtitle]}>What best describes you?</Text>
 
         <View style={styles.cards}>
           <TouchableOpacity
-            style={[styles.card, selected === 'fan' && styles.cardSelected]}
+            style={[styles.card, themedStyles.card, selected === 'fan' && themedStyles.cardSelected]}
             onPress={() => setSelected('fan')}
             activeOpacity={0.7}
           >
             <Text style={styles.cardEmoji}>🎧</Text>
-            <Text style={[styles.cardTitle, selected === 'fan' && styles.cardTitleSelected]}>
+            <Text style={[styles.cardTitle, themedStyles.cardTitle, selected === 'fan' && themedStyles.cardTitleSelected]}>
               I'm a Fan
             </Text>
-            <Text style={styles.cardDescription}>
+            <Text style={[styles.cardDescription, themedStyles.cardDescription]}>
               Discover and recommend great music
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.card, selected === 'band' && styles.cardSelected]}
+            style={[styles.card, themedStyles.card, selected === 'band' && themedStyles.cardSelected]}
             onPress={() => setSelected('band')}
             activeOpacity={0.7}
           >
             <Text style={styles.cardEmoji}>🎸</Text>
-            <Text style={[styles.cardTitle, selected === 'band' && styles.cardTitleSelected]}>
+            <Text style={[styles.cardTitle, themedStyles.cardTitle, selected === 'band' && themedStyles.cardTitleSelected]}>
               I'm a Band
             </Text>
-            <Text style={styles.cardDescription}>
+            <Text style={[styles.cardDescription, themedStyles.cardDescription]}>
               Share your music and connect with fans
             </Text>
           </TouchableOpacity>
@@ -86,10 +90,39 @@ export function OnboardingAccountTypeScreen({ navigation }: Props) {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    title: {
+      color: colors.textHeading,
+    },
+    subtitle: {
+      color: colors.textMuted,
+    },
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    cardSelected: {
+      borderColor: colors.btnPrimaryBg,
+      backgroundColor: colors.bgSurface,
+    },
+    cardTitle: {
+      color: colors.textPrimary,
+    },
+    cardTitleSelected: {
+      color: colors.btnPrimaryBg,
+    },
+    cardDescription: {
+      color: colors.textMuted,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   content: {
     flex: 1,
@@ -99,13 +132,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes['3xl'],
     fontWeight: '700',
-    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.sm,
   },
   subtitle: {
     fontSize: theme.fontSizes.lg,
-    color: theme.colors.textMuted,
     textAlign: 'center',
     marginBottom: theme.spacing.xl,
   },
@@ -114,16 +145,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   card: {
-    backgroundColor: theme.colors.surface,
     borderWidth: 2,
-    borderColor: theme.colors.surfaceBorder,
     borderRadius: theme.radii.lg,
     padding: theme.spacing.lg,
     alignItems: 'center',
-  },
-  cardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: colors.grape[1],
   },
   cardEmoji: {
     fontSize: 36,
@@ -132,15 +157,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: theme.fontSizes.xl,
     fontWeight: '600',
-    color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-  },
-  cardTitleSelected: {
-    color: theme.colors.primary,
   },
   cardDescription: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.textMuted,
     textAlign: 'center',
   },
 });

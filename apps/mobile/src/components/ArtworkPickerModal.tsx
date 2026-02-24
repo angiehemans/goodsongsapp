@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { IconX, IconCheck, IconRefresh, IconPhoto } from '@tabler/icons-react-native';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient, ArtworkOption } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
 
@@ -38,6 +40,11 @@ export function ArtworkPickerModal({
   hasPreferredArtwork,
   onClearPreferred,
 }: ArtworkPickerModalProps) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const [loading, setLoading] = useState(false);
   const [exactMatches, setExactMatches] = useState<ArtworkOption[]>([]);
   const [artistCatalog, setArtistCatalog] = useState<ArtworkOption[]>([]);
@@ -118,15 +125,15 @@ export function ArtworkPickerModal({
     return (
       <TouchableOpacity
         key={`${item.url}-${index}`}
-        style={[styles.artworkItem, isSelected && styles.artworkItemSelected]}
+        style={[styles.artworkItem, themedStyles.artworkItem, isSelected && styles.artworkItemSelected]}
         onPress={() => setSelectedUrl(item.url)}
         activeOpacity={0.7}
       >
         <View style={styles.artworkImageContainer}>
           {hasFailed || !imageUrl ? (
-            <View style={[styles.artworkImage, styles.artworkImagePlaceholder]}>
-              <IconPhoto size={32} color={colors.grape[4]} />
-              <Text style={styles.failedText}>Failed to load</Text>
+            <View style={[styles.artworkImage, styles.artworkImagePlaceholder, themedStyles.artworkImagePlaceholder]}>
+              <IconPhoto size={32} color={themeColors.iconMuted} />
+              <Text style={[styles.failedText, themedStyles.failedText]}>Failed to load</Text>
             </View>
           ) : (
             <FastImage
@@ -138,18 +145,18 @@ export function ArtworkPickerModal({
           )}
           {isSelected && (
             <View style={styles.selectedOverlay}>
-              <IconCheck size={24} color={colors.grape[0]} />
+              <IconCheck size={24} color={themeColors.btnPrimaryText} />
             </View>
           )}
           {isCurrent && !isSelected && (
-            <View style={styles.currentBadge}>
-              <Text style={styles.currentBadgeText}>Current</Text>
+            <View style={[styles.currentBadge, themedStyles.currentBadge]}>
+              <Text style={[styles.currentBadgeText, themedStyles.currentBadgeText]}>Current</Text>
             </View>
           )}
         </View>
-        <Text style={styles.sourceText}>{item.source_display}</Text>
+        <Text style={[styles.sourceText, themedStyles.sourceText]}>{item.source_display}</Text>
         {item.album_name && (
-          <Text style={styles.albumText} numberOfLines={1}>
+          <Text style={[styles.albumText, themedStyles.albumText]} numberOfLines={1}>
             {item.album_name}
           </Text>
         )}
@@ -183,19 +190,19 @@ export function ArtworkPickerModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, themedStyles.container]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, themedStyles.header]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <IconX size={24} color={colors.grape[8]} />
+            <IconX size={24} color={themeColors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerTitle}>
-            <Text style={styles.title}>Choose Artwork</Text>
-            <Text style={styles.subtitle} numberOfLines={1}>
+            <Text style={[styles.title, themedStyles.title]}>Choose Artwork</Text>
+            <Text style={[styles.subtitle, themedStyles.subtitle]} numberOfLines={1}>
               {trackName} - {artistName}
             </Text>
             {albumName && (
-              <Text style={styles.albumSubtitle} numberOfLines={1}>
+              <Text style={[styles.albumSubtitle, themedStyles.albumSubtitle]} numberOfLines={1}>
                 {albumName}
               </Text>
             )}
@@ -205,33 +212,33 @@ export function ArtworkPickerModal({
             style={styles.refreshButton}
             disabled={loading}
           >
-            <IconRefresh size={20} color={colors.grape[6]} />
+            <IconRefresh size={20} color={themeColors.iconMuted} />
           </TouchableOpacity>
         </View>
 
         {/* Content */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Searching for artwork...</Text>
+            <ActivityIndicator size="large" color={themeColors.btnPrimaryBg} />
+            <Text style={[styles.loadingText, themedStyles.loadingText]}>Searching for artwork...</Text>
           </View>
         ) : error ? (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={fetchArtworkOptions}>
-              <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={[styles.errorText, themedStyles.errorText]}>{error}</Text>
+            <TouchableOpacity style={[styles.retryButton, themedStyles.retryButton]} onPress={fetchArtworkOptions}>
+              <Text style={[styles.retryButtonText, themedStyles.retryButtonText]}>Try Again</Text>
             </TouchableOpacity>
           </View>
         ) : !hasResults ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No artwork found for this track</Text>
+            <Text style={[styles.emptyText, themedStyles.emptyText]}>No artwork found for this track</Text>
           </View>
         ) : (
           <ScrollView contentContainerStyle={styles.listContent}>
             {exactMatches.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Exact Matches</Text>
-                <Text style={styles.sectionSubtitle}>
+                <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Exact Matches</Text>
+                <Text style={[styles.sectionSubtitle, themedStyles.sectionSubtitle]}>
                   Artwork from albums containing this track
                 </Text>
                 {renderArtworkGrid(exactMatches)}
@@ -239,8 +246,8 @@ export function ArtworkPickerModal({
             )}
             {artistCatalog.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Artist Catalog</Text>
-                <Text style={styles.sectionSubtitle}>
+                <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Artist Catalog</Text>
+                <Text style={[styles.sectionSubtitle, themedStyles.sectionSubtitle]}>
                   Other albums by {artistName}
                 </Text>
                 {renderArtworkGrid(artistCatalog)}
@@ -250,28 +257,30 @@ export function ArtworkPickerModal({
         )}
 
         {/* Footer */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, themedStyles.footer]}>
           {hasPreferredArtwork && onClearPreferred && (
             <TouchableOpacity
               style={styles.clearButton}
               onPress={handleClearPreferred}
               disabled={saving}
             >
-              <Text style={styles.clearButtonText}>Reset to Default</Text>
+              <Text style={[styles.clearButtonText, themedStyles.clearButtonText]}>Reset to Default</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
             style={[
               styles.selectButton,
+              themedStyles.selectButton,
               (!selectedUrl || saving) && styles.selectButtonDisabled,
+              (!selectedUrl || saving) && themedStyles.selectButtonDisabled,
             ]}
             onPress={handleSelect}
             disabled={!selectedUrl || saving}
           >
             {saving ? (
-              <ActivityIndicator size="small" color={colors.grape[0]} />
+              <ActivityIndicator size="small" color={themeColors.btnPrimaryText} />
             ) : (
-              <Text style={styles.selectButtonText}>Use Selected Artwork</Text>
+              <Text style={[styles.selectButtonText, themedStyles.selectButtonText]}>Use Selected Artwork</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -286,17 +295,93 @@ const ITEM_GAP = theme.spacing.md;
 const CONTAINER_PADDING = theme.spacing.md;
 const ITEM_WIDTH = (SCREEN_WIDTH - CONTAINER_PADDING * 2 - ITEM_GAP) / 2;
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    header: {
+      borderBottomColor: colors.borderSubtle,
+    },
+    title: {
+      color: colors.textHeading,
+    },
+    subtitle: {
+      color: colors.textMuted,
+    },
+    albumSubtitle: {
+      color: colors.textPlaceholder,
+    },
+    loadingText: {
+      color: colors.textMuted,
+    },
+    errorText: {
+      color: colors.textMuted,
+    },
+    retryButton: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    retryButtonText: {
+      color: colors.textSecondary,
+    },
+    emptyText: {
+      color: colors.textMuted,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    sectionSubtitle: {
+      color: colors.textMuted,
+    },
+    artworkItem: {
+      backgroundColor: colors.bgSurface,
+    },
+    artworkImagePlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    failedText: {
+      color: colors.textMuted,
+    },
+    currentBadge: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    currentBadgeText: {
+      color: colors.btnPrimaryText,
+    },
+    sourceText: {
+      color: colors.textSecondary,
+    },
+    albumText: {
+      color: colors.textMuted,
+    },
+    footer: {
+      borderTopColor: colors.borderSubtle,
+    },
+    clearButtonText: {
+      color: colors.textMuted,
+    },
+    selectButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    selectButtonDisabled: {
+      backgroundColor: colors.iconSubtle,
+    },
+    selectButtonText: {
+      color: colors.btnPrimaryText,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.grape[2],
   },
   closeButton: {
     padding: theme.spacing.xs,
@@ -308,16 +393,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: colors.grape[8],
   },
   subtitle: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     marginTop: 2,
   },
   albumSubtitle: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[4],
     marginTop: 1,
   },
   refreshButton: {
@@ -331,7 +413,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[5],
   },
   errorContainer: {
     flex: 1,
@@ -342,11 +423,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[6],
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: colors.grape[2],
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radii.md,
@@ -354,7 +433,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: theme.fontSizes.sm,
     fontWeight: '600',
-    color: colors.grape[7],
   },
   emptyContainer: {
     flex: 1,
@@ -364,7 +442,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[5],
     textAlign: 'center',
   },
   listContent: {
@@ -376,12 +453,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaBold,
-    color: colors.grape[8],
     marginBottom: 2,
   },
   sectionSubtitle: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginBottom: theme.spacing.sm,
   },
   artworkRow: {
@@ -396,11 +471,10 @@ const styles = StyleSheet.create({
     width: ITEM_WIDTH,
     borderRadius: theme.radii.md,
     overflow: 'hidden',
-    backgroundColor: colors.grape[1],
   },
   artworkItemSelected: {
     borderWidth: 3,
-    borderColor: theme.colors.primary,
+    borderColor: '#6366f1',
   },
   artworkImageContainer: {
     position: 'relative',
@@ -412,14 +486,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   artworkImagePlaceholder: {
-    backgroundColor: colors.grape[2],
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
   },
   failedText: {
     fontSize: 10,
-    color: colors.grape[5],
     textAlign: 'center',
   },
   selectedOverlay: {
@@ -436,32 +508,27 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: theme.spacing.xs,
     right: theme.spacing.xs,
-    backgroundColor: colors.grape[7],
     paddingVertical: 2,
     paddingHorizontal: theme.spacing.xs,
     borderRadius: theme.radii.sm,
   },
   currentBadgeText: {
     fontSize: 10,
-    color: colors.grape[0],
     fontWeight: '600',
   },
   sourceText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[6],
     padding: theme.spacing.xs,
     paddingBottom: 0,
   },
   albumText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     paddingHorizontal: theme.spacing.xs,
     paddingBottom: theme.spacing.xs,
   },
   footer: {
     padding: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.grape[2],
     gap: theme.spacing.sm,
   },
   clearButton: {
@@ -470,20 +537,15 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   selectButton: {
-    backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radii.md,
     alignItems: 'center',
   },
-  selectButtonDisabled: {
-    backgroundColor: colors.grape[3],
-  },
+  selectButtonDisabled: {},
   selectButtonText: {
     fontSize: theme.fontSizes.base,
     fontWeight: '600',
-    color: colors.grape[0],
   },
 });

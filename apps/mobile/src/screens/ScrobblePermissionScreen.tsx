@@ -10,7 +10,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, Button } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { scrobbleNative } from '@/utils/scrobbleNative';
 import { RootStackParamList } from '@/navigation/types';
 
@@ -19,6 +21,12 @@ type Props = {
 };
 
 export function ScrobblePermissionScreen({ navigation }: Props) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
+
   useFocusEffect(
     React.useCallback(() => {
       let active = true;
@@ -42,7 +50,7 @@ export function ScrobblePermissionScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header
         title="Scrobbling Setup"
         showBackButton
@@ -51,11 +59,11 @@ export function ScrobblePermissionScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.iconContainer}>
-          <Icon name="headphones" size={48} color={theme.colors.primary} />
+          <Icon name="headphones" size={48} color={themeColors.btnPrimaryBg} />
         </View>
 
-        <Text style={styles.heading}>How Scrobbling Works</Text>
-        <Text style={styles.description}>
+        <Text style={[styles.heading, themedStyles.heading]}>How Scrobbling Works</Text>
+        <Text style={[styles.description, themedStyles.description]}>
           GoodSongs can automatically track the music you listen to on your
           favorite streaming apps. This works by reading your media
           notifications to detect what's playing.
@@ -63,32 +71,32 @@ export function ScrobblePermissionScreen({ navigation }: Props) {
 
         <View style={styles.bulletList}>
           <View style={styles.bulletItem}>
-            <Icon name="music" size={18} color={theme.colors.secondary} />
-            <Text style={styles.bulletText}>
+            <Icon name="music" size={18} color={themeColors.textHeading} />
+            <Text style={[styles.bulletText, themedStyles.bulletText]}>
               Only reads media/music notifications
             </Text>
           </View>
           <View style={styles.bulletItem}>
-            <Icon name="lock" size={18} color={theme.colors.secondary} />
-            <Text style={styles.bulletText}>
+            <Icon name="lock" size={18} color={themeColors.textHeading} />
+            <Text style={[styles.bulletText, themedStyles.bulletText]}>
               Never reads messages, emails, or other notifications
             </Text>
           </View>
           <View style={styles.bulletItem}>
-            <Icon name="sliders" size={18} color={theme.colors.secondary} />
-            <Text style={styles.bulletText}>
+            <Icon name="sliders" size={18} color={themeColors.textHeading} />
+            <Text style={[styles.bulletText, themedStyles.bulletText]}>
               You control which apps are tracked
             </Text>
           </View>
           <View style={styles.bulletItem}>
-            <Icon name="pause-circle" size={18} color={theme.colors.secondary} />
-            <Text style={styles.bulletText}>
+            <Icon name="pause-circle" size={18} color={themeColors.textHeading} />
+            <Text style={[styles.bulletText, themedStyles.bulletText]}>
               Pause or disable anytime from settings
             </Text>
           </View>
         </View>
 
-        <Text style={styles.permissionNote}>
+        <Text style={[styles.permissionNote, themedStyles.permissionNote]}>
           Android will ask you to enable notification access for GoodSongs.
           Find "GoodSongs" in the list and toggle it on, then return here.
         </Text>
@@ -102,10 +110,30 @@ export function ScrobblePermissionScreen({ navigation }: Props) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    heading: {
+      color: colors.textHeading,
+    },
+    description: {
+      color: colors.textSecondary,
+    },
+    bulletText: {
+      color: colors.textSecondary,
+    },
+    permissionNote: {
+      color: colors.textMuted,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   content: {
     padding: theme.spacing.lg,
@@ -118,14 +146,12 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: theme.fontSizes['3xl'],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.md,
     lineHeight: 36,
   },
   description: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[7],
     lineHeight: 22,
     textAlign: 'center',
     marginBottom: theme.spacing.xl,
@@ -141,13 +167,11 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[7],
     flex: 1,
     lineHeight: 20,
   },
   permissionNote: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     lineHeight: 18,
     textAlign: 'center',
     marginBottom: theme.spacing.lg,

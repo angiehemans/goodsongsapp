@@ -13,7 +13,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, Button, Card } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { useScrobbleStore } from '@/context/scrobbleStore';
 import { scrobbleNative } from '@/utils/scrobbleNative';
 import { ScrobbleStatus } from '@/types/scrobble';
@@ -24,6 +26,12 @@ type Props = {
 };
 
 export function ScrobbleSettingsScreen({ navigation }: Props) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
+
   const {
     status,
     appSettings,
@@ -100,7 +108,7 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
   // Not set up state
   if (status === ScrobbleStatus.notSetUp) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header
           title="Scrobbling"
           showBackButton
@@ -109,10 +117,10 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
         <ScrollView contentContainerStyle={styles.content}>
           <Card style={styles.section}>
             <View style={styles.setupIcon}>
-              <Icon name="headphones" size={40} color={theme.colors.primary} />
+              <Icon name="headphones" size={40} color={themeColors.btnPrimaryBg} />
             </View>
-            <Text style={styles.setupTitle}>Track Your Listening</Text>
-            <Text style={styles.setupDescription}>
+            <Text style={[styles.setupTitle, themedStyles.setupTitle]}>Track Your Listening</Text>
+            <Text style={[styles.setupDescription, themedStyles.setupDescription]}>
               Automatically keep track of what you listen to across your
               favorite music apps. Scrobbles are synced to your GoodSongs
               profile.
@@ -130,7 +138,7 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
   // Permission needed state
   if (status === ScrobbleStatus.permissionNeeded) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header
           title="Scrobbling"
           showBackButton
@@ -139,8 +147,8 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
         <ScrollView contentContainerStyle={styles.content}>
           <Card style={styles.section}>
             <View style={styles.warningRow}>
-              <Icon name="alert-triangle" size={20} color={theme.colors.warning} />
-              <Text style={styles.warningText}>
+              <Icon name="alert-triangle" size={20} color={themeColors.warning} />
+              <Text style={[styles.warningText, themedStyles.warningText]}>
                 Notification access has been revoked. Scrobbling won't work
                 until you re-enable it.
               </Text>
@@ -159,7 +167,7 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
   const isActive = status === ScrobbleStatus.active;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header
         title="Scrobbling"
         showBackButton
@@ -171,15 +179,15 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
         <Card style={styles.section}>
           <View style={styles.toggleRow}>
             <View style={styles.toggleInfo}>
-              <Text style={styles.toggleLabel}>Scrobbling</Text>
+              <Text style={[styles.toggleLabel, themedStyles.toggleLabel]}>Scrobbling</Text>
               <View style={styles.statusRow}>
                 <View
                   style={[
                     styles.statusDot,
-                    isActive ? styles.statusDotActive : styles.statusDotPaused,
+                    isActive ? styles.statusDotActive : themedStyles.statusDotPaused,
                   ]}
                 />
-                <Text style={styles.statusText}>
+                <Text style={[styles.statusText, themedStyles.statusText]}>
                   {isActive ? 'Active \u2014 Listening for music' : 'Paused'}
                 </Text>
               </View>
@@ -188,15 +196,15 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
               value={isActive}
               onValueChange={handleToggleScrobbling}
               trackColor={{
-                false: colors.grape[3],
-                true: theme.colors.primary,
+                false: themeColors.borderDefault,
+                true: themeColors.btnPrimaryBg,
               }}
-              thumbColor={colors.grape[0]}
+              thumbColor={themeColors.bgApp}
             />
           </View>
 
           {lastScrobbleTime && (
-            <Text style={styles.lastScrobble}>
+            <Text style={[styles.lastScrobble, themedStyles.lastScrobble]}>
               Last scrobble: {formatLastScrobble(lastScrobbleTime)}
             </Text>
           )}
@@ -204,16 +212,17 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
 
         {/* App Filter */}
         <Card style={[styles.section, !isActive && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>Tracked Apps</Text>
-          <Text style={styles.sectionDescription}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Tracked Apps</Text>
+          <Text style={[styles.sectionDescription, themedStyles.sectionDescription]}>
             Choose which music apps to track.
           </Text>
           {appSettings.map((app) => (
-            <View key={app.packageName} style={styles.appRow}>
+            <View key={app.packageName} style={[styles.appRow, themedStyles.appRow]}>
               <Text
                 style={[
                   styles.appName,
-                  !isActive && styles.textDisabled,
+                  themedStyles.appName,
+                  !isActive && themedStyles.textDisabled,
                 ]}
               >
                 {app.displayName}
@@ -223,10 +232,10 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
                 onValueChange={(val) => handleToggleApp(app.packageName, val)}
                 disabled={!isActive}
                 trackColor={{
-                  false: colors.grape[3],
-                  true: theme.colors.primary,
+                  false: themeColors.borderDefault,
+                  true: themeColors.btnPrimaryBg,
                 }}
-                thumbColor={colors.grape[0]}
+                thumbColor={themeColors.bgApp}
               />
             </View>
           ))}
@@ -234,10 +243,10 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
 
         {/* Sync Info */}
         <Card style={[styles.section, !isActive && styles.sectionDisabled]}>
-          <Text style={styles.sectionTitle}>Sync</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Sync</Text>
           <View style={styles.syncInfo}>
-            <Icon name="refresh-cw" size={16} color={isActive ? theme.colors.success : colors.grape[4]} />
-            <Text style={[styles.syncText, !isActive && styles.textDisabled]}>
+            <Icon name="refresh-cw" size={16} color={isActive ? themeColors.success : themeColors.textMuted} />
+            <Text style={[styles.syncText, themedStyles.syncText, !isActive && themedStyles.textDisabled]}>
               Scrobbles sync automatically
             </Text>
           </View>
@@ -245,14 +254,14 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
 
         {/* Scrobble Log */}
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Scrobble Log</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Scrobble Log</Text>
           {recentScrobblesLoading && recentScrobbles.length === 0 ? (
             <View style={styles.logLoading}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={styles.logLoadingText}>Loading...</Text>
+              <ActivityIndicator size="small" color={themeColors.btnPrimaryBg} />
+              <Text style={[styles.logLoadingText, themedStyles.logLoadingText]}>Loading...</Text>
             </View>
           ) : recentScrobbles.length === 0 ? (
-            <Text style={styles.logEmpty}>
+            <Text style={[styles.logEmpty, themedStyles.logEmpty]}>
               No synced scrobbles yet. Scrobbles will appear here once they've been saved.
             </Text>
           ) : (
@@ -262,17 +271,18 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
                 style={[
                   styles.logRow,
                   index > 0 && styles.logRowBorder,
+                  index > 0 && themedStyles.logRowBorder,
                 ]}
               >
                 <View style={styles.logRowLeft}>
-                  <Text style={styles.logTrackName} numberOfLines={1}>
+                  <Text style={[styles.logTrackName, themedStyles.logTrackName]} numberOfLines={1}>
                     {scrobble.track_name}
                   </Text>
-                  <Text style={styles.logArtistName} numberOfLines={1}>
+                  <Text style={[styles.logArtistName, themedStyles.logArtistName]} numberOfLines={1}>
                     {scrobble.artist_name}
                   </Text>
                 </View>
-                <Text style={styles.logTime}>
+                <Text style={[styles.logTime, themedStyles.logTime]}>
                   {formatPlayedAt(scrobble.played_at)}
                 </Text>
               </View>
@@ -285,8 +295,8 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
           style={styles.systemLink}
           onPress={handleOpenSystemSettings}
         >
-          <Icon name="settings" size={16} color={colors.grape[5]} />
-          <Text style={styles.systemLinkText}>
+          <Icon name="settings" size={16} color={themeColors.textMuted} />
+          <Text style={[styles.systemLinkText, themedStyles.systemLinkText]}>
             Manage notification access
           </Text>
         </TouchableOpacity>
@@ -295,10 +305,78 @@ export function ScrobbleSettingsScreen({ navigation }: Props) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    sectionDescription: {
+      color: colors.textMuted,
+    },
+    setupTitle: {
+      color: colors.textHeading,
+    },
+    setupDescription: {
+      color: colors.textMuted,
+    },
+    warningText: {
+      color: colors.textSecondary,
+    },
+    toggleLabel: {
+      color: colors.textHeading,
+    },
+    statusDotPaused: {
+      backgroundColor: colors.textMuted,
+    },
+    statusText: {
+      color: colors.textMuted,
+    },
+    lastScrobble: {
+      color: colors.textMuted,
+    },
+    appRow: {
+      borderTopColor: colors.borderSubtle,
+    },
+    appName: {
+      color: colors.textSecondary,
+    },
+    textDisabled: {
+      color: colors.textMuted,
+    },
+    syncText: {
+      color: colors.textSecondary,
+    },
+    logLoadingText: {
+      color: colors.textMuted,
+    },
+    logEmpty: {
+      color: colors.textMuted,
+    },
+    logRowBorder: {
+      borderTopColor: colors.borderSubtle,
+    },
+    logTrackName: {
+      color: colors.textPrimary,
+    },
+    logArtistName: {
+      color: colors.textMuted,
+    },
+    logTime: {
+      color: colors.textPlaceholder,
+    },
+    systemLinkText: {
+      color: colors.textMuted,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   content: {
     padding: theme.spacing.lg,
@@ -313,13 +391,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.xs,
     lineHeight: 32,
   },
   sectionDescription: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     marginBottom: theme.spacing.md,
     lineHeight: 20,
   },
@@ -332,14 +408,12 @@ const styles = StyleSheet.create({
   setupTitle: {
     fontSize: theme.fontSizes['2xl'],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.sm,
     lineHeight: 32,
   },
   setupDescription: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     lineHeight: 20,
     textAlign: 'center',
     marginBottom: theme.spacing.lg,
@@ -354,7 +428,6 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[7],
     flex: 1,
     lineHeight: 20,
   },
@@ -372,7 +445,6 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: 4,
   },
   statusRow: {
@@ -386,18 +458,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusDotActive: {
-    backgroundColor: theme.colors.success,
-  },
-  statusDotPaused: {
-    backgroundColor: colors.grape[4],
+    backgroundColor: '#10b981', // success green - consistent across themes
   },
   statusText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   lastScrobble: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: theme.spacing.sm,
   },
 
@@ -408,14 +475,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.grape[2],
   },
   appName: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[7],
-  },
-  textDisabled: {
-    color: colors.grape[4],
   },
 
   // Sync
@@ -427,7 +489,6 @@ const styles = StyleSheet.create({
   },
   syncText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[7],
   },
 
   // Scrobble log
@@ -439,11 +500,9 @@ const styles = StyleSheet.create({
   },
   logLoadingText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   logEmpty: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     lineHeight: 20,
   },
   logRow: {
@@ -454,7 +513,6 @@ const styles = StyleSheet.create({
   },
   logRowBorder: {
     borderTopWidth: 1,
-    borderTopColor: colors.grape[2],
   },
   logRowLeft: {
     flex: 1,
@@ -463,16 +521,13 @@ const styles = StyleSheet.create({
   logTrackName: {
     fontSize: theme.fontSizes.sm,
     fontWeight: '500',
-    color: colors.grape[8],
   },
   logArtistName: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: 2,
   },
   logTime: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[4],
   },
 
   // System link
@@ -485,6 +540,5 @@ const styles = StyleSheet.create({
   },
   systemLinkText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
 });

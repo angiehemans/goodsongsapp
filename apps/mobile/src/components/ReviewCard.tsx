@@ -1,4 +1,4 @@
-import React, { useState, memo } from "react";
+import React, { useState, memo, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,9 @@ import { Review } from "@goodsongs/api-client";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { MentionText } from "./MentionText";
 import { Tag } from "./Tag";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { apiClient } from "@/utils/api";
 
@@ -46,6 +48,9 @@ export const ReviewCard = memo(function ReviewCard({
   onPressBand,
   onPressReview,
 }: ReviewCardProps) {
+  const { colors } = useTheme();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+
   const authorUsername = review.author?.username || review.user?.username;
   const authorProfileImage = review.author?.profile_image_url;
 
@@ -98,7 +103,7 @@ export const ReviewCard = memo(function ReviewCard({
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, themedStyles.card]}
       onPress={() => onPressReview?.(review)}
       activeOpacity={onPressReview ? 0.7 : 1}
       disabled={!onPressReview}
@@ -116,15 +121,15 @@ export const ReviewCard = memo(function ReviewCard({
           fallback={authorUsername || "?"}
         />
         <View style={styles.authorInfo}>
-          <Text style={styles.authorName}>@{authorUsername || "unknown"}</Text>
-          <Text style={styles.dateText}>{formatDate(review.created_at)}</Text>
+          <Text style={[styles.authorName, themedStyles.authorName]}>@{authorUsername || "unknown"}</Text>
+          <Text style={[styles.dateText, themedStyles.dateText]}>{formatDate(review.created_at)}</Text>
         </View>
       </TouchableOpacity>
 
       {/* Song Content Container */}
-      <View style={styles.songContainer}>
+      <View style={[styles.songContainer, themedStyles.songContainer]}>
         {/* Song Info */}
-        <View style={styles.songRow}>
+        <View style={[styles.songRow, themedStyles.songRow]}>
           <View style={styles.songInfo}>
             {review.artwork_url ? (
               <FastImage
@@ -133,10 +138,10 @@ export const ReviewCard = memo(function ReviewCard({
                 resizeMode={FastImage.resizeMode.cover}
               />
             ) : (
-              <View style={[styles.artwork, styles.artworkPlaceholder]} />
+              <View style={[styles.artwork, styles.artworkPlaceholder, themedStyles.artworkPlaceholder]} />
             )}
             <View style={styles.songDetails}>
-              <Text style={styles.songName} numberOfLines={1}>
+              <Text style={[styles.songName, themedStyles.songName]} numberOfLines={1}>
                 {review.song_name}
               </Text>
               <TouchableOpacity
@@ -145,7 +150,7 @@ export const ReviewCard = memo(function ReviewCard({
                 }
                 disabled={!review.band?.slug || !onPressBand}
               >
-                <Text style={styles.bandName} numberOfLines={1}>
+                <Text style={[styles.bandName, themedStyles.bandName]} numberOfLines={1}>
                   {review.band_name}
                 </Text>
               </TouchableOpacity>
@@ -156,7 +161,7 @@ export const ReviewCard = memo(function ReviewCard({
               onPress={handleOpenLink}
               style={styles.linkButton}
             >
-              <IconExternalLink size={20} color={colors.grape[6]} />
+              <IconExternalLink size={20} color={colors.iconMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -164,7 +169,7 @@ export const ReviewCard = memo(function ReviewCard({
         {/* Review Text */}
         <MentionText
           text={(review as any).formatted_review_text || review.review_text}
-          style={styles.reviewText}
+          style={[styles.reviewText, themedStyles.reviewText]}
           numberOfLines={3}
         />
 
@@ -182,7 +187,7 @@ export const ReviewCard = memo(function ReviewCard({
               />
             ))}
             {review.liked_aspects.length > 3 && (
-              <Text style={styles.moreText}>
+              <Text style={[styles.moreText, themedStyles.moreText]}>
                 +{review.liked_aspects.length - 3} more
               </Text>
             )}
@@ -200,7 +205,7 @@ export const ReviewCard = memo(function ReviewCard({
             handleShare();
           }}
         >
-          <IconShare size={22} color={colors.grape[6]} />
+          <IconShare size={22} color={colors.iconMuted} />
         </TouchableOpacity>
 
         {/* Comments Button */}
@@ -209,9 +214,9 @@ export const ReviewCard = memo(function ReviewCard({
           onPress={() => onPressReview?.(review)}
           disabled={!onPressReview}
         >
-          <IconMessageCircle size={22} color={colors.grape[6]} />
+          <IconMessageCircle size={22} color={colors.iconMuted} />
           {commentsCount > 0 && (
-            <Text style={styles.actionCount}>{commentsCount}</Text>
+            <Text style={[styles.actionCount, themedStyles.actionCount]}>{commentsCount}</Text>
           )}
         </TouchableOpacity>
 
@@ -225,15 +230,15 @@ export const ReviewCard = memo(function ReviewCard({
           disabled={isLiking}
         >
           {isLiking ? (
-            <ActivityIndicator size="small" color={colors.grape[6]} />
+            <ActivityIndicator size="small" color={colors.iconMuted} />
           ) : isLiked ? (
             <IconHeartFilled size={22} color="#ef4444" />
           ) : (
-            <IconHeart size={22} color={colors.grape[6]} />
+            <IconHeart size={22} color={colors.iconMuted} />
           )}
           {likesCount > 0 && (
             <Text
-              style={[styles.actionCount, isLiked && styles.actionCountLiked]}
+              style={[styles.actionCount, themedStyles.actionCount, isLiked && styles.actionCountLiked]}
             >
               {likesCount}
             </Text>
@@ -244,10 +249,46 @@ export const ReviewCard = memo(function ReviewCard({
   );
 });
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    card: {
+      borderBottomColor: colors.borderDefault,
+    },
+    authorName: {
+      color: colors.textMuted,
+    },
+    dateText: {
+      color: colors.textMuted,
+    },
+    songContainer: {
+      borderBottomColor: colors.borderSubtle,
+    },
+    songRow: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    artworkPlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    songName: {
+      color: colors.textPrimary,
+    },
+    bandName: {
+      color: colors.textMuted,
+    },
+    reviewText: {
+      color: colors.textSecondary,
+    },
+    moreText: {
+      color: colors.textMuted,
+    },
+    actionCount: {
+      color: colors.textMuted,
+    },
+  });
+
 const styles = StyleSheet.create({
   card: {
     borderBottomWidth: 2,
-    borderBottomColor: colors.grape[3],
   },
   authorRow: {
     flexDirection: "row",
@@ -261,21 +302,17 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.grape[6],
   },
   dateText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grey[5],
   },
   songContainer: {
     marginTop: theme.spacing.sm,
     borderBottomWidth: 2,
-    borderBottomColor: colors.grape[2],
     borderStyle: "dotted",
     paddingBottom: theme.spacing.md,
   },
   songRow: {
-    backgroundColor: colors.grape[2],
     borderRadius: theme.radii.sm,
     padding: theme.spacing.sm,
     flexDirection: "row",
@@ -294,28 +331,23 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: theme.radii.sm,
   },
-  artworkPlaceholder: {
-    backgroundColor: colors.grape[2],
-  },
+  artworkPlaceholder: {},
   songDetails: {
     flex: 1,
   },
   songName: {
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.grey[9],
     lineHeight: 24,
   },
   bandName: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   linkButton: {
     padding: theme.spacing.xs,
   },
   reviewText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grey[8],
     lineHeight: 20,
     marginVertical: theme.spacing.sm,
   },
@@ -328,7 +360,6 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
   },
   actionsRow: {
     flexDirection: "row",
@@ -345,7 +376,6 @@ const styles = StyleSheet.create({
   },
   actionCount: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   actionCountLiked: {
     color: "#ef4444",

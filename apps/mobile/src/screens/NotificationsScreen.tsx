@@ -15,7 +15,9 @@ import Icon from "@react-native-vector-icons/feather";
 import { RootStackParamList } from "@/navigation/types";
 import { Header, ProfilePhoto } from "@/components";
 import { apiClient } from "@/utils/api";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { useNotificationStore } from "@/context/notificationStore";
 
@@ -72,9 +74,15 @@ function formatTimeAgo(dateString: string): string {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export function NotificationsScreen() {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const navigation = useNavigation<NavigationProp>();
   const { user: currentUser } = useAuthStore();
-  const { clearUnreadCount, pausePolling, resumePolling } = useNotificationStore();
+  const { clearUnreadCount, pausePolling, resumePolling } =
+    useNotificationStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -153,7 +161,13 @@ export function NotificationsScreen() {
 
   const getNotificationIcon = (
     type: NotificationType | undefined,
-  ): "user-plus" | "music" | "heart" | "message-circle" | "bell" | "at-sign" => {
+  ):
+    | "user-plus"
+    | "music"
+    | "heart"
+    | "message-circle"
+    | "bell"
+    | "at-sign" => {
     switch (type) {
       case "new_follower":
         return "user-plus";
@@ -267,77 +281,96 @@ export function NotificationsScreen() {
     }
   };
 
-  const renderNotification = useCallback(({ item }: { item: Notification }) => {
-    const notificationType = getNotificationType(item);
+  const renderNotification = useCallback(
+    ({ item }: { item: Notification }) => {
+      const notificationType = getNotificationType(item);
 
-    return (
-      <TouchableOpacity
-        style={[
-          styles.notificationItem,
-          !item.read && styles.unreadNotification,
-        ]}
-        onPress={() => handleNotificationPress(item)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.avatarContainer}>
-          <ProfilePhoto
-            src={item.actor?.profile_image_url}
-            name={item.actor?.username || "?"}
-            size={40}
-          />
-          <View
-            style={[
-              styles.typeBadge,
-              getNotificationBadgeStyle(notificationType),
-            ]}
-          >
-            <Icon
-              name={getNotificationIcon(notificationType)}
-              size={10}
-              color={colors.grape[0]}
+      return (
+        <TouchableOpacity
+          style={[
+            styles.notificationItem,
+            themedStyles.notificationItem,
+            !item.read && themedStyles.unreadNotification,
+          ]}
+          onPress={() => handleNotificationPress(item)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.avatarContainer}>
+            <ProfilePhoto
+              src={item.actor?.profile_image_url}
+              name={item.actor?.username || "?"}
+              size={40}
             />
-          </View>
-        </View>
-
-        <View style={styles.notificationContent}>
-          {/* Line 1: Username and time */}
-          <View style={styles.notificationHeader}>
-            <Text
+            <View
               style={[
-                styles.notificationUsername,
-                !item.read && styles.unreadText,
+                styles.typeBadge,
+                getNotificationBadgeStyle(notificationType),
+                notificationType === undefined && themedStyles.defaultBadge,
               ]}
             >
-              @{item.actor?.username}
-            </Text>
-            <Text style={styles.notificationTime}>
-              · {formatTimeAgo(item.created_at)}
-            </Text>
+              <Icon
+                name={getNotificationIcon(notificationType)}
+                size={10}
+                color={themeColors.textInverse}
+              />
+            </View>
           </View>
 
-          {/* Line 2: Action */}
-          <Text style={styles.notificationAction} numberOfLines={2}>
-            {getActionText(notificationType, item)}
-          </Text>
-
-          {/* Line 3: Comment preview (if applicable) */}
-          {(notificationType === "review_comment" ||
-            notificationType === "mention") &&
-            item.comment?.body && (
-              <Text style={styles.commentPreview} numberOfLines={2}>
-                "{item.comment.body}"
+          <View style={styles.notificationContent}>
+            {/* Line 1: Username and time */}
+            <View style={styles.notificationHeader}>
+              <Text
+                style={[
+                  styles.notificationUsername,
+                  themedStyles.notificationUsername,
+                  !item.read && styles.unreadText,
+                ]}
+              >
+                @{item.actor?.username}
               </Text>
-            )}
-        </View>
-      </TouchableOpacity>
-    );
-  }, [handleNotificationPress]);
+              <Text
+                style={[styles.notificationTime, themedStyles.notificationTime]}
+              >
+                · {formatTimeAgo(item.created_at)}
+              </Text>
+            </View>
+
+            {/* Line 2: Action */}
+            <Text
+              style={[
+                styles.notificationAction,
+                themedStyles.notificationAction,
+              ]}
+              numberOfLines={2}
+            >
+              {getActionText(notificationType, item)}
+            </Text>
+
+            {/* Line 3: Comment preview (if applicable) */}
+            {(notificationType === "review_comment" ||
+              notificationType === "mention") &&
+              item.comment?.body && (
+                <Text
+                  style={[styles.commentPreview, themedStyles.commentPreview]}
+                  numberOfLines={2}
+                >
+                  "{item.comment.body}"
+                </Text>
+              )}
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [handleNotificationPress, themedStyles, themeColors],
+  );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Icon name="bell-off" size={48} color={colors.grape[4]} />
-      <Text style={styles.emptyTitle}>No notifications yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Icon name="bell-off" size={48} color={themeColors.iconMuted} />
+      <Text style={[styles.emptyTitle, themedStyles.emptyTitle]}>
+        No notifications yet
+      </Text>
+      <Text style={[styles.emptySubtitle, themedStyles.emptySubtitle]}>
         When someone follows you or interacts with your reviews, you'll see it
         here.
       </Text>
@@ -348,24 +381,30 @@ export function NotificationsScreen() {
     if (!isLoadingMore) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={theme.colors.primary} />
+        <ActivityIndicator size="small" color={themeColors.btnPrimaryBg} />
       </View>
     );
   };
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView
+        style={[styles.container, themedStyles.container]}
+        edges={["top"]}
+      >
         <Header title="Alerts" />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={themeColors.btnPrimaryBg} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, themedStyles.container]}
+      edges={["top"]}
+    >
       <Header title="Alerts" />
       <FlatList
         data={notifications}
@@ -380,7 +419,7 @@ export function NotificationsScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={theme.colors.primary}
+            tintColor={themeColors.btnPrimaryBg}
           />
         }
         onEndReached={handleLoadMore}
@@ -394,10 +433,45 @@ export function NotificationsScreen() {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    notificationItem: {
+      borderBottomColor: colors.borderSubtle,
+    },
+    unreadNotification: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    defaultBadge: {
+      backgroundColor: colors.iconMuted,
+    },
+    notificationUsername: {
+      color: colors.textHeading,
+    },
+    notificationTime: {
+      color: colors.textMuted,
+    },
+    notificationAction: {
+      color: colors.textMuted,
+    },
+    commentPreview: {
+      color: colors.textPrimary,
+    },
+    emptyTitle: {
+      color: colors.textHeading,
+    },
+    emptySubtitle: {
+      color: colors.textMuted,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   loadingContainer: {
     flex: 1,
@@ -413,14 +487,11 @@ const styles = StyleSheet.create({
   notificationItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing.sm,
-    backgroundColor: colors.grape[1],
-    borderRadius: theme.radii.md,
-    marginBottom: theme.spacing.sm,
+    padding: theme.spacing.md,
     gap: theme.spacing.md,
-  },
-  unreadNotification: {
-    backgroundColor: colors.grape[2],
+    borderBottomWidth: 2,
+    borderStyle: "solid",
+    borderRadius: 0,
   },
   avatarContainer: {
     position: "relative",
@@ -436,10 +507,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   followerBadge: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: "#6366f1",
   },
   reviewBadge: {
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: "#3b82f6",
   },
   likeBadge: {
     backgroundColor: "#ef4444",
@@ -451,7 +522,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f97316",
   },
   defaultBadge: {
-    backgroundColor: colors.grape[5],
+    // Color applied via themedStyles
   },
   notificationContent: {
     flex: 1,
@@ -464,24 +535,20 @@ const styles = StyleSheet.create({
   notificationUsername: {
     fontSize: theme.fontSizes.sm,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.blue.base,
   },
   unreadText: {
     fontFamily: theme.fonts.thecoaBold,
   },
   notificationTime: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grey[5],
   },
   notificationAction: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[5],
     marginTop: 2,
     lineHeight: 18,
   },
   commentPreview: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[9],
     marginTop: 4,
     lineHeight: 16,
   },
@@ -494,14 +561,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: theme.fontSizes.xl,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.sm,
     lineHeight: 30,
   },
   emptySubtitle: {
     fontSize: theme.fontSizes.base,
-    color: theme.colors.textMuted,
     textAlign: "center",
   },
   loadingMore: {

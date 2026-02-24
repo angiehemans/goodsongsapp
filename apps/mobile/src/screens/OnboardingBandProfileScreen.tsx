@@ -17,10 +17,14 @@ import Icon from '@react-native-vector-icons/feather';
 import { Button } from '@/components';
 import { apiClient } from '@/utils/api';
 import { useAuthStore } from '@/context/authStore';
-import { theme, colors, commonStyles } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 
 export function OnboardingBandProfileScreen() {
   const { refreshUser } = useAuthStore();
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
 
   const [name, setName] = useState('');
   const [about, setAbout] = useState('');
@@ -84,7 +88,7 @@ export function OnboardingBandProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, themedStyles.container]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -93,39 +97,39 @@ export function OnboardingBandProfileScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Set up your band profile</Text>
-        <Text style={styles.subtitle}>Let fans know about your music</Text>
+        <Text style={[styles.title, themedStyles.title]}>Set up your band profile</Text>
+        <Text style={[styles.subtitle, themedStyles.subtitle]}>Let fans know about your music</Text>
 
         <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
           {profilePicture ? (
             <Image source={{ uri: profilePicture.uri }} style={styles.avatar} />
           ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Icon name="camera" size={28} color={theme.colors.textMuted} />
+            <View style={[styles.avatarPlaceholder, themedStyles.avatarPlaceholder]}>
+              <Icon name="camera" size={28} color={themeColors.textMuted} />
             </View>
           )}
-          <Text style={styles.avatarLabel}>Add photo</Text>
+          <Text style={[styles.avatarLabel, themedStyles.avatarLabel]}>Add photo</Text>
         </TouchableOpacity>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>Band / Artist Name *</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Band / Artist Name *</Text>
           <TextInput
-            style={commonStyles.input}
+            style={[styles.input, themedStyles.input]}
             value={name}
             onChangeText={setName}
             placeholder="Your band or artist name"
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
           />
         </View>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>About</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>About</Text>
           <TextInput
-            style={[commonStyles.input, styles.textArea]}
+            style={[styles.input, themedStyles.input, styles.textArea]}
             value={about}
             onChangeText={setAbout}
             placeholder="Tell fans about your music..."
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -134,37 +138,37 @@ export function OnboardingBandProfileScreen() {
 
         <View style={styles.row}>
           <View style={[styles.field, styles.halfField]}>
-            <Text style={commonStyles.inputLabel}>City</Text>
+            <Text style={[styles.inputLabel, themedStyles.inputLabel]}>City</Text>
             <TextInput
-              style={commonStyles.input}
+              style={[styles.input, themedStyles.input]}
               value={city}
               onChangeText={setCity}
               placeholder="City"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
           <View style={[styles.field, styles.halfField]}>
-            <Text style={commonStyles.inputLabel}>Region</Text>
+            <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Region</Text>
             <TextInput
-              style={commonStyles.input}
+              style={[styles.input, themedStyles.input]}
               value={region}
               onChangeText={setRegion}
               placeholder="State / Province"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Streaming Links</Text>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Streaming Links</Text>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>Spotify</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Spotify</Text>
           <TextInput
-            style={commonStyles.input}
+            style={[styles.input, themedStyles.input]}
             value={spotifyLink}
             onChangeText={setSpotifyLink}
             placeholder="https://open.spotify.com/artist/..."
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
@@ -172,13 +176,13 @@ export function OnboardingBandProfileScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>Bandcamp</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Bandcamp</Text>
           <TextInput
-            style={commonStyles.input}
+            style={[styles.input, themedStyles.input]}
             value={bandcampLink}
             onChangeText={setBandcampLink}
             placeholder="https://yourband.bandcamp.com"
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
@@ -186,13 +190,13 @@ export function OnboardingBandProfileScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>Apple Music</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Apple Music</Text>
           <TextInput
-            style={commonStyles.input}
+            style={[styles.input, themedStyles.input]}
             value={appleMusicLink}
             onChangeText={setAppleMusicLink}
             placeholder="https://music.apple.com/artist/..."
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
@@ -200,13 +204,13 @@ export function OnboardingBandProfileScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>YouTube Music</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>YouTube Music</Text>
           <TextInput
-            style={commonStyles.input}
+            style={[styles.input, themedStyles.input]}
             value={youtubeMusicLink}
             onChangeText={setYoutubeMusicLink}
             placeholder="https://music.youtube.com/channel/..."
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
@@ -227,10 +231,40 @@ export function OnboardingBandProfileScreen() {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    title: {
+      color: colors.textHeading,
+    },
+    subtitle: {
+      color: colors.textMuted,
+    },
+    avatarPlaceholder: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    avatarLabel: {
+      color: colors.textMuted,
+    },
+    inputLabel: {
+      color: colors.textPlaceholder,
+    },
+    input: {
+      backgroundColor: colors.bgApp,
+      borderColor: colors.borderDefault,
+      color: colors.textSecondary,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   flex: {
     flex: 1,
@@ -242,13 +276,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes['2xl'],
     fontWeight: '700',
-    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.xs,
   },
   subtitle: {
     fontSize: theme.fontSizes.base,
-    color: theme.colors.textMuted,
     textAlign: 'center',
     marginBottom: theme.spacing.lg,
   },
@@ -265,20 +297,28 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: theme.colors.surface,
     borderWidth: 2,
-    borderColor: theme.colors.surfaceBorder,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarLabel: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.textMuted,
     marginTop: theme.spacing.xs,
   },
   field: {
     marginBottom: theme.spacing.md,
+  },
+  inputLabel: {
+    fontSize: theme.fontSizes.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  input: {
+    borderWidth: theme.borderWidth,
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.sm + 2,
+    paddingHorizontal: theme.spacing.md,
+    fontSize: theme.fontSizes.base,
   },
   textArea: {
     minHeight: 80,
@@ -294,7 +334,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes.lg,
     fontWeight: '600',
-    color: theme.colors.secondary,
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },

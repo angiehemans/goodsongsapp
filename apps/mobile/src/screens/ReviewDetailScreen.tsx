@@ -46,7 +46,9 @@ import {
   MentionText,
   MentionTextInput,
 } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { apiClient, ReviewComment } from "@/utils/api";
 import { fixImageUrl } from "@/utils/imageUrl";
@@ -70,6 +72,11 @@ export function ReviewDetailScreen() {
   const insets = useSafeAreaInsets();
   const { reviewId, username } = route.params;
   const { user: currentUser } = useAuthStore();
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
 
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
@@ -374,20 +381,27 @@ export function ReviewDetailScreen() {
 
   if (error || !review) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView
+        style={[styles.container, themedStyles.container]}
+        edges={["top"]}
+      >
         <Header
-          title="Review"
+          title="Recommendation"
           showBackButton
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.errorContainer}>
-          <IconAlertCircle size={48} color={colors.grape[4]} />
-          <Text style={styles.errorText}>{error || "Review not found"}</Text>
+          <IconAlertCircle size={48} color={themeColors.textPlaceholder} />
+          <Text style={[styles.errorText, themedStyles.errorText]}>
+            {error || "Recommendation not found"}
+          </Text>
           <TouchableOpacity
-            style={styles.backButton}
+            style={[styles.backButton, themedStyles.backButton]}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={[styles.backButtonText, themedStyles.backButtonText]}>
+              Go Back
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -399,9 +413,12 @@ export function ReviewDetailScreen() {
   const authorProfileImage = review.author?.profile_image_url;
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, themedStyles.container]}
+      edges={["top"]}
+    >
       <Header
-        title="Review"
+        title="Recommendation"
         showBackButton
         onBackPress={() => navigation.goBack()}
       />
@@ -420,7 +437,7 @@ export function ReviewDetailScreen() {
           enableResetScrollToCoords={false}
         >
           {/* Review Card - matching ReviewCard component design */}
-          <View style={styles.card}>
+          <View style={[styles.card, themedStyles.card]}>
             {/* Author Row */}
             <TouchableOpacity
               style={styles.authorRow}
@@ -433,8 +450,10 @@ export function ReviewDetailScreen() {
                 fallback={authorUsername}
               />
               <View style={styles.authorInfo}>
-                <Text style={styles.authorName}>@{authorUsername}</Text>
-                <Text style={styles.dateText}>
+                <Text style={[styles.authorName, themedStyles.authorName]}>
+                  @{authorUsername}
+                </Text>
+                <Text style={[styles.dateText, themedStyles.dateText]}>
                   {formatDate(review.created_at)}
                 </Text>
               </View>
@@ -443,15 +462,15 @@ export function ReviewDetailScreen() {
                   style={styles.editButton}
                   onPress={handleEditReview}
                 >
-                  <IconEdit size={18} color={colors.grape[5]} />
+                  <IconEdit size={18} color={themeColors.iconMuted} />
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
 
             {/* Song Content Container */}
-            <View style={styles.songContainer}>
+            <View style={[styles.songContainer, themedStyles.songContainer]}>
               {/* Song Row */}
-              <View style={styles.songRow}>
+              <View style={[styles.songRow, themedStyles.songRow]}>
                 <View style={styles.songInfo}>
                   {review.artwork_url ? (
                     <FastImage
@@ -460,10 +479,19 @@ export function ReviewDetailScreen() {
                       resizeMode={FastImage.resizeMode.cover}
                     />
                   ) : (
-                    <View style={[styles.artwork, styles.artworkPlaceholder]} />
+                    <View
+                      style={[
+                        styles.artwork,
+                        styles.artworkPlaceholder,
+                        themedStyles.artworkPlaceholder,
+                      ]}
+                    />
                   )}
                   <View style={styles.songDetails}>
-                    <Text style={styles.songName} numberOfLines={1}>
+                    <Text
+                      style={[styles.songName, themedStyles.songName]}
+                      numberOfLines={1}
+                    >
                       {review.song_name}
                     </Text>
                     <TouchableOpacity
@@ -472,7 +500,10 @@ export function ReviewDetailScreen() {
                       }
                       disabled={!review.band?.slug}
                     >
-                      <Text style={styles.bandName} numberOfLines={1}>
+                      <Text
+                        style={[styles.bandName, themedStyles.bandName]}
+                        numberOfLines={1}
+                      >
                         {review.band_name}
                       </Text>
                     </TouchableOpacity>
@@ -483,7 +514,7 @@ export function ReviewDetailScreen() {
                     onPress={handleOpenLink}
                     style={styles.linkButton}
                   >
-                    <IconExternalLink size={20} color={colors.grape[6]} />
+                    <IconExternalLink size={20} color={themeColors.textMuted} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -493,7 +524,7 @@ export function ReviewDetailScreen() {
                 text={
                   (review as any).formatted_review_text || review.review_text
                 }
-                style={styles.reviewText}
+                style={[styles.reviewText, themedStyles.reviewText]}
               />
 
               {/* Tags */}
@@ -520,14 +551,16 @@ export function ReviewDetailScreen() {
                 style={styles.actionButton}
                 onPress={handleShare}
               >
-                <IconShare size={22} color={colors.grape[6]} />
+                <IconShare size={22} color={themeColors.textMuted} />
               </TouchableOpacity>
 
               {/* Comments Button */}
               <View style={styles.actionButton}>
-                <IconMessageCircle size={22} color={colors.grape[6]} />
+                <IconMessageCircle size={22} color={themeColors.textMuted} />
                 {comments.length > 0 && (
-                  <Text style={styles.actionCount}>{comments.length}</Text>
+                  <Text style={[styles.actionCount, themedStyles.actionCount]}>
+                    {comments.length}
+                  </Text>
                 )}
               </View>
 
@@ -538,16 +571,20 @@ export function ReviewDetailScreen() {
                 disabled={isLiking}
               >
                 {isLiking ? (
-                  <ActivityIndicator size="small" color={colors.grape[6]} />
+                  <ActivityIndicator
+                    size="small"
+                    color={themeColors.textMuted}
+                  />
                 ) : isLiked ? (
                   <IconHeartFilled size={22} color="#ef4444" />
                 ) : (
-                  <IconHeart size={22} color={colors.grape[6]} />
+                  <IconHeart size={22} color={themeColors.textMuted} />
                 )}
                 {likesCount > 0 && (
                   <Text
                     style={[
                       styles.actionCount,
+                      themedStyles.actionCount,
                       isLiked && styles.actionCountLiked,
                     ]}
                   >
@@ -560,17 +597,19 @@ export function ReviewDetailScreen() {
 
           {/* Comments Section */}
           <View style={styles.commentsSection}>
-            <Text style={styles.commentsTitle}>
+            <Text style={[styles.commentsTitle, themedStyles.commentsTitle]}>
               Comments {comments.length > 0 && `(${comments.length})`}
             </Text>
 
             {commentsLoading ? (
               <View style={styles.commentsLoading}>
-                <ActivityIndicator size="small" color={colors.grape[6]} />
+                <ActivityIndicator size="small" color={themeColors.textMuted} />
               </View>
             ) : comments.length === 0 ? (
               <View style={styles.noComments}>
-                <Text style={styles.noCommentsText}>
+                <Text
+                  style={[styles.noCommentsText, themedStyles.noCommentsText]}
+                >
                   No comments yet. Be the first to comment!
                 </Text>
               </View>
@@ -606,11 +645,21 @@ export function ReviewDetailScreen() {
                               handleAuthorPress(commentAuthor.username)
                             }
                           >
-                            <Text style={styles.commentAuthor}>
+                            <Text
+                              style={[
+                                styles.commentAuthor,
+                                themedStyles.commentAuthor,
+                              ]}
+                            >
                               @{commentAuthor.username}
                             </Text>
                           </TouchableOpacity>
-                          <Text style={styles.commentTime}>
+                          <Text
+                            style={[
+                              styles.commentTime,
+                              themedStyles.commentTime,
+                            ]}
+                          >
                             {formatTimeAgo(comment.created_at)}
                           </Text>
                           {currentUser?.id === commentAuthor.id &&
@@ -634,7 +683,10 @@ export function ReviewDetailScreen() {
                         <View style={styles.commentBodyRow}>
                           <MentionText
                             text={comment.formatted_body || comment.body}
-                            style={styles.commentBody}
+                            style={[
+                              styles.commentBody,
+                              themedStyles.commentBody,
+                            ]}
                           />
                           {/* Comment Actions */}
                           <View style={styles.commentActions}>
@@ -648,7 +700,7 @@ export function ReviewDetailScreen() {
                               >
                                 <IconArrowBackUp
                                   size={14}
-                                  color={colors.grape[5]}
+                                  color={themeColors.iconMuted}
                                 />
                               </TouchableOpacity>
                             )}
@@ -661,17 +713,21 @@ export function ReviewDetailScreen() {
                               {likingCommentId === comment.id ? (
                                 <ActivityIndicator
                                   size="small"
-                                  color={colors.grape[5]}
+                                  color={themeColors.iconMuted}
                                 />
                               ) : comment.liked_by_current_user ? (
                                 <IconHeartFilled size={14} color="#ef4444" />
                               ) : (
-                                <IconHeart size={14} color={colors.grape[5]} />
+                                <IconHeart
+                                  size={14}
+                                  color={themeColors.iconMuted}
+                                />
                               )}
                               {comment.likes_count > 0 && (
                                 <Text
                                   style={[
                                     styles.commentLikeCount,
+                                    themedStyles.commentLikeCount,
                                     comment.liked_by_current_user &&
                                       styles.commentLikeCountLiked,
                                   ]}
@@ -694,9 +750,14 @@ export function ReviewDetailScreen() {
                     disabled={loadingMoreComments}
                   >
                     {loadingMoreComments ? (
-                      <ActivityIndicator size="small" color={colors.grape[6]} />
+                      <ActivityIndicator
+                        size="small"
+                        color={themeColors.textMuted}
+                      />
                     ) : (
-                      <Text style={styles.loadMoreText}>
+                      <Text
+                        style={[styles.loadMoreText, themedStyles.loadMoreText]}
+                      >
                         Load more comments
                       </Text>
                     )}
@@ -712,6 +773,7 @@ export function ReviewDetailScreen() {
           <View
             style={[
               styles.commentInputContainer,
+              themedStyles.commentInputContainer,
               { paddingBottom: theme.spacing.md + insets.bottom },
             ]}
           >
@@ -723,9 +785,9 @@ export function ReviewDetailScreen() {
             />
             <MentionTextInput
               key={inputKey}
-              style={styles.commentInput}
+              style={[styles.commentInput, themedStyles.commentInput]}
               placeholder="Add a comment"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               value={newComment}
               onChangeText={setNewComment}
               maxLength={300}
@@ -733,16 +795,20 @@ export function ReviewDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.sendButton,
+                themedStyles.sendButton,
                 (!newComment.trim() || isSubmittingComment) &&
-                  styles.sendButtonDisabled,
+                  themedStyles.sendButtonDisabled,
               ]}
               onPress={handleSubmitComment}
               disabled={!newComment.trim() || isSubmittingComment}
             >
               {isSubmittingComment ? (
-                <ActivityIndicator size="small" color={colors.grape[0]} />
+                <ActivityIndicator
+                  size="small"
+                  color={themeColors.btnPrimaryText}
+                />
               ) : (
-                <IconSend size={18} color={colors.grape[0]} />
+                <IconSend size={18} color={themeColors.btnPrimaryText} />
               )}
             </TouchableOpacity>
           </View>
@@ -750,10 +816,13 @@ export function ReviewDetailScreen() {
           <View
             style={[
               styles.loginPrompt,
+              themedStyles.loginPrompt,
               { paddingBottom: theme.spacing.md + insets.bottom },
             ]}
           >
-            <Text style={styles.loginPromptText}>
+            <Text
+              style={[styles.loginPromptText, themedStyles.loginPromptText]}
+            >
               Log in to leave a comment
             </Text>
           </View>
@@ -763,10 +832,98 @@ export function ReviewDetailScreen() {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    errorText: {
+      color: colors.textMuted,
+    },
+    backButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    backButtonText: {
+      color: colors.btnPrimaryText,
+    },
+    card: {
+      borderBottomColor: colors.borderDefault,
+    },
+    authorName: {
+      color: colors.textMuted,
+    },
+    dateText: {
+      color: colors.textMuted,
+    },
+    songContainer: {
+      borderBottomColor: colors.borderSubtle,
+    },
+    songRow: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    artworkPlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    songName: {
+      color: colors.textPrimary,
+    },
+    bandName: {
+      color: colors.textMuted,
+    },
+    reviewText: {
+      color: colors.textSecondary,
+    },
+    actionCount: {
+      color: colors.textMuted,
+    },
+    commentsTitle: {
+      color: colors.textHeading,
+    },
+    noCommentsText: {
+      color: colors.textMuted,
+    },
+    commentAuthor: {
+      color: colors.textSecondary,
+    },
+    commentTime: {
+      color: colors.textMuted,
+    },
+    commentBody: {
+      color: colors.textSecondary,
+    },
+    commentLikeCount: {
+      color: colors.textMuted,
+    },
+    loadMoreText: {
+      color: colors.textMuted,
+    },
+    commentInputContainer: {
+      borderTopColor: colors.borderSubtle,
+      backgroundColor: colors.bgApp,
+    },
+    commentInput: {
+      backgroundColor: colors.bgSurface,
+      color: colors.textPrimary,
+    },
+    sendButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    sendButtonDisabled: {
+      backgroundColor: colors.iconSubtle,
+    },
+    loginPrompt: {
+      borderTopColor: colors.borderSubtle,
+    },
+    loginPromptText: {
+      color: colors.textMuted,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   keyboardView: {
     flex: 1,
@@ -786,24 +943,20 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[6],
     textAlign: "center",
   },
   backButton: {
-    backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radii.md,
   },
   backButtonText: {
-    color: colors.grape[0],
     fontSize: theme.fontSizes.base,
     fontWeight: "600",
   },
   // Card - matching ReviewCard design
   card: {
     borderBottomWidth: 2,
-    borderBottomColor: colors.grape[3],
   },
   // Author Row
   authorRow: {
@@ -819,11 +972,9 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.grape[6],
   },
   dateText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grey[5],
   },
   editButton: {
     padding: theme.spacing.xs,
@@ -832,12 +983,10 @@ const styles = StyleSheet.create({
   songContainer: {
     marginTop: theme.spacing.sm,
     borderBottomWidth: 2,
-    borderBottomColor: colors.grape[2],
     borderStyle: "dotted",
     paddingBottom: theme.spacing.md,
   },
   songRow: {
-    backgroundColor: colors.grape[2],
     borderRadius: theme.radii.sm,
     padding: theme.spacing.sm,
     flexDirection: "row",
@@ -856,21 +1005,17 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: theme.radii.sm,
   },
-  artworkPlaceholder: {
-    backgroundColor: colors.grape[3],
-  },
+  artworkPlaceholder: {},
   songDetails: {
     flex: 1,
   },
   songName: {
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.grey[9],
     lineHeight: 24,
   },
   bandName: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   linkButton: {
     padding: theme.spacing.xs,
@@ -878,7 +1023,6 @@ const styles = StyleSheet.create({
   // Review Text
   reviewText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grey[8],
     lineHeight: 20,
     marginVertical: theme.spacing.sm,
   },
@@ -906,7 +1050,6 @@ const styles = StyleSheet.create({
   },
   actionCount: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   actionCountLiked: {
     color: "#ef4444",
@@ -918,7 +1061,6 @@ const styles = StyleSheet.create({
   commentsTitle: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.md,
   },
   commentsLoading: {
@@ -931,7 +1073,6 @@ const styles = StyleSheet.create({
   },
   noCommentsText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     textAlign: "center",
   },
   commentsList: {
@@ -953,11 +1094,9 @@ const styles = StyleSheet.create({
   commentAuthor: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "600",
-    color: colors.grape[7],
   },
   commentTime: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
   },
   deleteButton: {
     marginLeft: "auto",
@@ -971,7 +1110,6 @@ const styles = StyleSheet.create({
   commentBody: {
     flex: 1,
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[8],
     lineHeight: 20,
   },
   commentActions: {
@@ -988,7 +1126,6 @@ const styles = StyleSheet.create({
   },
   commentLikeCount: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
   },
   commentLikeCountLiked: {
     color: "#ef4444",
@@ -999,7 +1136,6 @@ const styles = StyleSheet.create({
   },
   loadMoreText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
     fontWeight: "500",
   },
   // Comment Input
@@ -1010,38 +1146,29 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     padding: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.grape[2],
-    backgroundColor: colors.grape[0],
   },
   commentInput: {
     flex: 1,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[8],
     textAlignVertical: "top",
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
-  sendButtonDisabled: {
-    backgroundColor: colors.grape[3],
-  },
+  sendButtonDisabled: {},
   loginPrompt: {
     padding: theme.spacing.md,
     alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: colors.grape[2],
   },
   loginPromptText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
 });

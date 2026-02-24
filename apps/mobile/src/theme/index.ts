@@ -4,6 +4,10 @@ import { colors, typography, spacing, radii, borderWidths } from '@goodsongs/tok
 // Re-export tokens for convenience
 export { colors, typography, spacing, radii, borderWidths };
 
+// Re-export semantic colors
+export { lightColors, darkColors } from './semanticColors';
+export type { SemanticColors } from './semanticColors';
+
 // Theme object matching web app design
 export const theme = {
   colors: {

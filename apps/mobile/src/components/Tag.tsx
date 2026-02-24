@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, StyleSheet, TextStyle } from "react-native";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 interface TagProps {
   text: string;
@@ -8,8 +9,10 @@ interface TagProps {
 }
 
 export function Tag({ text, style }: TagProps) {
+  const { colors } = useTheme();
+
   return (
-    <Text style={[styles.tag, style]}>
+    <Text style={[styles.tag, { color: colors.textPlaceholder }, style]}>
       #{text}
     </Text>
   );
@@ -19,6 +22,5 @@ const styles = StyleSheet.create({
   tag: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "500",
-    color: colors.grape[4],
   },
 });

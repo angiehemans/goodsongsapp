@@ -14,7 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header, TextInput, Button } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient } from '@/utils/api';
 import { Band } from '@goodsongs/api-client';
 import { RootStackParamList } from '@/navigation/types';
@@ -39,6 +41,8 @@ type Props = {
 };
 
 export function CreateEventScreen({ navigation }: Props) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
   const [band, setBand] = useState<Band | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -168,10 +172,10 @@ export function CreateEventScreen({ navigation }: Props) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header title="Create Event" />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={[styles.loadingText, themedStyles.loadingText]}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
@@ -179,17 +183,17 @@ export function CreateEventScreen({ navigation }: Props) {
 
   if (!band) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header title="Create Event" />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>No band found</Text>
+          <Text style={[styles.loadingText, themedStyles.loadingText]}>No band found</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header title="Create Event" />
       <KeyboardAvoidingView
         style={styles.flex}
@@ -212,12 +216,12 @@ export function CreateEventScreen({ navigation }: Props) {
 
           {/* Description */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Description</Text>
-            <View style={styles.textAreaContainer}>
+            <Text style={[styles.label, themedStyles.label]}>Description</Text>
+            <View style={[styles.textAreaContainer, themedStyles.textAreaContainer]}>
               <RNTextInput
-                style={styles.textArea}
+                style={[styles.textArea, themedStyles.textArea]}
                 placeholder="Tell fans about this event..."
-                placeholderTextColor={colors.grape[4]}
+                placeholderTextColor={themeColors.textPlaceholder}
                 value={formData.description}
                 onChangeText={(text: string) => updateField('description', text)}
                 multiline
@@ -228,23 +232,23 @@ export function CreateEventScreen({ navigation }: Props) {
           </View>
 
           {/* Date & Time */}
-          <Text style={styles.sectionTitle}>Date & Time</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Date & Time</Text>
 
           <View style={styles.dateTimeRow}>
             <TouchableOpacity
-              style={styles.dateTimeButton}
+              style={[styles.dateTimeButton, themedStyles.dateTimeButton]}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={styles.dateTimeLabel}>Date</Text>
-              <Text style={styles.dateTimeValue}>{formatDate(formData.event_date)}</Text>
+              <Text style={[styles.dateTimeLabel, themedStyles.dateTimeLabel]}>Date</Text>
+              <Text style={[styles.dateTimeValue, themedStyles.dateTimeValue]}>{formatDate(formData.event_date)}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.dateTimeButton}
+              style={[styles.dateTimeButton, themedStyles.dateTimeButton]}
               onPress={() => setShowTimePicker(true)}
             >
-              <Text style={styles.dateTimeLabel}>Time</Text>
-              <Text style={styles.dateTimeValue}>{formatTime(formData.event_date)}</Text>
+              <Text style={[styles.dateTimeLabel, themedStyles.dateTimeLabel]}>Time</Text>
+              <Text style={[styles.dateTimeValue, themedStyles.dateTimeValue]}>{formatTime(formData.event_date)}</Text>
             </TouchableOpacity>
           </View>
 
@@ -268,7 +272,7 @@ export function CreateEventScreen({ navigation }: Props) {
           )}
 
           {/* Venue */}
-          <Text style={styles.sectionTitle}>Venue</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Venue</Text>
 
           <TextInput
             label="Venue Name *"
@@ -305,7 +309,7 @@ export function CreateEventScreen({ navigation }: Props) {
           </View>
 
           {/* Details */}
-          <Text style={styles.sectionTitle}>Details</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Details</Text>
 
           <TextInput
             label="Ticket Link"
@@ -327,19 +331,21 @@ export function CreateEventScreen({ navigation }: Props) {
 
           {/* Age Restriction */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Age Restriction</Text>
+            <Text style={[styles.label, themedStyles.label]}>Age Restriction</Text>
             <View style={styles.ageButtonsRow}>
               <TouchableOpacity
                 style={[
                   styles.ageButton,
-                  formData.age_restriction === '' && styles.ageButtonSelected,
+                  themedStyles.ageButton,
+                  formData.age_restriction === '' && themedStyles.ageButtonSelected,
                 ]}
                 onPress={() => updateField('age_restriction', '')}
               >
                 <Text
                   style={[
                     styles.ageButtonText,
-                    formData.age_restriction === '' && styles.ageButtonTextSelected,
+                    themedStyles.ageButtonText,
+                    formData.age_restriction === '' && themedStyles.ageButtonTextSelected,
                   ]}
                 >
                   None
@@ -350,14 +356,16 @@ export function CreateEventScreen({ navigation }: Props) {
                   key={age}
                   style={[
                     styles.ageButton,
-                    formData.age_restriction === age && styles.ageButtonSelected,
+                    themedStyles.ageButton,
+                    formData.age_restriction === age && themedStyles.ageButtonSelected,
                   ]}
                   onPress={() => updateField('age_restriction', age)}
                 >
                   <Text
                     style={[
                       styles.ageButtonText,
-                      formData.age_restriction === age && styles.ageButtonTextSelected,
+                      themedStyles.ageButtonText,
+                      formData.age_restriction === age && themedStyles.ageButtonTextSelected,
                     ]}
                   >
                     {age}
@@ -384,10 +392,56 @@ export function CreateEventScreen({ navigation }: Props) {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    loadingText: {
+      color: colors.textMuted,
+    },
+    label: {
+      color: colors.textPlaceholder,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    textAreaContainer: {
+      backgroundColor: colors.bgApp,
+      borderColor: colors.borderStrong,
+    },
+    textArea: {
+      color: colors.textPrimary,
+    },
+    dateTimeButton: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    dateTimeLabel: {
+      color: colors.textMuted,
+    },
+    dateTimeValue: {
+      color: colors.textHeading,
+    },
+    ageButton: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    ageButtonSelected: {
+      backgroundColor: colors.btnPrimaryBg,
+      borderColor: colors.btnPrimaryBg,
+    },
+    ageButtonText: {
+      color: colors.textSecondary,
+    },
+    ageButtonTextSelected: {
+      color: colors.btnPrimaryText,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   flex: {
     flex: 1,
@@ -399,7 +453,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[5],
   },
   content: {
     padding: theme.spacing.md,
@@ -409,26 +462,21 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[4],
     marginBottom: theme.spacing.xs,
   },
   sectionTitle: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
   textAreaContainer: {
-    backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
-    borderColor: colors.grape[6],
     borderRadius: theme.radii.md,
   },
   textArea: {
     padding: theme.spacing.md,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[8],
     minHeight: 100,
   },
   dateTimeRow: {
@@ -438,20 +486,16 @@ const styles = StyleSheet.create({
   },
   dateTimeButton: {
     flex: 1,
-    backgroundColor: colors.grape[1],
     borderWidth: 2,
-    borderColor: colors.grape[3],
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
   },
   dateTimeLabel: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginBottom: theme.spacing.xs,
   },
   dateTimeValue: {
     fontSize: theme.fontSizes.base,
-    color: theme.colors.secondary,
     fontWeight: '500',
   },
   row: {
@@ -469,21 +513,10 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.md,
-    backgroundColor: colors.grape[1],
     borderWidth: 1,
-    borderColor: colors.grape[3],
-  },
-  ageButtonSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
   },
   ageButtonText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
-  },
-  ageButtonTextSelected: {
-    color: 'white',
-    fontWeight: '500',
   },
   bottomSpacer: {
     height: 100,

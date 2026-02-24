@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   TouchableOpacity,
   Text,
@@ -8,6 +8,8 @@ import {
   TextStyle,
 } from "react-native";
 import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 
 interface ButtonProps {
   title: string;
@@ -34,9 +36,13 @@ export function Button({
   textStyle,
   leftIcon,
 }: ButtonProps) {
+  const { colors } = useTheme();
+
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+
   const buttonStyles = [
     styles.base,
-    styles[variant],
+    themedStyles[variant],
     styles[`size_${size}`],
     fullWidth && styles.fullWidth,
     disabled && styles.disabled,
@@ -45,11 +51,13 @@ export function Button({
 
   const textStyles = [
     styles.text,
-    styles[`text_${variant}`],
+    themedStyles[`text_${variant}`],
     styles[`textSize_${size}`],
     disabled && styles.textDisabled,
     textStyle,
   ];
+
+  const loaderColor = variant === "primary" ? colors.btnPrimaryText : colors.textHeading;
 
   return (
     <TouchableOpacity
@@ -60,9 +68,7 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={
-            variant === "primary" ? theme.colors.white : theme.colors.primary
-          }
+          color={loaderColor}
           size="small"
         />
       ) : (
@@ -75,6 +81,35 @@ export function Button({
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    // Variants with themed colors
+    primary: {
+      backgroundColor: colors.btnPrimaryBg,
+      borderColor: colors.btnPrimaryBg,
+    },
+    outline: {
+      backgroundColor: "transparent",
+      borderColor: colors.textHeading,
+    },
+    subtle: {
+      backgroundColor: "transparent",
+      borderColor: "transparent",
+    },
+
+    // Text variants
+    text_primary: {
+      color: colors.btnPrimaryText,
+    },
+    text_outline: {
+      color: colors.textHeading,
+    },
+    text_subtle: {
+      color: colors.textMuted,
+    },
+  });
+
+// Static styles that don't depend on theme
 const styles = StyleSheet.create({
   base: {
     flexDirection: "row",
@@ -83,20 +118,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.md,
     borderWidth: theme.borderWidth,
     gap: theme.spacing.sm,
-  },
-
-  // Variants
-  primary: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  outline: {
-    backgroundColor: "transparent",
-    borderColor: theme.colors.secondary,
-  },
-  subtle: {
-    backgroundColor: "transparent",
-    borderColor: "transparent",
   },
 
   // Sizes
@@ -127,15 +148,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.thecoa,
     includeFontPadding: false,
     textAlignVertical: "center",
-  },
-  text_primary: {
-    color: theme.colors.white,
-  },
-  text_outline: {
-    color: theme.colors.secondary,
-  },
-  text_subtle: {
-    color: theme.colors.primaryLight,
   },
   textSize_sm: {
     fontSize: theme.fontSizes.sm,

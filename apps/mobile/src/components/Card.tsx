@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 
 interface CardProps {
   children: React.ReactNode;
@@ -9,18 +11,27 @@ interface CardProps {
 }
 
 export function Card({ children, style, noPadding = false }: CardProps) {
+  const { colors } = useTheme();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+
   return (
-    <View style={[styles.card, noPadding && styles.noPadding, style]}>
+    <View style={[styles.card, themedStyles.card, noPadding && styles.noPadding, style]}>
       {children}
     </View>
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+  });
+
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surface,
     borderWidth: theme.borderWidth,
-    borderColor: theme.colors.surfaceBorder,
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
   },

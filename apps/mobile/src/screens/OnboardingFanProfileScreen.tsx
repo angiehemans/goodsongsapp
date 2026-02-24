@@ -17,7 +17,9 @@ import Icon from '@react-native-vector-icons/feather';
 import { Button } from '@/components';
 import { apiClient } from '@/utils/api';
 import { useAuthStore } from '@/context/authStore';
-import { theme, colors, commonStyles } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 
 // Username can only contain letters, numbers, and underscores
 const isValidUsername = (value: string): boolean => {
@@ -37,6 +39,8 @@ const getUsernameError = (value: string): string | null => {
 
 export function OnboardingFanProfileScreen() {
   const { refreshUser } = useAuthStore();
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
 
   const [username, setUsername] = useState('');
   const [aboutMe, setAboutMe] = useState('');
@@ -130,7 +134,7 @@ export function OnboardingFanProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, themedStyles.container]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -139,26 +143,27 @@ export function OnboardingFanProfileScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Set up your profile</Text>
-        <Text style={styles.subtitle}>Tell us a bit about yourself</Text>
+        <Text style={[styles.title, themedStyles.title]}>Set up your profile</Text>
+        <Text style={[styles.subtitle, themedStyles.subtitle]}>Tell us a bit about yourself</Text>
 
         <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
           {profileImage ? (
             <Image source={{ uri: profileImage.uri }} style={styles.avatar} />
           ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Icon name="camera" size={28} color={theme.colors.textMuted} />
+            <View style={[styles.avatarPlaceholder, themedStyles.avatarPlaceholder]}>
+              <Icon name="camera" size={28} color={themeColors.textMuted} />
             </View>
           )}
-          <Text style={styles.avatarLabel}>Add photo</Text>
+          <Text style={[styles.avatarLabel, themedStyles.avatarLabel]}>Add photo</Text>
         </TouchableOpacity>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>Username *</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Username *</Text>
           <View style={styles.usernameInputContainer}>
             <TextInput
               style={[
-                commonStyles.input,
+                styles.input,
+                themedStyles.input,
                 styles.usernameInput,
                 (usernameError || serverError) && username ? styles.inputError : null,
                 isUsernameValid ? styles.inputValid : null,
@@ -166,7 +171,7 @@ export function OnboardingFanProfileScreen() {
               value={username}
               onChangeText={handleUsernameChange}
               placeholder="Choose a username"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -187,18 +192,18 @@ export function OnboardingFanProfileScreen() {
           ) : username.length > 0 && isUsernameValid ? (
             <Text style={styles.validText}>Username looks good!</Text>
           ) : (
-            <Text style={styles.hintText}>Letters, numbers, and underscores only</Text>
+            <Text style={[styles.hintText, themedStyles.hintText]}>Letters, numbers, and underscores only</Text>
           )}
         </View>
 
         <View style={styles.field}>
-          <Text style={commonStyles.inputLabel}>About me</Text>
+          <Text style={[styles.inputLabel, themedStyles.inputLabel]}>About me</Text>
           <TextInput
-            style={[commonStyles.input, styles.textArea]}
+            style={[styles.input, themedStyles.input, styles.textArea]}
             value={aboutMe}
             onChangeText={setAboutMe}
             placeholder="Tell us about yourself..."
-            placeholderTextColor={colors.grape[4]}
+            placeholderTextColor={themeColors.textPlaceholder}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -207,23 +212,23 @@ export function OnboardingFanProfileScreen() {
 
         <View style={styles.row}>
           <View style={[styles.field, styles.halfField]}>
-            <Text style={commonStyles.inputLabel}>City</Text>
+            <Text style={[styles.inputLabel, themedStyles.inputLabel]}>City</Text>
             <TextInput
-              style={commonStyles.input}
+              style={[styles.input, themedStyles.input]}
               value={city}
               onChangeText={setCity}
               placeholder="City"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
           <View style={[styles.field, styles.halfField]}>
-            <Text style={commonStyles.inputLabel}>Region</Text>
+            <Text style={[styles.inputLabel, themedStyles.inputLabel]}>Region</Text>
             <TextInput
-              style={commonStyles.input}
+              style={[styles.input, themedStyles.input]}
               value={region}
               onChangeText={setRegion}
               placeholder="State / Province"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
         </View>
@@ -242,10 +247,40 @@ export function OnboardingFanProfileScreen() {
   );
 }
 
+const createThemedStyles = (themeColors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: themeColors.bgApp,
+    },
+    title: {
+      color: themeColors.textHeading,
+    },
+    subtitle: {
+      color: themeColors.textMuted,
+    },
+    avatarPlaceholder: {
+      backgroundColor: themeColors.bgSurface,
+      borderColor: themeColors.borderDefault,
+    },
+    avatarLabel: {
+      color: themeColors.textMuted,
+    },
+    inputLabel: {
+      color: themeColors.textPlaceholder,
+    },
+    input: {
+      backgroundColor: themeColors.bgApp,
+      borderColor: themeColors.borderStrong,
+      color: themeColors.textSecondary,
+    },
+    hintText: {
+      color: themeColors.textMuted,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   flex: {
     flex: 1,
@@ -257,13 +292,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes['2xl'],
     fontWeight: '700',
-    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.xs,
   },
   subtitle: {
     fontSize: theme.fontSizes.base,
-    color: theme.colors.textMuted,
     textAlign: 'center',
     marginBottom: theme.spacing.lg,
   },
@@ -280,20 +313,28 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: theme.colors.surface,
     borderWidth: 2,
-    borderColor: theme.colors.surfaceBorder,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarLabel: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.textMuted,
     marginTop: theme.spacing.xs,
   },
   field: {
     marginBottom: theme.spacing.md,
+  },
+  inputLabel: {
+    fontSize: theme.fontSizes.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  input: {
+    borderWidth: theme.borderWidth,
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.sm + 2,
+    paddingHorizontal: theme.spacing.md,
+    fontSize: theme.fontSizes.base,
   },
   textArea: {
     minHeight: 80,
@@ -337,7 +378,6 @@ const styles = StyleSheet.create({
   },
   hintText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: 4,
   },
 });

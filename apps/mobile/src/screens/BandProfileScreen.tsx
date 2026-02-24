@@ -12,13 +12,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, ProfilePhoto, Badge, ReviewCard, EmptyState, MusicPlayer, Logo } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
 import { Band, Review, Event } from '@goodsongs/api-client';
 
 export function BandProfileScreen({ route, navigation }: any) {
   const { slug } = route.params;
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
   const [band, setBand] = useState<Band | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,16 +90,16 @@ export function BandProfileScreen({ route, navigation }: any) {
             fallback={band?.name || 'B'}
           />
         ) : (
-          <View style={styles.bandPlaceholder}>
-            <Logo size={40} color={colors.grape[4]} />
+          <View style={[styles.bandPlaceholder, themedStyles.bandPlaceholder]}>
+            <Logo size={40} color={themeColors.iconSubtle} />
           </View>
         )}
         <View style={styles.profileInfo}>
-          <Text style={styles.bandName}>{band?.name || slug}</Text>
+          <Text style={[styles.bandName, themedStyles.bandName]}>{band?.name || slug}</Text>
           {(band?.location || band?.city) && (
             <View style={styles.locationRow}>
-              <Icon name="map-pin" size={14} color={colors.grape[5]} />
-              <Text style={styles.location}>
+              <Icon name="map-pin" size={14} color={themeColors.textMuted} />
+              <Text style={[styles.location, themedStyles.location]}>
                 {band?.city && band?.region
                   ? `${band.city}, ${band.region}`
                   : band?.location || band?.city}
@@ -109,41 +113,41 @@ export function BandProfileScreen({ route, navigation }: any) {
       <View style={styles.linksRow}>
         {band?.spotify_link && (
           <TouchableOpacity
-            style={styles.linkButton}
+            style={[styles.linkButton, themedStyles.linkButton]}
             onPress={() => handleOpenLink(band.spotify_link)}
           >
-            <Text style={styles.linkButtonText}>Spotify</Text>
+            <Text style={[styles.linkButtonText, themedStyles.linkButtonText]}>Spotify</Text>
           </TouchableOpacity>
         )}
         {band?.bandcamp_link && (
           <TouchableOpacity
-            style={styles.linkButton}
+            style={[styles.linkButton, themedStyles.linkButton]}
             onPress={() => handleOpenLink(band.bandcamp_link)}
           >
-            <Text style={styles.linkButtonText}>Bandcamp</Text>
+            <Text style={[styles.linkButtonText, themedStyles.linkButtonText]}>Bandcamp</Text>
           </TouchableOpacity>
         )}
         {band?.apple_music_link && (
           <TouchableOpacity
-            style={styles.linkButton}
+            style={[styles.linkButton, themedStyles.linkButton]}
             onPress={() => handleOpenLink(band.apple_music_link)}
           >
-            <Text style={styles.linkButtonText}>Apple Music</Text>
+            <Text style={[styles.linkButtonText, themedStyles.linkButtonText]}>Apple Music</Text>
           </TouchableOpacity>
         )}
         {band?.youtube_music_link && (
           <TouchableOpacity
-            style={styles.linkButton}
+            style={[styles.linkButton, themedStyles.linkButton]}
             onPress={() => handleOpenLink(band.youtube_music_link)}
           >
-            <Text style={styles.linkButtonText}>YouTube</Text>
+            <Text style={[styles.linkButtonText, themedStyles.linkButtonText]}>YouTube</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* About */}
       {band?.about && (
-        <Text style={styles.about}>{band.about}</Text>
+        <Text style={[styles.about, themedStyles.about]}>{band.about}</Text>
       )}
 
       {/* Music Player Embed */}
@@ -171,31 +175,31 @@ export function BandProfileScreen({ route, navigation }: any) {
       {/* Upcoming Events */}
       {upcomingEvents.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>Upcoming Events</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Upcoming Events</Text>
           {upcomingEvents.map((event) => (
             <TouchableOpacity
               key={event.id}
-              style={styles.eventCard}
+              style={[styles.eventCard, themedStyles.eventCard]}
               onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
             >
               <View style={styles.eventInfo}>
-                <Text style={styles.eventName}>{event.name}</Text>
-                <Text style={styles.eventDate}>{formatEventDate(event.event_date)}</Text>
+                <Text style={[styles.eventName, themedStyles.eventName]}>{event.name}</Text>
+                <Text style={[styles.eventDate, themedStyles.eventDate]}>{formatEventDate(event.event_date)}</Text>
                 {event.venue && (
-                  <Text style={styles.eventVenue}>
+                  <Text style={[styles.eventVenue, themedStyles.eventVenue]}>
                     {event.venue.name}{event.venue.city ? `, ${event.venue.city}` : ''}
                   </Text>
                 )}
               </View>
               {event.ticket_link && (
                 <TouchableOpacity
-                  style={styles.ticketButton}
+                  style={[styles.ticketButton, themedStyles.ticketButton]}
                   onPress={(e) => {
                     e.stopPropagation();
                     handleOpenLink(event.ticket_link);
                   }}
                 >
-                  <Text style={styles.ticketButtonText}>Tickets</Text>
+                  <Text style={[styles.ticketButtonText, themedStyles.ticketButtonText]}>Tickets</Text>
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
@@ -204,7 +208,7 @@ export function BandProfileScreen({ route, navigation }: any) {
       )}
 
       {/* Recommendations Title */}
-      <Text style={styles.sectionTitle}>Recommendations</Text>
+      <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Recommendations</Text>
     </View>
     );
   };
@@ -222,14 +226,14 @@ export function BandProfileScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header
           title=""
           showBackButton
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={themeColors.btnPrimaryBg} />
         </View>
       </SafeAreaView>
     );
@@ -238,7 +242,7 @@ export function BandProfileScreen({ route, navigation }: any) {
   const reviews: Review[] = band?.reviews || [];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header
         title=""
         showBackButton
@@ -254,8 +258,8 @@ export function BandProfileScreen({ route, navigation }: any) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
+            colors={[themeColors.btnPrimaryBg]}
+            tintColor={themeColors.btnPrimaryBg}
           />
         }
         ListHeaderComponent={renderBandHeader}
@@ -275,10 +279,57 @@ export function BandProfileScreen({ route, navigation }: any) {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    bandPlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    bandName: {
+      color: colors.textHeading,
+    },
+    location: {
+      color: colors.textMuted,
+    },
+    linkButton: {
+      backgroundColor: colors.bgSurfaceAlt,
+      borderColor: colors.borderDefault,
+    },
+    linkButtonText: {
+      color: colors.btnPrimaryBg,
+    },
+    about: {
+      color: colors.textSecondary,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    eventCard: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    eventName: {
+      color: colors.textHeading,
+    },
+    eventDate: {
+      color: colors.textSecondary,
+    },
+    eventVenue: {
+      color: colors.textMuted,
+    },
+    ticketButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    ticketButtonText: {
+      color: colors.btnPrimaryText,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   loadingContainer: {
     flex: 1,
@@ -304,14 +355,12 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.grape[2],
     justifyContent: 'center',
     alignItems: 'center',
   },
   bandName: {
     fontSize: theme.fontSizes.xl,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     lineHeight: 30,
   },
   locationRow: {
@@ -322,7 +371,6 @@ const styles = StyleSheet.create({
   },
   location: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   linksRow: {
     flexDirection: 'row',
@@ -334,18 +382,14 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radii.sm,
-    backgroundColor: colors.grape[2],
     borderWidth: 1,
-    borderColor: colors.grape[3],
   },
   linkButtonText: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.primary,
     fontWeight: '500',
   },
   about: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[7],
     lineHeight: 20,
     marginBottom: theme.spacing.md,
   },
@@ -361,7 +405,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     marginTop: theme.spacing.md,
     lineHeight: 32,
@@ -369,10 +412,8 @@ const styles = StyleSheet.create({
   eventCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     borderWidth: 1,
-    borderColor: colors.grape[3],
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
   },
@@ -382,27 +423,22 @@ const styles = StyleSheet.create({
   eventName: {
     fontSize: theme.fontSizes.md,
     fontWeight: '600',
-    color: theme.colors.secondary,
     marginBottom: 2,
   },
   eventDate: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   eventVenue: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grey[5],
     marginTop: 2,
   },
   ticketButton: {
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radii.sm,
-    backgroundColor: theme.colors.primary,
   },
   ticketButtonText: {
     fontSize: theme.fontSizes.sm,
-    color: 'white',
     fontWeight: '600',
   },
   reviewWrapper: {

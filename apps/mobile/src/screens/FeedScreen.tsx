@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -37,7 +37,9 @@ import {
   Logo,
   ArtworkPickerModal,
 } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { useScrobbleStore } from "@/context/scrobbleStore";
 import { useNotificationStore } from "@/context/notificationStore";
@@ -52,6 +54,9 @@ type Props = {
 };
 
 export function FeedScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+
   const { user: currentUser, refreshUser } = useAuthStore();
   const nowPlaying = useScrobbleStore((state) => state.nowPlaying);
   const pendingCount = useScrobbleStore((state) => state.pendingCount);
@@ -422,9 +427,9 @@ export function FeedScreen({ navigation, route }: Props) {
     if (recentlyPlayedLoading) {
       return (
         <View style={styles.recentlyPlayedSection}>
-          <Text style={styles.sectionTitle}>Recently Played</Text>
-          <View style={styles.recentlyPlayedLoading}>
-            <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Recently Played</Text>
+          <View style={[styles.recentlyPlayedLoading, themedStyles.recentlyPlayedLoading]}>
+            <Text style={[styles.loadingText, themedStyles.loadingText]}>Loading...</Text>
           </View>
         </View>
       );
@@ -434,10 +439,10 @@ export function FeedScreen({ navigation, route }: Props) {
     if (tracksToDisplay.length === 0) {
       return (
         <View style={styles.recentlyPlayedSection}>
-          <Text style={styles.sectionTitle}>Recently Played</Text>
-          <View style={styles.connectLastFm}>
-            <IconMusic size={24} color={colors.grape[5]} />
-            <Text style={styles.connectText}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Recently Played</Text>
+          <View style={[styles.connectLastFm, themedStyles.connectLastFm]}>
+            <IconMusic size={24} color={colors.textMuted} />
+            <Text style={[styles.connectText, themedStyles.connectText]}>
               Connect Last.fm or enable scrobbling to see your recently played
               tracks
             </Text>
@@ -448,14 +453,14 @@ export function FeedScreen({ navigation, route }: Props) {
 
     return (
       <View style={styles.recentlyPlayedSection}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>
           {nowPlaying ? "Now Playing" : "Recently Played"}
         </Text>
         {/* Offline sync notice */}
         {syncing && pendingCount > 0 && (
-          <View style={styles.syncingNotice}>
-            <ActivityIndicator size="small" color={colors.grape[6]} />
-            <Text style={styles.syncingNoticeText}>
+          <View style={[styles.syncingNotice, themedStyles.syncingNotice]}>
+            <ActivityIndicator size="small" color={colors.textMuted} />
+            <Text style={[styles.syncingNoticeText, themedStyles.syncingNoticeText]}>
               Loading {pendingCount} {pendingCount === 1 ? 'track' : 'tracks'} played while offline
             </Text>
           </View>
@@ -468,7 +473,7 @@ export function FeedScreen({ navigation, route }: Props) {
           {tracksToDisplay.map((track, index) => (
             <View
               key={`${track.name}-${track.artist}-${index}`}
-              style={styles.trackCard}
+              style={[styles.trackCard, themedStyles.trackCard]}
             >
               <Pressable
                 style={styles.artworkContainer}
@@ -486,10 +491,11 @@ export function FeedScreen({ navigation, route }: Props) {
                     style={[
                       styles.trackArtwork,
                       styles.trackArtworkPlaceholder,
+                      themedStyles.trackArtworkPlaceholder,
                     ]}
                   >
-                    <Logo size={28} color={colors.grape[4]} />
-                    <Text style={styles.pendingArtworkText}>
+                    <Logo size={28} color={colors.iconSubtle} />
+                    <Text style={[styles.pendingArtworkText, themedStyles.pendingArtworkText]}>
                       Loading artwork
                     </Text>
                   </View>
@@ -498,19 +504,20 @@ export function FeedScreen({ navigation, route }: Props) {
                     style={[
                       styles.trackArtwork,
                       styles.trackArtworkPlaceholder,
+                      themedStyles.trackArtworkPlaceholder,
                     ]}
                   >
-                    <Logo size={28} color={colors.grape[4]} />
+                    <Logo size={28} color={colors.iconSubtle} />
                   </View>
                 )}
                 {track.now_playing && (
                   <View style={styles.nowPlayingOverlay}>
-                    <IconVolume size={28} color={colors.grape[0]} />
+                    <IconVolume size={28} color={colors.textInverse} />
                   </View>
                 )}
                 {!track.album_art_url && track.can_refresh_artwork && (
                   <TouchableOpacity
-                    style={styles.refreshArtworkButton}
+                    style={[styles.refreshArtworkButton, themedStyles.refreshArtworkButton]}
                     onPress={() => {
                       const scrobbleId = getScrobbleId(track);
                       if (scrobbleId) {
@@ -520,25 +527,25 @@ export function FeedScreen({ navigation, route }: Props) {
                     disabled={refreshingArtworkId !== null}
                   >
                     {refreshingArtworkId === getScrobbleId(track) ? (
-                      <ActivityIndicator size="small" color={colors.grape[8]} />
+                      <ActivityIndicator size="small" color={colors.textPrimary} />
                     ) : (
-                      <IconRefresh size={14} color={colors.grape[8]} />
+                      <IconRefresh size={14} color={colors.textPrimary} />
                     )}
                   </TouchableOpacity>
                 )}
               </Pressable>
-              <Text style={styles.trackName} numberOfLines={1}>
+              <Text style={[styles.trackName, themedStyles.trackName]} numberOfLines={1}>
                 {track.name}
               </Text>
-              <Text style={styles.trackArtist} numberOfLines={1}>
+              <Text style={[styles.trackArtist, themedStyles.trackArtist]} numberOfLines={1}>
                 {track.artist}
               </Text>
               <TouchableOpacity
-                style={styles.recommendButton}
+                style={[styles.recommendButton, themedStyles.recommendButton]}
                 onPress={() => handleRecommendTrack(track)}
               >
-                <IconPlus size={12} color={colors.grape[0]} />
-                <Text style={styles.recommendButtonText}>Recommend</Text>
+                <IconPlus size={12} color={colors.btnPrimaryText} />
+                <Text style={[styles.recommendButtonText, themedStyles.recommendButtonText]}>Recommend</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -799,7 +806,7 @@ export function FeedScreen({ navigation, route }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={["top"]}>
       <Header
         title="Home"
         rightContent={
@@ -807,7 +814,7 @@ export function FeedScreen({ navigation, route }: Props) {
             onPress={() => navigation.navigate("Settings")}
             style={styles.settingsButton}
           >
-            <IconSettings size={24} color={colors.grape[8]} />
+            <IconSettings size={24} color={colors.iconDefault} />
           </TouchableOpacity>
         }
       />
@@ -825,8 +832,8 @@ export function FeedScreen({ navigation, route }: Props) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
+            colors={[colors.btnPrimaryBg]}
+            tintColor={colors.btnPrimaryBg}
           />
         }
         onScroll={handleScroll}
@@ -838,18 +845,18 @@ export function FeedScreen({ navigation, route }: Props) {
                 <View style={styles.loadingMore}>
                   <ActivityIndicator
                     size="small"
-                    color={theme.colors.primary}
+                    color={colors.btnPrimaryBg}
                   />
                 </View>
               ) : hasMore ? (
                 <TouchableOpacity
-                  style={styles.loadMoreButton}
+                  style={[styles.loadMoreButton, themedStyles.loadMoreButton]}
                   onPress={handleLoadMore}
                 >
-                  <Text style={styles.loadMoreButtonText}>Load More</Text>
+                  <Text style={[styles.loadMoreButtonText, themedStyles.loadMoreButtonText]}>Load More</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.endOfListText}>You're all caught up!</Text>
+                <Text style={[styles.endOfListText, themedStyles.endOfListText]}>You're all caught up!</Text>
               )}
             </View>
           ) : null
@@ -901,18 +908,18 @@ export function FeedScreen({ navigation, route }: Props) {
 
             {/* Discord Notice */}
             <TouchableOpacity
-              style={styles.discordBanner}
+              style={[styles.discordBanner, themedStyles.discordBanner]}
               onPress={() => Linking.openURL("https://discord.gg/33MCPDwws")}
             >
-              <Text style={styles.discordText}>
+              <Text style={[styles.discordText, themedStyles.discordText]}>
                 Want to give us feedback? Join our Discord community!
               </Text>
-              <View style={styles.discordButton}>
-                <Text style={styles.discordButtonText}>Join Discord</Text>
+              <View style={[styles.discordButton, themedStyles.discordButton]}>
+                <Text style={[styles.discordButtonText, themedStyles.discordButtonText]}>Join Discord</Text>
               </View>
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitle}>Following</Text>
+            <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Following</Text>
           </>
         }
       />
@@ -920,10 +927,10 @@ export function FeedScreen({ navigation, route }: Props) {
       {/* Success Banner */}
       {showSuccess && (
         <Animated.View
-          style={[styles.successBanner, { opacity: bannerOpacity }]}
+          style={[styles.successBanner, themedStyles.successBanner, { opacity: bannerOpacity }]}
         >
-          <IconCircleCheck size={20} color={colors.grape[0]} />
-          <Text style={styles.successText}>{successMessage}</Text>
+          <IconCircleCheck size={20} color={colors.btnPrimaryText} />
+          <Text style={[styles.successText, themedStyles.successText]}>{successMessage}</Text>
         </Animated.View>
       )}
 
@@ -946,10 +953,89 @@ export function FeedScreen({ navigation, route }: Props) {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    recentlyPlayedLoading: {
+      backgroundColor: colors.bgSurface,
+    },
+    loadingText: {
+      color: colors.textMuted,
+    },
+    connectLastFm: {
+      backgroundColor: colors.bgSurface,
+    },
+    connectText: {
+      color: colors.textMuted,
+    },
+    syncingNotice: {
+      backgroundColor: colors.bgSurface,
+    },
+    syncingNoticeText: {
+      color: colors.textMuted,
+    },
+    trackCard: {
+      backgroundColor: colors.bgSurface,
+    },
+    trackArtworkPlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    pendingArtworkText: {
+      color: colors.textMuted,
+    },
+    refreshArtworkButton: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    trackName: {
+      color: colors.textSecondary,
+    },
+    trackArtist: {
+      color: colors.textMuted,
+    },
+    recommendButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    recommendButtonText: {
+      color: colors.btnPrimaryText,
+    },
+    successBanner: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    successText: {
+      color: colors.btnPrimaryText,
+    },
+    endOfListText: {
+      color: colors.textMuted,
+    },
+    loadMoreButton: {
+      backgroundColor: colors.bgSurface,
+    },
+    loadMoreButtonText: {
+      color: colors.btnPrimaryBg,
+    },
+    // Discord banner themed styles
+    discordBanner: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    discordText: {
+      color: colors.textSecondary,
+    },
+    discordButton: {
+      backgroundColor: colors.bgSurface,
+    },
+    discordButtonText: {
+      color: colors.textSecondary,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   settingsButton: {
     padding: theme.spacing.xs,
@@ -961,7 +1047,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes["2xl"],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginVertical: theme.spacing.md,
     lineHeight: 32,
   },
@@ -973,7 +1058,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#E6EAF8", // 95% tint of #0124B0
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
@@ -982,10 +1066,8 @@ const styles = StyleSheet.create({
   discordText: {
     flex: 1,
     fontSize: theme.fontSizes.sm,
-    color: "#0124B0", // Brand blue
   },
   discordButton: {
-    backgroundColor: "#CCD5F1", // 85% tint of #0124B0
     borderRadius: theme.radii.sm,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
@@ -993,7 +1075,6 @@ const styles = StyleSheet.create({
   discordButtonText: {
     fontSize: theme.fontSizes.xs,
     fontFamily: theme.fonts.thecoaMedium,
-    color: "#0124B0", // Brand blue
     includeFontPadding: false,
     textAlignVertical: "center",
   },
@@ -1004,7 +1085,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes["2xl"],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 32,
   },
@@ -1012,22 +1092,18 @@ const styles = StyleSheet.create({
     height: 160,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
   },
   loadingText: {
-    color: colors.grape[5],
     fontSize: theme.fontSizes.sm,
   },
   connectLastFm: {
     padding: theme.spacing.lg,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     alignItems: "center",
     gap: theme.spacing.sm,
   },
   connectText: {
-    color: colors.grape[6],
     fontSize: theme.fontSizes.sm,
     textAlign: "center",
   },
@@ -1037,7 +1113,6 @@ const styles = StyleSheet.create({
   },
   trackCard: {
     width: 120,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     padding: theme.spacing.xs,
   },
@@ -1051,7 +1126,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.sm,
   },
   trackArtworkPlaceholder: {
-    backgroundColor: colors.grape[2],
     justifyContent: "center",
     alignItems: "center",
     gap: 2,
@@ -1060,7 +1134,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 4,
     right: 4,
-    backgroundColor: colors.grape[2],
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -1080,19 +1153,16 @@ const styles = StyleSheet.create({
   },
   pendingArtworkText: {
     fontSize: 9,
-    color: colors.grape[5],
     marginTop: 4,
     textAlign: "center",
   },
   trackName: {
     fontSize: theme.fontSizes.sm,
     fontFamily: theme.fonts.thecoaBold,
-    color: colors.grape[8],
     lineHeight: 22,
   },
   trackArtist: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: 2,
   },
   recommendButton: {
@@ -1100,7 +1170,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    backgroundColor: theme.colors.primary,
     borderRadius: theme.radii.sm,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
@@ -1109,7 +1178,6 @@ const styles = StyleSheet.create({
   recommendButtonText: {
     fontSize: 11,
     lineHeight: 12,
-    color: colors.grape[0],
     fontFamily: theme.fonts.thecoa,
     includeFontPadding: false,
     textAlignVertical: "center",
@@ -1122,12 +1190,10 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.sm,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
   },
   syncingNoticeText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   successBanner: {
     position: "absolute",
@@ -1138,7 +1204,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: theme.spacing.sm,
-    backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radii.md,
@@ -1150,7 +1215,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   successText: {
-    color: colors.grape[0],
     fontSize: theme.fontSizes.base,
     fontWeight: "600",
   },
@@ -1207,12 +1271,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   endOfListText: {
-    color: colors.grape[5],
     fontSize: theme.fontSizes.sm,
     paddingVertical: theme.spacing.md,
   },
   loadMoreButton: {
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
@@ -1220,7 +1282,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadMoreButtonText: {
-    color: theme.colors.primary,
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
   },

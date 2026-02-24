@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   TextInput as RNTextInput,
@@ -9,7 +9,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Icon from "@react-native-vector-icons/feather";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 
 type IconName = React.ComponentProps<typeof Icon>["name"];
 
@@ -34,22 +36,24 @@ export function TextInput({
 }: TextInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPassword = secureTextEntry !== undefined;
+  const { colors } = useTheme();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputContainer, error && styles.inputError]}>
+      {label && <Text style={[styles.label, themedStyles.label]}>{label}</Text>}
+      <View style={[styles.inputContainer, themedStyles.inputContainer, error && styles.inputError]}>
         {leftIcon && (
           <Icon
             name={leftIcon}
             size={18}
-            color={colors.grape[6]}
+            color={colors.iconMuted}
             style={styles.leftIcon}
           />
         )}
         <RNTextInput
-          style={[styles.input, leftIcon && styles.inputWithLeftIcon]}
-          placeholderTextColor={colors.grape[4]}
+          style={[styles.input, themedStyles.input, leftIcon && styles.inputWithLeftIcon]}
+          placeholderTextColor={colors.textPlaceholder}
           secureTextEntry={isPassword && !isPasswordVisible}
           autoCapitalize={isPassword ? "none" : props.autoCapitalize}
           autoCorrect={isPassword ? false : props.autoCorrect}
@@ -63,7 +67,7 @@ export function TextInput({
             <Icon
               name={isPasswordVisible ? "eye-off" : "eye"}
               size={18}
-              color={colors.grape[6]}
+              color={colors.iconMuted}
             />
           </TouchableOpacity>
         )}
@@ -73,7 +77,7 @@ export function TextInput({
             style={styles.rightIconButton}
             disabled={!onRightIconPress}
           >
-            <Icon name={rightIcon} size={18} color={colors.grape[6]} />
+            <Icon name={rightIcon} size={18} color={colors.iconMuted} />
           </TouchableOpacity>
         )}
       </View>
@@ -82,32 +86,42 @@ export function TextInput({
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    label: {
+      color: colors.textPlaceholder,
+    },
+    inputContainer: {
+      backgroundColor: colors.bgInput,
+      borderColor: colors.borderStrong,
+    },
+    input: {
+      color: colors.textSecondary,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     marginBottom: theme.spacing.md,
   },
   label: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[4],
     marginBottom: theme.spacing.xs,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
-    borderColor: colors.grape[6],
     borderRadius: theme.radii.md,
   },
   inputError: {
-    borderColor: theme.colors.error,
+    borderColor: '#EF4444',
   },
   input: {
     flex: 1,
     paddingVertical: theme.spacing.sm + 2,
     paddingHorizontal: theme.spacing.md,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[8],
   },
   inputWithLeftIcon: {
     paddingLeft: 0,
@@ -122,7 +136,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: theme.fontSizes.xs,
-    color: theme.colors.error,
+    color: '#EF4444',
     marginTop: theme.spacing.xs,
   },
 });

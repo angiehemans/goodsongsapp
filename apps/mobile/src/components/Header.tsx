@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "@react-native-vector-icons/feather";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { Logo } from "./Logo";
 
 type IconName = React.ComponentProps<typeof Icon>["name"];
@@ -23,20 +25,23 @@ export function Header({
   rightIcon,
   onRightPress,
 }: HeaderProps) {
+  const { colors } = useTheme();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, themedStyles.header]}>
       <View style={styles.leftSection}>
         {showBackButton ? (
           <View style={styles.backButtonContainer}>
             <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
-              <Icon name="arrow-left" size={24} color={colors.grape[8]} />
+              <Icon name="arrow-left" size={24} color={colors.iconDefault} />
             </TouchableOpacity>
-            {title && <Text style={styles.backTitle}>{title}</Text>}
+            {title && <Text style={[styles.backTitle, themedStyles.backTitle]}>{title}</Text>}
           </View>
         ) : (
           <View style={styles.logoContainer}>
-            <Logo size={24} color={theme.colors.secondary} />
-            {title && <Text style={styles.logoText}>{title}</Text>}
+            <Logo size={24} color={colors.logoColor} />
+            {title && <Text style={[styles.logoText, themedStyles.logoText]}>{title}</Text>}
           </View>
         )}
       </View>
@@ -45,13 +50,27 @@ export function Header({
         {rightContent}
         {rightIcon && onRightPress && (
           <TouchableOpacity onPress={onRightPress} style={styles.rightButton}>
-            <Icon name={rightIcon} size={24} color={colors.grape[8]} />
+            <Icon name={rightIcon} size={24} color={colors.iconDefault} />
           </TouchableOpacity>
         )}
       </View>
     </View>
   );
 }
+
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    header: {
+      backgroundColor: colors.bgApp,
+      borderBottomColor: colors.borderSubtle,
+    },
+    backTitle: {
+      color: colors.textHeading,
+    },
+    logoText: {
+      color: colors.textHeading,
+    },
+  });
 
 const styles = StyleSheet.create({
   header: {
@@ -60,9 +79,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.grape[2],
   },
   leftSection: {
     flex: 1,
@@ -84,7 +101,6 @@ const styles = StyleSheet.create({
   backTitle: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     lineHeight: 28,
   },
   logoContainer: {
@@ -95,7 +111,6 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     lineHeight: 28,
   },
   rightButton: {

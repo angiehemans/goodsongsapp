@@ -3,7 +3,7 @@ import { Text, TextStyle, StyleProp } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { colors } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 interface MentionTextProps {
   text: string;
@@ -18,6 +18,7 @@ const MENTION_REGEX = /\[@(\w+)\]\(user:(\d+)\)/g;
 
 export function MentionText({ text, style, numberOfLines }: MentionTextProps) {
   const navigation = useNavigation<NavigationProp>();
+  const { colors: themeColors } = useTheme();
 
   const handleMentionPress = (username: string) => {
     navigation.navigate('UserProfile', { username });
@@ -44,7 +45,7 @@ export function MentionText({ text, style, numberOfLines }: MentionTextProps) {
     parts.push(
       <Text
         key={`mention-${match.index}`}
-        style={styles.mention}
+        style={{ color: themeColors.textHeading, fontWeight: '600' }}
         onPress={() => handleMentionPress(username)}
       >
         @{username}
@@ -74,10 +75,3 @@ export function MentionText({ text, style, numberOfLines }: MentionTextProps) {
     </Text>
   );
 }
-
-const styles = {
-  mention: {
-    color: colors.blue.base,
-    fontWeight: '600' as const,
-  },
-};

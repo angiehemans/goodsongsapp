@@ -24,7 +24,9 @@ import {
   EmptyState,
   LoadingScreen,
 } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { apiClient } from "@/utils/api";
 import { Review, User } from "@goodsongs/api-client";
@@ -44,6 +46,11 @@ function ProfileEditForm({
   }) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const [editBio, setEditBio] = useState(user?.about_me || "");
   const [editCity, setEditCity] = useState(user?.city || "");
   const [editRegion, setEditRegion] = useState(user?.region || "");
@@ -69,22 +76,22 @@ function ProfileEditForm({
           fallback={user?.username || "U"}
         />
         <View style={styles.profileInfo}>
-          <Text style={styles.username}>@{user?.username || "User"}</Text>
+          <Text style={[styles.username, themedStyles.username]}>@{user?.username || "User"}</Text>
           <View style={styles.locationEditRow}>
             <TextInput
-              style={styles.locationInput}
+              style={[styles.locationInput, themedStyles.locationInput]}
               value={editCity}
               onChangeText={setEditCity}
               placeholder="City"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
-            <Text style={styles.locationSeparator}>,</Text>
+            <Text style={[styles.locationSeparator, themedStyles.locationSeparator]}>,</Text>
             <TextInput
-              style={styles.locationInput}
+              style={[styles.locationInput, themedStyles.locationInput]}
               value={editRegion}
               onChangeText={setEditRegion}
               placeholder="State"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
         </View>
@@ -93,36 +100,36 @@ function ProfileEditForm({
       {/* Bio */}
       <View style={styles.bioEditContainer}>
         <TextInput
-          style={styles.bioInput}
+          style={[styles.bioInput, themedStyles.bioInput]}
           value={editBio}
           onChangeText={setEditBio}
           placeholder="Write something about yourself..."
-          placeholderTextColor={colors.grape[4]}
+          placeholderTextColor={themeColors.textPlaceholder}
           multiline
           maxLength={500}
           textAlignVertical="top"
         />
-        <Text style={styles.charCount}>{editBio.length}/500</Text>
+        <Text style={[styles.charCount, themedStyles.charCount]}>{editBio.length}/500</Text>
       </View>
 
       {/* Edit Action Buttons */}
       <View style={styles.editActions}>
         <TouchableOpacity
-          style={styles.cancelButton}
+          style={[styles.cancelButton, themedStyles.cancelButton]}
           onPress={onCancel}
           disabled={isSaving}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={[styles.cancelButtonText, themedStyles.cancelButtonText]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          style={[styles.saveButton, themedStyles.saveButton, isSaving && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={isSaving}
         >
           {isSaving ? (
-            <ActivityIndicator size="small" color={colors.grape[0]} />
+            <ActivityIndicator size="small" color={themeColors.btnPrimaryText} />
           ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
+            <Text style={[styles.saveButtonText, themedStyles.saveButtonText]}>Save</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -138,6 +145,12 @@ function ProfileViewHeader({
   user: User | null;
   reviewCount: number;
 }) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
+
   return (
     <View style={styles.profileSection}>
       {/* Profile Info */}
@@ -149,11 +162,11 @@ function ProfileViewHeader({
           fallback={user?.username || "U"}
         />
         <View style={styles.profileInfo}>
-          <Text style={styles.username}>@{user?.username || "User"}</Text>
+          <Text style={[styles.username, themedStyles.username]}>@{user?.username || "User"}</Text>
           {(user?.location || user?.city) && (
             <View style={styles.locationRow}>
-              <Icon name="map-pin" size={14} color={colors.grape[5]} />
-              <Text style={styles.location}>
+              <Icon name="map-pin" size={14} color={themeColors.iconMuted} />
+              <Text style={[styles.location, themedStyles.location]}>
                 {user.city && user.region
                   ? `${user.city}, ${user.region}`
                   : user.location || user.city}
@@ -165,7 +178,7 @@ function ProfileViewHeader({
 
       {/* Bio */}
       {user?.about_me && (
-        <Text style={styles.bio} numberOfLines={4}>
+        <Text style={[styles.bio, themedStyles.bio]} numberOfLines={4}>
           {user.about_me}
         </Text>
       )}
@@ -186,7 +199,7 @@ function ProfileViewHeader({
       </View>
 
       {/* Recommendations Title */}
-      <Text style={styles.sectionTitle}>Recommendations</Text>
+      <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Recommendations</Text>
     </View>
   );
 }
@@ -196,6 +209,11 @@ type Props = {
 };
 
 export function ProfileScreen({ navigation }: Props) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const { user, setUser } = useAuthStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -307,7 +325,7 @@ export function ProfileScreen({ navigation }: Props) {
   // When editing, use a ScrollView instead of FlatList to avoid keyboard issues
   if (isEditing) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={["top"]}>
         <Header title="Profile" />
         <KeyboardAvoidingView
           style={styles.flex}
@@ -330,12 +348,12 @@ export function ProfileScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={["top"]}>
       <Header
         title="Profile"
         rightContent={
           <TouchableOpacity onPress={handleStartEdit} style={styles.editButton}>
-            <Icon name="edit-2" size={20} color={colors.grape[8]} />
+            <Icon name="edit-2" size={20} color={themeColors.textSecondary} />
           </TouchableOpacity>
         }
       />
@@ -349,8 +367,8 @@ export function ProfileScreen({ navigation }: Props) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
+            colors={[themeColors.btnPrimaryBg]}
+            tintColor={themeColors.btnPrimaryBg}
           />
         }
         onEndReached={handleLoadMore}
@@ -371,7 +389,7 @@ export function ProfileScreen({ navigation }: Props) {
         ListFooterComponent={
           loadingMoreReviews ? (
             <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <ActivityIndicator size="small" color={themeColors.btnPrimaryBg} />
             </View>
           ) : null
         }
@@ -384,10 +402,56 @@ export function ProfileScreen({ navigation }: Props) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    username: {
+      color: colors.textHeading,
+    },
+    location: {
+      color: colors.textMuted,
+    },
+    locationInput: {
+      color: colors.textPrimary,
+      borderBottomColor: colors.borderDefault,
+    },
+    locationSeparator: {
+      color: colors.textMuted,
+    },
+    bio: {
+      color: colors.textSecondary,
+    },
+    bioInput: {
+      color: colors.textPrimary,
+      borderColor: colors.borderDefault,
+    },
+    charCount: {
+      color: colors.textMuted,
+    },
+    cancelButton: {
+      borderColor: colors.borderDefault,
+    },
+    cancelButtonText: {
+      color: colors.textMuted,
+    },
+    saveButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    saveButtonText: {
+      color: colors.btnPrimaryText,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   flex: {
     flex: 1,
@@ -413,7 +477,6 @@ const styles = StyleSheet.create({
   username: {
     fontSize: theme.fontSizes.xl,
     fontFamily: theme.fonts.thecoaMedium,
-    color: theme.colors.secondary,
     lineHeight: 30,
   },
   locationRow: {
@@ -424,7 +487,6 @@ const styles = StyleSheet.create({
   },
   location: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   locationEditRow: {
     flexDirection: "row",
@@ -434,20 +496,16 @@ const styles = StyleSheet.create({
   locationInput: {
     flex: 1,
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[8],
     borderBottomWidth: 1,
-    borderBottomColor: colors.grape[4],
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: 0,
   },
   locationSeparator: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     marginHorizontal: theme.spacing.xs,
   },
   bio: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[7],
     lineHeight: 20,
     marginBottom: theme.spacing.md,
   },
@@ -456,9 +514,7 @@ const styles = StyleSheet.create({
   },
   bioInput: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[8],
     borderWidth: 1,
-    borderColor: colors.grape[4],
     borderRadius: theme.radii.md,
     padding: theme.spacing.sm,
     minHeight: 100,
@@ -466,7 +522,6 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     textAlign: "right",
     marginTop: theme.spacing.xs,
   },
@@ -481,20 +536,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.md,
     borderWidth: 1,
-    borderColor: colors.grape[4],
     alignItems: "center",
   },
   cancelButtonText: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "600",
-    color: colors.grape[6],
   },
   saveButton: {
     flex: 1,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.primary,
     alignItems: "center",
   },
   saveButtonDisabled: {
@@ -503,7 +555,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "600",
-    color: colors.grape[0],
   },
   badgesRow: {
     flexDirection: "row",
@@ -514,7 +565,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes["2xl"],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 32,
   },

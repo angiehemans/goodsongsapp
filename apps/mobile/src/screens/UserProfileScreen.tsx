@@ -17,13 +17,20 @@ import {
   ReviewCard,
   EmptyState,
 } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { apiClient } from "@/utils/api";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { UserProfile, Review } from "@goodsongs/api-client";
 
 export function UserProfileScreen({ route, navigation }: any) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const { username } = route.params;
   const { user: currentUser } = useAuthStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -141,11 +148,11 @@ export function UserProfileScreen({ route, navigation }: any) {
           fallback={profile?.username || "U"}
         />
         <View style={styles.profileInfo}>
-          <Text style={styles.username}>@{profile?.username || username}</Text>
+          <Text style={[styles.username, themedStyles.username]}>@{profile?.username || username}</Text>
           {(profile?.location || profile?.city) && (
             <View style={styles.locationRow}>
-              <Icon name="map-pin" size={14} color={colors.grape[5]} />
-              <Text style={styles.location}>
+              <Icon name="map-pin" size={14} color={themeColors.iconMuted} />
+              <Text style={[styles.location, themedStyles.location]}>
                 {profile?.city && profile?.region
                   ? `${profile.city}, ${profile.region}`
                   : profile?.location || profile?.city}
@@ -158,26 +165,33 @@ export function UserProfileScreen({ route, navigation }: any) {
       {/* Follow Button */}
       {!isOwnProfile && profile && (
         <TouchableOpacity
-          style={[styles.followButton, isFollowing && styles.followingButton]}
+          style={[
+            styles.followButton,
+            themedStyles.followButton,
+            isFollowing && styles.followingButton,
+            isFollowing && themedStyles.followingButton,
+          ]}
           onPress={handleFollowToggle}
           disabled={followLoading}
         >
           {followLoading ? (
             <ActivityIndicator
               size="small"
-              color={isFollowing ? colors.grape[6] : colors.grape[0]}
+              color={isFollowing ? themeColors.textMuted : themeColors.btnPrimaryText}
             />
           ) : (
             <>
               <Icon
                 name={isFollowing ? "user-check" : "user-plus"}
                 size={16}
-                color={isFollowing ? colors.grape[6] : colors.grape[0]}
+                color={isFollowing ? themeColors.textMuted : themeColors.btnPrimaryText}
               />
               <Text
                 style={[
                   styles.followButtonText,
+                  themedStyles.followButtonText,
                   isFollowing && styles.followingButtonText,
+                  isFollowing && themedStyles.followingButtonText,
                 ]}
               >
                 {isFollowing ? "Following" : "Follow"}
@@ -188,7 +202,7 @@ export function UserProfileScreen({ route, navigation }: any) {
       )}
 
       {/* Bio */}
-      {profile?.about_me && <Text style={styles.bio}>{profile.about_me}</Text>}
+      {profile?.about_me && <Text style={[styles.bio, themedStyles.bio]}>{profile.about_me}</Text>}
 
       {/* Stats Badges */}
       <View style={styles.badgesRow}>
@@ -206,7 +220,7 @@ export function UserProfileScreen({ route, navigation }: any) {
       </View>
 
       {/* Recommendations Title */}
-      <Text style={styles.sectionTitle}>Recommendations</Text>
+      <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Recommendations</Text>
     </View>
   );
 
@@ -234,21 +248,21 @@ export function UserProfileScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={["top"]}>
         <Header
           title=""
           showBackButton
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={themeColors.btnPrimaryBg} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={["top"]}>
       <Header title="" showBackButton onBackPress={() => navigation.goBack()} />
 
       <FlatList
@@ -260,8 +274,8 @@ export function UserProfileScreen({ route, navigation }: any) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
+            colors={[themeColors.btnPrimaryBg]}
+            tintColor={themeColors.btnPrimaryBg}
           />
         }
         onEndReached={handleLoadMore}
@@ -277,7 +291,7 @@ export function UserProfileScreen({ route, navigation }: any) {
         ListFooterComponent={
           loadingMoreReviews ? (
             <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <ActivityIndicator size="small" color={themeColors.btnPrimaryBg} />
             </View>
           ) : null
         }
@@ -290,10 +304,43 @@ export function UserProfileScreen({ route, navigation }: any) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    username: {
+      color: colors.textHeading,
+    },
+    location: {
+      color: colors.textMuted,
+    },
+    followButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    followingButton: {
+      backgroundColor: colors.bgSurfaceAlt,
+      borderColor: colors.borderDefault,
+    },
+    followButtonText: {
+      color: colors.btnPrimaryText,
+    },
+    followingButtonText: {
+      color: colors.textMuted,
+    },
+    bio: {
+      color: colors.textSecondary,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   loadingContainer: {
     flex: 1,
@@ -318,7 +365,6 @@ const styles = StyleSheet.create({
   username: {
     fontSize: theme.fontSizes.xl,
     fontFamily: theme.fonts.thecoaMedium,
-    color: theme.colors.secondary,
     lineHeight: 30,
   },
   locationRow: {
@@ -329,7 +375,6 @@ const styles = StyleSheet.create({
   },
   location: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   followButton: {
     flexDirection: "row",
@@ -339,25 +384,18 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.primary,
     marginBottom: theme.spacing.md,
   },
   followingButton: {
-    backgroundColor: colors.grape[2],
     borderWidth: 1,
-    borderColor: colors.grape[4],
   },
   followButtonText: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "600",
-    color: colors.grape[0],
   },
-  followingButtonText: {
-    color: colors.grape[6],
-  },
+  followingButtonText: {},
   bio: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[7],
     lineHeight: 20,
     marginBottom: theme.spacing.md,
   },
@@ -370,7 +408,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes["2xl"],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 32,
   },

@@ -23,7 +23,9 @@ import {
   EmptyState,
   Logo,
 } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { apiClient } from "@/utils/api";
 import { fixImageUrl } from "@/utils/imageUrl";
@@ -57,6 +59,11 @@ type Props = {
 
 export function DiscoverScreen({ navigation }: Props) {
   const { user: currentUser } = useAuthStore();
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const [activeTab, setActiveTab] = useState<TabType>("users");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -219,7 +226,7 @@ export function DiscoverScreen({ navigation }: Props) {
     if (!loadingMore) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={theme.colors.primary} />
+        <ActivityIndicator size="small" color={themeColors.btnPrimaryBg} />
       </View>
     );
   };
@@ -242,7 +249,7 @@ export function DiscoverScreen({ navigation }: Props) {
 
   const renderUserItem = useCallback(({ item }: { item: UserProfile }) => (
     <TouchableOpacity
-      style={styles.listItem}
+      style={[styles.listItem, themedStyles.listItem]}
       onPress={() => handleUserPress(item.username)}
     >
       <ProfilePhoto
@@ -252,9 +259,9 @@ export function DiscoverScreen({ navigation }: Props) {
         fallback={item.username || "U"}
       />
       <View style={styles.listItemContent}>
-        <Text style={styles.listItemTitle}>@{item.username}</Text>
+        <Text style={[styles.listItemTitle, themedStyles.listItemTitle]}>@{item.username}</Text>
         {(item.location || item.city) && (
-          <Text style={styles.listItemSubtitle}>
+          <Text style={[styles.listItemSubtitle, themedStyles.listItemSubtitle]}>
             {item.location || item.city}
           </Text>
         )}
@@ -263,7 +270,7 @@ export function DiscoverScreen({ navigation }: Props) {
         <Badge text={`${item.reviews_count} recs`} />
       )}
     </TouchableOpacity>
-  ), [handleUserPress]);
+  ), [handleUserPress, themedStyles]);
 
   const renderBandItem = useCallback(({ item }: { item: Band }) => {
     // Check if band has ANY image URL (before fixImageUrl processing)
@@ -271,7 +278,7 @@ export function DiscoverScreen({ navigation }: Props) {
 
     return (
       <TouchableOpacity
-        style={styles.listItem}
+        style={[styles.listItem, themedStyles.listItem]}
         onPress={() => navigation.navigate("BandProfile", { slug: item.slug })}
       >
         {hasImageUrl ? (
@@ -282,14 +289,14 @@ export function DiscoverScreen({ navigation }: Props) {
             fallback={item.name || "B"}
           />
         ) : (
-          <View style={styles.bandPlaceholder}>
-            <Logo size={24} color={colors.grape[4]} />
+          <View style={[styles.bandPlaceholder, themedStyles.bandPlaceholder]}>
+            <Logo size={24} color={themeColors.textPlaceholder} />
           </View>
         )}
         <View style={styles.listItemContent}>
-          <Text style={styles.listItemTitle}>{item.name}</Text>
+          <Text style={[styles.listItemTitle, themedStyles.listItemTitle]}>{item.name}</Text>
           {(item.location || item.city) && (
-            <Text style={styles.listItemSubtitle}>
+            <Text style={[styles.listItemSubtitle, themedStyles.listItemSubtitle]}>
               {item.location || item.city}
             </Text>
           )}
@@ -299,7 +306,7 @@ export function DiscoverScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
     );
-  }, [navigation]);
+  }, [navigation, themedStyles, themeColors]);
 
   const handlePressBand = useCallback((slug: string) => {
     navigation.navigate("BandProfile", { slug });
@@ -318,28 +325,28 @@ export function DiscoverScreen({ navigation }: Props) {
 
   const renderEventItem = useCallback(({ item }: { item: Event }) => (
     <TouchableOpacity
-      style={styles.eventItem}
+      style={[styles.eventItem, themedStyles.eventItem]}
       onPress={() => navigation.navigate("EventDetails", { eventId: item.id })}
     >
-      <View style={styles.eventDate}>
-        <Text style={styles.eventDay}>
+      <View style={[styles.eventDate, themedStyles.eventDate]}>
+        <Text style={[styles.eventDay, themedStyles.eventDay]}>
           {new Date(item.event_date).getDate()}
         </Text>
-        <Text style={styles.eventMonth}>
+        <Text style={[styles.eventMonth, themedStyles.eventMonth]}>
           {new Date(item.event_date).toLocaleString("default", {
             month: "short",
           })}
         </Text>
       </View>
       <View style={styles.eventContent}>
-        <Text style={styles.eventTitle}>{item.name}</Text>
-        <Text style={styles.eventVenue}>
+        <Text style={[styles.eventTitle, themedStyles.eventTitle]}>{item.name}</Text>
+        <Text style={[styles.eventVenue, themedStyles.eventVenue]}>
           {item.venue?.name} · {item.venue?.city}
         </Text>
-        <Text style={styles.eventBand}>{item.band?.name}</Text>
+        <Text style={[styles.eventBand, themedStyles.eventBand]}>{item.band?.name}</Text>
       </View>
     </TouchableOpacity>
-  ), [navigation]);
+  ), [navigation, themedStyles]);
 
   const getEmptyMessage = () => {
     switch (activeTab) {
@@ -371,7 +378,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={[theme.colors.primary]}
+                colors={[themeColors.btnPrimaryBg]}
               />
             }
             onScroll={handleScroll}
@@ -395,7 +402,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={[theme.colors.primary]}
+                colors={[themeColors.btnPrimaryBg]}
               />
             }
             onScroll={handleScroll}
@@ -419,7 +426,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={[theme.colors.primary]}
+                colors={[themeColors.btnPrimaryBg]}
               />
             }
             onScroll={handleScroll}
@@ -443,7 +450,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={[theme.colors.primary]}
+                colors={[themeColors.btnPrimaryBg]}
               />
             }
             onScroll={handleScroll}
@@ -460,7 +467,7 @@ export function DiscoverScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={["top"]}>
       <Header title="Discover" />
 
       {/* Search */}
@@ -479,20 +486,25 @@ export function DiscoverScreen({ navigation }: Props) {
         {TABS.map((tab) => (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+            style={[
+              styles.tab,
+              themedStyles.tab,
+              activeTab === tab.key && themedStyles.tabActive,
+            ]}
             onPress={() => setActiveTab(tab.key)}
           >
             <Icon
               name={tab.icon}
               size={16}
               color={
-                activeTab === tab.key ? theme.colors.primary : colors.grape[5]
+                activeTab === tab.key ? themeColors.btnPrimaryBg : themeColors.textMuted
               }
             />
             <Text
               style={[
                 styles.tabText,
-                activeTab === tab.key && styles.tabTextActive,
+                themedStyles.tabText,
+                activeTab === tab.key && themedStyles.tabTextActive,
               ]}
             >
               {tab.label}
@@ -507,10 +519,63 @@ export function DiscoverScreen({ navigation }: Props) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    tab: {
+      backgroundColor: colors.bgSurface,
+    },
+    tabActive: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    tabText: {
+      color: colors.textMuted,
+    },
+    tabTextActive: {
+      color: colors.btnPrimaryBg,
+    },
+    listItem: {
+      backgroundColor: colors.bgSurface,
+    },
+    listItemTitle: {
+      color: colors.textHeading,
+    },
+    listItemSubtitle: {
+      color: colors.textMuted,
+    },
+    bandPlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    eventItem: {
+      backgroundColor: colors.bgSurface,
+    },
+    eventDate: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    eventDay: {
+      color: colors.btnPrimaryBg,
+    },
+    eventMonth: {
+      color: colors.textMuted,
+    },
+    eventTitle: {
+      color: colors.textPrimary,
+    },
+    eventVenue: {
+      color: colors.textMuted,
+    },
+    eventBand: {
+      color: colors.textSecondary,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   searchContainer: {
     paddingHorizontal: theme.spacing.md,
@@ -533,17 +598,12 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.radii.md,
-    backgroundColor: colors.grape[1],
   },
-  tabActive: {
-    backgroundColor: colors.grape[2],
-  },
+  tabActive: {},
   tabText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   tabTextActive: {
-    color: theme.colors.primary,
     fontWeight: "600",
   },
   content: {
@@ -556,7 +616,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: theme.spacing.sm,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     marginBottom: theme.spacing.sm,
     gap: theme.spacing.md,
@@ -567,19 +626,16 @@ const styles = StyleSheet.create({
   listItemTitle: {
     fontSize: theme.fontSizes.base,
     fontFamily: theme.fonts.thecoaMedium,
-    color: colors.blue.base,
     lineHeight: 24,
   },
   listItemSubtitle: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grey[5],
     marginTop: 2,
   },
   bandPlaceholder: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.grape[2],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -588,7 +644,6 @@ const styles = StyleSheet.create({
   },
   eventItem: {
     flexDirection: "row",
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
@@ -598,18 +653,15 @@ const styles = StyleSheet.create({
     width: 48,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.grape[2],
     borderRadius: theme.radii.md,
     padding: theme.spacing.sm,
   },
   eventDay: {
     fontSize: theme.fontSizes.xl,
     fontWeight: "700",
-    color: theme.colors.primary,
   },
   eventMonth: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[6],
     textTransform: "uppercase",
   },
   eventContent: {
@@ -618,16 +670,13 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: theme.fontSizes.base,
     fontWeight: "600",
-    color: colors.grape[8],
   },
   eventVenue: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[6],
     marginTop: 2,
   },
   eventBand: {
     fontSize: theme.fontSizes.sm,
-    color: theme.colors.primaryLight,
     marginTop: 4,
   },
   loadingMore: {

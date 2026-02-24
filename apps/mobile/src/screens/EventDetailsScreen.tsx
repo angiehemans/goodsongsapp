@@ -12,13 +12,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, ProfilePhoto, Button } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
 import { Event } from '@goodsongs/api-client';
 
 export function EventDetailsScreen({ route, navigation }: any) {
   const { eventId } = route.params;
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,14 +80,14 @@ export function EventDetailsScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header
           title=""
           showBackButton
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={themeColors.btnPrimaryBg} />
         </View>
       </SafeAreaView>
     );
@@ -88,21 +95,21 @@ export function EventDetailsScreen({ route, navigation }: any) {
 
   if (!event) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header
           title=""
           showBackButton
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.loadingContainer}>
-          <Text style={styles.errorText}>Event not found</Text>
+          <Text style={[styles.errorText, themedStyles.errorText]}>Event not found</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header
         title=""
         showBackButton
@@ -113,18 +120,18 @@ export function EventDetailsScreen({ route, navigation }: any) {
         {event.image_url && (
           <Image
             source={{ uri: fixImageUrl(event.image_url) }}
-            style={styles.eventImage}
+            style={[styles.eventImage, themedStyles.eventImage]}
             resizeMode="cover"
           />
         )}
 
         {/* Event Title */}
-        <Text style={styles.eventTitle}>{event.name}</Text>
+        <Text style={[styles.eventTitle, themedStyles.eventTitle]}>{event.name}</Text>
 
         {/* Band Info */}
         {event.band && (
           <TouchableOpacity
-            style={styles.bandRow}
+            style={[styles.bandRow, themedStyles.bandRow]}
             onPress={() => navigation.navigate('BandProfile', { slug: event.band.slug })}
           >
             <ProfilePhoto
@@ -133,53 +140,53 @@ export function EventDetailsScreen({ route, navigation }: any) {
               size={40}
               fallback={event.band.name || 'B'}
             />
-            <Text style={styles.bandName}>{event.band.name}</Text>
-            <Icon name="chevron-right" size={20} color={colors.grape[5]} />
+            <Text style={[styles.bandName, themedStyles.bandName]}>{event.band.name}</Text>
+            <Icon name="chevron-right" size={20} color={themeColors.iconMuted} />
           </TouchableOpacity>
         )}
 
         {/* Date & Time */}
-        <View style={styles.infoSection}>
+        <View style={[styles.infoSection, themedStyles.infoSection]}>
           <View style={styles.infoRow}>
-            <View style={styles.iconContainer}>
-              <Icon name="calendar" size={20} color={theme.colors.primary} />
+            <View style={[styles.iconContainer, themedStyles.iconContainer]}>
+              <Icon name="calendar" size={20} color={themeColors.btnPrimaryBg} />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Date</Text>
-              <Text style={styles.infoValue}>{formatDate(event.event_date)}</Text>
+              <Text style={[styles.infoLabel, themedStyles.infoLabel]}>Date</Text>
+              <Text style={[styles.infoValue, themedStyles.infoValue]}>{formatDate(event.event_date)}</Text>
             </View>
           </View>
 
           <View style={styles.infoRow}>
-            <View style={styles.iconContainer}>
-              <Icon name="clock" size={20} color={theme.colors.primary} />
+            <View style={[styles.iconContainer, themedStyles.iconContainer]}>
+              <Icon name="clock" size={20} color={themeColors.btnPrimaryBg} />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Time</Text>
-              <Text style={styles.infoValue}>{formatTime(event.event_date)}</Text>
+              <Text style={[styles.infoLabel, themedStyles.infoLabel]}>Time</Text>
+              <Text style={[styles.infoValue, themedStyles.infoValue]}>{formatTime(event.event_date)}</Text>
             </View>
           </View>
         </View>
 
         {/* Venue */}
         {event.venue && (
-          <TouchableOpacity style={styles.venueSection} onPress={handleOpenMaps}>
+          <TouchableOpacity style={[styles.venueSection, themedStyles.venueSection]} onPress={handleOpenMaps}>
             <View style={styles.infoRow}>
-              <View style={styles.iconContainer}>
-                <Icon name="map-pin" size={20} color={theme.colors.primary} />
+              <View style={[styles.iconContainer, themedStyles.iconContainer]}>
+                <Icon name="map-pin" size={20} color={themeColors.btnPrimaryBg} />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Venue</Text>
-                <Text style={styles.infoValue}>{event.venue.name}</Text>
+                <Text style={[styles.infoLabel, themedStyles.infoLabel]}>Venue</Text>
+                <Text style={[styles.infoValue, themedStyles.infoValue]}>{event.venue.name}</Text>
                 {(event.venue.address || event.venue.city) && (
-                  <Text style={styles.venueAddress}>
+                  <Text style={[styles.venueAddress, themedStyles.venueAddress]}>
                     {[event.venue.address, event.venue.city, event.venue.region]
                       .filter(Boolean)
                       .join(', ')}
                   </Text>
                 )}
               </View>
-              <Icon name="external-link" size={16} color={colors.grape[5]} />
+              <Icon name="external-link" size={16} color={themeColors.iconMuted} />
             </View>
           </TouchableOpacity>
         )}
@@ -188,15 +195,15 @@ export function EventDetailsScreen({ route, navigation }: any) {
         {(event.price || event.age_restriction) && (
           <View style={styles.detailsRow}>
             {event.price && (
-              <View style={styles.detailBadge}>
-                <Icon name="dollar-sign" size={14} color={colors.grape[6]} />
-                <Text style={styles.detailText}>{event.price}</Text>
+              <View style={[styles.detailBadge, themedStyles.detailBadge]}>
+                <Icon name="dollar-sign" size={14} color={themeColors.textMuted} />
+                <Text style={[styles.detailText, themedStyles.detailText]}>{event.price}</Text>
               </View>
             )}
             {event.age_restriction && (
-              <View style={styles.detailBadge}>
-                <Icon name="user" size={14} color={colors.grape[6]} />
-                <Text style={styles.detailText}>{event.age_restriction}</Text>
+              <View style={[styles.detailBadge, themedStyles.detailBadge]}>
+                <Icon name="user" size={14} color={themeColors.textMuted} />
+                <Text style={[styles.detailText, themedStyles.detailText]}>{event.age_restriction}</Text>
               </View>
             )}
           </View>
@@ -205,8 +212,8 @@ export function EventDetailsScreen({ route, navigation }: any) {
         {/* Description */}
         {event.description && (
           <View style={styles.descriptionSection}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.description}>{event.description}</Text>
+            <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>About</Text>
+            <Text style={[styles.description, themedStyles.description]}>{event.description}</Text>
           </View>
         )}
 
@@ -226,10 +233,63 @@ export function EventDetailsScreen({ route, navigation }: any) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    errorText: {
+      color: colors.textMuted,
+    },
+    eventImage: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    eventTitle: {
+      color: colors.textHeading,
+    },
+    bandRow: {
+      backgroundColor: colors.bgSurface,
+    },
+    bandName: {
+      color: colors.textHeading,
+    },
+    infoSection: {
+      backgroundColor: colors.bgSurface,
+    },
+    iconContainer: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    infoLabel: {
+      color: colors.textMuted,
+    },
+    infoValue: {
+      color: colors.textHeading,
+    },
+    venueSection: {
+      backgroundColor: colors.bgSurface,
+    },
+    venueAddress: {
+      color: colors.textMuted,
+    },
+    detailBadge: {
+      backgroundColor: colors.bgSurface,
+    },
+    detailText: {
+      color: colors.textMuted,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    description: {
+      color: colors.textSecondary,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   loadingContainer: {
     flex: 1,
@@ -238,7 +298,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: theme.fontSizes.base,
-    color: colors.grape[5],
   },
   scrollView: {
     flex: 1,
@@ -251,19 +310,16 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: theme.radii.lg,
     marginBottom: theme.spacing.lg,
-    backgroundColor: colors.grape[2],
   },
   eventTitle: {
     fontSize: theme.fontSizes['2xl'],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.md,
     lineHeight: 32,
   },
   bandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.lg,
@@ -273,10 +329,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: theme.fontSizes.base,
     fontWeight: '600',
-    color: theme.colors.secondary,
   },
   infoSection: {
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
@@ -291,7 +345,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radii.md,
-    backgroundColor: colors.grape[2],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -300,23 +353,19 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginBottom: 2,
   },
   infoValue: {
     fontSize: theme.fontSizes.base,
     fontWeight: '500',
-    color: theme.colors.secondary,
   },
   venueSection: {
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
   venueAddress: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     marginTop: 2,
   },
   detailsRow: {
@@ -328,14 +377,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.xs,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
   },
   detailText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
     fontWeight: '500',
   },
   descriptionSection: {
@@ -344,12 +391,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.sm,
   },
   description: {
     fontSize: theme.fontSizes.base,
-    color: colors.grey[7],
     lineHeight: 24,
   },
   bottomSpacer: {

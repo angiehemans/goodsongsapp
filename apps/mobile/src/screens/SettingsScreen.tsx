@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,17 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '@react-native-vector-icons/feather';
 import { Header, TextInput, Button, Card } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { useThemeStore } from '@/context/themeStore';
+import { SemanticColors } from '@/theme/semanticColors';
 import { useAuthStore } from '@/context/authStore';
 import { useScrobbleStore } from '@/context/scrobbleStore';
 import { ScrobbleStatus } from '@/types/scrobble';
@@ -29,6 +33,11 @@ type Props = {
 export function SettingsScreen({ navigation }: Props) {
   const { user, logout, accountType, refreshUser } = useAuthStore();
   const isBandAccount = accountType === 'band';
+
+  // Theme state
+  const { colors } = useTheme();
+  const { colorScheme, useSystemTheme, setColorScheme, setUseSystemTheme } = useThemeStore();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
 
   // Last.fm state
   const [lastFmStatus, setLastFmStatus] = useState<LastFmStatus | null>(null);
@@ -171,14 +180,23 @@ export function SettingsScreen({ navigation }: Props) {
   const getScrobbleStatusColor = () => {
     switch (scrobbleStatus) {
       case ScrobbleStatus.active:
-        return theme.colors.success;
+        return colors.success;
       case ScrobbleStatus.paused:
-        return colors.grape[5];
+        return colors.textMuted;
       case ScrobbleStatus.permissionNeeded:
-        return theme.colors.warning;
+        return colors.warning;
       default:
-        return colors.grape[4];
+        return colors.textPlaceholder;
     }
+  };
+
+  const handleToggleDarkMode = async () => {
+    const newScheme = colorScheme === 'dark' ? 'light' : 'dark';
+    await setColorScheme(newScheme);
+  };
+
+  const handleToggleSystemTheme = async (value: boolean) => {
+    await setUseSystemTheme(value);
   };
 
   const handleLogout = () => {
@@ -202,10 +220,10 @@ export function SettingsScreen({ navigation }: Props) {
     if (lastFmLoading) {
       return (
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Last.fm Connection</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Last.fm Connection</Text>
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Checking Last.fm connection...</Text>
+            <ActivityIndicator size="small" color={colors.btnPrimaryBg} />
+            <Text style={[styles.loadingText, themedStyles.loadingText]}>Checking Last.fm connection...</Text>
           </View>
         </Card>
       );
@@ -214,16 +232,16 @@ export function SettingsScreen({ navigation }: Props) {
     if (lastFmStatus?.connected) {
       return (
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Last.fm Connection</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Last.fm Connection</Text>
           <View style={styles.connectedContainer}>
             <View style={styles.connectedBadge}>
-              <Icon name="check-circle" size={20} color={theme.colors.success} />
+              <Icon name="check-circle" size={20} color={colors.success} />
               <Text style={styles.connectedText}>Connected</Text>
             </View>
-            <Text style={styles.usernameText}>
+            <Text style={[styles.usernameText, themedStyles.usernameText]}>
               Connected as <Text style={styles.usernameBold}>{lastFmStatus.username}</Text>
             </Text>
-            <Text style={styles.descriptionText}>
+            <Text style={[styles.descriptionText, themedStyles.descriptionText]}>
               Your recently played songs will appear on your dashboard.
             </Text>
             <Button
@@ -240,9 +258,9 @@ export function SettingsScreen({ navigation }: Props) {
 
     return (
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Last.fm Connection</Text>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Last.fm Connection</Text>
         <View style={styles.connectContainer}>
-          <Text style={styles.descriptionText}>
+          <Text style={[styles.descriptionText, themedStyles.descriptionText]}>
             Connect your Last.fm account to see your recently played tracks and easily recommend songs you're listening to.
           </Text>
           <TextInput
@@ -267,7 +285,7 @@ export function SettingsScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header
         title="Settings"
         showBackButton
@@ -281,15 +299,15 @@ export function SettingsScreen({ navigation }: Props) {
         {/* Scrobbling - Android only, fan accounts only */}
         {isAndroid && !isBandAccount && (
           <Card style={styles.section}>
-            <Text style={styles.sectionTitle}>Listening History</Text>
+            <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Listening History</Text>
             <TouchableOpacity
               style={styles.scrobbleRow}
               onPress={() => navigation.navigate('ScrobbleSettings')}
             >
               <View style={styles.scrobbleRowLeft}>
-                <Icon name="headphones" size={20} color={theme.colors.secondary} />
+                <Icon name="headphones" size={20} color={colors.textHeading} />
                 <View style={styles.scrobbleRowText}>
-                  <Text style={styles.scrobbleRowLabel}>Scrobbling</Text>
+                  <Text style={[styles.scrobbleRowLabel, themedStyles.scrobbleRowLabel]}>Scrobbling</Text>
                   <View style={styles.scrobbleStatusRow}>
                     <View
                       style={[
@@ -297,23 +315,60 @@ export function SettingsScreen({ navigation }: Props) {
                         { backgroundColor: getScrobbleStatusColor() },
                       ]}
                     />
-                    <Text style={styles.scrobbleStatusText}>
+                    <Text style={[styles.scrobbleStatusText, themedStyles.scrobbleStatusText]}>
                       {getScrobbleStatusLabel()}
                     </Text>
                   </View>
                 </View>
               </View>
-              <Icon name="chevron-right" size={20} color={colors.grape[4]} />
+              <Icon name="chevron-right" size={20} color={colors.iconSubtle} />
             </TouchableOpacity>
           </Card>
         )}
 
+        {/* Appearance Section */}
+        <Card style={styles.section}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Appearance</Text>
+          <View style={styles.appearanceContainer}>
+            <View style={styles.appearanceRow}>
+              <View style={styles.appearanceRowLeft}>
+                <Icon name="moon" size={20} color={colors.iconDefault} />
+                <Text style={[styles.appearanceLabel, themedStyles.appearanceLabel]}>Dark Mode</Text>
+              </View>
+              <Switch
+                value={colorScheme === 'dark'}
+                onValueChange={handleToggleDarkMode}
+                disabled={useSystemTheme}
+                trackColor={{ false: colors.borderDefault, true: colors.btnPrimaryBg }}
+                thumbColor={colors.bgApp}
+              />
+            </View>
+            <View style={styles.appearanceRow}>
+              <View style={styles.appearanceRowLeft}>
+                <Icon name="smartphone" size={20} color={colors.iconDefault} />
+                <View>
+                  <Text style={[styles.appearanceLabel, themedStyles.appearanceLabel]}>Use System Theme</Text>
+                  <Text style={[styles.appearanceDescription, themedStyles.appearanceDescription]}>
+                    Automatically match device settings
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={useSystemTheme}
+                onValueChange={handleToggleSystemTheme}
+                trackColor={{ false: colors.borderDefault, true: colors.btnPrimaryBg }}
+                thumbColor={colors.bgApp}
+              />
+            </View>
+          </View>
+        </Card>
+
         {/* Account Section */}
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Account</Text>
           <View style={styles.accountRow}>
             <View style={styles.emailLabelRow}>
-              <Text style={styles.accountLabel}>Email</Text>
+              <Text style={[styles.accountLabel, themedStyles.accountLabel]}>Email</Text>
               {user?.email_confirmed ? (
                 <View style={styles.confirmedBadge}>
                   <Icon name="check" size={10} color="#fff" />
@@ -325,20 +380,21 @@ export function SettingsScreen({ navigation }: Props) {
                 </View>
               )}
             </View>
-            <Text style={styles.accountValue}>{user?.email}</Text>
+            <Text style={[styles.accountValue, themedStyles.accountValue]}>{user?.email}</Text>
             {!user?.email_confirmed && (
               <TouchableOpacity
                 style={[
                   styles.resendButton,
+                  themedStyles.resendButton,
                   (!canResend || resendLoading) && styles.resendButtonDisabled,
                 ]}
                 onPress={handleResendConfirmation}
                 disabled={!canResend || resendLoading}
               >
                 {resendLoading ? (
-                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                  <ActivityIndicator size="small" color={colors.btnPrimaryBg} />
                 ) : (
-                  <Text style={styles.resendButtonText}>
+                  <Text style={[styles.resendButtonText, themedStyles.resendButtonText]}>
                     {retryAfter > 0 ? `Resend (${retryAfter}s)` : 'Resend confirmation'}
                   </Text>
                 )}
@@ -349,8 +405,8 @@ export function SettingsScreen({ navigation }: Props) {
 
         {/* Sign Out Section */}
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Sign Out</Text>
-          <Text style={styles.descriptionText}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Sign Out</Text>
+          <Text style={[styles.descriptionText, themedStyles.descriptionText]}>
             Sign out of your account on this device
           </Text>
           <Button
@@ -365,10 +421,52 @@ export function SettingsScreen({ navigation }: Props) {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    loadingText: {
+      color: colors.textMuted,
+    },
+    usernameText: {
+      color: colors.textSecondary,
+    },
+    descriptionText: {
+      color: colors.textMuted,
+    },
+    accountLabel: {
+      color: colors.textSecondary,
+    },
+    accountValue: {
+      color: colors.textMuted,
+    },
+    resendButton: {
+      backgroundColor: colors.bgSurface,
+    },
+    resendButtonText: {
+      color: colors.btnPrimaryBg,
+    },
+    scrobbleRowLabel: {
+      color: colors.textSecondary,
+    },
+    scrobbleStatusText: {
+      color: colors.textMuted,
+    },
+    appearanceLabel: {
+      color: colors.textSecondary,
+    },
+    appearanceDescription: {
+      color: colors.textMuted,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   content: {
     padding: theme.spacing.lg,
@@ -380,7 +478,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.fontSizes['2xl'],
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginBottom: theme.spacing.md,
     lineHeight: 32,
   },
@@ -391,7 +488,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   connectedContainer: {
     gap: theme.spacing.sm,
@@ -404,18 +500,16 @@ const styles = StyleSheet.create({
   connectedText: {
     fontSize: theme.fontSizes.sm,
     fontWeight: '600',
-    color: theme.colors.success,
+    color: '#10B981',
   },
   usernameText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[7],
   },
   usernameBold: {
     fontWeight: '600',
   },
   descriptionText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     lineHeight: 20,
   },
   disconnectButton: {
@@ -438,13 +532,12 @@ const styles = StyleSheet.create({
   accountLabel: {
     fontSize: theme.fontSizes.sm,
     fontWeight: '500',
-    color: colors.grape[7],
   },
   confirmedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: theme.colors.success,
+    backgroundColor: '#10B981',
     borderRadius: theme.radii.full,
     paddingVertical: 2,
     paddingHorizontal: 8,
@@ -467,11 +560,9 @@ const styles = StyleSheet.create({
   },
   accountValue: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   resendButton: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.sm,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
@@ -483,11 +574,10 @@ const styles = StyleSheet.create({
   resendButtonText: {
     fontSize: theme.fontSizes.xs,
     fontWeight: '600',
-    color: theme.colors.primary,
   },
   logoutButton: {
     marginTop: theme.spacing.md,
-    borderColor: theme.colors.error,
+    borderColor: '#EF4444',
   },
   scrobbleRow: {
     flexDirection: 'row',
@@ -506,7 +596,6 @@ const styles = StyleSheet.create({
   scrobbleRowLabel: {
     fontSize: theme.fontSizes.base,
     fontWeight: '500',
-    color: colors.grape[7],
   },
   scrobbleStatusRow: {
     flexDirection: 'row',
@@ -520,6 +609,28 @@ const styles = StyleSheet.create({
   },
   scrobbleStatusText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
+  },
+  // Appearance section styles
+  appearanceContainer: {
+    gap: theme.spacing.md,
+  },
+  appearanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  appearanceRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  appearanceLabel: {
+    fontSize: theme.fontSizes.base,
+    fontWeight: '500',
+  },
+  appearanceDescription: {
+    fontSize: theme.fontSizes.xs,
+    marginTop: 2,
   },
 });

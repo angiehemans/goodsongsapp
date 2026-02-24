@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Button, Logo } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { AuthStackParamList } from "@/navigation/types";
 
 type WelcomeScreenProps = {
@@ -11,17 +13,26 @@ type WelcomeScreenProps = {
 };
 
 export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
+  const { colors: themeColors, isDark } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.grape[0]} />
+    <SafeAreaView style={[styles.container, themedStyles.container]}>
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={themeColors.bgApp}
+      />
 
       <View style={styles.content}>
         {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>share some</Text>
-          <Text style={styles.heroTitle}>goodsongs</Text>
+          <Text style={[styles.heroTitle, themedStyles.heroTitle]}>share some</Text>
+          <Text style={[styles.heroTitle, themedStyles.heroTitle]}>goodsongs</Text>
 
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroSubtitle, themedStyles.heroSubtitle]}>
             A platform that brings artists and fans together. Share the songs
             you love. Discover your next obsession.
           </Text>
@@ -47,17 +58,34 @@ export function WelcomeScreen({ navigation }: WelcomeScreenProps) {
 
       {/* Logo at bottom */}
       <View style={styles.footer}>
-        <Logo size={32} color={colors.blue.base} />
-        <Text style={styles.logoText}>goodsongs</Text>
+        <Logo size={32} color={themeColors.logoColor} />
+        <Text style={[styles.logoText, themedStyles.logoText]}>goodsongs</Text>
       </View>
     </SafeAreaView>
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    heroTitle: {
+      color: colors.textHeading,
+    },
+    heroSubtitle: {
+      color: colors.textSecondary,
+    },
+    logoText: {
+      color: colors.logoColor,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   content: {
     flex: 1,
@@ -72,13 +100,11 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 40,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     textAlign: "center",
     lineHeight: 52,
   },
   heroSubtitle: {
     fontSize: theme.fontSizes.lg,
-    color: colors.grape[7],
     textAlign: "center",
     marginTop: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
@@ -98,7 +124,6 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 28,
     fontFamily: theme.fonts.thecoaBold,
-    color: colors.blue.base,
     lineHeight: 42,
   },
 });

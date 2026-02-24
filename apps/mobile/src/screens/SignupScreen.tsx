@@ -11,7 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, TextInput, Card } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { AuthStackParamList } from '@/navigation/types';
 import { useAuthStore, AuthState } from '@/context/authStore';
 
@@ -20,6 +22,11 @@ type SignupScreenProps = {
 };
 
 export function SignupScreen({ navigation }: SignupScreenProps) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -79,7 +86,7 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, themedStyles.container]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -89,11 +96,11 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <Text style={styles.title}>Create an Account</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, themedStyles.title]}>Create an Account</Text>
+            <Text style={[styles.subtitle, themedStyles.subtitle]}>
               Already have an account?{' '}
               <Text
-                style={styles.link}
+                style={[styles.link, themedStyles.link]}
                 onPress={() => navigation.navigate('Login')}
               >
                 Sign in
@@ -148,10 +155,27 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    title: {
+      color: colors.textHeading,
+    },
+    subtitle: {
+      color: colors.textMuted,
+    },
+    link: {
+      color: colors.textSecondary,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   keyboardView: {
     flex: 1,
@@ -166,18 +190,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes['2xl'],
     fontWeight: '700',
-    color: theme.colors.secondary,
     textAlign: 'center',
     marginBottom: theme.spacing.sm,
   },
   subtitle: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[5],
     textAlign: 'center',
     marginBottom: theme.spacing.xl,
   },
   link: {
-    color: theme.colors.primaryLight,
     fontWeight: '500',
   },
   card: {

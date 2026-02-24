@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet, ViewStyle } from "react-native";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 
 interface BadgeProps {
   text: string;
@@ -15,15 +17,40 @@ export function Badge({
   size = "sm",
   style,
 }: BadgeProps) {
+  const { colors } = useTheme();
+  const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+
+  // Get the appropriate variant styles
+  const getVariantStyle = () => {
+    if (variant === "default") return themedStyles.default;
+    if (variant === "primary") return themedStyles.primary;
+    if (variant === "success") return styles.success;
+    if (variant === "warning") return styles.warning;
+    return themedStyles.default;
+  };
+
+  const getTextVariantStyle = () => {
+    if (variant === "default") return themedStyles.text_default;
+    if (variant === "primary") return themedStyles.text_primary;
+    if (variant === "success") return styles.text_success;
+    if (variant === "warning") return styles.text_warning;
+    return themedStyles.text_default;
+  };
+
   return (
     <View
-      style={[styles.badge, styles[variant], styles[`size_${size}`], style]}
+      style={[
+        styles.badge,
+        getVariantStyle(),
+        size === "sm" ? styles.size_sm : styles.size_md,
+        style,
+      ]}
     >
       <Text
         style={[
           styles.text,
-          styles[`text_${variant}`],
-          styles[`textSize_${size}`],
+          getTextVariantStyle(),
+          size === "sm" ? styles.textSize_sm : styles.textSize_md,
         ]}
       >
         {text}
@@ -32,18 +59,31 @@ export function Badge({
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    // Variants with themed colors
+    default: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    primary: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+
+    // Text variants
+    text_default: {
+      color: colors.textMuted,
+    },
+    text_primary: {
+      color: colors.btnPrimaryText,
+    },
+  });
+
 const styles = StyleSheet.create({
   badge: {
     borderRadius: theme.radii.sm,
   },
 
-  // Variants
-  default: {
-    backgroundColor: colors.grape[2],
-  },
-  primary: {
-    backgroundColor: colors.grape[6],
-  },
+  // Success/warning variants (same in both modes)
   success: {
     backgroundColor: "#D1FAE5",
   },
@@ -64,12 +104,6 @@ const styles = StyleSheet.create({
   // Text
   text: {
     fontWeight: "500",
-  },
-  text_default: {
-    color: colors.grape[6],
-  },
-  text_primary: {
-    color: colors.grape[0],
   },
   text_success: {
     color: "#065F46",

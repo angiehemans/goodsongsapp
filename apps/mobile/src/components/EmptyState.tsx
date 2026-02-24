@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from '@react-native-vector-icons/feather';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 type IconName = React.ComponentProps<typeof Icon>['name'];
 
@@ -12,11 +13,13 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon = 'inbox', title, message }: EmptyStateProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Icon name={icon} size={48} color={colors.grey[4]} />
-      <Text style={styles.title}>{title}</Text>
-      {message && <Text style={styles.message}>{message}</Text>}
+      <Icon name={icon} size={48} color={colors.iconSubtle} />
+      <Text style={[styles.title, { color: colors.textMuted }]}>{title}</Text>
+      {message && <Text style={[styles.message, { color: colors.textMuted }]}>{message}</Text>}
     </View>
   );
 }
@@ -31,13 +34,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: theme.fontSizes.lg,
     fontWeight: '600',
-    color: colors.grey[6],
     marginTop: theme.spacing.md,
     textAlign: 'center',
   },
   message: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grey[5],
     marginTop: theme.spacing.xs,
     textAlign: 'center',
   },

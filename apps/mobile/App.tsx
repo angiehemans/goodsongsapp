@@ -1,17 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from '@/navigation';
-import { colors } from '@/theme';
+import { useThemeStore } from '@/context/themeStore';
+
+function AppContent() {
+  const { colors, isDark, loadThemePreference } = useThemeStore();
+
+  useEffect(() => {
+    loadThemePreference();
+  }, [loadThemePreference]);
+
+  return (
+    <>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.bgApp}
+      />
+      <AppNavigator />
+    </>
+  );
+}
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={colors.grape[0]}
-      />
-      <AppNavigator />
+      <AppContent />
     </SafeAreaProvider>
   );
 }

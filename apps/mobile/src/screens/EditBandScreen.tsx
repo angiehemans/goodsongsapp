@@ -13,12 +13,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header, ProfilePhoto } from '@/components';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
 import { Band } from '@goodsongs/api-client';
 
 export function EditBandScreen({ route, navigation }: any) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
   const { slug } = route.params;
   const [band, setBand] = useState<Band | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,21 +85,21 @@ export function EditBandScreen({ route, navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
         <Header
           title="Edit Band"
           showBackButton
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size="large" color={themeColors.btnPrimaryBg} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, themedStyles.container]} edges={['top']}>
       <Header
         title="Edit Band"
         showBackButton
@@ -118,113 +122,113 @@ export function EditBandScreen({ route, navigation }: any) {
               size={80}
               fallback={band?.name || 'B'}
             />
-            <Text style={styles.photoHint}>Photo editing coming soon</Text>
+            <Text style={[styles.photoHint, themedStyles.photoHint]}>Photo editing coming soon</Text>
           </View>
 
           {/* Form Fields */}
           <View style={styles.field}>
-            <Text style={styles.label}>Band Name *</Text>
+            <Text style={[styles.label, themedStyles.label]}>Band Name *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedStyles.input]}
               value={name}
               onChangeText={setName}
               placeholder="Enter band name"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>About</Text>
+            <Text style={[styles.label, themedStyles.label]}>About</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, themedStyles.input]}
               value={about}
               onChangeText={setAbout}
               placeholder="Tell fans about your band..."
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               multiline
               numberOfLines={4}
               maxLength={500}
             />
-            <Text style={styles.charCount}>{about.length}/500</Text>
+            <Text style={[styles.charCount, themedStyles.charCount]}>{about.length}/500</Text>
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Location</Text>
+            <Text style={[styles.label, themedStyles.label]}>Location</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedStyles.input]}
               value={location}
               onChangeText={setLocation}
               placeholder="City, State"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Streaming Links</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Streaming Links</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Spotify</Text>
+            <Text style={[styles.label, themedStyles.label]}>Spotify</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedStyles.input]}
               value={spotifyLink}
               onChangeText={setSpotifyLink}
               placeholder="https://open.spotify.com/artist/..."
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               autoCapitalize="none"
               keyboardType="url"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Bandcamp</Text>
+            <Text style={[styles.label, themedStyles.label]}>Bandcamp</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedStyles.input]}
               value={bandcampLink}
               onChangeText={setBandcampLink}
               placeholder="https://yourband.bandcamp.com"
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               autoCapitalize="none"
               keyboardType="url"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Bandcamp Embed</Text>
+            <Text style={[styles.label, themedStyles.label]}>Bandcamp Embed</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, themedStyles.input]}
               value={bandcampEmbed}
               onChangeText={setBandcampEmbed}
               placeholder="Paste Bandcamp embed code or URL..."
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               autoCapitalize="none"
               multiline
               numberOfLines={3}
             />
-            <Text style={styles.fieldHint}>
+            <Text style={[styles.fieldHint, themedStyles.fieldHint]}>
               Paste the embed code from Bandcamp to display a player on your profile
             </Text>
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Apple Music</Text>
+            <Text style={[styles.label, themedStyles.label]}>Apple Music</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedStyles.input]}
               value={appleMusicLink}
               onChangeText={setAppleMusicLink}
               placeholder="https://music.apple.com/..."
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               autoCapitalize="none"
               keyboardType="url"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>YouTube Music</Text>
+            <Text style={[styles.label, themedStyles.label]}>YouTube Music</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedStyles.input]}
               value={youtubeMusicLink}
               onChangeText={setYoutubeMusicLink}
               placeholder="https://music.youtube.com/..."
-              placeholderTextColor={colors.grape[4]}
+              placeholderTextColor={themeColors.textPlaceholder}
               autoCapitalize="none"
               keyboardType="url"
             />
@@ -233,20 +237,20 @@ export function EditBandScreen({ route, navigation }: any) {
           {/* Buttons */}
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={[styles.cancelButton, themedStyles.cancelButton]}
               onPress={() => navigation.goBack()}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={[styles.cancelButtonText, themedStyles.cancelButtonText]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+              style={[styles.saveButton, themedStyles.saveButton, saving && styles.saveButtonDisabled]}
               onPress={handleSave}
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator size="small" color="white" />
+                <ActivityIndicator size="small" color={themeColors.btnPrimaryText} />
               ) : (
-                <Text style={styles.saveButtonText}>Save Changes</Text>
+                <Text style={[styles.saveButtonText, themedStyles.saveButtonText]}>Save Changes</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -256,10 +260,48 @@ export function EditBandScreen({ route, navigation }: any) {
   );
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    photoHint: {
+      color: colors.textMuted,
+    },
+    label: {
+      color: colors.textSecondary,
+    },
+    input: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+      color: colors.textHeading,
+    },
+    charCount: {
+      color: colors.textMuted,
+    },
+    fieldHint: {
+      color: colors.textMuted,
+    },
+    sectionTitle: {
+      color: colors.textHeading,
+    },
+    cancelButton: {
+      borderColor: colors.borderDefault,
+    },
+    cancelButtonText: {
+      color: colors.textSecondary,
+    },
+    saveButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    saveButtonText: {
+      color: colors.btnPrimaryText,
+    },
+  });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   flex: {
     flex: 1,
@@ -279,7 +321,6 @@ const styles = StyleSheet.create({
   },
   photoHint: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: theme.spacing.sm,
   },
   field: {
@@ -288,18 +329,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: theme.fontSizes.sm,
     fontWeight: '500',
-    color: colors.grape[6],
     marginBottom: theme.spacing.xs,
   },
   input: {
-    backgroundColor: colors.grape[1],
     borderWidth: 2,
-    borderColor: colors.grape[3],
     borderRadius: theme.radii.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     fontSize: theme.fontSizes.base,
-    color: theme.colors.secondary,
   },
   textArea: {
     minHeight: 100,
@@ -307,19 +344,16 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     textAlign: 'right',
     marginTop: theme.spacing.xs,
   },
   fieldHint: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: theme.spacing.xs,
   },
   sectionTitle: {
     fontSize: theme.fontSizes.lg,
     fontFamily: theme.fonts.thecoaBold,
-    color: theme.colors.secondary,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
@@ -333,19 +367,16 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radii.md,
     borderWidth: 2,
-    borderColor: colors.grape[3],
     alignItems: 'center',
   },
   cancelButtonText: {
     fontSize: theme.fontSizes.base,
     fontWeight: '600',
-    color: colors.grape[6],
   },
   saveButton: {
     flex: 1,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
   },
   saveButtonDisabled: {
@@ -354,6 +385,5 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: theme.fontSizes.base,
     fontWeight: '600',
-    color: 'white',
   },
 });

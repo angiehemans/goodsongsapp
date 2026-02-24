@@ -16,7 +16,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "@react-native-vector-icons/feather";
 import { Header, TextInput, Button, MentionTextInput } from "@/components";
-import { theme, colors } from "@/theme";
+import { theme } from "@/theme";
+import { useTheme } from "@/hooks/useTheme";
+import { SemanticColors } from "@/theme/semanticColors";
 import { apiClient, ArtworkOption, DiscogsSearchResult } from "@/utils/api";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { CreateReviewParams } from "@/navigation/types";
@@ -86,6 +88,11 @@ function useDebounce<T>(value: T, delay: number): T {
 const MIN_SEARCH_LENGTH = 3;
 
 export function CreateReviewScreen({ navigation, route }: any) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(
+    () => createThemedStyles(themeColors),
+    [themeColors],
+  );
   const params = route.params as CreateReviewParams | undefined;
   const scrollViewRef = useRef<ScrollView>(null);
   const paramsRef = useRef(params);
@@ -374,7 +381,11 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
   const addCustomGenre = () => {
     const trimmed = customGenre.trim();
-    if (trimmed && !formData.genres.includes(trimmed) && formData.genres.length < 5) {
+    if (
+      trimmed &&
+      !formData.genres.includes(trimmed) &&
+      formData.genres.length < 5
+    ) {
       setFormData((prev) => ({
         ...prev,
         genres: [...prev.genres, trimmed],
@@ -431,10 +442,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
             formData.liked_aspects.length > 0
               ? formData.liked_aspects
               : undefined,
-          genres:
-            formData.genres.length > 0
-              ? formData.genres
-              : undefined,
+          genres: formData.genres.length > 0 ? formData.genres : undefined,
           band_lastfm_artist_name: formData.band_lastfm_artist_name,
           band_musicbrainz_id: formData.band_musicbrainz_id,
         });
@@ -456,10 +464,17 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
   // Show search interface if no release is selected, not prefilled, not in edit mode, and not in manual entry mode
   const showSearch =
-    !isPrefilled && !selectedRelease && !formData.song_name && !manualEntry && !isEditMode;
+    !isPrefilled &&
+    !selectedRelease &&
+    !formData.song_name &&
+    !manualEntry &&
+    !isEditMode;
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, themedStyles.container]}
+      edges={["top"]}
+    >
       <Header
         title={isEditMode ? "Edit Recommendation" : "Recommend"}
         showBackButton={isEditMode}
@@ -478,7 +493,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
           showsVerticalScrollIndicator={true}
         >
           {!isEditMode && (
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, themedStyles.subtitle]}>
               Share your favorite songs and help others discover great music!
             </Text>
           )}
@@ -486,17 +501,22 @@ export function CreateReviewScreen({ navigation, route }: any) {
           {/* Song Search Section */}
           {showSearch && (
             <View style={styles.searchSection}>
-              <View style={styles.searchInputContainer}>
+              <View
+                style={[
+                  styles.searchInputContainer,
+                  themedStyles.searchInputContainer,
+                ]}
+              >
                 <Icon
                   name="search"
                   size={18}
-                  color={colors.grape[4]}
+                  color={themeColors.textPlaceholder}
                   style={styles.searchIcon}
                 />
                 <RNTextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, themedStyles.searchInput]}
                   placeholder="Song name..."
-                  placeholderTextColor={colors.grape[4]}
+                  placeholderTextColor={themeColors.textPlaceholder}
                   value={trackQuery}
                   onChangeText={setTrackQuery}
                   autoCapitalize="none"
@@ -505,7 +525,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 {isSearching && trackQuery && (
                   <ActivityIndicator
                     size="small"
-                    color={colors.grape[6]}
+                    color={themeColors.textMuted}
                     style={styles.searchLoader}
                   />
                 )}
@@ -514,19 +534,20 @@ export function CreateReviewScreen({ navigation, route }: any) {
               <View
                 style={[
                   styles.searchInputContainer,
+                  themedStyles.searchInputContainer,
                   styles.artistInputContainer,
                 ]}
               >
                 <Icon
                   name="user"
                   size={18}
-                  color={colors.grape[4]}
+                  color={themeColors.textPlaceholder}
                   style={styles.searchIcon}
                 />
                 <RNTextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, themedStyles.searchInput]}
                   placeholder="Artist name (optional)..."
-                  placeholderTextColor={colors.grape[4]}
+                  placeholderTextColor={themeColors.textPlaceholder}
                   value={artistQuery}
                   onChangeText={setArtistQuery}
                   autoCapitalize="none"
@@ -535,7 +556,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 {isSearching && artistQuery && !trackQuery && (
                   <ActivityIndicator
                     size="small"
-                    color={colors.grape[6]}
+                    color={themeColors.textMuted}
                     style={styles.searchLoader}
                   />
                 )}
@@ -543,7 +564,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Search Results */}
               {searchResults.length > 0 && (
-                <View style={styles.searchResults}>
+                <View
+                  style={[styles.searchResults, themedStyles.searchResults]}
+                >
                   <ScrollView
                     nestedScrollEnabled
                     keyboardShouldPersistTaps="handled"
@@ -552,7 +575,10 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     {searchResults.map((result, index) => (
                       <TouchableOpacity
                         key={`${result.song_name}-${result.band_name}-${index}`}
-                        style={styles.searchResultItem}
+                        style={[
+                          styles.searchResultItem,
+                          themedStyles.searchResultItem,
+                        ]}
                         onPress={() => handleSelectRelease(result)}
                       >
                         {result.artwork_url ? (
@@ -566,20 +592,33 @@ export function CreateReviewScreen({ navigation, route }: any) {
                             style={[
                               styles.resultArtwork,
                               styles.resultArtworkPlaceholder,
+                              themedStyles.resultArtworkPlaceholder,
                             ]}
                           >
                             <Icon
                               name="music"
                               size={16}
-                              color={colors.grape[6]}
+                              color={themeColors.textMuted}
                             />
                           </View>
                         )}
                         <View style={styles.resultInfo}>
-                          <Text style={styles.resultSongName} numberOfLines={1}>
+                          <Text
+                            style={[
+                              styles.resultSongName,
+                              themedStyles.resultSongName,
+                            ]}
+                            numberOfLines={1}
+                          >
                             {result.song_name}
                           </Text>
-                          <Text style={styles.resultArtist} numberOfLines={1}>
+                          <Text
+                            style={[
+                              styles.resultArtist,
+                              themedStyles.resultArtist,
+                            ]}
+                            numberOfLines={1}
+                          >
                             {result.band_name}
                             {result.release_year &&
                               ` \u2022 ${result.release_year}`}
@@ -597,7 +636,10 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 isSearching &&
                 searchResults.length === 0 && (
                   <View style={styles.searchStatus}>
-                    <ActivityIndicator size="small" color={colors.grape[6]} />
+                    <ActivityIndicator
+                      size="small"
+                      color={themeColors.textMuted}
+                    />
                   </View>
                 )}
 
@@ -607,7 +649,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 searchResults.length === 0 &&
                 (trackQuery.length >= MIN_SEARCH_LENGTH ||
                   artistQuery.length >= MIN_SEARCH_LENGTH) && (
-                  <Text style={styles.noResultsText}>
+                  <Text
+                    style={[styles.noResultsText, themedStyles.noResultsText]}
+                  >
                     No results found. Try a different search or enter details
                     manually.
                   </Text>
@@ -618,7 +662,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
                 onPress={handleEnterManually}
                 style={styles.manualEntryLink}
               >
-                <Text style={styles.manualEntryText}>
+                <Text
+                  style={[styles.manualEntryText, themedStyles.manualEntryText]}
+                >
                   Can't find your song? Enter details manually
                 </Text>
               </TouchableOpacity>
@@ -627,7 +673,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
           {/* Selected Release Display */}
           {(selectedRelease || isPrefilled) && (
-            <View style={styles.selectedSongCard}>
+            <View
+              style={[styles.selectedSongCard, themedStyles.selectedSongCard]}
+            >
               <View style={styles.selectedSongInfo}>
                 {formData.artwork_url && !artworkError ? (
                   <Image
@@ -640,16 +688,30 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     style={[
                       styles.selectedArtwork,
                       styles.selectedArtworkPlaceholder,
+                      themedStyles.selectedArtworkPlaceholder,
                     ]}
                   >
-                    <Icon name="music" size={20} color={colors.grape[6]} />
+                    <Icon
+                      name="music"
+                      size={20}
+                      color={themeColors.textMuted}
+                    />
                   </View>
                 )}
                 <View style={styles.selectedSongText}>
-                  <Text style={styles.selectedSongName} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.selectedSongName,
+                      themedStyles.selectedSongName,
+                    ]}
+                    numberOfLines={1}
+                  >
                     {formData.song_name || "Song name"}
                   </Text>
-                  <Text style={styles.selectedArtist} numberOfLines={1}>
+                  <Text
+                    style={[styles.selectedArtist, themedStyles.selectedArtist]}
+                    numberOfLines={1}
+                  >
                     {formData.band_name || "Artist"}
                   </Text>
                 </View>
@@ -659,7 +721,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                   onPress={handleClearSelection}
                   style={styles.clearButton}
                 >
-                  <Icon name="x" size={18} color={colors.grape[5]} />
+                  <Icon name="x" size={18} color={themeColors.iconMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -668,11 +730,20 @@ export function CreateReviewScreen({ navigation, route }: any) {
           {/* Manual Entry Mode Header */}
           {manualEntry && !selectedRelease && !isPrefilled && (
             <View style={styles.manualEntryHeader}>
-              <Text style={styles.manualEntryTitle}>
+              <Text
+                style={[styles.manualEntryTitle, themedStyles.manualEntryTitle]}
+              >
                 Enter song details manually
               </Text>
               <TouchableOpacity onPress={handleBackToSearch}>
-                <Text style={styles.backToSearchText}>Back to search</Text>
+                <Text
+                  style={[
+                    styles.backToSearchText,
+                    themedStyles.backToSearchText,
+                  ]}
+                >
+                  Back to search
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -715,21 +786,41 @@ export function CreateReviewScreen({ navigation, route }: any) {
               {/* Artwork Selection */}
               {artworkLoading ? (
                 <View style={styles.artworkLoadingContainer}>
-                  <Text style={styles.artworkLoadingText}>
+                  <Text
+                    style={[
+                      styles.artworkLoadingText,
+                      themedStyles.artworkLoadingText,
+                    ]}
+                  >
                     Loading artwork options...
                   </Text>
-                  <ActivityIndicator size="small" color={colors.grape[6]} />
+                  <ActivityIndicator
+                    size="small"
+                    color={themeColors.textMuted}
+                  />
                 </View>
               ) : artworkOptions.length > 0 ? (
                 <View style={styles.artworkPickerSection}>
-                  <Text style={styles.label}>Artwork</Text>
+                  <Text style={[styles.label, themedStyles.label]}>
+                    Artwork
+                  </Text>
                   <TouchableOpacity
-                    style={styles.artworkPickerButton}
+                    style={[
+                      styles.artworkPickerButton,
+                      themedStyles.artworkPickerButton,
+                    ]}
                     onPress={() => setShowArtworkPicker(!showArtworkPicker)}
                   >
-                    <Icon name="image" size={18} color={colors.grape[6]} />
+                    <Icon
+                      name="image"
+                      size={18}
+                      color={themeColors.textMuted}
+                    />
                     <Text
-                      style={styles.artworkPickerButtonText}
+                      style={[
+                        styles.artworkPickerButtonText,
+                        themedStyles.artworkPickerButtonText,
+                      ]}
                       numberOfLines={1}
                     >
                       {formData.artwork_url
@@ -741,18 +832,24 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     <Icon
                       name={showArtworkPicker ? "chevron-up" : "chevron-down"}
                       size={18}
-                      color={colors.grape[5]}
+                      color={themeColors.iconMuted}
                     />
                   </TouchableOpacity>
                   {showArtworkPicker && (
-                    <View style={styles.artworkOptionsList}>
+                    <View
+                      style={[
+                        styles.artworkOptionsList,
+                        themedStyles.artworkOptionsList,
+                      ]}
+                    >
                       {artworkOptions.map((option, index) => (
                         <TouchableOpacity
                           key={`${option.source}-${index}`}
                           style={[
                             styles.artworkOptionItem,
+                            themedStyles.artworkOptionItem,
                             formData.artwork_url === option.url &&
-                              styles.artworkOptionItemSelected,
+                              themedStyles.artworkOptionItemSelected,
                           ]}
                           onPress={() => handleSelectArtwork(option)}
                         >
@@ -762,12 +859,20 @@ export function CreateReviewScreen({ navigation, route }: any) {
                             onError={() => {}}
                           />
                           <View style={styles.artworkOptionInfo}>
-                            <Text style={styles.artworkOptionSource}>
+                            <Text
+                              style={[
+                                styles.artworkOptionSource,
+                                themedStyles.artworkOptionSource,
+                              ]}
+                            >
                               {option.source_display}
                             </Text>
                             {option.album_name && (
                               <Text
-                                style={styles.artworkOptionAlbum}
+                                style={[
+                                  styles.artworkOptionAlbum,
+                                  themedStyles.artworkOptionAlbum,
+                                ]}
                                 numberOfLines={1}
                               >
                                 {option.album_name}
@@ -783,7 +888,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                             <Icon
                               name="check"
                               size={18}
-                              color={colors.grape[6]}
+                              color={themeColors.textMuted}
                             />
                           )}
                         </TouchableOpacity>
@@ -808,7 +913,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Liked Aspects */}
               <View style={styles.aspectsSection}>
-                <Text style={styles.label}>What did you like about it?</Text>
+                <Text style={[styles.label, themedStyles.label]}>
+                  What did you like about it?
+                </Text>
                 <View style={styles.aspectsGrid}>
                   {LIKED_ASPECTS.map((aspect) => {
                     const isSelected = formData.liked_aspects.includes(aspect);
@@ -817,7 +924,8 @@ export function CreateReviewScreen({ navigation, route }: any) {
                         key={aspect}
                         style={[
                           styles.aspectChip,
-                          isSelected && styles.aspectChipSelected,
+                          themedStyles.aspectChip,
+                          isSelected && themedStyles.aspectChipSelected,
                         ]}
                         onPress={() => toggleAspect(aspect)}
                       >
@@ -825,13 +933,14 @@ export function CreateReviewScreen({ navigation, route }: any) {
                           <Icon
                             name="check"
                             size={14}
-                            color={colors.grape[0]}
+                            color={themeColors.btnPrimaryText}
                           />
                         )}
                         <Text
                           style={[
                             styles.aspectChipText,
-                            isSelected && styles.aspectChipTextSelected,
+                            themedStyles.aspectChipText,
+                            isSelected && themedStyles.aspectChipTextSelected,
                           ]}
                         >
                           {aspect}
@@ -844,12 +953,19 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Review Text */}
               <View style={styles.reviewSection}>
-                <Text style={styles.label}>Your Recommendation *</Text>
-                <View style={styles.textAreaContainer}>
+                <Text style={[styles.label, themedStyles.label]}>
+                  Your Recommendation *
+                </Text>
+                <View
+                  style={[
+                    styles.textAreaContainer,
+                    themedStyles.textAreaContainer,
+                  ]}
+                >
                   <MentionTextInput
-                    style={styles.textArea}
-                    placeholder="Share why you love this song... Use @ to mention"
-                    placeholderTextColor={colors.grape[4]}
+                    style={[styles.textArea, themedStyles.textArea]}
+                    placeholder="Share why you love this song"
+                    placeholderTextColor={themeColors.textPlaceholder}
                     value={formData.review_text}
                     onChangeText={(text: string) =>
                       updateField("review_text", text)
@@ -864,7 +980,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     }}
                   />
                 </View>
-                <Text style={styles.charCount}>
+                <Text style={[styles.charCount, themedStyles.charCount]}>
                   {formData.review_text.length} characters
                 </Text>
               </View>
@@ -886,21 +1002,41 @@ export function CreateReviewScreen({ navigation, route }: any) {
               {/* Artwork Selection - outside Advanced */}
               {artworkLoading ? (
                 <View style={styles.artworkLoadingContainer}>
-                  <Text style={styles.artworkLoadingText}>
+                  <Text
+                    style={[
+                      styles.artworkLoadingText,
+                      themedStyles.artworkLoadingText,
+                    ]}
+                  >
                     Loading artwork options...
                   </Text>
-                  <ActivityIndicator size="small" color={colors.grape[6]} />
+                  <ActivityIndicator
+                    size="small"
+                    color={themeColors.textMuted}
+                  />
                 </View>
               ) : artworkOptions.length > 0 ? (
                 <View style={styles.artworkPickerSection}>
-                  <Text style={styles.label}>Artwork Options</Text>
+                  <Text style={[styles.label, themedStyles.label]}>
+                    Artwork Options
+                  </Text>
                   <TouchableOpacity
-                    style={styles.artworkPickerButton}
+                    style={[
+                      styles.artworkPickerButton,
+                      themedStyles.artworkPickerButton,
+                    ]}
                     onPress={() => setShowArtworkPicker(!showArtworkPicker)}
                   >
-                    <Icon name="image" size={18} color={colors.grape[6]} />
+                    <Icon
+                      name="image"
+                      size={18}
+                      color={themeColors.textMuted}
+                    />
                     <Text
-                      style={styles.artworkPickerButtonText}
+                      style={[
+                        styles.artworkPickerButtonText,
+                        themedStyles.artworkPickerButtonText,
+                      ]}
                       numberOfLines={1}
                     >
                       {formData.artwork_url
@@ -912,18 +1048,24 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     <Icon
                       name={showArtworkPicker ? "chevron-up" : "chevron-down"}
                       size={18}
-                      color={colors.grape[5]}
+                      color={themeColors.iconMuted}
                     />
                   </TouchableOpacity>
                   {showArtworkPicker && (
-                    <View style={styles.artworkOptionsList}>
+                    <View
+                      style={[
+                        styles.artworkOptionsList,
+                        themedStyles.artworkOptionsList,
+                      ]}
+                    >
                       {artworkOptions.map((option, index) => (
                         <TouchableOpacity
                           key={`${option.source}-${index}`}
                           style={[
                             styles.artworkOptionItem,
+                            themedStyles.artworkOptionItem,
                             formData.artwork_url === option.url &&
-                              styles.artworkOptionItemSelected,
+                              themedStyles.artworkOptionItemSelected,
                           ]}
                           onPress={() => handleSelectArtwork(option)}
                         >
@@ -933,12 +1075,20 @@ export function CreateReviewScreen({ navigation, route }: any) {
                             onError={() => {}}
                           />
                           <View style={styles.artworkOptionInfo}>
-                            <Text style={styles.artworkOptionSource}>
+                            <Text
+                              style={[
+                                styles.artworkOptionSource,
+                                themedStyles.artworkOptionSource,
+                              ]}
+                            >
                               {option.source_display}
                             </Text>
                             {option.album_name && (
                               <Text
-                                style={styles.artworkOptionAlbum}
+                                style={[
+                                  styles.artworkOptionAlbum,
+                                  themedStyles.artworkOptionAlbum,
+                                ]}
                                 numberOfLines={1}
                               >
                                 {option.album_name}
@@ -954,7 +1104,7 @@ export function CreateReviewScreen({ navigation, route }: any) {
                             <Icon
                               name="check"
                               size={18}
-                              color={colors.grape[6]}
+                              color={themeColors.textMuted}
                             />
                           )}
                         </TouchableOpacity>
@@ -966,7 +1116,9 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Liked Aspects */}
               <View style={styles.aspectsSection}>
-                <Text style={styles.label}>What did you like about it?</Text>
+                <Text style={[styles.label, themedStyles.label]}>
+                  What did you like about it?
+                </Text>
                 <View style={styles.aspectsGrid}>
                   {LIKED_ASPECTS.map((aspect) => {
                     const isSelected = formData.liked_aspects.includes(aspect);
@@ -975,7 +1127,8 @@ export function CreateReviewScreen({ navigation, route }: any) {
                         key={aspect}
                         style={[
                           styles.aspectChip,
-                          isSelected && styles.aspectChipSelected,
+                          themedStyles.aspectChip,
+                          isSelected && themedStyles.aspectChipSelected,
                         ]}
                         onPress={() => toggleAspect(aspect)}
                       >
@@ -983,13 +1136,14 @@ export function CreateReviewScreen({ navigation, route }: any) {
                           <Icon
                             name="check"
                             size={14}
-                            color={colors.grape[0]}
+                            color={themeColors.btnPrimaryText}
                           />
                         )}
                         <Text
                           style={[
                             styles.aspectChipText,
-                            isSelected && styles.aspectChipTextSelected,
+                            themedStyles.aspectChipText,
+                            isSelected && themedStyles.aspectChipTextSelected,
                           ]}
                         >
                           {aspect}
@@ -1002,12 +1156,19 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
               {/* Review Text */}
               <View style={styles.reviewSection}>
-                <Text style={styles.label}>Your Recommendation *</Text>
-                <View style={styles.textAreaContainer}>
+                <Text style={[styles.label, themedStyles.label]}>
+                  Your Recommendation *
+                </Text>
+                <View
+                  style={[
+                    styles.textAreaContainer,
+                    themedStyles.textAreaContainer,
+                  ]}
+                >
                   <MentionTextInput
-                    style={styles.textArea}
-                    placeholder="Share why you love this song... Use @ to mention"
-                    placeholderTextColor={colors.grape[4]}
+                    style={[styles.textArea, themedStyles.textArea]}
+                    placeholder="Share why you love this song"
+                    placeholderTextColor={themeColors.textPlaceholder}
                     value={formData.review_text}
                     onChangeText={(text: string) =>
                       updateField("review_text", text)
@@ -1022,21 +1183,28 @@ export function CreateReviewScreen({ navigation, route }: any) {
                     }}
                   />
                 </View>
-                <Text style={styles.charCount}>
+                <Text style={[styles.charCount, themedStyles.charCount]}>
                   {formData.review_text.length} characters
                 </Text>
               </View>
 
               {/* Advanced Accordion */}
               <TouchableOpacity
-                style={styles.advancedHeader}
+                style={[styles.advancedHeader, themedStyles.advancedHeader]}
                 onPress={() => setShowAdvanced(!showAdvanced)}
               >
-                <Text style={styles.advancedHeaderText}>Advanced</Text>
+                <Text
+                  style={[
+                    styles.advancedHeaderText,
+                    themedStyles.advancedHeaderText,
+                  ]}
+                >
+                  Advanced
+                </Text>
                 <Icon
                   name={showAdvanced ? "chevron-up" : "chevron-down"}
                   size={18}
-                  color={colors.grape[5]}
+                  color={themeColors.iconMuted}
                 />
               </TouchableOpacity>
 
@@ -1082,10 +1250,12 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
                   {/* Genres */}
                   <View style={styles.genresSection}>
-                    <Text style={styles.label}>
-                      Genres {formData.genres.length > 0 && `(${formData.genres.length}/5)`}
+                    <Text style={[styles.label, themedStyles.label]}>
+                      Genres{" "}
+                      {formData.genres.length > 0 &&
+                        `(${formData.genres.length}/5)`}
                     </Text>
-                    <Text style={styles.genreHint}>
+                    <Text style={[styles.genreHint, themedStyles.genreHint]}>
                       Select from common genres or add your own
                     </Text>
 
@@ -1095,11 +1265,25 @@ export function CreateReviewScreen({ navigation, route }: any) {
                         {formData.genres.map((genre) => (
                           <TouchableOpacity
                             key={genre}
-                            style={styles.selectedGenreChip}
+                            style={[
+                              styles.selectedGenreChip,
+                              themedStyles.selectedGenreChip,
+                            ]}
                             onPress={() => toggleGenre(genre)}
                           >
-                            <Text style={styles.selectedGenreText}>{genre}</Text>
-                            <Icon name="x" size={14} color={colors.grape[0]} />
+                            <Text
+                              style={[
+                                styles.selectedGenreText,
+                                themedStyles.selectedGenreText,
+                              ]}
+                            >
+                              {genre}
+                            </Text>
+                            <Icon
+                              name="x"
+                              size={14}
+                              color={themeColors.btnPrimaryText}
+                            />
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -1107,28 +1291,48 @@ export function CreateReviewScreen({ navigation, route }: any) {
 
                     {/* Genre Picker Toggle */}
                     <TouchableOpacity
-                      style={styles.genrePickerButton}
+                      style={[
+                        styles.genrePickerButton,
+                        themedStyles.genrePickerButton,
+                      ]}
                       onPress={() => setShowGenrePicker(!showGenrePicker)}
                     >
-                      <Icon name="music" size={18} color={colors.grape[6]} />
-                      <Text style={styles.genrePickerButtonText}>
+                      <Icon
+                        name="music"
+                        size={18}
+                        color={themeColors.textMuted}
+                      />
+                      <Text
+                        style={[
+                          styles.genrePickerButtonText,
+                          themedStyles.genrePickerButtonText,
+                        ]}
+                      >
                         {showGenrePicker ? "Hide genres" : "Select genres..."}
                       </Text>
                       <Icon
                         name={showGenrePicker ? "chevron-up" : "chevron-down"}
                         size={18}
-                        color={colors.grape[5]}
+                        color={themeColors.iconMuted}
                       />
                     </TouchableOpacity>
 
                     {showGenrePicker && (
-                      <View style={styles.genreOptionsList}>
+                      <View
+                        style={[
+                          styles.genreOptionsList,
+                          themedStyles.genreOptionsList,
+                        ]}
+                      >
                         {/* Custom genre input */}
                         <View style={styles.customGenreRow}>
                           <RNTextInput
-                            style={styles.customGenreInput}
+                            style={[
+                              styles.customGenreInput,
+                              themedStyles.customGenreInput,
+                            ]}
                             placeholder="Add custom genre..."
-                            placeholderTextColor={colors.grape[4]}
+                            placeholderTextColor={themeColors.textPlaceholder}
                             value={customGenre}
                             onChangeText={setCustomGenre}
                             onSubmitEditing={addCustomGenre}
@@ -1137,13 +1341,21 @@ export function CreateReviewScreen({ navigation, route }: any) {
                           <TouchableOpacity
                             style={[
                               styles.addGenreButton,
-                              (!customGenre.trim() || formData.genres.length >= 5) &&
-                                styles.addGenreButtonDisabled,
+                              themedStyles.addGenreButton,
+                              (!customGenre.trim() ||
+                                formData.genres.length >= 5) &&
+                                themedStyles.addGenreButtonDisabled,
                             ]}
                             onPress={addCustomGenre}
-                            disabled={!customGenre.trim() || formData.genres.length >= 5}
+                            disabled={
+                              !customGenre.trim() || formData.genres.length >= 5
+                            }
                           >
-                            <Icon name="plus" size={16} color={colors.grape[0]} />
+                            <Icon
+                              name="plus"
+                              size={16}
+                              color={themeColors.btnPrimaryText}
+                            />
                           </TouchableOpacity>
                         </View>
 
@@ -1156,17 +1368,24 @@ export function CreateReviewScreen({ navigation, route }: any) {
                                 key={genre}
                                 style={[
                                   styles.genreChip,
-                                  isSelected && styles.genreChipSelected,
+                                  themedStyles.genreChip,
+                                  isSelected && themedStyles.genreChipSelected,
                                 ]}
                                 onPress={() => toggleGenre(genre)}
                               >
                                 {isSelected && (
-                                  <Icon name="check" size={12} color={colors.grape[0]} />
+                                  <Icon
+                                    name="check"
+                                    size={12}
+                                    color={themeColors.btnPrimaryText}
+                                  />
                                 )}
                                 <Text
                                   style={[
                                     styles.genreChipText,
-                                    isSelected && styles.genreChipTextSelected,
+                                    themedStyles.genreChipText,
+                                    isSelected &&
+                                      themedStyles.genreChipTextSelected,
                                   ]}
                                 >
                                   {genre}
@@ -1200,10 +1419,171 @@ export function CreateReviewScreen({ navigation, route }: any) {
   );
 }
 
+// Themed styles that change based on light/dark mode
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgApp,
+    },
+    subtitle: {
+      color: colors.textMuted,
+    },
+    label: {
+      color: colors.textPlaceholder,
+    },
+    searchInputContainer: {
+      backgroundColor: colors.bgInput,
+      borderColor: colors.borderStrong,
+    },
+    searchInput: {
+      color: colors.textPrimary,
+    },
+    searchResults: {
+      backgroundColor: colors.bgApp,
+      borderColor: colors.borderDefault,
+    },
+    searchResultItem: {
+      borderBottomColor: colors.borderSubtle,
+    },
+    resultArtworkPlaceholder: {
+      backgroundColor: colors.bgSurface,
+    },
+    resultSongName: {
+      color: colors.textPrimary,
+    },
+    resultArtist: {
+      color: colors.textMuted,
+    },
+    noResultsText: {
+      color: colors.textMuted,
+    },
+    manualEntryText: {
+      color: colors.textMuted,
+    },
+    selectedSongCard: {
+      backgroundColor: colors.bgSurface,
+    },
+    selectedArtworkPlaceholder: {
+      backgroundColor: colors.bgSurfaceAlt,
+    },
+    selectedSongName: {
+      color: colors.textPrimary,
+    },
+    selectedArtist: {
+      color: colors.textMuted,
+    },
+    manualEntryTitle: {
+      color: colors.textSecondary,
+    },
+    backToSearchText: {
+      color: colors.textMuted,
+    },
+    aspectChip: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    aspectChipSelected: {
+      backgroundColor: colors.btnPrimaryBg,
+      borderColor: colors.btnPrimaryBg,
+    },
+    aspectChipText: {
+      color: colors.textMuted,
+    },
+    aspectChipTextSelected: {
+      color: colors.btnPrimaryText,
+    },
+    textAreaContainer: {
+      backgroundColor: colors.bgInput,
+      borderColor: colors.borderStrong,
+    },
+    textArea: {
+      color: colors.textPrimary,
+    },
+    charCount: {
+      color: colors.textMuted,
+    },
+    artworkLoadingText: {
+      color: colors.textMuted,
+    },
+    artworkPickerButton: {
+      backgroundColor: colors.bgInput,
+      borderColor: colors.borderStrong,
+    },
+    artworkPickerButtonText: {
+      color: colors.textSecondary,
+    },
+    artworkOptionsList: {
+      backgroundColor: colors.bgApp,
+      borderColor: colors.borderDefault,
+    },
+    artworkOptionItem: {
+      borderBottomColor: colors.borderSubtle,
+    },
+    artworkOptionItemSelected: {
+      backgroundColor: colors.bgSurface,
+    },
+    artworkOptionSource: {
+      color: colors.textPrimary,
+    },
+    artworkOptionAlbum: {
+      color: colors.textMuted,
+    },
+    advancedHeader: {
+      backgroundColor: colors.bgSurface,
+    },
+    advancedHeaderText: {
+      color: colors.textMuted,
+    },
+    genreHint: {
+      color: colors.textMuted,
+    },
+    selectedGenreChip: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    selectedGenreText: {
+      color: colors.btnPrimaryText,
+    },
+    genrePickerButton: {
+      backgroundColor: colors.bgInput,
+      borderColor: colors.borderStrong,
+    },
+    genrePickerButtonText: {
+      color: colors.textSecondary,
+    },
+    genreOptionsList: {
+      backgroundColor: colors.bgApp,
+      borderColor: colors.borderDefault,
+    },
+    customGenreInput: {
+      backgroundColor: colors.bgSurface,
+      color: colors.textPrimary,
+    },
+    addGenreButton: {
+      backgroundColor: colors.btnPrimaryBg,
+    },
+    addGenreButtonDisabled: {
+      backgroundColor: colors.iconSubtle,
+    },
+    genreChip: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+    },
+    genreChipSelected: {
+      backgroundColor: colors.btnPrimaryBg,
+      borderColor: colors.btnPrimaryBg,
+    },
+    genreChipText: {
+      color: colors.textMuted,
+    },
+    genreChipTextSelected: {
+      color: colors.btnPrimaryText,
+    },
+  });
+
+// Static styles that don't change with theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grape[0],
   },
   flex: {
     flex: 1,
@@ -1213,12 +1593,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     marginBottom: theme.spacing.md,
   },
   label: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[4],
     marginBottom: theme.spacing.xs,
   },
 
@@ -1229,9 +1607,7 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
-    borderColor: colors.grape[6],
     borderRadius: theme.radii.md,
     paddingHorizontal: theme.spacing.sm,
   },
@@ -1245,16 +1621,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: theme.spacing.sm,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[8],
   },
   searchLoader: {
     marginLeft: theme.spacing.xs,
   },
   searchResults: {
     marginTop: theme.spacing.xs,
-    backgroundColor: colors.grape[0],
     borderWidth: 1,
-    borderColor: colors.grape[3],
     borderRadius: theme.radii.md,
     maxHeight: 280,
     overflow: "hidden",
@@ -1264,7 +1637,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.grape[2],
   },
   resultArtwork: {
     width: 40,
@@ -1272,7 +1644,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.sm,
   },
   resultArtworkPlaceholder: {
-    backgroundColor: colors.grape[1],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1283,11 +1654,9 @@ const styles = StyleSheet.create({
   resultSongName: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "500",
-    color: colors.grape[8],
   },
   resultArtist: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: 2,
   },
   searchStatus: {
@@ -1296,7 +1665,6 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
     textAlign: "center",
     paddingVertical: theme.spacing.md,
   },
@@ -1306,7 +1674,6 @@ const styles = StyleSheet.create({
   },
   manualEntryText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
 
   // Selected song styles
@@ -1314,7 +1681,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.grape[1],
     padding: theme.spacing.sm,
     borderRadius: theme.radii.md,
     marginBottom: theme.spacing.md,
@@ -1330,7 +1696,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.sm,
   },
   selectedArtworkPlaceholder: {
-    backgroundColor: colors.grape[2],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1341,11 +1706,9 @@ const styles = StyleSheet.create({
   selectedSongName: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "600",
-    color: colors.grape[8],
   },
   selectedArtist: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: 2,
   },
   clearButton: {
@@ -1362,11 +1725,9 @@ const styles = StyleSheet.create({
   manualEntryTitle: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "500",
-    color: colors.grape[7],
   },
   backToSearchText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
 
   // Aspects
@@ -1385,20 +1746,13 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs + 2,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radii.full,
-    backgroundColor: colors.grape[1],
     borderWidth: 1,
-    borderColor: colors.grape[3],
   },
-  aspectChipSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
+  aspectChipSelected: {},
   aspectChipText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[6],
   },
   aspectChipTextSelected: {
-    color: colors.grape[0],
     fontWeight: "500",
   },
 
@@ -1407,20 +1761,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   textAreaContainer: {
-    backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
-    borderColor: colors.grape[6],
     borderRadius: theme.radii.md,
   },
   textArea: {
     padding: theme.spacing.md,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[8],
     minHeight: 120,
   },
   charCount: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     textAlign: "right",
     marginTop: theme.spacing.xs,
   },
@@ -1437,7 +1787,6 @@ const styles = StyleSheet.create({
   },
   artworkLoadingText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   artworkPickerSection: {
     marginBottom: theme.spacing.md,
@@ -1445,9 +1794,7 @@ const styles = StyleSheet.create({
   artworkPickerButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
-    borderColor: colors.grape[6],
     borderRadius: theme.radii.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.sm,
@@ -1456,13 +1803,10 @@ const styles = StyleSheet.create({
   artworkPickerButtonText: {
     flex: 1,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[7],
   },
   artworkOptionsList: {
     marginTop: theme.spacing.xs,
-    backgroundColor: colors.grape[0],
     borderWidth: 1,
-    borderColor: colors.grape[3],
     borderRadius: theme.radii.md,
     overflow: "hidden",
   },
@@ -1471,12 +1815,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.grape[2],
     gap: theme.spacing.sm,
   },
-  artworkOptionItemSelected: {
-    backgroundColor: colors.grape[1],
-  },
+  artworkOptionItemSelected: {},
   artworkOptionThumb: {
     width: 40,
     height: 40,
@@ -1488,11 +1829,9 @@ const styles = StyleSheet.create({
   artworkOptionSource: {
     fontSize: theme.fontSizes.sm,
     fontWeight: "500",
-    color: colors.grape[8],
   },
   artworkOptionAlbum: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginTop: 2,
   },
 
@@ -1501,7 +1840,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: colors.grape[1],
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.md,
@@ -1509,7 +1847,6 @@ const styles = StyleSheet.create({
   },
   advancedHeaderText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[5],
   },
   advancedContent: {
     marginBottom: theme.spacing.md,
@@ -1521,7 +1858,6 @@ const styles = StyleSheet.create({
   },
   genreHint: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[5],
     marginBottom: theme.spacing.sm,
   },
   selectedGenres: {
@@ -1537,19 +1873,15 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radii.full,
-    backgroundColor: theme.colors.primary,
   },
   selectedGenreText: {
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[0],
     fontWeight: "500",
   },
   genrePickerButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.grape[0],
     borderWidth: theme.borderWidth,
-    borderColor: colors.grape[6],
     borderRadius: theme.radii.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.sm,
@@ -1558,13 +1890,10 @@ const styles = StyleSheet.create({
   genrePickerButtonText: {
     flex: 1,
     fontSize: theme.fontSizes.base,
-    color: colors.grape[7],
   },
   genreOptionsList: {
     marginTop: theme.spacing.xs,
-    backgroundColor: colors.grape[0],
     borderWidth: 1,
-    borderColor: colors.grape[3],
     borderRadius: theme.radii.md,
     padding: theme.spacing.sm,
   },
@@ -1575,23 +1904,18 @@ const styles = StyleSheet.create({
   },
   customGenreInput: {
     flex: 1,
-    backgroundColor: colors.grape[1],
     borderRadius: theme.radii.sm,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     fontSize: theme.fontSizes.sm,
-    color: colors.grape[8],
   },
   addGenreButton: {
-    backgroundColor: theme.colors.primary,
     borderRadius: theme.radii.sm,
     paddingHorizontal: theme.spacing.sm,
     justifyContent: "center",
     alignItems: "center",
   },
-  addGenreButtonDisabled: {
-    backgroundColor: colors.grape[3],
-  },
+  addGenreButtonDisabled: {},
   genreOptionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1604,20 +1928,13 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radii.full,
-    backgroundColor: colors.grape[1],
     borderWidth: 1,
-    borderColor: colors.grape[3],
   },
-  genreChipSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
+  genreChipSelected: {},
   genreChipText: {
     fontSize: theme.fontSizes.xs,
-    color: colors.grape[6],
   },
   genreChipTextSelected: {
-    color: colors.grape[0],
     fontWeight: "500",
   },
 });

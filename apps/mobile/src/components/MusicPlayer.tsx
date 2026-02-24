@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { theme, colors } from '@/theme';
+import { theme } from '@/theme';
+import { useTheme } from '@/hooks/useTheme';
+import { SemanticColors } from '@/theme/semanticColors';
 
 interface MusicPlayerProps {
   bandcampEmbed?: string;
@@ -20,12 +22,14 @@ export function MusicPlayer({
   youtubeMusicLink,
   appleMusicLink,
 }: MusicPlayerProps) {
+  const { colors: themeColors } = useTheme();
+  const themedStyles = React.useMemo(() => createThemedStyles(themeColors), [themeColors]);
   // Bandcamp embed (highest priority)
   if (bandcampEmbed) {
     const embedUrl = getBandcampEmbedUrl(bandcampEmbed);
     if (embedUrl) {
       return (
-        <View style={styles.bandcampContainer}>
+        <View style={[styles.bandcampContainer, themedStyles.bandcampContainer]}>
           <WebView
             source={{ uri: embedUrl }}
             style={styles.bandcampWebView}
@@ -47,7 +51,7 @@ export function MusicPlayer({
     const embedUrl = getSpotifyEmbedUrl(spotifyLink);
     if (embedUrl) {
       return (
-        <View style={styles.spotifyContainer}>
+        <View style={[styles.spotifyContainer, themedStyles.spotifyContainer]}>
           <WebView
             source={{ uri: embedUrl }}
             style={styles.spotifyWebView}
@@ -69,7 +73,7 @@ export function MusicPlayer({
     const embedUrl = getYouTubeMusicEmbedUrl(youtubeMusicLink);
     if (embedUrl) {
       return (
-        <View style={styles.youtubeContainer}>
+        <View style={[styles.youtubeContainer, themedStyles.youtubeContainer]}>
           <WebView
             source={{ uri: embedUrl }}
             style={styles.youtubeWebView}
@@ -193,13 +197,25 @@ function getAppleMusicEmbedUrl(appleMusicUrl: string): string | null {
   return null;
 }
 
+const createThemedStyles = (colors: SemanticColors) =>
+  StyleSheet.create({
+    bandcampContainer: {
+      backgroundColor: colors.bgSurface,
+    },
+    spotifyContainer: {
+      backgroundColor: colors.bgSurface,
+    },
+    youtubeContainer: {
+      backgroundColor: colors.bgSurface,
+    },
+  });
+
 const styles = StyleSheet.create({
   bandcampContainer: {
     width: '100%',
     height: 120,
     borderRadius: 0,
     overflow: 'hidden',
-    backgroundColor: colors.grape[1],
   },
   bandcampWebView: {
     flex: 1,
@@ -210,7 +226,6 @@ const styles = StyleSheet.create({
     height: 155,
     borderRadius: theme.radii.md,
     overflow: 'hidden',
-    backgroundColor: colors.grape[1],
   },
   spotifyWebView: {
     flex: 1,
@@ -221,7 +236,6 @@ const styles = StyleSheet.create({
     height: 155,
     borderRadius: theme.radii.md,
     overflow: 'hidden',
-    backgroundColor: colors.grape[1],
   },
   youtubeWebView: {
     flex: 1,
