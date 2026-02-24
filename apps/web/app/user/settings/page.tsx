@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { IconCheck, IconLogout, IconMail } from '@tabler/icons-react';
+import { IconCheck, IconLogout, IconMail, IconMusic } from '@tabler/icons-react';
 import {
   Badge,
   Button,
@@ -12,6 +12,7 @@ import {
   Group,
   Loader,
   Paper,
+  Select,
   Stack,
   Text,
   Title,
@@ -22,6 +23,7 @@ import { Header } from '@/components/Header/Header';
 import { UserSidebar } from '@/components/UserSidebar/UserSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Band } from '@/lib/api';
+import { StreamingPlatform, STREAMING_PLATFORMS } from '@/lib/streaming';
 import styles from './page.module.css';
 
 // Lazy load components
@@ -38,6 +40,7 @@ export default function SettingsPage() {
   const [retryAfter, setRetryAfter] = useState(0);
   const [band, setBand] = useState<Band | null>(null);
   const [bandLoading, setBandLoading] = useState(false);
+  const [streamingPlatformLoading, setStreamingPlatformLoading] = useState(false);
 
   // Auth redirects
   useEffect(() => {
@@ -118,6 +121,41 @@ export default function SettingsPage() {
 
   const canResend = user?.can_resend_confirmation && retryAfter === 0;
 
+  const handleStreamingPlatformChange = async (value: string | null) => {
+    setStreamingPlatformLoading(true);
+    try {
+      // Convert empty string to null for "No preference"
+      const platform = (value === '' || value === null) ? null : value as StreamingPlatform;
+      await apiClient.updatePreferredStreamingPlatform(platform);
+      await refreshUser();
+      notifications.show({
+        title: 'Preferences updated',
+        message: platform
+          ? `${STREAMING_PLATFORMS[platform].name} set as your preferred platform`
+          : 'Streaming preference cleared',
+        color: 'green',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update streaming preference';
+      notifications.show({
+        title: 'Error',
+        message,
+        color: 'red',
+      });
+    } finally {
+      setStreamingPlatformLoading(false);
+    }
+  };
+
+  // Streaming platform select options
+  const streamingPlatformOptions = [
+    { value: '', label: 'No preference' },
+    ...Object.entries(STREAMING_PLATFORMS).map(([key, { name }]) => ({
+      value: key,
+      label: name,
+    })),
+  ];
+
   if (isLoading) {
     return (
       <Container>
@@ -174,6 +212,31 @@ export default function SettingsPage() {
                 <LastFmConnection />
               </Suspense>
             )}
+
+            {/* Streaming Preferences Section */}
+            <Paper p="lg" radius="md" withBorder>
+              <Title order={4} mb="md">
+                <Group gap="xs">
+                  <IconMusic size={20} />
+                  Streaming Preferences
+                </Group>
+              </Title>
+              <Stack gap="sm">
+                <Text size="sm" c="dimmed">
+                  Choose your preferred streaming platform. When available, songs will open directly
+                  in this app.
+                </Text>
+                <Select
+                  label="Preferred Platform"
+                  placeholder="Select a platform"
+                  data={streamingPlatformOptions}
+                  value={user?.preferred_streaming_platform ?? ''}
+                  onChange={handleStreamingPlatformChange}
+                  disabled={streamingPlatformLoading}
+                  clearable={false}
+                />
+              </Stack>
+            </Paper>
 
             {/* Account Section */}
             <Paper p="lg" radius="md" withBorder>

@@ -11,6 +11,7 @@ import {
   IconLink,
   IconMessage,
   IconPhoto,
+  IconPlayerPlay,
   IconShare,
 } from '@tabler/icons-react';
 import html2canvas from 'html2canvas';
@@ -18,7 +19,9 @@ import { ActionIcon, Card, Center, Group, Menu, Spoiler, Stack, Text } from '@ma
 import { CommentsDrawer } from '@/components/CommentsDrawer/CommentsDrawer';
 import { MentionText } from '@/components/MentionText/MentionText';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
+import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Review } from '@/lib/api';
+import { STREAMING_PLATFORMS, StreamingLinks, StreamingPlatform } from '@/lib/streaming';
 import styles from './ReviewCard.module.css';
 
 interface ReviewCardProps {
@@ -27,6 +30,7 @@ interface ReviewCardProps {
 }
 
 export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
+  const { user } = useAuth();
   const [artworkError, setArtworkError] = useState(false);
   const [isLiked, setIsLiked] = useState(review.liked_by_current_user ?? false);
   const [likesCount, setLikesCount] = useState(review.likes_count ?? 0);
@@ -41,6 +45,139 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
 
   const storyRef = useRef<HTMLDivElement>(null);
   const postRef = useRef<HTMLDivElement>(null);
+
+  // Get streaming data from track object or review directly
+  const track = (review as any).track;
+  const band = review.band as any;
+  const streamingLinks: StreamingLinks | undefined =
+    track?.streaming_links || review.streaming_links;
+  const preferredTrackLink: string | undefined = track?.preferred_track_link;
+  const songlinkUrl: string | undefined = track?.songlink_url || review.songlink_url;
+  const songlinkSearchUrl: string | undefined =
+    track?.songlink_search_url || (review as any).songlink_search_url;
+  const preferredBandLink: string | undefined = band?.preferred_band_link;
+
+  // Get available streaming links from track
+  const getAvailableStreamingLinks = (): Array<{ platform: StreamingPlatform; url: string }> => {
+    if (!streamingLinks) return [];
+    return (Object.entries(streamingLinks) as [StreamingPlatform, string | undefined][])
+      .filter(([_, url]) => url)
+      .map(([platform, url]) => ({ platform, url: url! }));
+  };
+
+  // Get available band links
+  const getAvailableBandLinks = (): Array<{ platform: string; url: string }> => {
+    if (!band) return [];
+    const bandLinks: Array<{ platform: string; url: string }> = [];
+    if (band.spotify_link) bandLinks.push({ platform: 'spotify', url: band.spotify_link });
+    if (band.apple_music_link)
+      bandLinks.push({ platform: 'appleMusic', url: band.apple_music_link });
+    if (band.youtube_music_link)
+      bandLinks.push({ platform: 'youtubeMusic', url: band.youtube_music_link });
+    if (band.bandcamp_link) bandLinks.push({ platform: 'bandcamp', url: band.bandcamp_link });
+    if (band.soundcloud_link) bandLinks.push({ platform: 'soundcloud', url: band.soundcloud_link });
+    return bandLinks;
+  };
+
+  const availableLinks = getAvailableStreamingLinks();
+  const availableBandLinks = getAvailableBandLinks();
+  const preferredPlatform = user?.preferred_streaming_platform;
+  const preferredLink = preferredPlatform && streamingLinks?.[preferredPlatform];
+
+  // Get the best URL following the fallback chain:
+  // preferred_track_link > streaming_links > songlink_url > preferred_band_link > band_links > songlink_search_url
+  const getBestUrl = (): string | undefined => {
+    if (preferredTrackLink) return preferredTrackLink;
+    if (availableLinks.length > 0) return availableLinks[0].url;
+    if (songlinkUrl) return songlinkUrl;
+    if (preferredBandLink) return preferredBandLink;
+    if (availableBandLinks.length > 0) return availableBandLinks[0].url;
+    if (songlinkSearchUrl) return songlinkSearchUrl;
+    return review.song_link;
+  };
+
+  // Determine what happens when play button is clicked
+  const handlePlayClick = () => {
+    // Priority 1: preferred_track_link
+    if (preferredTrackLink) {
+      window.open(preferredTrackLink, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Priority 2: User's preferred platform from streaming_links
+    if (preferredLink) {
+      window.open(preferredLink, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Priority 3: If only one streaming link, direct open
+    if (availableLinks.length === 1) {
+      window.open(availableLinks[0].url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Priority 4: Multiple streaming links - Menu will handle
+    if (availableLinks.length > 1) {
+      return; // Menu handles this
+    }
+
+    // Priority 5: songlink_url
+    if (songlinkUrl) {
+      window.open(songlinkUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Priority 6: preferred_band_link
+    if (preferredBandLink) {
+      window.open(preferredBandLink, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Priority 7: If only one band link, direct open
+    if (availableBandLinks.length === 1) {
+      window.open(availableBandLinks[0].url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Priority 8: Multiple band links - Menu will handle
+    if (availableBandLinks.length > 1) {
+      return; // Menu handles this
+    }
+
+    // Priority 9: songlink_search_url
+    if (songlinkSearchUrl) {
+      window.open(songlinkSearchUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Final fallback: song_link
+    if (review.song_link) {
+      window.open(review.song_link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Should show menu when we have multiple options at the current priority level
+  // (multiple streaming links OR multiple band links when no streaming links)
+  const shouldShowStreamingMenu =
+    availableLinks.length > 1 && !preferredTrackLink && !preferredLink;
+  const shouldShowBandMenu =
+    availableLinks.length === 0 &&
+    !songlinkUrl &&
+    !preferredBandLink &&
+    availableBandLinks.length > 1 &&
+    !preferredTrackLink;
+  const shouldShowMenu = shouldShowStreamingMenu || shouldShowBandMenu;
+
+  // Links to show in the menu
+  const menuLinks = shouldShowStreamingMenu ? availableLinks : availableBandLinks;
+
+  // Check if we have any playable link
+  const hasPlayableLink = !!getBestUrl();
+
+  // Determine if the best link is a direct song link (play icon) or not (link icon)
+  // Song links: preferred_track_link, streaming_links, songlink_url
+  // Non-song links: preferred_band_link, band_links, songlink_search_url, song_link
+  const isSongLink = !!(preferredTrackLink || availableLinks.length > 0 || songlinkUrl);
 
   // Proxy external images to avoid CORS issues with html2canvas
   const getProxiedImageUrl = (url: string | undefined) => {
@@ -265,11 +402,69 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
               )}
             </Stack>
           </Group>
-          {review.song_link && (
-            <a href={review.song_link} target="_blank" rel="noopener noreferrer">
-              <IconExternalLink size={24} color="var(--mantine-color-grape-6)" />
-            </a>
-          )}
+          {/* Streaming Links Button */}
+          {hasPlayableLink &&
+            (shouldShowMenu ? (
+              <Menu shadow="md" width={200} position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon
+                    variant="subtle"
+                    color="grape"
+                    aria-label={isSongLink ? 'Play on streaming platform' : 'Open link'}
+                  >
+                    {isSongLink ? <IconPlayerPlay size={24} /> : <IconLink size={24} />}
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>{shouldShowBandMenu ? 'Artist on' : 'Listen on'}</Menu.Label>
+                  {menuLinks.map(({ platform, url }) => (
+                    <Menu.Item
+                      key={platform}
+                      component="a"
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      leftSection={
+                        <div
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            backgroundColor:
+                              STREAMING_PLATFORMS[platform as StreamingPlatform]?.color || '#666',
+                          }}
+                        />
+                      }
+                    >
+                      {STREAMING_PLATFORMS[platform as StreamingPlatform]?.name || platform}
+                    </Menu.Item>
+                  ))}
+                  {(songlinkUrl || songlinkSearchUrl) && (
+                    <>
+                      <Menu.Divider />
+                      <Menu.Item
+                        component="a"
+                        href={songlinkUrl || songlinkSearchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        leftSection={<IconExternalLink size={14} />}
+                      >
+                        View all platforms
+                      </Menu.Item>
+                    </>
+                  )}
+                </Menu.Dropdown>
+              </Menu>
+            ) : (
+              <ActionIcon
+                variant="subtle"
+                color="grape"
+                aria-label={isSongLink ? 'Play' : 'Open link'}
+                onClick={handlePlayClick}
+              >
+                {isSongLink ? <IconPlayerPlay size={24} /> : <IconLink size={24} />}
+              </ActionIcon>
+            ))}
         </div>
 
         {/* Review Text */}

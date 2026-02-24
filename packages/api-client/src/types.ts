@@ -12,6 +12,35 @@ export interface Plan {
 // Legacy type - kept for backwards compatibility during migration
 export type AccountType = 'fan' | 'band' | 'music_blogger' | 'admin';
 
+/** Supported streaming platforms */
+export type StreamingPlatform =
+  | 'spotify' | 'appleMusic' | 'youtubeMusic' | 'tidal'
+  | 'amazonMusic' | 'deezer' | 'soundcloud' | 'bandcamp';
+
+/** Streaming links object from backend */
+export interface StreamingLinks {
+  spotify?: string;
+  appleMusic?: string;
+  youtubeMusic?: string;
+  tidal?: string;
+  amazonMusic?: string;
+  deezer?: string;
+  soundcloud?: string;
+  bandcamp?: string;
+}
+
+/** Platform display info */
+export const STREAMING_PLATFORMS: Record<StreamingPlatform, { name: string; color: string }> = {
+  spotify: { name: 'Spotify', color: '#1DB954' },
+  appleMusic: { name: 'Apple Music', color: '#FA243C' },
+  youtubeMusic: { name: 'YouTube Music', color: '#FF0000' },
+  tidal: { name: 'Tidal', color: '#000000' },
+  amazonMusic: { name: 'Amazon Music', color: '#FF9900' },
+  deezer: { name: 'Deezer', color: '#FEAA2D' },
+  soundcloud: { name: 'SoundCloud', color: '#FF5500' },
+  bandcamp: { name: 'Bandcamp', color: '#1DA0C3' },
+};
+
 export interface User {
   id: number;
   email: string;
@@ -41,6 +70,7 @@ export interface User {
   following_count?: number;
   email_confirmed?: boolean;
   can_resend_confirmation?: boolean;
+  preferred_streaming_platform?: StreamingPlatform | null;
 }
 
 export interface ProfileUpdateData {
@@ -48,6 +78,7 @@ export interface ProfileUpdateData {
   profile_image?: File;
   city?: string;
   region?: string;
+  preferred_streaming_platform?: StreamingPlatform | null;
 }
 
 export interface AuthResponse {
@@ -112,6 +143,8 @@ export interface Review extends ReviewData {
   liked_by_current_user?: boolean;
   likes_count?: number;
   comments_count?: number;
+  streaming_links?: StreamingLinks;
+  songlink_url?: string;
 }
 
 export interface UserProfile {
@@ -163,6 +196,9 @@ export interface FollowingFeedItem {
   review_text: string;
   liked_aspects?: (string | { name: string })[];
   created_at: string;
+  likes_count?: number;
+  comments_count?: number;
+  liked_by_current_user?: boolean;
   author: {
     id: number;
     username: string;
@@ -172,6 +208,23 @@ export interface FollowingFeedItem {
     id: number;
     slug: string;
     name: string;
+    preferred_band_link?: string;
+    spotify_link?: string;
+    apple_music_link?: string;
+    youtube_music_link?: string;
+    bandcamp_link?: string;
+    soundcloud_link?: string;
+  };
+  streaming_links?: StreamingLinks;
+  songlink_url?: string;
+  songlink_search_url?: string;
+  track?: {
+    id: string;
+    name: string;
+    preferred_track_link?: string;
+    streaming_links?: StreamingLinks;
+    songlink_url?: string;
+    songlink_search_url?: string;
   };
 }
 

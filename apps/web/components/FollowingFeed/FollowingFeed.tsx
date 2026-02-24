@@ -34,7 +34,9 @@ function feedItemToReview(item: FollowingFeedItem): Review {
     likes_count: item.likes_count,
     liked_by_current_user: item.liked_by_current_user,
     comments_count: item.comments_count,
-  };
+    // Include track data for streaming links
+    track: item.track,
+  } as Review;
 }
 
 export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: FollowingFeedProps) {

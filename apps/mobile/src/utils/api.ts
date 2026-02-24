@@ -11,7 +11,12 @@ import {
   LastFmStatus,
   RecentlyPlayedTrack,
   RecentlyPlayedResponse,
+  StreamingPlatform,
+  StreamingLinks,
+  STREAMING_PLATFORMS,
 } from '@goodsongs/api-client';
+
+export { StreamingPlatform, StreamingLinks, STREAMING_PLATFORMS };
 
 export interface DiscoverPagination {
   current_page: number;
@@ -158,6 +163,25 @@ export interface FanDashboardFeedItem {
   likes_count: number;
   comments_count: number;
   liked_by_current_user?: boolean;
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+    preferred_band_link?: string;
+    spotify_link?: string;
+    apple_music_link?: string;
+    youtube_music_link?: string;
+    bandcamp_link?: string;
+    soundcloud_link?: string;
+  };
+  track?: {
+    id: string;
+    name: string;
+    preferred_track_link?: string;
+    streaming_links?: StreamingLinks;
+    songlink_url?: string;
+    songlink_search_url?: string;
+  };
 }
 
 export interface FanDashboardRecentlyPlayed {
@@ -960,6 +984,32 @@ class MobileApiClient {
       method: 'DELETE',
       body: JSON.stringify({ token }),
     });
+  }
+
+  // Update user's preferred streaming platform
+  async updatePreferredStreamingPlatform(platform: StreamingPlatform | null): Promise<User> {
+    const formData = new FormData();
+    formData.append('_method', 'PATCH');
+    if (platform !== null) {
+      formData.append('preferred_streaming_platform', platform);
+    } else {
+      formData.append('preferred_streaming_platform', '');
+    }
+
+    const response = await fetch(`${API_URL}/update-profile`, {
+      method: 'POST',
+      headers: {
+        Authorization: this.token ? `Bearer ${this.token}` : '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to update streaming preference');
+    }
+
+    return response.json();
   }
 }
 

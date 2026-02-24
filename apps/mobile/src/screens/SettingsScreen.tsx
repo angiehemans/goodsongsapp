@@ -22,7 +22,7 @@ import { SemanticColors } from '@/theme/semanticColors';
 import { useAuthStore } from '@/context/authStore';
 import { useScrobbleStore } from '@/context/scrobbleStore';
 import { ScrobbleStatus } from '@/types/scrobble';
-import { apiClient } from '@/utils/api';
+import { apiClient, StreamingPlatform, STREAMING_PLATFORMS } from '@/utils/api';
 import { LastFmStatus } from '@goodsongs/api-client';
 import { RootStackParamList } from '@/navigation/types';
 
@@ -50,6 +50,9 @@ export function SettingsScreen({ navigation }: Props) {
   // Email verification state
   const [resendLoading, setResendLoading] = useState(false);
   const [retryAfter, setRetryAfter] = useState(0);
+
+  // Streaming platform state
+  const [streamingPlatformLoading, setStreamingPlatformLoading] = useState(false);
 
   useEffect(() => {
     // Only check Last.fm status for fan accounts
@@ -216,6 +219,35 @@ export function SettingsScreen({ navigation }: Props) {
     );
   };
 
+  const handleStreamingPlatformChange = async (platform: StreamingPlatform | null) => {
+    setStreamingPlatformLoading(true);
+    try {
+      await apiClient.updatePreferredStreamingPlatform(platform);
+      await refreshUser();
+      Alert.alert(
+        'Preferences Updated',
+        platform
+          ? `${STREAMING_PLATFORMS[platform].name} set as your preferred platform`
+          : 'Streaming preference cleared'
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update streaming preference';
+      Alert.alert('Error', message);
+    } finally {
+      setStreamingPlatformLoading(false);
+    }
+  };
+
+  // Streaming platform options for rendering
+  const streamingPlatformOptions: Array<{ key: StreamingPlatform | null; name: string; color?: string }> = [
+    { key: null, name: 'No preference' },
+    ...Object.entries(STREAMING_PLATFORMS).map(([key, { name, color }]) => ({
+      key: key as StreamingPlatform,
+      name,
+      color,
+    })),
+  ];
+
   const renderLastFmSection = () => {
     if (lastFmLoading) {
       return (
@@ -363,6 +395,56 @@ export function SettingsScreen({ navigation }: Props) {
           </View>
         </Card>
 
+        {/* Streaming Preferences Section */}
+        <Card style={styles.section}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Streaming</Text>
+          <Text style={[styles.descriptionText, themedStyles.descriptionText, styles.streamingDescription]}>
+            Choose your preferred streaming platform. When available, songs will open directly in this app.
+          </Text>
+          <View style={styles.streamingContainer}>
+            {streamingPlatformOptions.map((option) => {
+              const isSelected = (user?.preferred_streaming_platform ?? null) === option.key;
+              return (
+                <TouchableOpacity
+                  key={option.key ?? 'none'}
+                  style={[
+                    styles.streamingOption,
+                    themedStyles.streamingOption,
+                    isSelected && styles.streamingOptionSelected,
+                    isSelected && themedStyles.streamingOptionSelected,
+                  ]}
+                  onPress={() => handleStreamingPlatformChange(option.key)}
+                  disabled={streamingPlatformLoading}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.streamingOptionLeft}>
+                    {option.color && (
+                      <View
+                        style={[
+                          styles.streamingDot,
+                          { backgroundColor: option.color },
+                        ]}
+                      />
+                    )}
+                    <Text
+                      style={[
+                        styles.streamingOptionText,
+                        themedStyles.streamingOptionText,
+                        isSelected && styles.streamingOptionTextSelected,
+                      ]}
+                    >
+                      {option.name}
+                    </Text>
+                  </View>
+                  {isSelected && (
+                    <Icon name="check" size={18} color={colors.btnPrimaryBg} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Card>
+
         {/* Account Section */}
         <Card style={styles.section}>
           <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>Account</Text>
@@ -461,6 +543,16 @@ const createThemedStyles = (colors: SemanticColors) =>
     },
     appearanceDescription: {
       color: colors.textMuted,
+    },
+    streamingOption: {
+      backgroundColor: colors.bgSurface,
+    },
+    streamingOptionSelected: {
+      backgroundColor: colors.bgSurfaceAlt,
+      borderColor: colors.btnPrimaryBg,
+    },
+    streamingOptionText: {
+      color: colors.textSecondary,
     },
   });
 
@@ -632,5 +724,41 @@ const styles = StyleSheet.create({
   appearanceDescription: {
     fontSize: theme.fontSizes.xs,
     marginTop: 2,
+  },
+  // Streaming section styles
+  streamingDescription: {
+    marginBottom: theme.spacing.md,
+  },
+  streamingContainer: {
+    gap: theme.spacing.xs,
+  },
+  streamingOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing.md,
+    borderRadius: theme.radii.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  streamingOptionSelected: {
+    borderWidth: 2,
+  },
+  streamingOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  streamingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  streamingOptionText: {
+    fontSize: theme.fontSizes.base,
+    fontWeight: '500',
+  },
+  streamingOptionTextSelected: {
+    fontWeight: '600',
   },
 });

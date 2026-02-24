@@ -75,6 +75,10 @@ function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
     liked_by_current_user: item.liked_by_current_user,
     comments_count: item.comments_count,
     author: item.author,
+    // Include band data for band links
+    band: item.band,
+    // Include track data for streaming links
+    track: item.track,
   }));
 }
 

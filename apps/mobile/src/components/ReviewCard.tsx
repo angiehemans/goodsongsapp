@@ -10,21 +10,24 @@ import {
 } from "react-native";
 import FastImage from "react-native-fast-image";
 import {
-  IconExternalLink,
+  IconPlayerPlay,
   IconShare,
   IconMessageCircle,
   IconHeart,
   IconHeartFilled,
+  IconLink,
 } from "@tabler/icons-react-native";
-import { Review } from "@goodsongs/api-client";
+import { Review, StreamingPlatform } from "@goodsongs/api-client";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { MentionText } from "./MentionText";
 import { Tag } from "./Tag";
+import { StreamingLinksModal } from "./StreamingLinksModal";
 import { theme } from "@/theme";
 import { useTheme } from "@/hooks/useTheme";
 import { SemanticColors } from "@/theme/semanticColors";
 import { fixImageUrl } from "@/utils/imageUrl";
-import { apiClient } from "@/utils/api";
+import { apiClient, StreamingLinks } from "@/utils/api";
+import { useAuthStore } from "@/context/authStore";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -50,6 +53,7 @@ export const ReviewCard = memo(function ReviewCard({
 }: ReviewCardProps) {
   const { colors } = useTheme();
   const themedStyles = useMemo(() => createThemedStyles(colors), [colors]);
+  const { user } = useAuthStore();
 
   const authorUsername = review.author?.username || review.user?.username;
   const authorProfileImage = review.author?.profile_image_url;
@@ -59,10 +63,126 @@ export const ReviewCard = memo(function ReviewCard({
   const [likesCount, setLikesCount] = useState(review.likes_count ?? 0);
   const [isLiking, setIsLiking] = useState(false);
 
+  // Streaming links modal state
+  const [showStreamingModal, setShowStreamingModal] = useState(false);
+
   // Comments count
   const commentsCount = review.comments_count ?? 0;
 
-  const handleOpenLink = () => {
+  // Get streaming data from track object or review directly
+  const track = (review as any).track;
+  const band = review.band as any;
+  const streamingLinks: StreamingLinks | undefined = track?.streaming_links || (review as any).streaming_links;
+  const preferredTrackLink: string | undefined = track?.preferred_track_link;
+  const songlinkUrl: string | undefined = track?.songlink_url || (review as any).songlink_url;
+  const songlinkSearchUrl: string | undefined = track?.songlink_search_url || (review as any).songlink_search_url;
+  const preferredBandLink: string | undefined = band?.preferred_band_link;
+
+  // Get available streaming links from track
+  const getAvailableStreamingLinks = (): Array<{ platform: StreamingPlatform; url: string }> => {
+    if (!streamingLinks) return [];
+    return (Object.entries(streamingLinks) as [StreamingPlatform, string | undefined][])
+      .filter(([_, url]) => url)
+      .map(([platform, url]) => ({ platform, url: url! }));
+  };
+
+  // Get available band links
+  const getAvailableBandLinks = (): Array<{ platform: string; url: string }> => {
+    if (!band) return [];
+    const bandLinks: Array<{ platform: string; url: string }> = [];
+    if (band.spotify_link) bandLinks.push({ platform: 'spotify', url: band.spotify_link });
+    if (band.apple_music_link) bandLinks.push({ platform: 'appleMusic', url: band.apple_music_link });
+    if (band.youtube_music_link) bandLinks.push({ platform: 'youtubeMusic', url: band.youtube_music_link });
+    if (band.bandcamp_link) bandLinks.push({ platform: 'bandcamp', url: band.bandcamp_link });
+    if (band.soundcloud_link) bandLinks.push({ platform: 'soundcloud', url: band.soundcloud_link });
+    return bandLinks;
+  };
+
+  const availableLinks = getAvailableStreamingLinks();
+  const availableBandLinks = getAvailableBandLinks();
+  const preferredPlatform = user?.preferred_streaming_platform as StreamingPlatform | undefined;
+  const preferredLink = preferredPlatform && streamingLinks?.[preferredPlatform];
+
+  // Get the best URL following the fallback chain:
+  // preferred_track_link > streaming_links > songlink_url > preferred_band_link > band_links > songlink_search_url
+  const getBestUrl = (): string | undefined => {
+    if (preferredTrackLink) return preferredTrackLink;
+    if (availableLinks.length > 0) return availableLinks[0].url;
+    if (songlinkUrl) return songlinkUrl;
+    if (preferredBandLink) return preferredBandLink;
+    if (availableBandLinks.length > 0) return availableBandLinks[0].url;
+    if (songlinkSearchUrl) return songlinkSearchUrl;
+    return review.song_link;
+  };
+
+  // Should show modal when we have multiple options at the current priority level
+  // (for band links modal title and behavior)
+  const shouldShowBandModal = availableLinks.length === 0 && !songlinkUrl && !preferredBandLink && availableBandLinks.length > 1 && !preferredTrackLink;
+
+  // Check if we have any playable link
+  const hasPlayableLink = !!getBestUrl();
+
+  // Determine if the best link is a direct song link (play icon) or not (link icon)
+  // Song links: preferred_track_link, streaming_links, songlink_url
+  // Non-song links: preferred_band_link, band_links, songlink_search_url, song_link
+  const isSongLink = !!(preferredTrackLink || availableLinks.length > 0 || songlinkUrl);
+
+  const handlePlayClick = () => {
+    // Priority 1: preferred_track_link
+    if (preferredTrackLink) {
+      Linking.openURL(preferredTrackLink);
+      return;
+    }
+
+    // Priority 2: User's preferred platform from streaming_links
+    if (preferredLink) {
+      Linking.openURL(preferredLink);
+      return;
+    }
+
+    // Priority 3: If only one streaming link, direct open
+    if (availableLinks.length === 1) {
+      Linking.openURL(availableLinks[0].url);
+      return;
+    }
+
+    // Priority 4: Multiple streaming links - show modal
+    if (availableLinks.length > 1) {
+      setShowStreamingModal(true);
+      return;
+    }
+
+    // Priority 5: songlink_url
+    if (songlinkUrl) {
+      Linking.openURL(songlinkUrl);
+      return;
+    }
+
+    // Priority 6: preferred_band_link
+    if (preferredBandLink) {
+      Linking.openURL(preferredBandLink);
+      return;
+    }
+
+    // Priority 7: If only one band link, direct open
+    if (availableBandLinks.length === 1) {
+      Linking.openURL(availableBandLinks[0].url);
+      return;
+    }
+
+    // Priority 8: Multiple band links - show modal
+    if (availableBandLinks.length > 1) {
+      setShowStreamingModal(true);
+      return;
+    }
+
+    // Priority 9: songlink_search_url
+    if (songlinkSearchUrl) {
+      Linking.openURL(songlinkSearchUrl);
+      return;
+    }
+
+    // Final fallback: song_link
     if (review.song_link) {
       Linking.openURL(review.song_link);
     }
@@ -156,12 +276,16 @@ export const ReviewCard = memo(function ReviewCard({
               </TouchableOpacity>
             </View>
           </View>
-          {review.song_link && (
+          {hasPlayableLink && (
             <TouchableOpacity
-              onPress={handleOpenLink}
+              onPress={handlePlayClick}
               style={styles.linkButton}
             >
-              <IconExternalLink size={20} color={colors.iconMuted} />
+              {isSongLink ? (
+                <IconPlayerPlay size={20} color={colors.iconMuted} />
+              ) : (
+                <IconLink size={20} color={colors.iconMuted} />
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -245,6 +369,20 @@ export const ReviewCard = memo(function ReviewCard({
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Streaming Links Modal */}
+      {(availableLinks.length > 0 || availableBandLinks.length > 0) && (
+        <StreamingLinksModal
+          visible={showStreamingModal}
+          onClose={() => setShowStreamingModal(false)}
+          streamingLinks={streamingLinks}
+          bandLinks={availableBandLinks}
+          songName={review.song_name}
+          bandName={review.band_name}
+          songlinkUrl={songlinkUrl || songlinkSearchUrl}
+          isBandLinks={shouldShowBandModal}
+        />
+      )}
     </TouchableOpacity>
   );
 });

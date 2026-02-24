@@ -223,6 +223,10 @@ export function FeedScreen({ navigation, route }: Props) {
         username: item.author.username,
         profile_image_url: item.author.profile_image_url,
       },
+      // Include band data for band links
+      band: item.band,
+      // Include track data for streaming links
+      track: item.track,
     } as Review));
   };
 

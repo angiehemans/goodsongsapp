@@ -1,4 +1,9 @@
 
+// Re-export streaming types from dedicated module
+export type { StreamingPlatform, StreamingLinks } from './streaming';
+export { STREAMING_PLATFORMS } from './streaming';
+import type { StreamingPlatform, StreamingLinks } from './streaming';
+
 // New RBAC types
 export type Role = 'fan' | 'band' | 'blogger';
 
@@ -166,6 +171,7 @@ export interface User {
   following_count?: number;
   email_confirmed?: boolean;
   can_resend_confirmation?: boolean;
+  preferred_streaming_platform?: StreamingPlatform | null;
 }
 
 export interface ResendConfirmationResponse {
@@ -179,6 +185,7 @@ export interface ProfileUpdateData {
   profile_image?: File;
   city?: string;
   region?: string;
+  preferred_streaming_platform?: StreamingPlatform | null;
 }
 
 export interface AuthResponse {
@@ -260,6 +267,8 @@ export interface Review extends ReviewData {
   likes_count?: number;
   liked_by_current_user?: boolean;
   comments_count?: number;
+  streaming_links?: StreamingLinks;
+  songlink_url?: string;
 }
 
 // User mention in reviews/comments
@@ -367,6 +376,8 @@ export interface FollowingFeedItem {
   likes_count?: number;
   liked_by_current_user?: boolean;
   comments_count?: number;
+  streaming_links?: StreamingLinks;
+  songlink_url?: string;
 }
 
 export interface FollowingFeedResponse {
@@ -840,6 +851,25 @@ export interface FanDashboardFeedItem {
   likes_count: number;
   comments_count: number;
   liked_by_current_user?: boolean;
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+    preferred_band_link?: string;
+    spotify_link?: string;
+    apple_music_link?: string;
+    youtube_music_link?: string;
+    bandcamp_link?: string;
+    soundcloud_link?: string;
+  };
+  track?: {
+    id: string;
+    name: string;
+    preferred_track_link?: string;
+    streaming_links?: StreamingLinks;
+    songlink_url?: string;
+    songlink_search_url?: string;
+  };
 }
 
 export interface FanDashboardRecentlyPlayed {
@@ -2141,6 +2171,15 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify({ plan_key: planKey }),
     });
+  }
+
+  // Update user's preferred streaming platform
+  async updatePreferredStreamingPlatform(platform: StreamingPlatform | null): Promise<User> {
+    const formData = new FormData();
+    formData.append('_method', 'PATCH');
+    // Always include the field - use empty string to clear (backend needs to allow this)
+    formData.append('preferred_streaming_platform', platform ?? '');
+    return this.makeFormRequest('/update-profile', formData);
   }
 }
 
