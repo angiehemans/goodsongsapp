@@ -16,13 +16,15 @@ import {
   Group,
   Loader,
   Paper,
+  Select,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import { useAuth } from '@/hooks/useAuth';
-import { AdminUserDetail, apiClient, Review } from '@/lib/api';
+import { AdminPlan, AdminUserDetail, apiClient, Review } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
 
 export default function AdminUserDetailPage() {
@@ -34,6 +36,8 @@ export default function AdminUserDetailPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [plans, setPlans] = useState<AdminPlan[]>([]);
+  const [updatingPlan, setUpdatingPlan] = useState(false);
 
   const fetchUserData = useCallback(async () => {
     if (!user || !isAdmin || !userId) return;
@@ -42,10 +46,14 @@ export default function AdminUserDetailPage() {
     setError(null);
 
     try {
-      // Fetch user details and reviews via admin endpoint
-      const data = await apiClient.getAdminUserDetail(parseInt(userId, 10));
-      setUserProfile(data.user);
-      setReviews(data.reviews || []);
+      // Fetch user details, reviews, and plans in parallel
+      const [userData, plansData] = await Promise.all([
+        apiClient.getAdminUserDetail(parseInt(userId, 10)),
+        apiClient.getAdminPlans(),
+      ]);
+      setUserProfile(userData.user);
+      setReviews(userData.reviews || []);
+      setPlans(plansData.plans || []);
     } catch (err) {
       console.error('Failed to fetch user data:', err);
       setError('Failed to load user data. The admin endpoint may not be available.');
@@ -53,6 +61,32 @@ export default function AdminUserDetailPage() {
       setDataLoading(false);
     }
   }, [user, isAdmin, userId]);
+
+  const handlePlanChange = async (planId: string | null) => {
+    if (!userProfile || updatingPlan) return;
+
+    setUpdatingPlan(true);
+    try {
+      const result = await apiClient.updateAdminUser(userProfile.id, {
+        plan_id: planId ? parseInt(planId, 10) : undefined,
+      });
+      setUserProfile(result.user);
+      notifications.show({
+        title: 'Plan Updated',
+        message: `User plan has been updated successfully.`,
+        color: 'green',
+      });
+    } catch (err) {
+      console.error('Failed to update plan:', err);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update user plan.',
+        color: 'red',
+      });
+    } finally {
+      setUpdatingPlan(false);
+    }
+  };
 
   useEffect(() => {
     if (user && isAdmin && userId) {
@@ -134,6 +168,19 @@ export default function AdminUserDetailPage() {
                       View Public Profile
                     </Button>
                   )}
+                  <Select
+                    label="Plan"
+                    placeholder="Select a plan"
+                    data={plans.map((plan) => ({
+                      value: String(plan.id),
+                      label: `${plan.name} (${plan.role})`,
+                    }))}
+                    value={userProfile.plan ? String(plans.find(p => p.key === userProfile.plan?.key)?.id || '') : ''}
+                    onChange={handlePlanChange}
+                    disabled={updatingPlan}
+                    w={200}
+                    size="xs"
+                  />
                 </Stack>
               </Group>
             </Paper>

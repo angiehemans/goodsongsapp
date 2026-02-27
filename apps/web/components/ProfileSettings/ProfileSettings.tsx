@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   Paper,
   Title,
@@ -13,10 +13,10 @@ import {
   Alert,
   FileButton,
   ActionIcon,
-  Loader,
 } from '@mantine/core';
 import { IconCamera, IconCheck, IconAlertCircle } from '@tabler/icons-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { notifications } from '@mantine/notifications';
 import { apiClient, ProfileUpdateData } from '@/lib/api';
 import { fixImageUrl } from '@/lib/utils';
@@ -28,41 +28,16 @@ interface ProfileSettingsProps {
 export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
   const { user, refreshUser } = useAuth();
   const [aboutMe, setAboutMe] = useState(user?.about_me || '');
-  const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const resetRef = useRef<() => void>(null);
 
-  const handleImageSelect = (file: File | null) => {
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        notifications.show({
-          title: 'Invalid file type',
-          message: 'Please select an image file',
-          color: 'red',
-        });
-        return;
-      }
-
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        notifications.show({
-          title: 'File too large',
-          message: 'Please select an image smaller than 5MB',
-          color: 'red',
-        });
-        return;
-      }
-
-      setProfileImage(file);
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
+  const {
+    file: profileImage,
+    previewUrl,
+    handleSelect: handleImageSelect,
+    reset: resetImage,
+    resetRef,
+  } = useImageUpload();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +58,7 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
 
       // Only submit if there are changes
       const hasChanges = profileImage || aboutMe !== user?.about_me;
-      
+
       if (!hasChanges) {
         notifications.show({
           title: 'No changes',
@@ -100,9 +75,7 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
       await refreshUser();
 
       // Clean up
-      setProfileImage(null);
-      setPreviewUrl(null);
-      resetRef.current?.();
+      resetImage();
 
       notifications.show({
         title: 'Profile updated!',
@@ -124,19 +97,22 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
     }
   };
 
+  const handleReset = () => {
+    setAboutMe(user?.about_me || '');
+    resetImage();
+    setError(null);
+  };
+
   const currentImageUrl = previewUrl || fixImageUrl(user?.profile_image_url);
 
   return (
     <Paper p="lg" radius="md">
-      <Title order={3} mb="md">Profile Settings</Title>
-      
+      <Title order={3} mb="md">
+        Profile Settings
+      </Title>
+
       {error && (
-        <Alert 
-          icon={<IconAlertCircle size="1rem" />} 
-          title="Error" 
-          color="red" 
-          mb="md"
-        >
+        <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red" mb="md">
           {error}
         </Alert>
       )}
@@ -145,14 +121,12 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
         <Stack>
           {/* Profile Image Section */}
           <div>
-            <Text size="sm" fw={500} mb="xs">Profile Picture</Text>
+            <Text size="sm" fw={500} mb="xs">
+              Profile Picture
+            </Text>
             <Group>
               <div style={{ position: 'relative' }}>
-                <Avatar 
-                  size={80}
-                  src={currentImageUrl}
-                  color="grape"
-                >
+                <Avatar size={80} src={currentImageUrl} color="grape">
                   {!currentImageUrl && user?.username?.charAt(0).toUpperCase()}
                 </Avatar>
                 <FileButton
@@ -196,7 +170,9 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
 
           {/* About Me Section */}
           <div>
-            <Text size="sm" fw={500} mb="xs">About Me</Text>
+            <Text size="sm" fw={500} mb="xs">
+              About Me
+            </Text>
             <Textarea
               placeholder="Tell others about yourself and your music taste..."
               minRows={3}
@@ -215,13 +191,7 @@ export function ProfileSettings({ onProfileUpdate }: ProfileSettingsProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                setAboutMe(user?.about_me || '');
-                setProfileImage(null);
-                setPreviewUrl(null);
-                resetRef.current?.();
-                setError(null);
-              }}
+              onClick={handleReset}
               disabled={isSubmitting}
             >
               Reset

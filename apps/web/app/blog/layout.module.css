@@ -1,0 +1,14 @@
+.blogLayout {
+  --gs-bg-app: #0a0a0a;
+  --gs-bg-surface: #141414;
+  --gs-bg-elevated: #1a1a1a;
+  --gs-text-primary: #e5e5e5;
+  --gs-text-secondary: #a3a3a3;
+  --gs-text-heading: #ffffff;
+  --gs-border-default: #262626;
+  --gs-logo-color: #a855f7;
+
+  background-color: var(--gs-bg-app);
+  color: var(--gs-text-primary);
+  min-height: 100vh;
+}

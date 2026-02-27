@@ -33,6 +33,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
 import {
+  AdminPlan,
   AdminUserDetail,
   AdminUserUpdateData,
   apiClient,
@@ -76,6 +77,8 @@ export function AdminUserDrawer({
   const [admin, setAdmin] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const [role, setRole] = useState<string>('fan');
+  const [planId, setPlanId] = useState<string | null>(null);
+  const [plans, setPlans] = useState<AdminPlan[]>([]);
   const [lastfmUsername, setLastfmUsername] = useState('');
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -88,10 +91,15 @@ export function AdminUserDrawer({
 
     setLoading(true);
     try {
-      const data = await apiClient.getAdminUserDetail(userId);
+      // Fetch user details and plans in parallel
+      const [data, plansData] = await Promise.all([
+        apiClient.getAdminUserDetail(userId),
+        apiClient.getAdminPlans(),
+      ]);
       setUserDetail(data.user);
       setReviews(data.reviews || []);
       setBands(data.bands || []);
+      setPlans(plansData.plans || []);
 
       // Initialize form state
       setEmail(data.user.email || '');
@@ -108,6 +116,10 @@ export function AdminUserDrawer({
       else if (rawRole === 'band' || rawRole === 1) normalizedRole = 'band';
       else if (rawRole === 'blogger' || rawRole === 'music_blogger' || rawRole === 3) normalizedRole = 'blogger';
       setRole(normalizedRole);
+      // Set plan ID based on user's current plan
+      const userPlanKey = data.user.plan?.key;
+      const matchingPlan = plansData.plans?.find((p) => p.key === userPlanKey);
+      setPlanId(matchingPlan ? String(matchingPlan.id) : null);
       setLastfmUsername(data.user.lastfm_username || '');
       setOnboardingCompleted(data.user.onboarding_completed || false);
       const imageUrl = fixImageUrl(data.user.profile_image_url);
@@ -176,6 +188,7 @@ export function AdminUserDrawer({
         region,
         disabled,
         role: role as Role,
+        plan_id: planId ? parseInt(planId, 10) : undefined,
         lastfm_username: lastfmUsername, // send empty string to clear
         onboarding_completed: onboardingCompleted,
       };
@@ -392,6 +405,18 @@ export function AdminUserDrawer({
                       { value: 'band', label: 'Band' },
                       { value: 'blogger', label: 'Blogger' },
                     ]}
+                  />
+
+                  <Select
+                    label="Plan"
+                    placeholder="Select a plan"
+                    value={planId}
+                    onChange={setPlanId}
+                    data={plans.map((plan) => ({
+                      value: String(plan.id),
+                      label: `${plan.name} (${plan.role})`,
+                    }))}
+                    clearable
                   />
 
                   <TextInput

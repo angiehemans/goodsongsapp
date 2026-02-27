@@ -15,6 +15,7 @@ import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, ReviewComment } from '@/lib/api';
+import { formatTimeAgoCompact } from '@/lib/utils';
 import styles from './CommentsDrawer.module.css';
 
 interface CommentsDrawerProps {
@@ -161,18 +162,6 @@ export function CommentsDrawer({
     }, 100);
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
-    return date.toLocaleDateString();
-  };
-
   // Infinite scroll observer
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useCallback(
@@ -244,7 +233,7 @@ export function CommentsDrawer({
                               @{author.username}
                             </Text>
                             <Text size="xs" c="dimmed">
-                              {formatTimeAgo(comment.created_at)}
+                              {formatTimeAgoCompact(comment.created_at)}
                             </Text>
                           </Group>
                           {user?.id === author.id && (

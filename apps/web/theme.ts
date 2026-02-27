@@ -213,6 +213,22 @@ export const theme = createTheme({
         main: {
           backgroundColor: 'var(--gs-bg-app)',
         },
+        header: {
+          borderBottomWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+        },
+        navbar: {
+          borderRightWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+        },
+        aside: {
+          borderLeftWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+        },
+        footer: {
+          borderTopWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+        },
       },
     },
     Paper: {
@@ -247,6 +263,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
+          paddingTop: '2px',
           '&::placeholder': {
             color: 'var(--gs-text-placeholder)',
           },
@@ -263,6 +280,7 @@ export const theme = createTheme({
           borderColor: 'var(--gs-border-strong)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
+          paddingTop: '2px',
           color: 'var(--gs-text-secondary)',
           '&::placeholder': {
             color: 'var(--gs-text-placeholder)',
@@ -400,6 +418,7 @@ export const theme = createTheme({
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
+          paddingTop: '2px',
           '&::placeholder': {
             color: 'var(--gs-text-placeholder)',
           },
@@ -504,6 +523,35 @@ export const theme = createTheme({
       styles: {
         root: {
           color: 'var(--gs-text-secondary)',
+        },
+      },
+    },
+    RichTextEditor: {
+      styles: {
+        root: {
+          borderWidth: 0,
+        },
+        toolbar: {
+          borderBottomWidth: 0,
+
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+        },
+        content: {
+          backgroundColor: 'var(--gs-bg-app)',
+        },
+      },
+    },
+    Table: {
+      styles: {
+        table: {
+          borderWidth: 'var(--gs-border-width)',
+        },
+        th: {
+          borderBottomWidth: 'var(--gs-border-width)',
+        },
+        td: {
+          borderBottomWidth: 'var(--gs-border-width)',
         },
       },
     },

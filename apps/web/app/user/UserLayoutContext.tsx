@@ -82,6 +82,9 @@ function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
   }));
 }
 
+// Cache duration in milliseconds (30 seconds)
+const DASHBOARD_CACHE_DURATION = 30 * 1000;
+
 export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   const { user, isLoading, isOnboardingComplete, isBand, isBlogger } = useAuth();
   const { setInitialCount: setNotificationInitialCount } = useNotifications();
@@ -94,6 +97,8 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   const [followingFeedItems, setFollowingFeedItems] = useState<FollowingFeedItem[]>([]);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [isFetching, setIsFetching] = useState(false);
 
   // Auth redirects
   useEffect(() => {
@@ -108,19 +113,50 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
     }
 
     // Band users should be redirected to band dashboard
-    // Bloggers stay on fan-style dashboard (blogger-dashboard)
-    if (!isLoading && user && isBand && !isBlogger) {
+    if (!isLoading && user && isBand) {
       router.push('/user/band-dashboard');
+      return;
+    }
+
+    // Blogger users should be redirected to blogger dashboard
+    if (!isLoading && user && isBlogger) {
+      router.push('/user/blogger/dashboard');
       return;
     }
   }, [user, isLoading, isOnboardingComplete, isBand, isBlogger, router]);
 
   // Fetch dashboard data (single optimized endpoint)
-  const refreshDashboard = useCallback(async () => {
+  // Bloggers use blogger_dashboard, fans use fan_dashboard
+  // Falls back to fan_dashboard if blogger_dashboard endpoint doesn't exist
+  // Includes caching to prevent unnecessary refetches during navigation
+  const refreshDashboard = useCallback(async (force = false) => {
     if (!user) return;
+
+    // Skip if already fetching (deduplication)
+    if (isFetching) return;
+
+    // Skip if data is fresh (within cache duration) unless forced
+    const now = Date.now();
+    if (!force && dashboardData && (now - lastFetchTime) < DASHBOARD_CACHE_DURATION) {
+      return;
+    }
+
+    setIsFetching(true);
     try {
-      const data = await apiClient.getFanDashboard();
+      let data: FanDashboardResponse;
+      if (isBlogger) {
+        try {
+          data = await apiClient.getBloggerDashboard();
+        } catch (bloggerError) {
+          // Fallback to fan dashboard if blogger endpoint doesn't exist
+          console.warn('Blogger dashboard not available, falling back to fan dashboard');
+          data = await apiClient.getFanDashboard();
+        }
+      } else {
+        data = await apiClient.getFanDashboard();
+      }
       setDashboardData(data);
+      setLastFetchTime(Date.now());
       setFollowersCount(data.profile.followers_count);
       setFollowingCount(data.profile.following_count);
       setUnreadNotificationsCount(data.unread_notifications_count);
@@ -140,8 +176,10 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
       } as Review)));
     } catch (error) {
       console.error('Failed to fetch dashboard:', error);
+    } finally {
+      setIsFetching(false);
     }
-  }, [user, setNotificationInitialCount]);
+  }, [user, isBlogger, setNotificationInitialCount, isFetching, dashboardData, lastFetchTime]);
 
   // Keep these for backwards compatibility (they now just refresh the dashboard)
   const refreshReviews = useCallback(async () => {
@@ -153,16 +191,22 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   }, [refreshDashboard]);
 
   // Initial data fetch using optimized dashboard endpoint
-  // Bloggers use the same dashboard data as fans
+  // Only runs when user/loading state changes, not on every navigation
   useEffect(() => {
     const fetchData = async () => {
       if (!user || isLoading || (isBand && !isBlogger)) return;
+      // Only fetch if we don't have data yet
+      if (dashboardData) {
+        setIsDataLoading(false);
+        return;
+      }
       setIsDataLoading(true);
-      await refreshDashboard();
+      await refreshDashboard(true); // Force fetch on initial load
       setIsDataLoading(false);
     };
     fetchData();
-  }, [user, isLoading, isBand, isBlogger, refreshDashboard]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isLoading, isBand, isBlogger]); // Only re-run when user ID changes, not on every render
 
   return (
     <UserLayoutContext.Provider

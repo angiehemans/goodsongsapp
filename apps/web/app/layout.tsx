@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 
 import '@mantine/core/styles.css';
+import '@mantine/charts/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/tiptap/styles.css';
 import './globals.css';
 
 import { LazyMobileNav } from '@/components/UserSidebar/LazyMobileNav';

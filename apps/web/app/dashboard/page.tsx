@@ -26,7 +26,7 @@ function DashboardRedirectContent() {
     } else if (isBand) {
       router.replace('/user/band-dashboard');
     } else if (isBlogger) {
-      router.replace('/user/blogger-dashboard');
+      router.replace('/user/blogger/dashboard');
     } else {
       router.replace('/user/dashboard');
     }

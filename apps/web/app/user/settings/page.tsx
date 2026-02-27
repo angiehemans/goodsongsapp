@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { IconCheck, IconLogout, IconMail, IconMusic } from '@tabler/icons-react';
+import { IconCheck, IconLogout, IconMail, IconMessage, IconMusic } from '@tabler/icons-react';
 import {
   Badge,
   Button,
@@ -14,6 +14,7 @@ import {
   Paper,
   Select,
   Stack,
+  Switch,
   Text,
   Title,
 } from '@mantine/core';
@@ -34,13 +35,14 @@ const LastFmConnection = lazy(() =>
 );
 
 export default function SettingsPage() {
-  const { user, logout, isLoading, isOnboardingComplete, isBand, isFan, refreshUser } = useAuth();
+  const { user, logout, isLoading, isOnboardingComplete, isBand, isFan, isBlogger, refreshUser } = useAuth();
   const router = useRouter();
   const [resendLoading, setResendLoading] = useState(false);
   const [retryAfter, setRetryAfter] = useState(0);
   const [band, setBand] = useState<Band | null>(null);
   const [bandLoading, setBandLoading] = useState(false);
   const [streamingPlatformLoading, setStreamingPlatformLoading] = useState(false);
+  const [anonymousCommentsLoading, setAnonymousCommentsLoading] = useState(false);
 
   // Auth redirects
   useEffect(() => {
@@ -147,6 +149,31 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAllowAnonymousCommentsChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.currentTarget.checked;
+    setAnonymousCommentsLoading(true);
+    try {
+      await apiClient.updateAllowAnonymousComments(checked);
+      await refreshUser();
+      notifications.show({
+        title: 'Settings updated',
+        message: checked
+          ? 'Anonymous comments are now allowed on your posts'
+          : 'Anonymous comments are now disabled',
+        color: 'green',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update setting';
+      notifications.show({
+        title: 'Error',
+        message,
+        color: 'red',
+      });
+    } finally {
+      setAnonymousCommentsLoading(false);
+    }
+  };
+
   // Streaming platform select options
   const streamingPlatformOptions = [
     { value: '', label: 'No preference' },
@@ -237,6 +264,33 @@ export default function SettingsPage() {
                 />
               </Stack>
             </Paper>
+
+            {/* Blog Settings - Only for blogger accounts */}
+            {isBlogger && (
+              <Paper p="lg" radius="md" withBorder>
+                <Title order={4} mb="md">
+                  <Group gap="xs">
+                    <IconMessage size={20} />
+                    Blog Settings
+                  </Group>
+                </Title>
+                <Stack gap="sm">
+                  <Group justify="space-between">
+                    <div>
+                      <Text fw={500}>Allow Anonymous Comments</Text>
+                      <Text size="sm" c="dimmed">
+                        Allow visitors without accounts to comment on your posts
+                      </Text>
+                    </div>
+                    <Switch
+                      checked={user?.allow_anonymous_comments ?? false}
+                      onChange={handleAllowAnonymousCommentsChange}
+                      disabled={anonymousCommentsLoading}
+                    />
+                  </Group>
+                </Stack>
+              </Paper>
+            )}
 
             {/* Account Section */}
             <Paper p="lg" radius="md" withBorder>

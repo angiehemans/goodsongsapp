@@ -1,0 +1,88 @@
+.container {
+  margin-top: var(--mantine-spacing-xl);
+  padding-top: var(--mantine-spacing-xl);
+  border-top: 1px solid var(--gs-border-default);
+}
+
+.loginLink {
+  color: var(--mantine-color-grape-6);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}
+
+.username {
+  color: var(--gs-text-heading);
+  text-decoration: none;
+}
+
+.username:hover {
+  text-decoration: underline;
+}
+
+.commentBody {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.anonymousComment {
+  background-color: var(--mantine-color-gray-0);
+}
+
+[data-mantine-color-scheme='dark'] .anonymousComment {
+  background-color: var(--mantine-color-dark-6);
+}
+
+.guestAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--mantine-color-gray-3);
+  border-radius: 50%;
+  color: var(--mantine-color-gray-6);
+}
+
+[data-mantine-color-scheme='dark'] .guestAvatar {
+  background-color: var(--mantine-color-dark-5);
+  color: var(--mantine-color-dark-2);
+}
+
+.guestName {
+  color: var(--mantine-color-gray-7);
+}
+
+[data-mantine-color-scheme='dark'] .guestName {
+  color: var(--mantine-color-dark-1);
+}
+
+/* Dark theme inputs for blog pages (hardcoded dark theme) */
+.darkInput {
+  --input-bd: #0262626;
+  --input-bg: #141414;
+}
+
+.darkInput input,
+.darkInput textarea {
+  background-color: #141414 !important;
+  border-color: #262626 !important;
+  color: #e5e5e5 !important;
+}
+
+.darkInput input::placeholder,
+.darkInput textarea::placeholder {
+  color: #a3a3a3;
+}
+
+.darkInput input:focus,
+.darkInput textarea:focus {
+  border-color: var(--mantine-color-grape-6);
+}
+
+/* Dark theme paper/card styling for blog pages */
+.darkPaper {
+  background-color: var(--gs-bg-surface, #141414);
+  border-color: var(--gs-border-default, #262626);
+}

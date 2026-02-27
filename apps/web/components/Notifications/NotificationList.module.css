@@ -1,0 +1,22 @@
+.notificationCard {
+  background-color: var(--gs-bg-surface);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-sm);
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 150ms ease;
+}
+
+.notificationCard:hover {
+  background-color: var(--gs-bg-surface-alt);
+}
+
+.notificationCardUnread {
+  background-color: var(--gs-notification-unread);
+}
+
+.notificationCardUnread:hover {
+  background-color: var(--gs-notification-unread-hover);
+}

@@ -172,6 +172,7 @@ export interface User {
   email_confirmed?: boolean;
   can_resend_confirmation?: boolean;
   preferred_streaming_platform?: StreamingPlatform | null;
+  allow_anonymous_comments?: boolean;
 }
 
 export interface ResendConfirmationResponse {
@@ -321,10 +322,61 @@ export interface LikeResponse {
   likes_count: number;
 }
 
+// Post comment (similar to ReviewComment but with anonymous support)
+export interface PostComment {
+  id: number;
+  body: string;
+  formatted_body?: string;
+  mentions?: MentionUser[];
+  anonymous: boolean;
+  guest_name?: string;
+  author?: {
+    id: number;
+    username: string;
+    display_name?: string;
+    profile_image_url?: string;
+  };
+  likes_count: number;
+  liked_by_current_user: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PostCommentsResponse {
+  comments: PostComment[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
+  };
+}
+
+export interface CreatePostCommentData {
+  body: string;
+  guest_name?: string;
+  guest_email?: string;
+}
+
+export interface CreatePostCommentResponse {
+  message: string;
+  comment: PostComment;
+  claim_token?: string;
+  comments_count: number;
+}
+
+export interface ClaimCommentResponse {
+  message: string;
+  comment: PostComment;
+}
+
 export interface UserProfile {
   id: number;
   email: string;
   username: string;
+  display_name?: string;
   about_me?: string;
   city?: string;
   region?: string;
@@ -333,6 +385,8 @@ export interface UserProfile {
   reviews?: Review[];
   reviews_count?: number;
   bands?: Band[];
+  posts?: PublicBlogPost[];  // Blog posts for bloggers
+  posts_count?: number;
   is_following?: boolean;  // Whether the current user follows this user
   followers_count?: number;
   following_count?: number;
@@ -664,6 +718,7 @@ export interface AdminUserUpdateData {
   // New RBAC field
   role?: Role;
   plan_key?: string;
+  plan_id?: number;
   // Legacy field - kept for backwards compatibility
   /** @deprecated Use `role` instead */
   account_type?: 'fan' | 'band' | 'music_blogger';
@@ -723,6 +778,160 @@ export interface AdminBandDetailResponse {
   band: AdminBandDetail;
   reviews: Review[];
   events: Event[];
+}
+
+// Post types for blogger/band post management
+export type PostStatus = 'draft' | 'published' | 'scheduled';
+
+export interface PostAuthor {
+  name: string;
+  url: string | null;
+}
+
+export interface PostListItem {
+  id: number;
+  title: string;
+  slug: string;
+  status: PostStatus;
+  featured: boolean;
+  authors: PostAuthor[];
+  publish_date: string | null;
+  created_at: string;
+  updated_at: string;
+  // Attached song fields
+  song_name?: string;
+  band_name?: string;
+  song_artwork_url?: string;
+}
+
+export interface PostListPagination {
+  current_page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
+  has_next_page: boolean;
+  has_previous_page: boolean;
+}
+
+export interface PostListResponse {
+  posts: PostListItem[];
+  pagination: PostListPagination;
+}
+
+export interface GetMyPostsParams {
+  status?: PostStatus;
+  page?: number;
+  per_page?: number;
+}
+
+export interface PostAuthorInput {
+  name: string;
+  url?: string | null;
+}
+
+export interface CreatePostData {
+  title: string;
+  slug?: string;
+  excerpt?: string;
+  body?: string;
+  status?: PostStatus;
+  featured?: boolean;
+  publish_date?: string | null;
+  tags?: string[];
+  categories?: string[];
+  authors?: PostAuthorInput[];
+  featured_image?: File;
+  // Attached song fields
+  song_name?: string;
+  band_name?: string;
+  album_name?: string;
+  song_artwork_url?: string;
+  song_link?: string;
+}
+
+export interface UpdatePostData extends Partial<CreatePostData> {}
+
+export interface PostDetail {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  body?: string;
+  status: PostStatus;
+  featured: boolean;
+  publish_date: string | null;
+  tags: string[];
+  categories: string[];
+  authors: PostAuthor[];
+  featured_image_url?: string;
+  created_at: string;
+  updated_at: string;
+  // Attached song (nested object from API)
+  song?: BlogPostSong;
+  // Legacy flat song fields (for backwards compatibility)
+  song_name?: string;
+  band_name?: string;
+  album_name?: string;
+  song_artwork_url?: string;
+  song_link?: string;
+  streaming_links?: StreamingLinks;
+}
+
+// Blog image upload response
+export interface BlogImageUploadResponse {
+  id: number;
+  url: string;
+  filename: string;
+  content_type: string;
+  byte_size: number;
+}
+
+// Public blog post author info
+export interface BlogPostAuthor {
+  id: number;
+  username: string;
+  display_name: string;
+  profile_image_url?: string;
+  allow_anonymous_comments?: boolean;
+}
+
+// Attached song for blog posts (from API)
+export interface BlogPostSong {
+  song_name: string;
+  band_name: string;
+  album_name?: string;
+  artwork_url?: string;
+  song_link?: string;
+  streaming_links?: StreamingLinks;
+  preferred_link?: string;
+  songlink_url?: string;
+}
+
+// Public blog post (from /blogs/:username and /blogs/:username/:slug)
+export interface PublicBlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  body?: string;
+  featured: boolean;
+  status: PostStatus;
+  publish_date: string;
+  featured_image_url?: string;
+  tags: string[];
+  categories: string[];
+  authors: PostAuthor[];
+  author: BlogPostAuthor;
+  can_edit?: boolean;
+  created_at: string;
+  updated_at: string;
+  // Like fields
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+  // Comment fields
+  comments_count?: number;
+  // Attached song (nested object from API)
+  song?: BlogPostSong;
 }
 
 export interface SetAccountTypeData {
@@ -920,9 +1129,22 @@ class ApiClient {
   private refreshPromise: Promise<string> | null = null;
   private onSessionExpired: (() => void) | null = null;
 
+  // In-memory token cache to avoid sync localStorage reads on every request
+  private cachedAuthToken: string | null = null;
+  private cachedRefreshToken: string | null = null;
+  private tokensCacheInitialized = false;
+
   // Set callback for when session expires (refresh token invalid)
   setSessionExpiredCallback(callback: () => void) {
     this.onSessionExpired = callback;
+  }
+
+  // Initialize token cache from localStorage (call once on app start)
+  private initTokenCache(): void {
+    if (this.tokensCacheInitialized || typeof window === 'undefined') return;
+    this.cachedAuthToken = localStorage.getItem('auth_token');
+    this.cachedRefreshToken = localStorage.getItem('refresh_token');
+    this.tokensCacheInitialized = true;
   }
 
   private getApiUrl(): string {
@@ -930,12 +1152,13 @@ class ApiClient {
   }
 
   private getAuthHeader(): HeadersInit {
-    const token = localStorage.getItem('auth_token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+    this.initTokenCache();
+    return this.cachedAuthToken ? { 'Authorization': `Bearer ${this.cachedAuthToken}` } : {};
   }
 
   private async refreshAccessToken(): Promise<string> {
-    const refreshToken = localStorage.getItem('refresh_token');
+    this.initTokenCache();
+    const refreshToken = this.cachedRefreshToken;
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -948,14 +1171,13 @@ class ApiClient {
 
     if (!response.ok) {
       // Refresh token is invalid - clear tokens and notify
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
+      this.clearAllTokens();
       this.onSessionExpired?.();
       throw new Error('Session expired. Please log in again.');
     }
 
     const data = await response.json();
-    localStorage.setItem('auth_token', data.auth_token);
+    this.setAuthToken(data.auth_token);
     return data.auth_token;
   }
 
@@ -1200,33 +1422,41 @@ class ApiClient {
   }
 
   setAuthToken(token: string) {
+    this.cachedAuthToken = token;
     localStorage.setItem('auth_token', token);
   }
 
   setRefreshToken(token: string) {
+    this.cachedRefreshToken = token;
     localStorage.setItem('refresh_token', token);
   }
 
   removeAuthToken() {
+    this.cachedAuthToken = null;
     localStorage.removeItem('auth_token');
   }
 
   removeRefreshToken() {
+    this.cachedRefreshToken = null;
     localStorage.removeItem('refresh_token');
   }
 
   clearAllTokens() {
+    this.cachedAuthToken = null;
+    this.cachedRefreshToken = null;
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
+    this.initTokenCache();
+    return this.cachedRefreshToken;
   }
 
   // Auth endpoints
   async logout(): Promise<void> {
-    const refreshToken = localStorage.getItem('refresh_token');
+    this.initTokenCache();
+    const refreshToken = this.cachedRefreshToken;
     if (refreshToken) {
       try {
         await this.makeRequest('/auth/logout', {
@@ -1259,7 +1489,8 @@ class ApiClient {
   }
 
   getAuthToken(): string | null {
-    return localStorage.getItem('auth_token');
+    this.initTokenCache();
+    return this.cachedAuthToken;
   }
 
   async createReview(data: ReviewData): Promise<any> {
@@ -2080,6 +2311,232 @@ class ApiClient {
   // Fan Dashboard - optimized single endpoint
   async getFanDashboard(): Promise<FanDashboardResponse> {
     return this.makeRequest('/api/v1/fan_dashboard');
+  }
+
+  // Blogger Dashboard - optimized single endpoint for bloggers
+  async getBloggerDashboard(): Promise<FanDashboardResponse> {
+    return this.makeRequest('/api/v1/blogger_dashboard');
+  }
+
+  // Posts - Get user's posts for management
+  async getMyPosts(params?: GetMyPostsParams): Promise<PostListResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.page) searchParams.append('page', String(params.page));
+    if (params?.per_page) searchParams.append('per_page', String(params.per_page));
+    const query = searchParams.toString();
+    return this.makeRequest(`/posts/my${query ? `?${query}` : ''}`);
+  }
+
+  // Posts - Get single post for editing
+  async getPost(id: number): Promise<{ post: PostDetail }> {
+    return this.makeRequest(`/posts/${id}`);
+  }
+
+  // Public Blog - Get user's public blog posts
+  // Public Blog - Get blogger profile with posts (alias for /users/:username)
+  async getBlogProfile(username: string): Promise<UserProfile> {
+    return this.makeRequest(`/blogs/${username}`);
+  }
+
+  // Public Blog - Get single blog post by slug
+  async getBlogPost(username: string, slug: string): Promise<PublicBlogPost> {
+    return this.makeRequest(`/blogs/${username}/${slug}`);
+  }
+
+  // Posts - Create new post
+  async createPost(data: CreatePostData): Promise<{ post: PostDetail }> {
+    if (data.featured_image) {
+      const formData = new FormData();
+      formData.append('post[title]', data.title);
+      if (data.slug) formData.append('post[slug]', data.slug);
+      if (data.excerpt) formData.append('post[excerpt]', data.excerpt);
+      if (data.body) formData.append('post[body]', data.body);
+      if (data.status) formData.append('post[status]', data.status);
+      if (data.featured !== undefined) formData.append('post[featured]', String(data.featured));
+      if (data.publish_date) formData.append('post[publish_date]', data.publish_date);
+      if (data.tags) data.tags.forEach(tag => formData.append('post[tags][]', tag));
+      if (data.categories) data.categories.forEach(cat => formData.append('post[categories][]', cat));
+      if (data.authors) formData.append('post[authors]', JSON.stringify(data.authors));
+      formData.append('post[featured_image]', data.featured_image);
+      // Song fields
+      if (data.song_name) formData.append('post[song_name]', data.song_name);
+      if (data.band_name) formData.append('post[band_name]', data.band_name);
+      if (data.album_name) formData.append('post[album_name]', data.album_name);
+      if (data.song_artwork_url) formData.append('post[song_artwork_url]', data.song_artwork_url);
+      if (data.song_link) formData.append('post[song_link]', data.song_link);
+
+      const response = await fetch(`${this.getApiUrl()}/posts`, {
+        method: 'POST',
+        headers: this.getAuthHeader(),
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || error.message || 'Failed to create post');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest('/posts', {
+      method: 'POST',
+      body: JSON.stringify({ post: data }),
+    });
+  }
+
+  // Posts - Update existing post
+  async updatePost(id: number, data: UpdatePostData): Promise<{ post: PostDetail }> {
+    if (data.featured_image) {
+      const formData = new FormData();
+      if (data.title) formData.append('post[title]', data.title);
+      if (data.slug) formData.append('post[slug]', data.slug);
+      if (data.excerpt !== undefined) formData.append('post[excerpt]', data.excerpt || '');
+      if (data.body !== undefined) formData.append('post[body]', data.body || '');
+      if (data.status) formData.append('post[status]', data.status);
+      if (data.featured !== undefined) formData.append('post[featured]', String(data.featured));
+      if (data.publish_date !== undefined) formData.append('post[publish_date]', data.publish_date || '');
+      if (data.tags) data.tags.forEach(tag => formData.append('post[tags][]', tag));
+      if (data.categories) data.categories.forEach(cat => formData.append('post[categories][]', cat));
+      if (data.authors) formData.append('post[authors]', JSON.stringify(data.authors));
+      formData.append('post[featured_image]', data.featured_image);
+      // Song fields
+      if (data.song_name) formData.append('post[song_name]', data.song_name);
+      if (data.band_name) formData.append('post[band_name]', data.band_name);
+      if (data.album_name) formData.append('post[album_name]', data.album_name);
+      if (data.song_artwork_url) formData.append('post[song_artwork_url]', data.song_artwork_url);
+      if (data.song_link) formData.append('post[song_link]', data.song_link);
+
+      const response = await fetch(`${this.getApiUrl()}/posts/${id}`, {
+        method: 'PATCH',
+        headers: this.getAuthHeader(),
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || error.message || 'Failed to update post');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest(`/posts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ post: data }),
+    });
+  }
+
+  // Posts - Delete post
+  async deletePost(id: number): Promise<void> {
+    await this.makeRequest(`/posts/${id}`, { method: 'DELETE' });
+  }
+
+  // Posts - Like a post
+  async likePost(postId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/posts/${postId}/like`, {
+      method: 'POST',
+    });
+  }
+
+  // Posts - Unlike a post
+  async unlikePost(postId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/posts/${postId}/like`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Posts - Get user's liked posts
+  async getLikedPosts(page: number = 1): Promise<PostListResponse> {
+    return this.makeRequest(`/posts/liked?page=${page}`);
+  }
+
+  // Post Comments - Get comments for a post
+  async getPostComments(postId: number, page: number = 1): Promise<PostCommentsResponse> {
+    return this.makeRequest(`/posts/${postId}/comments?page=${page}`);
+  }
+
+  // Post Comments - Create a comment (authenticated or anonymous)
+  async createPostComment(
+    postId: number,
+    data: CreatePostCommentData
+  ): Promise<CreatePostCommentResponse> {
+    return this.makeRequest(`/posts/${postId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ comment: data }),
+    });
+  }
+
+  // Post Comments - Update a comment
+  async updatePostComment(
+    postId: number,
+    commentId: number,
+    body: string
+  ): Promise<{ message: string; comment: PostComment }> {
+    return this.makeRequest(`/posts/${postId}/comments/${commentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ comment: { body } }),
+    });
+  }
+
+  // Post Comments - Delete a comment
+  async deletePostComment(
+    postId: number,
+    commentId: number
+  ): Promise<{ message: string; comments_count: number }> {
+    return this.makeRequest(`/posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Post Comments - Claim an anonymous comment
+  async claimPostComment(claimToken: string): Promise<ClaimCommentResponse> {
+    return this.makeRequest('/post_comments/claim', {
+      method: 'POST',
+      body: JSON.stringify({ claim_token: claimToken }),
+    });
+  }
+
+  // Post Comments - Like a comment
+  async likePostComment(commentId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/post_comments/${commentId}/like`, {
+      method: 'POST',
+    });
+  }
+
+  // Post Comments - Unlike a comment
+  async unlikePostComment(commentId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/post_comments/${commentId}/like`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Update allow_anonymous_comments setting
+  async updateAllowAnonymousComments(allow: boolean): Promise<User> {
+    const formData = new FormData();
+    formData.append('_method', 'PATCH');
+    formData.append('allow_anonymous_comments', String(allow));
+    return this.makeFormRequest('/update-profile', formData);
+  }
+
+  // Blog Images - Upload image for post content
+  async uploadBlogImage(file: File): Promise<BlogImageUploadResponse> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${this.getApiUrl()}/blog_images`, {
+      method: 'POST',
+      headers: this.getAuthHeader(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || error.message || 'Failed to upload image');
+    }
+
+    return response.json();
   }
 
   // User search for mention autocomplete

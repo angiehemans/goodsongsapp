@@ -1,0 +1,12 @@
+.trackItem {
+  transition: background-color 150ms ease;
+  border-bottom: 1px solid var(--gs-border-subtle);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--gs-bg-app);
+  }
+}

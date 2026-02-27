@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { notifications } from '@mantine/notifications';
 import { apiClient, User, Role, Plan, normalizeRole } from '@/lib/api';
+
+const CLAIM_TOKEN_KEY = 'pending_comment_claim_token';
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   // Set up session expired callback to clear user state
   useEffect(() => {
@@ -45,9 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setIsLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const fetchUser = async () => {
+    // Prevent duplicate fetches
+    if (isFetching) return;
+    setIsFetching(true);
     try {
       const userData = await apiClient.getProfile();
       setUser(userData);
@@ -57,6 +65,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
+    }
+  };
+
+  // Try to claim any pending anonymous comment after auth
+  const claimPendingComment = async () => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem(CLAIM_TOKEN_KEY);
+    if (!token) return;
+
+    try {
+      await apiClient.claimPostComment(token);
+      localStorage.removeItem(CLAIM_TOKEN_KEY);
+      notifications.show({
+        title: 'Comment claimed!',
+        message: 'Your anonymous comment has been linked to your account.',
+        color: 'green',
+      });
+    } catch {
+      // Silently fail - token may have expired or been used
+      localStorage.removeItem(CLAIM_TOKEN_KEY);
     }
   };
 
@@ -67,6 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       apiClient.setRefreshToken(response.refresh_token);
     }
     await fetchUser();
+    // Try to claim any pending anonymous comment
+    await claimPendingComment();
   };
 
   const signup = async (email: string, password: string, passwordConfirmation: string) => {
@@ -80,6 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       apiClient.setRefreshToken(response.refresh_token);
     }
     await fetchUser();
+    // Try to claim any pending anonymous comment
+    await claimPendingComment();
   };
 
   const logout = () => {
