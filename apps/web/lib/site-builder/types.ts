@@ -109,6 +109,7 @@ export type AboutTitleAlign = 'left' | 'center' | 'right';
 export type AboutGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface AboutSettings {
+  show_social_links?: boolean;
   title_align?: AboutTitleAlign;
   gap?: AboutGap;
   background_color?: string;

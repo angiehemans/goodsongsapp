@@ -25,6 +25,9 @@ const UNIQUE_SECTIONS: SectionType[] = [
   'recommendations', 'mailing_list', 'merch',
 ];
 
+// Section types not yet available
+const COMING_SOON_SECTIONS: SectionType[] = ['mailing_list', 'merch'];
+
 export function EditorPanel() {
   const router = useRouter();
   const { getHiddenSections } = usePlanGating();
@@ -53,6 +56,9 @@ export function EditorPanel() {
   const availableSectionTypes = config?.section_types || ALL_SECTION_TYPES;
 
   const getAddSectionStatus = (type: SectionType) => {
+    if (COMING_SOON_SECTIONS.includes(type)) {
+      return { canAdd: false, reason: 'coming_soon' };
+    }
     if (!availableSectionTypes.includes(type)) {
       return { canAdd: false, reason: 'upgrade' };
     }
@@ -259,6 +265,9 @@ export function EditorPanel() {
                         )}
                         {status.reason === 'upgrade' && (
                           <Text size="xs" c="dimmed">Upgrade</Text>
+                        )}
+                        {status.reason === 'coming_soon' && (
+                          <Text size="xs" c="dimmed">Soon</Text>
                         )}
                       </Group>
                     </Menu.Item>

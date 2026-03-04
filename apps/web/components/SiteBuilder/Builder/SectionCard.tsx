@@ -10,7 +10,7 @@ import {
   IconChevronUp,
   IconTrash,
 } from '@tabler/icons-react';
-import { ActionIcon, Collapse, Text, Tooltip, Stack, Divider } from '@mantine/core';
+import { ActionIcon, Badge, Collapse, Text, Tooltip, Stack, Divider } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useBuilderStore } from '@/lib/site-builder/store';
 import { Section, SectionType } from '@/lib/site-builder/types';
@@ -28,6 +28,8 @@ import {
   AppearanceEditor,
 } from './SectionEditors';
 
+const COMING_SOON_SECTIONS: SectionType[] = ['mailing_list', 'merch'];
+
 interface SectionCardProps {
   id: string;
   section: Section;
@@ -42,6 +44,14 @@ function SectionEditor({ section, index }: { section: Section; index: number }) 
   const content = section.content || {};
   const settings = section.settings || {};
   const data = section.data || {};
+
+  if (COMING_SOON_SECTIONS.includes(section.type)) {
+    return (
+      <Text size="sm" c="dimmed" ta="center" py="md">
+        This section is coming soon.
+      </Text>
+    );
+  }
 
   switch (section.type) {
     case 'hero':
@@ -138,7 +148,12 @@ export function SectionCard({ id, section, index }: SectionCardProps) {
           <IconGripVertical size={18} />
         </div>
 
-        <span className="section-card__title">{label}</span>
+        <span className="section-card__title">
+          {label}
+          {COMING_SOON_SECTIONS.includes(section.type) && (
+            <Badge size="xs" variant="light" color="gray" ml={8}>Coming Soon</Badge>
+          )}
+        </span>
 
         <div className="section-card__actions">
           <Tooltip label={section.visible ? 'Hide section' : 'Show section'}>
