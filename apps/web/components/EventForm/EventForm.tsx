@@ -45,8 +45,8 @@ const AGE_RESTRICTION_OPTIONS = [
 ];
 
 interface EventFormProps {
-  /** Band slug for creating events */
-  bandSlug: string;
+  /** Band slug for creating band events (omit for standalone user events) */
+  bandSlug?: string;
   /** Event to edit (null for create mode) */
   event?: Event | null;
   /** Whether the modal is open */
@@ -292,14 +292,18 @@ export function EventForm({ bandSlug, event, opened, onClose, onSaved }: EventFo
 
         if (isEditing) {
           savedEvent = await apiClient.updateEvent(event!.id, formData);
-        } else {
+        } else if (bandSlug) {
           savedEvent = await apiClient.createEvent(bandSlug, formData);
+        } else {
+          savedEvent = await apiClient.createUserEvent(formData);
         }
       } else {
         if (isEditing) {
           savedEvent = await apiClient.updateEvent(event!.id, eventData);
-        } else {
+        } else if (bandSlug) {
           savedEvent = await apiClient.createEvent(bandSlug, eventData);
+        } else {
+          savedEvent = await apiClient.createUserEvent(eventData);
         }
       }
 

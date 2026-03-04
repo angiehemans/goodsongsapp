@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ColorInput, Select, Stack, Text } from '@mantine/core';
+import { ColorInput, NumberInput, Select, Stack, Text } from '@mantine/core';
 import { useBuilderStore } from '@/lib/site-builder/store';
 
 // Define font options directly - simple format
@@ -100,6 +100,17 @@ export function ThemeControls() {
           data={FONT_OPTIONS}
           value={theme.body_font ?? 'Inter'}
           onChange={(value) => value && setThemeField('body_font', value)}
+        />
+
+        <NumberInput
+          label="Content Max Width"
+          description="Maximum width for section content (except hero)"
+          value={theme.content_max_width ?? 1200}
+          onChange={(value) => setThemeField('content_max_width', value === '' ? 1200 : Number(value))}
+          min={600}
+          max={2000}
+          step={50}
+          suffix="px"
         />
       </Stack>
     </div>

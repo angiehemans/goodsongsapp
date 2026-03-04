@@ -219,14 +219,16 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
           });
         } else {
           const response = await apiClient.createPost(data);
+          // Handle both { post: { id } } and { id } response formats
+          const newPostId = response.post?.id ?? (response as any).id;
           notifications.show({
             title: 'Saved',
             message: 'Post created successfully.',
             color: 'green',
           });
           // If not publishing, stay in editor with the new post ID
-          if (targetStatus !== 'published') {
-            router.replace(`/user/blogger/posts/editor?id=${response.post.id}`);
+          if (targetStatus !== 'published' && newPostId) {
+            router.replace(`/user/blogger/posts/editor?id=${newPostId}`);
           }
         }
 

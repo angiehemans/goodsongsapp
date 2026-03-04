@@ -1,22 +1,31 @@
 import ReactMarkdown from 'react-markdown';
-import { AboutContent, AboutData, SectionProps } from '@/lib/site-builder/types';
+import { AboutContent, AboutData, AboutSettings, SectionProps } from '@/lib/site-builder/types';
 
-type AboutSectionProps = SectionProps<AboutContent, AboutData>;
+type AboutSectionProps = SectionProps<AboutContent, AboutData, AboutSettings>;
 
 // Allowed markdown elements for security
 const ALLOWED_ELEMENTS = ['p', 'strong', 'em', 'a', 'br', 'ul', 'ol', 'li'];
 
-export function AboutSection({ content, data, isPreview }: AboutSectionProps) {
+export function AboutSection({ content, data, settings, isPreview }: AboutSectionProps) {
   // Use content bio or fall back to profile about_me
   const body = content.bio || data?.about_me;
+  const heading = content.heading || 'About';
+  const titleAlign = settings?.title_align || 'left';
+  const gap = settings?.gap || 'md';
 
   if (!body && !isPreview) {
     return null;
   }
 
+  const sectionClasses = [
+    'about-section',
+    `about-section--title-${titleAlign}`,
+    `about-section--gap-${gap}`,
+  ].join(' ');
+
   return (
-    <div>
-      <h2 className="profile-section__heading">About</h2>
+    <div className={sectionClasses}>
+      <h2 className="profile-section__heading">{heading}</h2>
 
       {body ? (
         <div className="profile-markdown">

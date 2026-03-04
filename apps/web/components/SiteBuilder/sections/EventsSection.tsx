@@ -40,6 +40,11 @@ export function EventsSection({ content, data, settings, isPreview }: EventsSect
   const displayLimit = settings?.display_limit || 6;
   const showPastEvents = settings?.show_past_events ?? false;
 
+  // Layout settings
+  const layout = settings?.layout || 'grid';
+  const titleAlign = settings?.title_align || 'left';
+  const gap = settings?.gap || 'md';
+
   // Filter events based on settings
   const now = new Date();
   const filteredEvents = showPastEvents
@@ -52,12 +57,23 @@ export function EventsSection({ content, data, settings, isPreview }: EventsSect
     return null;
   }
 
+  const sectionClasses = [
+    'events-section',
+    `events-section--layout-${layout}`,
+    `events-section--title-${titleAlign}`,
+    `events-section--gap-${gap}`,
+  ].join(' ');
+
+  const gridClasses = layout === 'grid'
+    ? 'profile-grid profile-grid--3'
+    : 'profile-stack profile-stack--gap-md';
+
   return (
-    <div>
+    <div className={sectionClasses}>
       <h2 className="profile-section__heading">Events</h2>
 
       {displayedEvents.length > 0 ? (
-        <div className="profile-grid profile-grid--3">
+        <div className={gridClasses}>
           {displayedEvents.map((event) => {
             const isPast = new Date(event.event_date) < now;
             const cardClasses = `profile-card${isPast ? ' profile-card--faded' : ''}`;

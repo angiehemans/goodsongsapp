@@ -41,12 +41,13 @@ function SectionEditor({ section, index }: { section: Section; index: number }) 
   // Default to empty object if content/settings are undefined (API may return null/undefined)
   const content = section.content || {};
   const settings = section.settings || {};
+  const data = section.data || {};
 
   switch (section.type) {
     case 'hero':
       return <HeroEditor index={index} content={content as any} settings={settings as any} />;
     case 'music':
-      return <MusicEditor index={index} content={content as any} settings={settings as any} />;
+      return <MusicEditor index={index} content={content as any} settings={settings as any} data={data as any} />;
     case 'events':
       return <EventsEditor index={index} content={content as any} settings={settings as any} />;
     case 'posts':

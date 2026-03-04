@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   IconBell,
+  IconCalendarEvent,
   IconExternalLink,
   IconFileText,
   IconHome,
@@ -38,6 +39,7 @@ const getNavItems = (username?: string) => [
     icon: IconFileText,
     actionHref: '/user/blogger/posts/editor',
   },
+  { label: 'Events', href: '/user/blogger/events', icon: IconCalendarEvent },
   {
     label: 'View Site',
     href: username ? `/blog/${username}` : '#',

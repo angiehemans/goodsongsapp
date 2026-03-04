@@ -3,38 +3,86 @@ import { fixImageUrl } from '@/lib/utils';
 
 type RecommendationsSectionProps = SectionProps<RecommendationsContent, RecommendationsData, RecommendationsSettings>;
 
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export function RecommendationsSection({ content, data, settings, isPreview }: RecommendationsSectionProps) {
-  const recommendations = data?.recommendations || [];
+  // Support both 'recommendations' and 'reviews' keys (backend uses 'reviews')
+  const recommendations = data?.recommendations || data?.reviews || [];
   const displayLimit = settings?.display_limit || 6;
   const displayedRecs = recommendations.slice(0, displayLimit);
+
+  // Layout settings
+  const layout = settings?.layout || 'grid';
+  const titleAlign = settings?.title_align || 'left';
+  const gap = settings?.gap || 'md';
 
   if (displayedRecs.length === 0 && !isPreview) {
     return null;
   }
 
+  const sectionClasses = [
+    'recommendations-section',
+    `recommendations-section--layout-${layout}`,
+    `recommendations-section--title-${titleAlign}`,
+    `recommendations-section--gap-${gap}`,
+  ].join(' ');
+
+  const gridClasses = layout === 'grid'
+    ? 'profile-grid profile-grid--3'
+    : 'profile-stack profile-stack--gap-md';
+
   return (
-    <div>
+    <div className={sectionClasses}>
       <h2 className="profile-section__heading">Recommendations</h2>
 
       {displayedRecs.length > 0 ? (
-        <div className="profile-grid profile-grid--4">
-          {displayedRecs.map((rec) => (
-            <div key={rec.id} className="profile-card">
-              <div className="profile-card__image--square">
-                <img
-                  src={fixImageUrl(rec.artwork_url) || '/placeholder-album.png'}
-                  alt={rec.song_name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder-album.png';
-                  }}
-                />
+        <div className={gridClasses}>
+          {displayedRecs.map((rec) => {
+            const bandName = rec.band_name || rec.track?.artist;
+            const reviewText = rec.review_text || rec.body;
+
+            return (
+              <div key={rec.id} className="recommendation-card">
+                <div className="recommendation-card__header">
+                  <div className="recommendation-card__artwork">
+                    {rec.artwork_url ? (
+                      <img
+                        src={fixImageUrl(rec.artwork_url)}
+                        alt={rec.song_name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="recommendation-card__artwork-placeholder">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="recommendation-card__info">
+                    <h3 className="recommendation-card__song">{rec.song_name}</h3>
+                    {bandName && <p className="recommendation-card__artist">{bandName}</p>}
+                  </div>
+                </div>
+                {reviewText && (
+                  <p className="recommendation-card__review">{reviewText}</p>
+                )}
+                {rec.created_at && (
+                  <p className="recommendation-card__date">{formatDate(rec.created_at)}</p>
+                )}
               </div>
-              <div className="profile-card__body">
-                <h3 className="profile-card__title profile-text--clamp-1">{rec.song_name}</h3>
-                <p className="profile-card__subtitle">{rec.band_name}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="profile-section__empty">

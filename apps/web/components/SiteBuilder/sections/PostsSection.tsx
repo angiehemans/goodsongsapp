@@ -28,20 +28,37 @@ function CalendarIcon() {
 export function PostsSection({ content, data, settings, isPreview }: PostsSectionProps) {
   const posts = data?.posts || [];
   const displayLimit = settings?.display_limit || 6;
-  const displayedPosts = posts.slice(0, displayLimit);
+  const displayedPosts = posts.slice(0, Math.min(displayLimit, 9));
+
+  // Layout settings
+  const layout = settings?.layout || 'grid';
+  const titleAlign = settings?.title_align || 'left';
+  const gap = settings?.gap || 'md';
+  const heading = content.heading || 'Posts';
 
   if (displayedPosts.length === 0 && !isPreview) {
     return null;
   }
 
+  const sectionClasses = [
+    'posts-section',
+    `posts-section--layout-${layout}`,
+    `posts-section--title-${titleAlign}`,
+    `posts-section--gap-${gap}`,
+  ].join(' ');
+
+  const gridClasses = layout === 'grid'
+    ? 'profile-grid profile-grid--3'
+    : 'profile-stack profile-stack--gap-md';
+
   return (
-    <div>
-      <h2 className="profile-section__heading">Posts</h2>
+    <div className={sectionClasses}>
+      <h2 className="profile-section__heading">{heading}</h2>
 
       {displayedPosts.length > 0 ? (
-        <div className="profile-grid profile-grid--3">
+        <div className={gridClasses}>
           {displayedPosts.map((post) => {
-            const cardContent = (
+            const cardContent = layout === 'grid' ? (
               <>
                 {post.featured_image_url && (
                   <img
@@ -63,11 +80,34 @@ export function PostsSection({ content, data, settings, isPreview }: PostsSectio
                   </div>
                 </div>
               </>
+            ) : (
+              // Stack layout - horizontal card
+              <div className="posts-section__stack-item">
+                {post.featured_image_url && (
+                  <img
+                    src={fixImageUrl(post.featured_image_url)}
+                    alt={post.title}
+                    className="posts-section__stack-image"
+                  />
+                )}
+                <div className="posts-section__stack-content">
+                  <h3 className="profile-card__title">{post.title}</h3>
+                  {post.excerpt && (
+                    <p className="profile-card__subtitle profile-text--clamp-2">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  <div className="profile-card__meta">
+                    <CalendarIcon />
+                    <span>{formatDate(post.publish_date)}</span>
+                  </div>
+                </div>
+              </div>
             );
 
             if (isPreview) {
               return (
-                <div key={post.id} className="profile-card">
+                <div key={post.id} className={layout === 'grid' ? 'profile-card' : ''}>
                   {cardContent}
                 </div>
               );
@@ -77,7 +117,7 @@ export function PostsSection({ content, data, settings, isPreview }: PostsSectio
               <Link
                 key={post.id}
                 href={`/posts/${post.slug}`}
-                className="profile-card profile-card--link"
+                className={layout === 'grid' ? 'profile-card profile-card--link' : 'posts-section__stack-link'}
               >
                 {cardContent}
               </Link>

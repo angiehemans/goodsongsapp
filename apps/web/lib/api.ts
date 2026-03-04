@@ -2293,10 +2293,8 @@ class ApiClient {
 
   async updateEvent(eventId: number, data: EventData | FormData): Promise<Event> {
     if (data instanceof FormData) {
-      // For file uploads, use POST with _method override
-      data.append('_method', 'PATCH');
       const response = await fetch(`${this.getApiUrl()}/events/${eventId}`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           ...this.getAuthHeader(),
         },
@@ -2313,6 +2311,36 @@ class ApiClient {
 
     return this.makeRequest(`/events/${eventId}`, {
       method: 'PATCH',
+      body: JSON.stringify({ event: data }),
+    });
+  }
+
+  async getUserEvents(userId: number): Promise<Event[]> {
+    return this.makeRequest(`/users/${userId}/events`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  async createUserEvent(data: EventData | FormData): Promise<Event> {
+    if (data instanceof FormData) {
+      const response = await fetch(`${this.getApiUrl()}/events`, {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeader(),
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create event');
+      }
+
+      return response.json();
+    }
+
+    return this.makeRequest(`/events`, {
+      method: 'POST',
       body: JSON.stringify({ event: data }),
     });
   }

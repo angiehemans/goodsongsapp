@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, useEffect, useMemo } from 'react';
-import { ProfileTheme, Section, HeroData, AboutData, ProfileSourceData } from '@/lib/site-builder/types';
+import { ProfileTheme, Section, HeroData, AboutData, PostsData, RecommendationsData, EventsData, ProfileSourceData } from '@/lib/site-builder/types';
 import { getFontFamily, getGoogleFontsUrl } from '@/lib/site-builder/fonts';
 import { ProfileFooter } from './ProfileFooter';
 import { ProfileSections } from './SectionRenderer';
@@ -55,6 +55,7 @@ export function ProfilePage({
     '--gs-profile-font': theme.font_color,
     '--gs-profile-header-font': getFontFamily(theme.header_font),
     '--gs-profile-body-font': getFontFamily(theme.body_font),
+    '--gs-profile-content-max-width': `${theme.content_max_width || 1200}px`,
   };
 
   // Inject source data into sections for preview
@@ -82,6 +83,27 @@ export function ProfilePage({
             about_me: sourceData.about_text,
           };
           return { ...section, data: aboutData };
+        }
+        case 'posts': {
+          if (!sourceData.posts || sourceData.posts.length === 0) return section;
+          const postsData: PostsData = {
+            posts: sourceData.posts,
+          };
+          return { ...section, data: postsData };
+        }
+        case 'events': {
+          if (!sourceData.events || sourceData.events.length === 0) return section;
+          const eventsData: EventsData = {
+            events: sourceData.events,
+          };
+          return { ...section, data: eventsData };
+        }
+        case 'recommendations': {
+          if (!sourceData.recommendations || sourceData.recommendations.length === 0) return section;
+          const recommendationsData: RecommendationsData = {
+            recommendations: sourceData.recommendations,
+          };
+          return { ...section, data: recommendationsData };
         }
         default:
           return section;

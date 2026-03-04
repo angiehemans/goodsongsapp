@@ -21,6 +21,7 @@ export interface ProfileTheme {
   font_color: string;
   header_font: string;
   body_font: string;
+  content_max_width?: number; // Max width for section content in pixels, default 1200
 }
 
 // Layout alignment options for hero section
@@ -56,26 +57,80 @@ export interface HeroSettings {
   menu_background_color?: string;
 }
 
+export type MusicPlayerLayout = 'left' | 'center' | 'right';
+export type MusicTitleAlign = 'left' | 'center' | 'right';
+export type MusicGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
+
 export interface MusicSettings {
   display_limit?: number;
+  player_layout?: MusicPlayerLayout;
+  title_align?: MusicTitleAlign;
+  gap?: MusicGap;
+  // Appearance
+  background_color?: string;
+  background_image_url?: string;
+  background_overlay?: boolean;
+  background_overlay_opacity?: number;
 }
+
+export type EventsLayout = 'grid' | 'stack';
+export type EventsTitleAlign = 'left' | 'center' | 'right';
+export type EventsGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface EventsSettings {
   display_limit?: number;
   show_past_events?: boolean;
+  layout?: EventsLayout;
+  title_align?: EventsTitleAlign;
+  gap?: EventsGap;
+  background_color?: string;
+  background_image_url?: string;
+  background_overlay?: boolean;
+  background_overlay_opacity?: number;
 }
+
+export type PostsLayout = 'grid' | 'stack';
+export type PostsTitleAlign = 'left' | 'center' | 'right';
+export type PostsGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface PostsSettings {
   display_limit?: number;
+  layout?: PostsLayout;
+  title_align?: PostsTitleAlign;
+  gap?: PostsGap;
+  // Appearance
+  background_color?: string;
+  background_image_url?: string;
+  background_overlay?: boolean;
+  background_overlay_opacity?: number;
 }
 
+export type AboutTitleAlign = 'left' | 'center' | 'right';
+export type AboutGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
+
 export interface AboutSettings {
-  show_social_links?: boolean;
-  visible_social_links?: SocialLinkType[] | null;
+  title_align?: AboutTitleAlign;
+  gap?: AboutGap;
+  background_color?: string;
+  background_image_url?: string;
+  background_overlay?: boolean;
+  background_overlay_opacity?: number;
 }
+
+export type RecommendationsLayout = 'grid' | 'stack';
+export type RecommendationsTitleAlign = 'left' | 'center' | 'right';
+export type RecommendationsGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface RecommendationsSettings {
   display_limit?: number;
+  layout?: RecommendationsLayout;
+  title_align?: RecommendationsTitleAlign;
+  gap?: RecommendationsGap;
+  // Appearance
+  background_color?: string;
+  background_image_url?: string;
+  background_overlay?: boolean;
+  background_overlay_opacity?: number;
 }
 
 export interface CustomTextSettings {
@@ -111,16 +166,23 @@ export interface HeroContent {
 }
 
 // Music section content (data hydrated from band)
-export interface MusicContent {}
+export interface MusicContent {
+  heading?: string;
+  embed_code?: string; // Legacy single embed (for backwards compatibility)
+  embed_codes?: string[]; // Multiple embeds (up to 8)
+}
 
 // Events section content (data hydrated from band)
 export interface EventsContent {}
 
 // Posts section content (data hydrated from user)
-export interface PostsContent {}
+export interface PostsContent {
+  heading?: string;
+}
 
 // About section content
 export interface AboutContent {
+  heading?: string;
   bio?: string;
 }
 
@@ -222,14 +284,26 @@ export interface AboutData {
   about_me?: string;
 }
 
+// Recommendation/review item shape
+export interface RecommendationItem {
+  id: number;
+  song_name: string;
+  band_name?: string;
+  artwork_url?: string;
+  body?: string;
+  review_text?: string;
+  created_at?: string;
+  track?: {
+    id: string;
+    name: string;
+    artist?: string;
+  };
+}
+
 export interface RecommendationsData {
-  recommendations: Array<{
-    id: number;
-    song_name: string;
-    band_name: string;
-    artwork_url?: string;
-    body?: string;
-  }>;
+  // Frontend uses 'recommendations', backend may return 'reviews'
+  recommendations?: RecommendationItem[];
+  reviews?: RecommendationItem[];
 }
 
 export interface MailingListData {}
@@ -283,6 +357,35 @@ export interface ProfileSourceData {
     username: string;
     role: string;
   };
+  posts?: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    excerpt?: string;
+    featured_image_url?: string;
+    publish_date: string;
+  }>;
+  events?: Array<{
+    id: number;
+    name: string;
+    event_date: string;
+    venue?: { name: string; city?: string };
+    image_url?: string;
+  }>;
+  recommendations?: Array<{
+    id: number;
+    song_name: string;
+    band_name?: string;
+    artwork_url?: string;
+    body?: string;
+    review_text?: string;
+    created_at?: string;
+    track?: {
+      id: string;
+      name: string;
+      artist?: string;
+    };
+  }>;
 }
 
 // Full profile theme response from GET /api/v1/profile_theme

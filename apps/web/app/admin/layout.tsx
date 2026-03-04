@@ -92,7 +92,7 @@ export default function AdminLayout({
       padding="md"
       styles={{
         main: {
-          backgroundColor: 'var(--mantine-color-gray-0)',
+          backgroundColor: 'var(--gs-bg-app)',
           minHeight: '100vh',
         },
       }}
