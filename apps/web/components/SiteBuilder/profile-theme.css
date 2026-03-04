@@ -1,0 +1,754 @@
+/* Profile page theme using CSS custom properties */
+/* Container queries for responsive preview support */
+
+.profile-page {
+  /* Global theme variables - set dynamically via inline styles */
+  --gs-profile-bg: #121212;
+  --gs-profile-brand: #6366f1;
+  --gs-profile-font: #f5f5f5;
+  --gs-profile-header-font: 'Inter', sans-serif;
+  --gs-profile-body-font: 'Inter', sans-serif;
+
+  /* Derived colors */
+  --gs-text-primary: var(--gs-profile-font);
+  --gs-text-muted: color-mix(in srgb, var(--gs-profile-font) 60%, transparent);
+  --gs-card-bg: rgba(255, 255, 255, 0.05);
+  --gs-border-color: rgba(255, 255, 255, 0.1);
+
+  min-height: 100vh;
+  background-color: var(--gs-profile-bg);
+  color: var(--gs-profile-font);
+  font-family: var(--gs-profile-body-font);
+  line-height: 1.5;
+  container-type: inline-size;
+  container-name: profile;
+}
+
+.profile-page h1,
+.profile-page h2,
+.profile-page h3,
+.profile-page h4 {
+  font-family: var(--gs-profile-header-font);
+  color: var(--gs-profile-font);
+  margin: 0;
+}
+
+/* Section wrapper */
+.profile-section {
+  /* Section-level overrides - inherit from global by default */
+  --gs-section-bg: var(--gs-profile-bg);
+  --gs-section-font: var(--gs-profile-font);
+
+  position: relative;
+  background-color: var(--gs-section-bg);
+  color: var(--gs-section-font);
+  container-type: inline-size;
+  container-name: section;
+}
+
+/* Background image overlay for readability */
+.profile-section--has-bg-image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.profile-section--has-bg-image > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional overlay - only applied when has-overlay class is present */
+.profile-section--has-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--gs-section-bg);
+  opacity: var(--gs-overlay-opacity, 0.85);
+  z-index: 0;
+}
+
+/* Section content container */
+.profile-section__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+@container section (max-width: 768px) {
+  .profile-section__content {
+    padding: 2rem 1rem;
+  }
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+/* Hero Menu */
+.hero-menu {
+  position: relative;
+  z-index: 10;
+  padding: 1rem 1.5rem;
+  background-color: transparent;
+}
+
+.hero-menu__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.hero-menu__title {
+  font-family: var(--gs-profile-header-font);
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--gs-text-primary);
+  white-space: nowrap;
+}
+
+.hero-menu__links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.hero-menu__link {
+  font-size: 0.875rem;
+  color: var(--gs-text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.hero-menu__link:hover {
+  color: var(--gs-text-primary);
+}
+
+@container section (max-width: 600px) {
+  .hero-menu__content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .hero-menu__links {
+    justify-content: center;
+    gap: 1rem;
+  }
+}
+
+.profile-section--hero {
+  min-height: 400px;
+  display: flex;
+  align-items: stretch;
+}
+
+.profile-section--fullscreen {
+  min-height: 100vh;
+}
+
+.profile-section--hero .profile-section__content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  text-align: center;
+  padding: 2rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.hero__avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gs-card-bg);
+}
+
+
+.hero__headline {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.hero__logo {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Container query responsive headline */
+@container section (max-width: 768px) {
+  .hero__headline {
+    font-size: 2.5rem;
+  }
+}
+
+@container section (max-width: 480px) {
+  .hero__headline {
+    font-size: 2rem;
+  }
+}
+
+/* Custom headline size via CSS variable */
+.hero__headline[style*="--headline-size"] {
+  font-size: var(--headline-size);
+}
+
+@container section (max-width: 768px) {
+  .hero__headline[style*="--headline-size"] {
+    font-size: calc(var(--headline-size) * 0.75);
+  }
+}
+
+@container section (max-width: 480px) {
+  .hero__headline[style*="--headline-size"] {
+    font-size: calc(var(--headline-size) * 0.5);
+  }
+}
+
+.hero__subtitle {
+  font-size: 1.25rem;
+  color: var(--gs-text-muted);
+  margin: 0;
+}
+
+.hero__description {
+  font-size: 1rem;
+  color: var(--gs-text-muted);
+  max-width: 600px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Hero horizontal alignment */
+.hero--align-center {
+  align-items: center;
+  text-align: center;
+}
+
+.hero--align-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.hero--align-right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Hero vertical alignment (justify) */
+.hero--justify-top {
+  justify-content: flex-start;
+}
+
+.hero--justify-center {
+  justify-content: center;
+}
+
+.hero--justify-bottom {
+  justify-content: flex-end;
+}
+
+.hero--justify-space-between {
+  justify-content: space-between;
+}
+
+.hero--justify-space-around {
+  justify-content: space-around;
+}
+
+/* Hero gap sizes */
+.hero--gap-none {
+  gap: 0;
+}
+
+.hero--gap-sm {
+  gap: 0.5rem;
+}
+
+.hero--gap-md {
+  gap: 1rem;
+}
+
+.hero--gap-lg {
+  gap: 1.5rem;
+}
+
+.hero--gap-xl {
+  gap: 2.5rem;
+}
+
+/* Hero social links */
+.hero__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: inherit;
+}
+
+.hero__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--gs-card-bg);
+  color: var(--gs-text-primary);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.hero__social-link:hover {
+  background-color: var(--gs-profile-brand);
+  color: white;
+  transform: scale(1.1);
+}
+
+.hero__social-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   SECTION HEADINGS
+   ============================================ */
+.profile-section__heading {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   GRID LAYOUTS
+   ============================================ */
+.profile-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.profile-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.profile-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.profile-grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@container section (max-width: 1024px) {
+  .profile-grid--4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@container section (max-width: 768px) {
+  .profile-grid--3,
+  .profile-grid--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@container section (max-width: 480px) {
+  .profile-grid--2,
+  .profile-grid--3,
+  .profile-grid--4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.profile-card {
+  background-color: var(--gs-card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.profile-card--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.profile-card__image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.profile-card__image--square {
+  height: 0;
+  padding-bottom: 100%;
+  position: relative;
+}
+
+.profile-card__image--square img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-card__body {
+  padding: 1rem;
+}
+
+.profile-card__title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0 0 0.25rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.profile-card__subtitle {
+  font-size: 0.875rem;
+  color: var(--gs-text-muted);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.profile-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gs-text-muted);
+  margin-top: 0.5rem;
+}
+
+.profile-card__meta svg {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.profile-card--faded {
+  opacity: 0.6;
+}
+
+/* ============================================
+   STACK & FLEX UTILITIES
+   ============================================ */
+.profile-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-stack--gap-xs { gap: 0.25rem; }
+.profile-stack--gap-sm { gap: 0.5rem; }
+.profile-stack--gap-md { gap: 1rem; }
+.profile-stack--gap-lg { gap: 1.5rem; }
+.profile-stack--gap-xl { gap: 2rem; }
+
+.profile-stack--center {
+  align-items: center;
+  text-align: center;
+}
+
+.profile-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.profile-row--gap-xs { gap: 0.25rem; }
+.profile-row--gap-sm { gap: 0.5rem; }
+.profile-row--gap-md { gap: 1rem; }
+
+.profile-row--nowrap {
+  flex-wrap: nowrap;
+}
+
+/* ============================================
+   TEXT UTILITIES
+   ============================================ */
+.profile-text--muted {
+  color: var(--gs-text-muted);
+}
+
+.profile-text--sm {
+  font-size: 0.875rem;
+}
+
+.profile-text--xs {
+  font-size: 0.75rem;
+}
+
+.profile-text--lg {
+  font-size: 1.125rem;
+}
+
+.profile-text--xl {
+  font-size: 1.25rem;
+}
+
+.profile-text--bold {
+  font-weight: 600;
+}
+
+.profile-text--clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.profile-text--clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--gs-profile-body-font);
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.profile-btn:hover {
+  opacity: 0.9;
+}
+
+.profile-btn--primary {
+  background-color: var(--gs-profile-brand);
+  color: white;
+}
+
+.profile-btn--lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+.profile-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: var(--gs-profile-body-font);
+  font-size: 1rem;
+  background-color: var(--gs-card-bg);
+  border: 1px solid var(--gs-border-color);
+  border-radius: 8px;
+  color: var(--gs-text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.profile-input:focus {
+  border-color: var(--gs-profile-brand);
+}
+
+.profile-input::placeholder {
+  color: var(--gs-text-muted);
+}
+
+.profile-form-row {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.profile-form-row .profile-input {
+  flex: 1;
+}
+
+/* ============================================
+   MARKDOWN CONTENT
+   ============================================ */
+.profile-markdown {
+  line-height: 1.7;
+  font-size: 1.125rem;
+}
+
+.profile-markdown p {
+  margin: 0 0 1rem 0;
+}
+
+.profile-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.profile-markdown a {
+  color: var(--gs-profile-brand);
+  text-decoration: none;
+}
+
+.profile-markdown a:hover {
+  text-decoration: underline;
+}
+
+.profile-markdown ul,
+.profile-markdown ol {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.profile-markdown li {
+  margin-bottom: 0.25rem;
+}
+
+.profile-markdown h3 {
+  margin: 1.5rem 0 0.75rem 0;
+  font-size: 1.25rem;
+}
+
+.profile-markdown h4 {
+  margin: 1.25rem 0 0.5rem 0;
+  font-size: 1.125rem;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.profile-section__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--gs-text-muted);
+}
+
+/* ============================================
+   TRACK LIST (MUSIC)
+   ============================================ */
+.profile-track {
+  padding: 1rem;
+  background-color: var(--gs-card-bg);
+  border-radius: 8px;
+}
+
+.profile-track__name {
+  font-weight: 500;
+}
+
+/* ============================================
+   CENTERED CONTENT (MAILING LIST, MERCH)
+   ============================================ */
+.profile-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+.profile-centered__icon {
+  opacity: 0.8;
+}
+
+.profile-centered__description {
+  color: var(--gs-text-muted);
+  font-size: 1.125rem;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.profile-footer {
+  padding: 2rem 1rem;
+  text-align: center;
+  border-top: 1px solid var(--gs-border-color);
+}
+
+.profile-footer__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--gs-text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.profile-footer__content:hover {
+  color: var(--gs-text-primary);
+}
+
+.profile-footer__text {
+  opacity: 0.6;
+}
+
+.profile-footer__brand {
+  font-weight: 500;
+}
+
+/* ============================================
+   LIST LAYOUT (RECOMMENDATIONS)
+   ============================================ */
+.profile-list-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--gs-card-bg);
+  border-radius: 12px;
+}
+
+.profile-list-item__image {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-list-item__content {
+  flex: 1;
+  min-width: 0;
+}

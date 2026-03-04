@@ -6,6 +6,7 @@ import {
   IconCamera,
   IconCheck,
   IconCrown,
+  IconLink,
   IconLogout,
   IconMail,
   IconMessage,
@@ -30,8 +31,10 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { SocialLinksEditor } from '@/components/SocialLinksEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
+import { SOCIAL_PLATFORMS, SOCIAL_LINK_ORDER } from '@/lib/social-links';
 import { StreamingPlatform, STREAMING_PLATFORMS } from '@/lib/streaming';
 import { fixImageUrl } from '@/lib/utils';
 
@@ -65,6 +68,9 @@ export default function BloggerSettingsPage() {
 
   // Anonymous comments state
   const [anonymousCommentsLoading, setAnonymousCommentsLoading] = useState(false);
+
+  // Social links state
+  const [socialLinksLoading, setSocialLinksLoading] = useState(false);
 
   // Initialize form with user data
   useEffect(() => {
@@ -249,6 +255,38 @@ export default function BloggerSettingsPage() {
     }
   };
 
+  const handleSaveSocialLinks = async (links: Record<string, string>) => {
+    setSocialLinksLoading(true);
+    try {
+      const formData = new FormData();
+
+      // Set each social link field
+      SOCIAL_LINK_ORDER.forEach((key) => {
+        const fieldName = SOCIAL_PLATFORMS[key].fieldName;
+        const value = links[key] || '';
+        formData.append(fieldName, value);
+      });
+
+      await apiClient.updateProfile(formData);
+      await refreshUser();
+
+      notifications.show({
+        title: 'Social links updated',
+        message: 'Your social links have been saved successfully.',
+        color: 'green',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update social links';
+      notifications.show({
+        title: 'Error',
+        message,
+        color: 'red',
+      });
+    } finally {
+      setSocialLinksLoading(false);
+    }
+  };
+
   const canResend = user?.can_resend_confirmation && retryAfter === 0;
 
   const streamingPlatformOptions = [
@@ -353,6 +391,24 @@ export default function BloggerSettingsPage() {
             Save Changes
           </Button>
         </Stack>
+      </Paper>
+
+      {/* Social Links Section */}
+      <Paper p="lg" radius="md" withBorder>
+        <Title order={4} mb="md">
+          <Group gap="xs">
+            <IconLink size={20} />
+            Social Links
+          </Group>
+        </Title>
+        <Text size="sm" c="dimmed" mb="md">
+          Add your social media links to display on your profile and blog.
+        </Text>
+        <SocialLinksEditor
+          initialValues={user.social_links || {}}
+          onSave={handleSaveSocialLinks}
+          isSaving={socialLinksLoading}
+        />
       </Paper>
 
       {/* Last.fm Connection */}

@@ -1,0 +1,9 @@
+export { HeroSection } from './HeroSection';
+export { MusicSection } from './MusicSection';
+export { EventsSection } from './EventsSection';
+export { PostsSection } from './PostsSection';
+export { AboutSection } from './AboutSection';
+export { RecommendationsSection } from './RecommendationsSection';
+export { MailingListSection } from './MailingListSection';
+export { MerchSection } from './MerchSection';
+export { CustomTextSection } from './CustomTextSection';

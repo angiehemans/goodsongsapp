@@ -14,6 +14,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { PageViewTracker } from '@/components/Analytics';
 import { EventCard } from '@/components/EventCard/EventCard';
 import { Header } from '@/components/Header/Header';
 import { MusicPlayer } from '@/components/MusicPlayer/MusicPlayer';
@@ -120,6 +121,7 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
 
   return (
     <Container p={0} fluid className={styles.container}>
+      <PageViewTracker type="band" id={band.id} />
       <Header showBackButton />
       <Flex className={styles.content}>
         {/* Band Sidebar */}

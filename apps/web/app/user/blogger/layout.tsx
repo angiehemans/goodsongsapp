@@ -44,7 +44,7 @@ const getNavItems = (username?: string) => [
     icon: IconExternalLink,
     external: true,
   },
-  { label: 'Site Builder', href: '/user/blogger/site-builder', icon: IconLayout },
+  { label: 'Site Builder', href: '/site-builder', icon: IconLayout },
   { label: 'Settings', href: '/user/blogger/settings', icon: IconSettings },
 ];
 

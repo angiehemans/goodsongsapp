@@ -1,9 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  IconArrowDownRight,
-  IconArrowUpRight,
   IconEdit,
   IconEye,
   IconFileText,
@@ -20,12 +19,15 @@ import {
   Box,
   Button,
   Card,
+  Center,
   Grid,
   Group,
+  Loader,
   Paper,
   Progress,
   ScrollArea,
   SimpleGrid,
+  Skeleton,
   Stack,
   Table,
   Text,
@@ -34,159 +36,42 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  apiClient,
+  BlogDashboardResponse,
+  BlogDashboardTopPost,
+} from '@/lib/api';
+import { fixImageUrl } from '@/lib/utils';
 
-// Sample data - would come from API in production
-const SAMPLE_STATS = {
-  totalViews: 24892,
-  viewsChange: 12.5,
-  totalPosts: 47,
-  postsChange: 3,
-  subscribers: 1284,
-  subscribersChange: 8.2,
-  comments: 342,
-  commentsChange: -2.4,
+// Color mapping for traffic sources
+const SOURCE_COLORS: Record<string, string> = {
+  google: 'blue.6',
+  direct: 'grape.6',
+  goodsongs: 'teal.6',
+  twitter: 'cyan.6',
+  facebook: 'indigo.6',
+  instagram: 'pink.6',
+  reddit: 'orange.6',
+  other: 'gray.6',
 };
 
-const SAMPLE_VIEWS_DATA = [
-  { date: 'Jan 1', views: 1200 },
-  { date: 'Jan 8', views: 1450 },
-  { date: 'Jan 15', views: 1380 },
-  { date: 'Jan 22', views: 1890 },
-  { date: 'Jan 29', views: 2100 },
-  { date: 'Feb 5', views: 1950 },
-  { date: 'Feb 12', views: 2400 },
-  { date: 'Feb 19', views: 2780 },
-  { date: 'Feb 26', views: 3100 },
-];
-
-const SAMPLE_AUDIENCE_DATA = [
-  { month: 'Oct', subscribers: 890 },
-  { month: 'Nov', subscribers: 1020 },
-  { month: 'Dec', subscribers: 1150 },
-  { month: 'Jan', subscribers: 1284 },
-];
-
-const SAMPLE_TRAFFIC_SOURCES = [
-  { name: 'Direct', value: 42, color: 'grape.6' },
-  { name: 'Social', value: 28, color: 'blue.6' },
-  { name: 'Search', value: 18, color: 'teal.6' },
-  { name: 'Referral', value: 12, color: 'orange.6' },
-];
-
-const SAMPLE_RECENT_POSTS = [
-  {
-    id: '1',
-    title: 'The Evolution of Indie Rock in 2024',
-    status: 'published',
-    views: 2341,
-    comments: 23,
-    publishDate: '2024-02-15',
-  },
-  {
-    id: '2',
-    title: 'Album Review: New Horizons by The Wanderers',
-    status: 'published',
-    views: 1876,
-    comments: 15,
-    publishDate: '2024-02-10',
-  },
-  {
-    id: '3',
-    title: 'Top 10 Underground Artists to Watch',
-    status: 'draft',
-    views: 0,
-    comments: 0,
-    publishDate: null,
-  },
-  {
-    id: '4',
-    title: 'Concert Review: Live at the Fillmore',
-    status: 'published',
-    views: 1234,
-    comments: 8,
-    publishDate: '2024-02-05',
-  },
-  {
-    id: '5',
-    title: 'The Return of Vinyl: Why Records Matter',
-    status: 'scheduled',
-    views: 0,
-    comments: 0,
-    publishDate: '2024-03-01',
-  },
-];
-
-const SAMPLE_ACTIVITY = [
-  {
-    id: '1',
-    type: 'comment',
-    user: 'Sarah M.',
-    avatar: null,
-    action: 'commented on',
-    target: 'The Evolution of Indie Rock',
-    time: '2 hours ago',
-  },
-  {
-    id: '2',
-    type: 'subscriber',
-    user: 'Alex K.',
-    avatar: null,
-    action: 'subscribed to your blog',
-    target: null,
-    time: '4 hours ago',
-  },
-  {
-    id: '3',
-    type: 'comment',
-    user: 'Mike R.',
-    avatar: null,
-    action: 'replied to your comment on',
-    target: 'Album Review: New Horizons',
-    time: '6 hours ago',
-  },
-  {
-    id: '4',
-    type: 'subscriber',
-    user: 'Emma L.',
-    avatar: null,
-    action: 'subscribed to your blog',
-    target: null,
-    time: '1 day ago',
-  },
-  {
-    id: '5',
-    type: 'comment',
-    user: 'Jordan T.',
-    avatar: null,
-    action: 'commented on',
-    target: 'Concert Review: Live at the Fillmore',
-    time: '1 day ago',
-  },
-];
-
-const SAMPLE_TOP_POSTS = [
-  { title: 'Best Albums of 2023: A Retrospective', views: 8420, percentage: 100 },
-  { title: 'The Evolution of Indie Rock in 2024', views: 6234, percentage: 74 },
-  { title: 'Interview: Rising Star Maya Chen', views: 4521, percentage: 54 },
-  { title: 'Festival Season Guide 2024', views: 3890, percentage: 46 },
-  { title: 'Album Review: New Horizons', views: 2876, percentage: 34 },
-];
+function getSourceColor(source: string): string {
+  return SOURCE_COLORS[source.toLowerCase()] || SOURCE_COLORS.other;
+}
 
 function StatCard({
   title,
   value,
-  change,
   icon: Icon,
   color,
+  loading,
 }: {
   title: string;
   value: string | number;
-  change: number;
   icon: typeof IconEye;
   color: string;
+  loading?: boolean;
 }) {
-  const isPositive = change >= 0;
-
   return (
     <Paper p="md" radius="md" withBorder>
       <Group justify="space-between" align="flex-start">
@@ -194,23 +79,13 @@ function StatCard({
           <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
             {title}
           </Text>
-          <Text size="xl" fw={700} mt={4}>
-            {typeof value === 'number' ? value.toLocaleString() : value}
-          </Text>
-          <Group gap={4} mt={4}>
-            {isPositive ? (
-              <IconArrowUpRight size={16} color="var(--mantine-color-teal-6)" />
-            ) : (
-              <IconArrowDownRight size={16} color="var(--mantine-color-red-6)" />
-            )}
-            <Text size="xs" c={isPositive ? 'teal' : 'red'} fw={500}>
-              {isPositive ? '+' : ''}
-              {change}%
+          {loading ? (
+            <Skeleton height={28} width={80} mt={4} />
+          ) : (
+            <Text size="xl" fw={700} mt={4}>
+              {typeof value === 'number' ? value.toLocaleString() : value}
             </Text>
-            <Text size="xs" c="dimmed">
-              vs last month
-            </Text>
-          </Group>
+          )}
         </div>
         <ThemeIcon size="lg" radius="md" variant="light" color={color}>
           <Icon size={20} />
@@ -233,8 +108,101 @@ function getStatusColor(status: string) {
   }
 }
 
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function getNotificationText(type: string, actorName: string): { action: string; target: string | null } {
+  switch (type) {
+    case 'post_like':
+      return { action: 'liked your post', target: null };
+    case 'post_comment':
+      return { action: 'commented on your post', target: null };
+    case 'follow':
+      return { action: 'started following you', target: null };
+    case 'mention':
+      return { action: 'mentioned you', target: null };
+    default:
+      return { action: 'interacted with your content', target: null };
+  }
+}
+
+function timeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+  const weeks = Math.floor(days / 7);
+  return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+}
+
 export default function BloggerDashboardPage() {
   const { user } = useAuth();
+  const [dashboardData, setDashboardData] = useState<BlogDashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchDashboard() {
+      try {
+        setLoading(true);
+        const data = await apiClient.getBlogDashboard();
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Failed to fetch dashboard:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboard();
+  }, []);
+
+  // Transform page views data for chart
+  const viewsChartData = dashboardData?.page_views_over_time.map((item) => ({
+    date: formatDate(item.date),
+    views: item.views,
+  })) || [];
+
+  // Transform traffic sources for donut chart
+  const trafficSourcesData = dashboardData?.traffic_sources.map((source) => ({
+    name: source.source.charAt(0).toUpperCase() + source.source.slice(1),
+    value: source.percentage,
+    color: getSourceColor(source.source),
+  })) || [];
+
+  // Transform follower growth for bar chart
+  const followerGrowthData = dashboardData?.follower_growth.map((item) => ({
+    week: formatDate(item.week),
+    followers: item.new_followers,
+  })) || [];
+
+  // Calculate max views for top posts progress bars
+  const maxEngagement = dashboardData?.top_performing_posts[0]?.engagement_score || 1;
+
+  if (error) {
+    return (
+      <ScrollArea h="calc(100vh - 60px)" p="md">
+        <Center py="xl">
+          <Stack align="center" gap="md">
+            <Text c="red">{error}</Text>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </Stack>
+        </Center>
+      </ScrollArea>
+    );
+  }
 
   return (
     <ScrollArea h="calc(100vh - 60px)" p="md">
@@ -263,31 +231,31 @@ export default function BloggerDashboardPage() {
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
           <StatCard
             title="Page Views"
-            value={SAMPLE_STATS.totalViews}
-            change={SAMPLE_STATS.viewsChange}
+            value={dashboardData?.totals.page_views || 0}
             icon={IconEye}
             color="grape"
+            loading={loading}
           />
           <StatCard
             title="Total Posts"
-            value={SAMPLE_STATS.totalPosts}
-            change={SAMPLE_STATS.postsChange}
+            value={dashboardData?.totals.posts || 0}
             icon={IconFileText}
             color="blue"
+            loading={loading}
           />
           <StatCard
-            title="Subscribers"
-            value={SAMPLE_STATS.subscribers}
-            change={SAMPLE_STATS.subscribersChange}
+            title="Followers"
+            value={dashboardData?.totals.followers || 0}
             icon={IconUsers}
             color="teal"
+            loading={loading}
           />
           <StatCard
             title="Comments"
-            value={SAMPLE_STATS.comments}
-            change={SAMPLE_STATS.commentsChange}
+            value={dashboardData?.totals.comments || 0}
             icon={IconMessageCircle}
             color="orange"
+            loading={loading}
           />
         </SimpleGrid>
 
@@ -303,19 +271,29 @@ export default function BloggerDashboardPage() {
                     Last 60 days
                   </Text>
                 </div>
-                <Badge variant="light" color="grape" leftSection={<IconTrendingUp size={12} />}>
-                  +23% this month
-                </Badge>
+                {dashboardData && viewsChartData.length > 1 && (
+                  <Badge variant="light" color="grape" leftSection={<IconTrendingUp size={12} />}>
+                    {dashboardData.totals.page_views.toLocaleString()} total
+                  </Badge>
+                )}
               </Group>
-              <AreaChart
-                h={250}
-                data={SAMPLE_VIEWS_DATA}
-                dataKey="date"
-                series={[{ name: 'views', color: 'grape.6' }]}
-                curveType="natural"
-                gridAxis="x"
-                withDots={false}
-              />
+              {loading ? (
+                <Skeleton height={250} />
+              ) : viewsChartData.length > 0 ? (
+                <AreaChart
+                  h={250}
+                  data={viewsChartData}
+                  dataKey="date"
+                  series={[{ name: 'views', color: 'grape.6' }]}
+                  curveType="natural"
+                  gridAxis="x"
+                  withDots={false}
+                />
+              ) : (
+                <Center h={250}>
+                  <Text c="dimmed">No page view data yet</Text>
+                </Center>
+              )}
             </Paper>
           </Grid.Col>
 
@@ -325,34 +303,46 @@ export default function BloggerDashboardPage() {
               <Text fw={600} mb="md">
                 Traffic Sources
               </Text>
-              <DonutChart
-                data={SAMPLE_TRAFFIC_SOURCES}
-                size={160}
-                thickness={24}
-                mx="auto"
-                tooltipDataSource="segment"
-                chartLabel="Sources"
-              />
-              <Stack gap="xs" mt="md">
-                {SAMPLE_TRAFFIC_SOURCES.map((source) => (
-                  <Group key={source.name} justify="space-between">
-                    <Group gap="xs">
-                      <Box
-                        w={10}
-                        h={10}
-                        style={{
-                          borderRadius: '50%',
-                          backgroundColor: `var(--mantine-color-${source.color})`,
-                        }}
-                      />
-                      <Text size="sm">{source.name}</Text>
-                    </Group>
-                    <Text size="sm" fw={500}>
-                      {source.value}%
-                    </Text>
-                  </Group>
-                ))}
-              </Stack>
+              {loading ? (
+                <Center h={200}>
+                  <Loader size="sm" />
+                </Center>
+              ) : trafficSourcesData.length > 0 ? (
+                <>
+                  <DonutChart
+                    data={trafficSourcesData}
+                    size={160}
+                    thickness={24}
+                    mx="auto"
+                    tooltipDataSource="segment"
+                    chartLabel="Sources"
+                  />
+                  <Stack gap="xs" mt="md">
+                    {trafficSourcesData.map((source) => (
+                      <Group key={source.name} justify="space-between">
+                        <Group gap="xs">
+                          <Box
+                            w={10}
+                            h={10}
+                            style={{
+                              borderRadius: '50%',
+                              backgroundColor: `var(--mantine-color-${source.color})`,
+                            }}
+                          />
+                          <Text size="sm">{source.name}</Text>
+                        </Group>
+                        <Text size="sm" fw={500}>
+                          {source.value.toFixed(1)}%
+                        </Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </>
+              ) : (
+                <Center h={200}>
+                  <Text c="dimmed" size="sm">No traffic data yet</Text>
+                </Center>
+              )}
             </Paper>
           </Grid.Col>
         </Grid>
@@ -361,7 +351,7 @@ export default function BloggerDashboardPage() {
         <Grid>
           {/* Recent Posts */}
           <Grid.Col span={{ base: 12, lg: 7 }}>
-            <Paper p="md" radius="md" withBorder>
+            <Paper p="md" radius="md" withBorder style={{ height: '-webkit-fill-available' }}>
               <Group justify="space-between" mb="md">
                 <Text fw={600}>Recent Posts</Text>
                 <Button
@@ -374,65 +364,88 @@ export default function BloggerDashboardPage() {
                   View all
                 </Button>
               </Group>
-              <Table.ScrollContainer minWidth={500}>
-                <Table verticalSpacing="sm">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Title</Table.Th>
-                      <Table.Th>Status</Table.Th>
-                      <Table.Th ta="right">Views</Table.Th>
-                      <Table.Th ta="right">Comments</Table.Th>
-                      <Table.Th />
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {SAMPLE_RECENT_POSTS.map((post) => (
-                      <Table.Tr key={post.id}>
-                        <Table.Td>
-                          <Text size="sm" lineClamp={1} maw={250}>
-                            {post.title}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Badge
-                            variant="light"
-                            color={getStatusColor(post.status)}
-                            size="sm"
-                            tt="capitalize"
-                          >
-                            {post.status}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td ta="right">
-                          <Text size="sm">{post.views.toLocaleString()}</Text>
-                        </Table.Td>
-                        <Table.Td ta="right">
-                          <Text size="sm">{post.comments}</Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Tooltip label="Edit post">
-                            <ActionIcon
-                              component={Link}
-                              href={`/user/blogger/posts/editor?id=${post.id}`}
-                              variant="subtle"
-                              color="gray"
-                              size="sm"
-                            >
-                              <IconEdit size={16} />
-                            </ActionIcon>
-                          </Tooltip>
-                        </Table.Td>
+              {loading ? (
+                <Stack gap="sm">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} height={40} />
+                  ))}
+                </Stack>
+              ) : dashboardData?.recent_posts && dashboardData.recent_posts.length > 0 ? (
+                <Table.ScrollContainer minWidth={500}>
+                  <Table verticalSpacing="sm">
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Title</Table.Th>
+                        <Table.Th>Status</Table.Th>
+                        <Table.Th ta="right">Likes</Table.Th>
+                        <Table.Th ta="right">Comments</Table.Th>
+                        <Table.Th />
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {dashboardData.recent_posts.map((post) => (
+                        <Table.Tr key={post.id}>
+                          <Table.Td>
+                            <Text size="sm" lineClamp={1} maw={250}>
+                              {post.title}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Badge
+                              variant="light"
+                              color={getStatusColor(post.status)}
+                              size="sm"
+                              tt="capitalize"
+                            >
+                              {post.status}
+                            </Badge>
+                          </Table.Td>
+                          <Table.Td ta="right">
+                            <Text size="sm">{post.likes_count.toLocaleString()}</Text>
+                          </Table.Td>
+                          <Table.Td ta="right">
+                            <Text size="sm">{post.comments_count}</Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Tooltip label="Edit post">
+                              <ActionIcon
+                                component={Link}
+                                href={`/user/blogger/posts/editor?id=${post.id}`}
+                                variant="subtle"
+                                color="gray"
+                                size="sm"
+                              >
+                                <IconEdit size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
+              ) : (
+                <Center py="xl">
+                  <Stack align="center" gap="xs">
+                    <Text c="dimmed">No posts yet</Text>
+                    <Button
+                      component={Link}
+                      href="/user/blogger/posts/editor"
+                      variant="light"
+                      color="grape"
+                      size="xs"
+                    >
+                      Create your first post
+                    </Button>
+                  </Stack>
+                </Center>
+              )}
             </Paper>
           </Grid.Col>
 
           {/* Recent Activity */}
           <Grid.Col span={{ base: 12, lg: 5 }}>
-            <Paper p="md" radius="md" withBorder h="100%">
+            <Paper p="md" radius="md" withBorder style={{ height: '-webkit-fill-available' }}>
               <Group justify="space-between" mb="md">
                 <Text fw={600}>Recent Activity</Text>
                 <Button
@@ -445,82 +458,138 @@ export default function BloggerDashboardPage() {
                   View all
                 </Button>
               </Group>
-              <Stack gap="sm">
-                {SAMPLE_ACTIVITY.map((activity) => (
-                  <Group key={activity.id} gap="sm" wrap="nowrap">
-                    <Avatar size="sm" radius="xl" color="grape">
-                      {activity.user.charAt(0)}
-                    </Avatar>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text size="sm" lineClamp={2}>
-                        <Text span fw={500}>
-                          {activity.user}
-                        </Text>{' '}
-                        {activity.action}
-                        {activity.target && (
-                          <>
-                            {' '}
-                            <Text span fw={500}>
-                              {activity.target}
-                            </Text>
-                          </>
+              {loading ? (
+                <Stack gap="sm">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Group key={i} gap="sm">
+                      <Skeleton circle height={32} />
+                      <Skeleton height={32} style={{ flex: 1 }} />
+                    </Group>
+                  ))}
+                </Stack>
+              ) : dashboardData?.recent_notifications && dashboardData.recent_notifications.length > 0 ? (
+                <Stack gap="sm">
+                  {dashboardData.recent_notifications.map((notification) => {
+                    // Get actor name from actor or anonymous_commenter
+                    const actorName = notification.actor?.display_name
+                      || notification.actor?.username
+                      || notification.anonymous_commenter?.name
+                      || 'Someone';
+                    const actorImage = notification.actor?.profile_image_url;
+
+                    return (
+                      <Group key={notification.id} gap="sm" wrap="nowrap">
+                        <Avatar
+                          src={actorImage ? fixImageUrl(actorImage) : undefined}
+                          size="sm"
+                          radius="xl"
+                          color="grape"
+                        >
+                          {actorName.charAt(0)}
+                        </Avatar>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text size="sm" fw={500} lineClamp={1}>
+                            {actorName}
+                          </Text>
+                          <Text size="xs" c="dimmed" lineClamp={1}>
+                            {notification.message || getNotificationText(notification.type, actorName).action}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {timeAgo(notification.created_at)}
+                          </Text>
+                        </div>
+                        {!notification.read && (
+                          <Box
+                            w={8}
+                            h={8}
+                            style={{
+                              borderRadius: '50%',
+                              backgroundColor: 'var(--mantine-color-grape-6)',
+                              flexShrink: 0,
+                            }}
+                          />
                         )}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {activity.time}
-                      </Text>
-                    </div>
-                  </Group>
-                ))}
-              </Stack>
+                      </Group>
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <Center py="xl">
+                  <Text c="dimmed">No recent activity</Text>
+                </Center>
+              )}
             </Paper>
           </Grid.Col>
         </Grid>
 
         {/* Bottom Row */}
         <Grid>
-          {/* Audience Growth */}
+          {/* Follower Growth */}
           <Grid.Col span={{ base: 12, md: 5 }}>
-            <Paper p="md" radius="md" withBorder>
+            <Paper p="md" radius="md" withBorder style={{ height: '-webkit-fill-available' }}>
               <Text fw={600} mb="md">
-                Subscriber Growth
+                Follower Growth
               </Text>
-              <BarChart
-                h={200}
-                data={SAMPLE_AUDIENCE_DATA}
-                dataKey="month"
-                series={[{ name: 'subscribers', color: 'teal.6' }]}
-                gridAxis="y"
-              />
+              {loading ? (
+                <Skeleton height={200} />
+              ) : followerGrowthData.length > 0 ? (
+                <BarChart
+                  h={200}
+                  data={followerGrowthData}
+                  dataKey="week"
+                  series={[{ name: 'followers', color: 'teal.6' }]}
+                  gridAxis="y"
+                />
+              ) : (
+                <Center h={200}>
+                  <Text c="dimmed" size="sm">No follower data yet</Text>
+                </Center>
+              )}
             </Paper>
           </Grid.Col>
 
           {/* Top Posts */}
           <Grid.Col span={{ base: 12, md: 7 }}>
-            <Paper p="md" radius="md" withBorder>
+            <Paper p="md" radius="md" withBorder style={{ height: '-webkit-fill-available' }}>
               <Text fw={600} mb="md">
                 Top Performing Posts
               </Text>
-              <Stack gap="md">
-                {SAMPLE_TOP_POSTS.map((post, index) => (
-                  <div key={post.title}>
-                    <Group justify="space-between" mb={4}>
-                      <Group gap="xs">
-                        <Text size="sm" c="dimmed" w={20}>
-                          {index + 1}.
-                        </Text>
-                        <Text size="sm" lineClamp={1}>
-                          {post.title}
+              {loading ? (
+                <Stack gap="md">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} height={40} />
+                  ))}
+                </Stack>
+              ) : dashboardData?.top_performing_posts && dashboardData.top_performing_posts.length > 0 ? (
+                <Stack gap="md">
+                  {dashboardData.top_performing_posts.map((post: BlogDashboardTopPost, index: number) => (
+                    <div key={post.id}>
+                      <Group justify="space-between" mb={4}>
+                        <Group gap="xs">
+                          <Text size="sm" c="dimmed" w={20}>
+                            {index + 1}.
+                          </Text>
+                          <Text size="sm" lineClamp={1}>
+                            {post.title}
+                          </Text>
+                        </Group>
+                        <Text size="sm" fw={500}>
+                          {post.views.toLocaleString()} views
                         </Text>
                       </Group>
-                      <Text size="sm" fw={500}>
-                        {post.views.toLocaleString()} views
-                      </Text>
-                    </Group>
-                    <Progress value={post.percentage} color="grape" size="sm" />
-                  </div>
-                ))}
-              </Stack>
+                      <Progress
+                        value={(post.engagement_score / maxEngagement) * 100}
+                        color="grape"
+                        size="sm"
+                      />
+                    </div>
+                  ))}
+                </Stack>
+              ) : (
+                <Center py="xl">
+                  <Text c="dimmed">No posts with engagement data yet</Text>
+                </Center>
+              )}
             </Paper>
           </Grid.Col>
         </Grid>

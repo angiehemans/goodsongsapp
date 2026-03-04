@@ -173,6 +173,7 @@ export interface User {
   can_resend_confirmation?: boolean;
   preferred_streaming_platform?: StreamingPlatform | null;
   allow_anonymous_comments?: boolean;
+  social_links?: Record<string, string>;
 }
 
 export interface ResendConfirmationResponse {
@@ -462,17 +463,20 @@ export interface FollowingFeedResponse {
 export interface NotificationActor {
   id: number;
   username: string;
+  display_name?: string;
   profile_image_url?: string;
 }
 
 export interface Notification {
   id: number;
-  notification_type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment' | 'mention';
-  type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment' | 'mention';  // Alternative field name from API
-  message: string;
+  notification_type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment' | 'mention' | 'post_like' | 'post_comment';
+  type?: 'new_follower' | 'new_review' | 'review_like' | 'review_comment' | 'mention' | 'post_like' | 'post_comment';  // Alternative field name from API
+  message?: string;
   read: boolean;
   created_at: string;
-  actor: NotificationActor;
+  actor?: NotificationActor | null;
+  // For anonymous post comments
+  anonymous_commenter?: { name: string } | null;
   // For new_review notifications
   song_name?: string;
   band_name?: string;
@@ -482,7 +486,13 @@ export interface Notification {
     song_name: string;
     band_name: string;
   };
-  // For review_comment notifications
+  // For post_like and post_comment notifications
+  post?: {
+    id: number;
+    title: string;
+    slug: string;
+  };
+  // For review_comment and post_comment notifications
   comment?: {
     id: number;
     body: string;
@@ -932,6 +942,85 @@ export interface PublicBlogPost {
   comments_count?: number;
   // Attached song (nested object from API)
   song?: BlogPostSong;
+}
+
+// Blog Dashboard Types
+export interface BlogDashboardTotals {
+  page_views: number;
+  posts: number;
+  recommendations: number;
+  followers: number;
+  comments: number;
+}
+
+export interface BlogDashboardPageView {
+  date: string;
+  views: number;
+}
+
+export interface BlogDashboardTrafficSource {
+  source: string;
+  views: number;
+  percentage: number;
+}
+
+export interface BlogDashboardRecentPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  status: PostStatus;
+  featured: boolean;
+  publish_date: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+}
+
+export interface BlogDashboardNotificationActor {
+  id: number;
+  username: string;
+  display_name: string;
+  profile_image_url?: string;
+}
+
+export interface BlogDashboardNotification {
+  id: number;
+  type: string;
+  read: boolean;
+  actor: BlogDashboardNotificationActor | null;
+  anonymous_commenter?: { name: string } | null;
+  message?: string;
+  post?: { id: number; title: string; slug: string };
+  comment?: { id: number; body: string };
+  created_at: string;
+}
+
+export interface BlogDashboardFollowerGrowth {
+  week: string;
+  new_followers: number;
+}
+
+export interface BlogDashboardTopPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  publish_date: string;
+  views: number;
+  likes: number;
+  comments: number;
+  engagement_score: number;
+}
+
+export interface BlogDashboardResponse {
+  totals: BlogDashboardTotals;
+  page_views_over_time: BlogDashboardPageView[];
+  traffic_sources: BlogDashboardTrafficSource[];
+  recent_posts: BlogDashboardRecentPost[];
+  recent_notifications: BlogDashboardNotification[];
+  follower_growth: BlogDashboardFollowerGrowth[];
+  top_performing_posts: BlogDashboardTopPost[];
 }
 
 export interface SetAccountTypeData {
@@ -2652,6 +2741,11 @@ class ApiClient {
     // Always include the field - use empty string to clear (backend needs to allow this)
     formData.append('preferred_streaming_platform', platform ?? '');
     return this.makeFormRequest('/update-profile', formData);
+  }
+
+  // Blog Dashboard - Get comprehensive dashboard data
+  async getBlogDashboard(): Promise<BlogDashboardResponse> {
+    return this.makeRequest('/api/v1/blog_dashboard');
   }
 }
 

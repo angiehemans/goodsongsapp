@@ -18,20 +18,23 @@ import {
   Title,
 } from '@mantine/core';
 import { Logo } from '@/components/Logo';
+import { ProfilePage } from '@/components/SiteBuilder/ProfilePage';
 import { PublicBlogPost, UserProfile } from '@/lib/api';
+import { PublicProfileResponse, ProfileTheme, Section } from '@/lib/site-builder/types';
 import { fixImageUrl } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ username: string }>;
 }
 
-async function getBlogProfile(username: string): Promise<UserProfile | null> {
-  const baseUrl =
-    process.env.NODE_ENV === 'production'
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://api.goodsongs.app'
-      : 'http://localhost:3000';
+function getApiUrl(): string {
+  return process.env.NODE_ENV === 'production'
+    ? process.env.NEXT_PUBLIC_API_URL || 'https://api.goodsongs.app'
+    : 'http://localhost:3000';
+}
 
-  const response = await fetch(`${baseUrl}/blogs/${username}`, {
+async function getBlogProfile(username: string): Promise<UserProfile | null> {
+  const response = await fetch(`${getApiUrl()}/blogs/${username}`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -43,6 +46,25 @@ async function getBlogProfile(username: string): Promise<UserProfile | null> {
       return null;
     }
     throw new Error('Failed to fetch blog profile');
+  }
+
+  return response.json();
+}
+
+async function getPublicProfile(username: string): Promise<PublicProfileResponse | null> {
+  const response = await fetch(`${getApiUrl()}/api/v1/profiles/${username}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    // For other errors, return null to fall back to legacy design
+    return null;
   }
 
   return response.json();
@@ -83,21 +105,8 @@ function formatDate(dateString: string) {
   });
 }
 
-export default async function BlogPage({ params }: PageProps) {
-  const { username } = await params;
-
-  let profile: UserProfile | null;
-
-  try {
-    profile = await getBlogProfile(username);
-  } catch {
-    notFound();
-  }
-
-  if (!profile) {
-    notFound();
-  }
-
+// Legacy blog design (fallback when no published theme)
+function LegacyBlogPage({ profile, username }: { profile: UserProfile; username: string }) {
   const posts = profile.posts || [];
   const displayName = profile.display_name || profile.username;
 
@@ -246,4 +255,53 @@ export default async function BlogPage({ params }: PageProps) {
       </Box>
     </>
   );
+}
+
+export default async function BlogPage({ params }: PageProps) {
+  const { username } = await params;
+
+  // Try to get the public profile with site builder theme
+  const publicProfile = await getPublicProfile(username);
+
+  // If we have a published theme, use the ProfilePage component
+  if (publicProfile?.data?.theme && publicProfile.data.sections.length > 0) {
+    const { theme, sections, user } = publicProfile.data;
+
+    // Build source data for the ProfilePage
+    const sourceData = {
+      display_name: user.display_name,
+      location: user.location,
+      about_text: user.about_me,
+      profile_image_url: user.profile_image_url,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+    };
+
+    return (
+      <ProfilePage
+        theme={theme}
+        sections={sections}
+        sourceData={sourceData}
+        isPreview={false}
+      />
+    );
+  }
+
+  // Fallback to legacy blog design
+  let profile: UserProfile | null;
+
+  try {
+    profile = await getBlogProfile(username);
+  } catch {
+    notFound();
+  }
+
+  if (!profile) {
+    notFound();
+  }
+
+  return <LegacyBlogPage profile={profile} username={username} />;
 }

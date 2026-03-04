@@ -177,6 +177,13 @@ export function NotificationList({ title = 'Notifications', showHeader = true }:
           return `/users/${user.username}/reviews/${notification.review.id}`;
         }
         return '#';
+      case 'post_like':
+      case 'post_comment':
+        // Link to the post page if we have post info
+        if (notification.post?.slug && user) {
+          return `/blog/${user.username}/${notification.post.slug}`;
+        }
+        return '#';
       default:
         return '#';
     }
@@ -189,8 +196,10 @@ export function NotificationList({ title = 'Notifications', showHeader = true }:
       case 'new_review':
         return <IconMusic size={12} color="white" />;
       case 'review_like':
+      case 'post_like':
         return <IconHeart size={12} color="white" />;
       case 'review_comment':
+      case 'post_comment':
         return <IconMessage size={12} color="white" />;
       case 'mention':
         return <IconAt size={12} color="white" />;
@@ -206,8 +215,10 @@ export function NotificationList({ title = 'Notifications', showHeader = true }:
       case 'new_review':
         return 'var(--mantine-color-blue-6)';
       case 'review_like':
+      case 'post_like':
         return 'var(--mantine-color-red-6)';
       case 'review_comment':
+      case 'post_comment':
         return 'var(--mantine-color-green-6)';
       case 'mention':
         return 'var(--mantine-color-orange-6)';
@@ -218,6 +229,11 @@ export function NotificationList({ title = 'Notifications', showHeader = true }:
 
   // Get the action text (without username) for mobile-style layout
   const getActionText = (notification: Notification) => {
+    // Use the message from API if available
+    if (notification.message) {
+      return notification.message;
+    }
+
     const type = getNotificationType(notification);
 
     switch (type) {
@@ -236,6 +252,16 @@ export function NotificationList({ title = 'Notifications', showHeader = true }:
         const songName = notification.review?.song_name || notification.song_name;
         if (songName) return `commented on "${songName}"`;
         return 'commented on your recommendation';
+      }
+      case 'post_like': {
+        const postTitle = notification.post?.title;
+        if (postTitle) return `liked your post "${postTitle}"`;
+        return 'liked your post';
+      }
+      case 'post_comment': {
+        const postTitle = notification.post?.title;
+        if (postTitle) return `commented on your post "${postTitle}"`;
+        return 'commented on your post';
       }
       case 'mention': {
         const songName = notification.review?.song_name || notification.song_name;
@@ -294,87 +320,98 @@ export function NotificationList({ title = 'Notifications', showHeader = true }:
         />
       ) : (
         <Stack gap={0}>
-          {notificationsList.map((notification) => (
-            <Box
-              key={notification.id}
-              component={Link}
-              href={getNotificationLink(notification)}
-              className={`${styles.notificationCard} ${!notification.read ? styles.notificationCardUnread : ''}`}
-            >
-              <Group gap="md" wrap="nowrap" align="flex-start">
-                <Box pos="relative">
-                  <ProfilePhoto
-                    src={notification.actor?.profile_image_url}
-                    fallback={notification.actor?.username || '?'}
-                    size={40}
-                  />
-                  <Box
-                    style={{
-                      position: 'absolute',
-                      bottom: -2,
-                      right: -2,
-                      width: 18,
-                      height: 18,
-                      borderRadius: '50%',
-                      backgroundColor: getNotificationIconColor(getNotificationType(notification)),
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {getNotificationIcon(getNotificationType(notification))}
-                  </Box>
-                </Box>
+          {notificationsList.map((notification) => {
+            // Get the display name from actor or anonymous_commenter
+            const displayName = notification.actor?.display_name
+              || notification.actor?.username
+              || notification.anonymous_commenter?.name
+              || 'Someone';
+            const username = notification.actor?.username;
+            const profileImage = notification.actor?.profile_image_url;
 
-                <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  {/* Line 1: @username · time */}
-                  <Group gap="xs" wrap="nowrap">
-                    <Text
-                      size="sm"
-                      fw={notification.read ? 500 : 700}
-                      style={{ color: 'var(--gs-text-heading)' }}
-                    >
-                      {notification.actor ? `@${notification.actor.username}` : 'Someone'}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      · {formatTimeAgo(notification.created_at)}
-                    </Text>
-                  </Group>
-
-                  {/* Line 2: Action text */}
-                  <Text size="sm" c="dimmed" lineClamp={2}>
-                    {getActionText(notification)}
-                  </Text>
-
-                  {/* Line 3: Comment preview (if applicable) */}
-                  {(getNotificationType(notification) === 'review_comment' ||
-                    getNotificationType(notification) === 'mention') &&
-                    notification.comment?.body && (
-                      <Text size="sm" c="dark" lineClamp={2} fs="italic">
-                        &quot;{notification.comment.body}&quot;
-                      </Text>
-                    )}
-                </Stack>
-
-                {!notification.read && (
-                  <Tooltip label="Mark as read">
-                    <ActionIcon
-                      variant="subtle"
-                      color="grape"
-                      size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleMarkAsRead(notification.id);
+            return (
+              <Box
+                key={notification.id}
+                component={Link}
+                href={getNotificationLink(notification)}
+                className={`${styles.notificationCard} ${!notification.read ? styles.notificationCardUnread : ''}`}
+              >
+                <Group gap="md" wrap="nowrap" align="flex-start">
+                  <Box pos="relative">
+                    <ProfilePhoto
+                      src={profileImage}
+                      fallback={displayName}
+                      size={40}
+                    />
+                    <Box
+                      style={{
+                        position: 'absolute',
+                        bottom: -2,
+                        right: -2,
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        backgroundColor: getNotificationIconColor(getNotificationType(notification)),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      <IconCheck size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-              </Group>
-            </Box>
-          ))}
+                      {getNotificationIcon(getNotificationType(notification))}
+                    </Box>
+                  </Box>
+
+                  <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                    {/* Line 1: Name or @username · time */}
+                    <Group gap="xs" wrap="nowrap">
+                      <Text
+                        size="sm"
+                        fw={notification.read ? 500 : 700}
+                        style={{ color: 'var(--gs-text-heading)' }}
+                      >
+                        {username ? `@${username}` : displayName}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        · {formatTimeAgo(notification.created_at)}
+                      </Text>
+                    </Group>
+
+                    {/* Line 2: Action text */}
+                    <Text size="sm" c="dimmed" lineClamp={2}>
+                      {getActionText(notification)}
+                    </Text>
+
+                    {/* Line 3: Comment preview (if applicable) */}
+                    {(getNotificationType(notification) === 'review_comment' ||
+                      getNotificationType(notification) === 'post_comment' ||
+                      getNotificationType(notification) === 'mention') &&
+                      notification.comment?.body && (
+                        <Text size="sm" c="dark" lineClamp={2} fs="italic">
+                          &quot;{notification.comment.body}&quot;
+                        </Text>
+                      )}
+                  </Stack>
+
+                  {!notification.read && (
+                    <Tooltip label="Mark as read">
+                      <ActionIcon
+                        variant="subtle"
+                        color="grape"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleMarkAsRead(notification.id);
+                        }}
+                      >
+                        <IconCheck size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </Group>
+              </Box>
+            );
+          })}
 
           {currentPage < totalPages && (
             <Center mt="lg">

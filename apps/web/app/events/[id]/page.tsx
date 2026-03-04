@@ -26,6 +26,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { trackView } from '@/components/Analytics';
 import { Header } from '@/components/Header/Header';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { apiClient, Event } from '@/lib/api';
@@ -45,6 +46,7 @@ export default function EventDetailPage() {
       try {
         const eventData = await apiClient.getEvent(Number(eventId));
         setEvent(eventData);
+        trackView('event', Number(eventId));
       } catch (err) {
         console.error('Failed to fetch event:', err);
         setError('Event not found');

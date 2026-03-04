@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { Alert, Container, Flex, Title } from '@mantine/core';
+import { PageViewTracker } from '@/components/Analytics';
 import { Header } from '@/components/Header/Header';
 import { UserProfileSidebar } from '@/components/UserProfileSidebar/UserProfileSidebar';
 import { UserReviewsList } from '@/components/UserReviewsList/UserReviewsList';
@@ -99,6 +100,7 @@ export default async function UserProfilePage({
 
   return (
     <>
+      <PageViewTracker type="user" id={profile.id} />
       {/* Main Content */}
       <Container p={0} fluid className={styles.container}>
         <Header showBackButton />

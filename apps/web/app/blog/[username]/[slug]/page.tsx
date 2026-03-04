@@ -27,6 +27,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { PageViewTracker } from '@/components/Analytics';
 import { PublicBlogPost } from '@/lib/api';
 import { STREAMING_PLATFORMS, StreamingLinks, StreamingPlatform } from '@/lib/streaming';
 import { fixImageUrl } from '@/lib/utils';
@@ -125,6 +126,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <>
+      <PageViewTracker type="post" id={post.id} />
       <Container size="md" py="xl" style={{ minHeight: 'calc(100vh - 80px)' }}>
         <Stack gap="xl">
           {/* Back link */}
