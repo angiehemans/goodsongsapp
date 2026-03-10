@@ -13,6 +13,10 @@ interface AuthContextType {
   isFan: boolean;
   isBand: boolean;
   isBlogger: boolean;
+  /** Band with a paid (non-free) plan */
+  isPaidBand: boolean;
+  /** Eligible for /user/pro/ routes (blogger or paid band) */
+  isProUser: boolean;
   /** @deprecated Use `isBlogger` instead */
   isMusicBlogger: boolean;
   isAdmin: boolean;
@@ -24,7 +28,7 @@ interface AuthContextType {
   accountType: Role | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -35,10 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
 
-  // Set up session expired callback to clear user state
+  // Set up session expired callback to clear user state and redirect to login
   useEffect(() => {
     apiClient.setSessionExpiredCallback(() => {
       setUser(null);
+      window.location.href = '/login';
     });
   }, []);
 
@@ -46,6 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = apiClient.getAuthToken();
     if (token) {
       fetchUser();
+    } else if (apiClient.getRefreshToken()) {
+      // No access token but refresh token exists — try to bootstrap session
+      apiClient.refreshSession().then((ok) => {
+        if (ok) {
+          fetchUser();
+        } else {
+          setIsLoading(false);
+        }
+      });
     } else {
       setIsLoading(false);
     }
@@ -60,8 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await apiClient.getProfile();
       setUser(userData);
     } catch (error) {
-      // Clear all tokens on failure (not just auth_token)
-      apiClient.clearAllTokens();
+      // Only clear user state here — don't clear tokens.
+      // If the error was a 401, makeRequest already attempted a token refresh.
+      // If refresh succeeded, the retry worked and we won't reach this catch.
+      // If refresh failed, onSessionExpired already cleared tokens and redirects to login.
+      // Clearing tokens here would destroy a valid refresh token on transient errors.
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -91,7 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await apiClient.login({ email, password });
-    apiClient.setAuthToken(response.auth_token);
+    const authToken = response.auth_token || response.access_token;
+    if (authToken) {
+      apiClient.setAuthToken(authToken);
+    }
     if (response.refresh_token) {
       apiClient.setRefreshToken(response.refresh_token);
     }
@@ -106,7 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       password_confirmation: passwordConfirmation,
     });
-    apiClient.setAuthToken(response.auth_token);
+    const authToken = response.auth_token || response.access_token;
+    if (authToken) {
+      apiClient.setAuthToken(authToken);
+    }
     if (response.refresh_token) {
       apiClient.setRefreshToken(response.refresh_token);
     }
@@ -115,8 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await claimPendingComment();
   };
 
-  const logout = () => {
-    apiClient.clearAllTokens();
+  const logout = async () => {
+    try {
+      await apiClient.logout();
+    } catch {
+      // Ignore errors — tokens are cleared inside apiClient.logout()
+    }
     setUser(null);
   };
 
@@ -141,6 +168,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isFan = role === 'fan';
   const isBand = role === 'band';
   const isBlogger = role === 'blogger';
+  // Band with a paid (non-free) plan
+  const isPaidBand = isBand && !!user?.plan?.key && user.plan.key !== 'band_free';
+  // Eligible for /user/pro/ routes (blogger or paid band)
+  const isProUser = isBlogger || isPaidBand;
   // Alias for backwards compatibility
   const isMusicBlogger = isBlogger;
   // Admin is a separate flag, not a role
@@ -154,6 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isFan,
       isBand,
       isBlogger,
+      isPaidBand,
+      isProUser,
       isMusicBlogger,
       isAdmin,
       role,

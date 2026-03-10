@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiClient, normalizeRole } from '@/lib/api';
 
 export default function BandProfilePage() {
-  const { user, isLoading, refreshUser, isOnboardingComplete, isFan } = useAuth();
+  const { user, isLoading, refreshUser, isOnboardingComplete, isFan, isPaidBand } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState('');
@@ -46,7 +46,7 @@ export default function BandProfilePage() {
   // Redirect if onboarding is already complete
   useEffect(() => {
     if (!isLoading && user && isOnboardingComplete) {
-      const dashboard = isFan ? '/user/dashboard' : '/user/band-dashboard';
+      const dashboard = isFan ? '/user/dashboard' : isPaidBand ? '/user/pro/dashboard' : '/user/band-dashboard';
       router.push(dashboard);
     }
   }, [user, isLoading, isOnboardingComplete, isFan, router]);
@@ -108,6 +108,9 @@ export default function BandProfilePage() {
         color: 'green',
       });
 
+      // After onboarding, we don't know the plan yet (user just signed up),
+      // so go to band-dashboard by default. The band-dashboard page will
+      // redirect paid bands to /user/pro/dashboard.
       router.push('/user/band-dashboard');
     } catch (error) {
       notifications.show({

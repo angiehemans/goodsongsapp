@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { IconDeviceFloppy, IconUpload, IconTrash, IconArrowLeft, IconPlus } from '@tabler/icons-react';
-import { ActionIcon, Button, Group, Text, Badge, Stack, Tooltip, Menu } from '@mantine/core';
+import { ActionIcon, Button, Group, Text, Badge, Stack, Tooltip, Menu, SegmentedControl } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { useBuilderStore } from '@/lib/site-builder/store';
@@ -11,6 +11,7 @@ import { SECTION_LABELS } from '@/lib/site-builder/constants';
 import { updateProfileTheme, publishProfileTheme, discardProfileThemeDraft } from '@/lib/site-builder/api';
 import { ThemeControls } from './ThemeControls';
 import { SectionList } from './SectionList';
+import { SinglePostEditor } from './SinglePostEditor';
 import { HiddenSectionsBanner, usePlanGating } from './PlanGating';
 
 // All available section types
@@ -35,6 +36,9 @@ export function EditorPanel() {
   const {
     theme,
     sections,
+    singlePostLayout,
+    activePage,
+    setActivePage,
     config,
     hasUnsavedChanges,
     isSaving,
@@ -84,6 +88,7 @@ export function EditorPanel() {
       await updateProfileTheme({
         ...theme,
         sections,
+        single_post_layout: singlePostLayout,
       });
       markAsSaved();
       notifications.show({
@@ -110,6 +115,7 @@ export function EditorPanel() {
         await updateProfileTheme({
           ...theme,
           sections,
+          single_post_layout: singlePostLayout,
         });
       }
       await publishProfileTheme();
@@ -225,59 +231,81 @@ export function EditorPanel() {
 
       {/* Editor Content */}
       <div className="builder-editor__content">
-        {/* Hidden sections warning */}
-        <HiddenSectionsBanner hiddenSections={hiddenSections} requiredPlan="band_pro" />
-
-        {/* Global Theme Section */}
+        {/* Global Theme Section (always visible) */}
         <div className="builder-editor__section">
           <div className="builder-editor__section-title">Theme</div>
           <ThemeControls />
         </div>
 
-        {/* Sections List */}
-        <div className="builder-editor__section">
-          <Group justify="space-between" align="center" mb="sm">
-            <div className="builder-editor__section-title" style={{ marginBottom: 0 }}>Sections</div>
-            <Menu shadow="md" width={200} position="bottom-end">
-              <Menu.Target>
-                <ActionIcon variant="light" size="sm">
-                  <IconPlus size={14} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                {ALL_SECTION_TYPES.map((type) => {
-                  const status = getAddSectionStatus(type);
-                  const label = SECTION_LABELS[type];
-
-                  return (
-                    <Menu.Item
-                      key={type}
-                      disabled={!status.canAdd}
-                      onClick={() => handleAddSection(type)}
-                    >
-                      <Group justify="space-between" w="100%">
-                        <Text size="sm" c={status.canAdd ? undefined : 'dimmed'}>{label}</Text>
-                        {status.reason === 'exists' && (
-                          <Text size="xs" c="dimmed">Added</Text>
-                        )}
-                        {status.reason === 'limit' && (
-                          <Text size="xs" c="dimmed">Max</Text>
-                        )}
-                        {status.reason === 'upgrade' && (
-                          <Text size="xs" c="dimmed">Upgrade</Text>
-                        )}
-                        {status.reason === 'coming_soon' && (
-                          <Text size="xs" c="dimmed">Soon</Text>
-                        )}
-                      </Group>
-                    </Menu.Item>
-                  );
-                })}
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-          <SectionList />
+        {/* Page Tabs */}
+        <div className="builder-editor__section" style={{ paddingBottom: 0 }}>
+          <SegmentedControl
+            fullWidth
+            value={activePage}
+            onChange={(value) => setActivePage(value as 'main' | 'posts')}
+            data={[
+              { value: 'main', label: 'Main Page' },
+              { value: 'posts', label: 'Posts' },
+            ]}
+          />
         </div>
+
+        {activePage === 'main' ? (
+          <>
+            {/* Hidden sections warning */}
+            <HiddenSectionsBanner hiddenSections={hiddenSections} requiredPlan="band_pro" />
+
+            {/* Sections List */}
+            <div className="builder-editor__section">
+              <Group justify="space-between" align="center" mb="sm">
+                <div className="builder-editor__section-title" style={{ marginBottom: 0 }}>Sections</div>
+                <Menu shadow="md" width={200} position="bottom-end">
+                  <Menu.Target>
+                    <ActionIcon variant="light" size="sm">
+                      <IconPlus size={14} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    {ALL_SECTION_TYPES.map((type) => {
+                      const status = getAddSectionStatus(type);
+                      const label = SECTION_LABELS[type];
+
+                      return (
+                        <Menu.Item
+                          key={type}
+                          disabled={!status.canAdd}
+                          onClick={() => handleAddSection(type)}
+                        >
+                          <Group justify="space-between" w="100%">
+                            <Text size="sm" c={status.canAdd ? undefined : 'dimmed'}>{label}</Text>
+                            {status.reason === 'exists' && (
+                              <Text size="xs" c="dimmed">Added</Text>
+                            )}
+                            {status.reason === 'limit' && (
+                              <Text size="xs" c="dimmed">Max</Text>
+                            )}
+                            {status.reason === 'upgrade' && (
+                              <Text size="xs" c="dimmed">Upgrade</Text>
+                            )}
+                            {status.reason === 'coming_soon' && (
+                              <Text size="xs" c="dimmed">Soon</Text>
+                            )}
+                          </Group>
+                        </Menu.Item>
+                      );
+                    })}
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
+              <SectionList />
+            </div>
+          </>
+        ) : (
+          <div className="builder-editor__section">
+            <div className="builder-editor__section-title">Post Layout</div>
+            <SinglePostEditor />
+          </div>
+        )}
       </div>
     </div>
   );

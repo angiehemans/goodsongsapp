@@ -36,7 +36,7 @@ const aspectOptions = [
 ];
 
 function CreateReviewForm() {
-  const { user, isLoading, isOnboardingComplete, isBand } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand, isPaidBand } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,6 +55,10 @@ function CreateReviewForm() {
     }
     if (!isLoading && user && !isOnboardingComplete) {
       router.push('/onboarding');
+      return;
+    }
+    if (!isLoading && user && isBand && isPaidBand) {
+      router.push('/user/pro/dashboard');
       return;
     }
     if (!isLoading && user && isBand) {

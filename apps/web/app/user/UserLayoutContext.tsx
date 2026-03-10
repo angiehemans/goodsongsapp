@@ -86,7 +86,7 @@ function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
 const DASHBOARD_CACHE_DURATION = 30 * 1000;
 
 export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
-  const { user, isLoading, isOnboardingComplete, isBand, isBlogger } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand, isBlogger, isPaidBand, isProUser } = useAuth();
   const { setInitialCount: setNotificationInitialCount } = useNotifications();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<FanDashboardResponse | null>(null);
@@ -112,18 +112,18 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
       return;
     }
 
-    // Band users should be redirected to band dashboard
+    // Pro users (bloggers and paid bands) go to pro dashboard
+    if (!isLoading && user && isProUser) {
+      router.push('/user/pro/dashboard');
+      return;
+    }
+
+    // Free band users go to band dashboard
     if (!isLoading && user && isBand) {
       router.push('/user/band-dashboard');
       return;
     }
-
-    // Blogger users should be redirected to blogger dashboard
-    if (!isLoading && user && isBlogger) {
-      router.push('/user/blogger/dashboard');
-      return;
-    }
-  }, [user, isLoading, isOnboardingComplete, isBand, isBlogger, router]);
+  }, [user, isLoading, isOnboardingComplete, isBand, isBlogger, isPaidBand, isProUser, router]);
 
   // Fetch dashboard data (single optimized endpoint)
   // Bloggers use blogger_dashboard, fans use fan_dashboard

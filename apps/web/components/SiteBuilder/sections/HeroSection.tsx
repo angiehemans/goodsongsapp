@@ -1,5 +1,10 @@
+'use client';
+
+import { useState } from 'react';
 import { HeroContent, HeroData, HeroSettings, HeroElement, SectionProps, SocialLinkType } from '@/lib/site-builder/types';
 import { fixImageUrl } from '@/lib/utils';
+import { apiClient } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import { SOCIAL_PLATFORMS, SOCIAL_LINK_ORDER } from '@/lib/social-links';
 
 type HeroSectionProps = SectionProps<HeroContent, HeroData, HeroSettings>;
@@ -53,7 +58,30 @@ const SocialIcons: Record<SocialLinkType, React.ReactNode> = {
   ),
 };
 
-export function HeroSection({ content, data, settings }: HeroSectionProps) {
+export function HeroSection({ content, data, settings, isPreview }: HeroSectionProps) {
+  const { user } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  // Follow button settings
+  const showFollowButton = settings?.show_follow_button !== false;
+  const ownerUserId = data?.owner_user_id;
+  const isOwnProfile = user?.id != null && ownerUserId != null && user.id === ownerUserId;
+
+  const handleFollow = async () => {
+    if (!ownerUserId || isPreview) return;
+    try {
+      if (isFollowing) {
+        await apiClient.unfollowUser(ownerUserId);
+        setIsFollowing(false);
+      } else {
+        await apiClient.followUser(ownerUserId);
+        setIsFollowing(true);
+      }
+    } catch {
+      // silently fail
+    }
+  };
+
   // Use content values or fall back to data (profile info)
   const headline = content.headline || data?.display_name || 'Welcome';
   const subtitle = content.subtitle || data?.location || '';
@@ -105,7 +133,8 @@ export function HeroSection({ content, data, settings }: HeroSectionProps) {
     if (availableLinks.length === 0) return null;
 
     // Filter by visibility settings if set
-    const linksToShow = visibleSocialLinks
+    // "configured" means show all available links (same as null/undefined)
+    const linksToShow = Array.isArray(visibleSocialLinks)
       ? availableLinks.filter(key => visibleSocialLinks.includes(key))
       : availableLinks;
 
@@ -196,26 +225,34 @@ export function HeroSection({ content, data, settings }: HeroSectionProps) {
             {menuTitle && (
               <span className="hero-menu__title">{menuTitle}</span>
             )}
-            {menuSections.length > 0 && (
-              <ul className="hero-menu__links">
-                {menuSections.map((section) => (
-                  <li key={section.anchor}>
-                    <a
-                      href={`#${section.anchor}`}
-                      className="hero-menu__link"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        document.getElementById(section.anchor)?.scrollIntoView({
-                          behavior: 'smooth',
-                        });
-                      }}
-                    >
-                      {section.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ul className="hero-menu__links">
+              {menuSections.map((section) => (
+                <li key={section.anchor}>
+                  <a
+                    href={`#${section.anchor}`}
+                    className="hero-menu__link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(section.anchor)?.scrollIntoView({
+                        behavior: 'smooth',
+                      });
+                    }}
+                  >
+                    {section.label}
+                  </a>
+                </li>
+              ))}
+              {showFollowButton && (!isOwnProfile || isPreview) && (
+                <li>
+                  <button
+                    className={`hero-menu__follow-btn ${isFollowing ? 'hero-menu__follow-btn--following' : ''}`}
+                    onClick={handleFollow}
+                  >
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                </li>
+              )}
+            </ul>
           </div>
         </nav>
       )}

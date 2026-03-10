@@ -4,18 +4,14 @@ import Link from 'next/link';
 import {
   IconArrowLeft,
   IconCalendar,
-  IconEdit,
-  IconExternalLink,
   IconMusic,
   IconPlayerPlay,
-  IconShare,
-  IconTag,
+  IconExternalLink,
 } from '@tabler/icons-react';
 import {
   ActionIcon,
   Anchor,
   Avatar,
-  Badge,
   Box,
   Center,
   Container,
@@ -27,59 +23,36 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { PageViewTracker } from '@/components/Analytics';
-import { PublicBlogPost } from '@/lib/api';
-import { STREAMING_PLATFORMS, StreamingLinks, StreamingPlatform } from '@/lib/streaming';
-import { fixImageUrl } from '@/lib/utils';
-import { PostCommentsSection } from '@/components/PostComments';
-import { Logo } from '@/components/Logo';
-import { PostLikeButton } from '@/components/Posts/PostLikeButton';
-import { getThemedUserPost } from '@/lib/site-builder/api';
+import { getThemedBandPost } from '@/lib/site-builder/api';
 import { ThemedPostPage } from '@/components/SiteBuilder/ThemedPostPage';
 import { FontPreload } from '@/components/SiteBuilder/FontPreload';
+import { PostCommentsSection } from '@/components/PostComments';
+import { PostLikeButton } from '@/components/Posts/PostLikeButton';
+import { Logo } from '@/components/Logo';
+import { fixImageUrl } from '@/lib/utils';
+import { STREAMING_PLATFORMS } from '@/lib/streaming';
+import type { StreamingPlatform } from '@/lib/streaming';
 
 interface PageProps {
-  params: Promise<{ username: string; slug: string }>;
-}
-
-async function getBlogPost(username: string, slug: string): Promise<PublicBlogPost | null> {
-  const baseUrl =
-    process.env.NODE_ENV === 'production'
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://api.goodsongs.app'
-      : 'http://localhost:3000';
-
-  const response = await fetch(`${baseUrl}/blogs/${username}/${slug}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      return null;
-    }
-    throw new Error('Failed to fetch blog post');
-  }
-
-  return response.json();
+  params: Promise<{ slug: string; postSlug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { username, slug } = await params;
+  const { slug, postSlug } = await params;
 
   try {
-    const post = await getBlogPost(username, slug);
-    if (!post) {
+    const response = await getThemedBandPost(slug, postSlug);
+    if (!response) {
       return {
         title: 'Post Not Found - Goodsongs',
-        description: 'The requested blog post could not be found.',
+        description: 'The requested post could not be found.',
       };
     }
 
+    const { post, user } = response.data;
     return {
-      title: `${post.title} - ${post.author.display_name} - Goodsongs`,
-      description: post.excerpt || `Read ${post.title} by ${post.author.display_name} on Goodsongs.`,
+      title: `${post.title} - ${user.display_name || user.username} - Goodsongs`,
+      description: post.excerpt || `Read ${post.title} on Goodsongs.`,
       openGraph: {
         title: post.title,
         description: post.excerpt || undefined,
@@ -89,7 +62,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   } catch {
     return {
       title: 'Post Not Found - Goodsongs',
-      description: 'The requested blog post could not be found.',
+      description: 'The requested post could not be found.',
     };
   }
 }
@@ -102,9 +75,8 @@ function formatDate(dateString: string) {
   });
 }
 
-// Get available streaming links from the post
 function getAvailableStreamingLinks(
-  streamingLinks?: StreamingLinks
+  streamingLinks?: Record<string, string>
 ): Array<{ platform: StreamingPlatform; url: string }> {
   if (!streamingLinks) return [];
   return (Object.entries(streamingLinks) as [StreamingPlatform, string | undefined][])
@@ -112,25 +84,20 @@ function getAvailableStreamingLinks(
     .map(([platform, url]) => ({ platform, url: url! }));
 }
 
-export default async function BlogPostPage({ params }: PageProps) {
-  const { username, slug } = await params;
+export default async function BandPostPage({ params }: PageProps) {
+  const { slug, postSlug } = await params;
 
-  let post: PublicBlogPost | null;
-
-  try {
-    post = await getBlogPost(username, slug);
-  } catch {
+  const response = await getThemedBandPost(slug, postSlug);
+  if (!response) {
     notFound();
   }
 
-  if (!post) {
-    notFound();
-  }
+  const { post, theme, related_posts, navigation, user } = response.data;
+  const postBasePath = `/bands/${slug}`;
+  const bandImageUrl = user.primary_band?.profile_picture_url;
 
-  // Try themed rendering
-  const themedResponse = await getThemedUserPost(username, slug).catch(() => null);
-  if (themedResponse?.data?.theme) {
-    const { theme, related_posts, navigation } = themedResponse.data;
+  // Themed rendering
+  if (theme) {
     const layout = theme.single_post_layout || {
       show_featured_image: true,
       show_author: true,
@@ -144,16 +111,16 @@ export default async function BlogPostPage({ params }: PageProps) {
       max_width: null,
     };
     return (
-      <div style={{ margin: '-1px 0 0 0', position: 'relative', zIndex: 1 }}>
+      <div data-mantine-color-scheme="dark">
         <FontPreload fonts={[theme.header_font, theme.body_font]} />
-        <PageViewTracker type="post" id={post.id} />
         <ThemedPostPage
           theme={theme}
           layout={layout}
-          post={themedResponse.data.post}
+          post={post}
           relatedPosts={related_posts}
           navigation={navigation}
-          postBasePath={`/blog/${username}`}
+          postBasePath={postBasePath}
+          authorImageOverride={bandImageUrl}
         />
       </div>
     );
@@ -162,14 +129,13 @@ export default async function BlogPostPage({ params }: PageProps) {
   // Unthemed fallback
   return (
     <>
-      <PageViewTracker type="post" id={post.id} />
       <Container size="md" py="xl" style={{ minHeight: 'calc(100vh - 80px)' }}>
         <Stack gap="xl">
           {/* Back link */}
           <Group>
             <ActionIcon
               component={Link}
-              href={`/blog/${username}`}
+              href={`/bands/${slug}`}
               variant="subtle"
               color="gray"
               size="lg"
@@ -177,7 +143,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               <IconArrowLeft size={20} />
             </ActionIcon>
             <Text size="sm" c="dimmed">
-              Back to {post.author.display_name}&apos;s blog
+              Back to band profile
             </Text>
           </Group>
 
@@ -200,23 +166,17 @@ export default async function BlogPostPage({ params }: PageProps) {
               {post.title}
             </Title>
 
-            {/* Author and date */}
             <Group gap="md">
               <Group gap="xs">
                 <Avatar
-                  src={fixImageUrl(post.author.profile_image_url)}
-                  alt={post.author.display_name}
+                  src={fixImageUrl(bandImageUrl || post.author.profile_image_url)}
+                  alt={user.primary_band?.name || post.author.display_name || post.author.username || 'Author'}
                   size="sm"
                   radius="xl"
                 />
-                <Link
-                  href={`/blog/${post.author.username}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
-                  <Text size="sm" fw={500}>
-                    {post.author.display_name}
-                  </Text>
-                </Link>
+                <Text size="sm" fw={500}>
+                  {post.author.display_name || post.author.username}
+                </Text>
               </Group>
 
               <Group gap="xs">
@@ -226,19 +186,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                 </Text>
               </Group>
 
-              {post.can_edit && (
-                <ActionIcon
-                  component={Link}
-                  href={`/user/pro/posts/editor?id=${post.id}`}
-                  variant="subtle"
-                  color="grape"
-                  size="sm"
-                >
-                  <IconEdit size={16} />
-                </ActionIcon>
-              )}
-
-              {/* Like Button */}
               <PostLikeButton
                 postId={post.id}
                 initialLiked={post.liked_by_current_user}
@@ -246,18 +193,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                 size="sm"
               />
             </Group>
-
-            {/* Tags */}
-            {post.tags.length > 0 && (
-              <Group gap="xs">
-                <IconTag size={14} color="var(--mantine-color-dimmed)" />
-                {post.tags.map((tag) => (
-                  <Badge key={tag} variant="light" color="grape" size="sm">
-                    {tag}
-                  </Badge>
-                ))}
-              </Group>
-            )}
           </Stack>
 
           {/* Attached Song */}
@@ -293,21 +228,14 @@ export default async function BlogPostPage({ params }: PageProps) {
                     <Text size="sm" c="dimmed" lineClamp={1}>
                       {post.song.band_name}
                     </Text>
-                    {post.song.album_name && (
-                      <Text size="xs" c="dimmed" lineClamp={1}>
-                        {post.song.album_name}
-                      </Text>
-                    )}
                   </Stack>
                 </Group>
 
-                {/* Streaming Links */}
                 {(() => {
-                  const availableLinks = getAvailableStreamingLinks(post.song.streaming_links);
-                  const songLinkUrl = post.song.songlink_url || post.song.song_link;
-                  const preferredUrl = post.song.preferred_link;
+                  const availableLinks = getAvailableStreamingLinks(post.song?.streaming_links);
+                  const songLinkUrl = post.song?.songlink_url || post.song?.song_link;
+                  const preferredUrl = post.song?.preferred_link;
 
-                  // Show menu if we have multiple streaming platforms
                   if (availableLinks.length > 1) {
                     return (
                       <Menu shadow="md" width={200} position="bottom-end">
@@ -358,7 +286,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                     );
                   }
 
-                  // Single streaming link or fallback to songlink
                   const singleUrl = preferredUrl || availableLinks[0]?.url || songLinkUrl;
                   if (singleUrl) {
                     return (
@@ -386,47 +313,13 @@ export default async function BlogPostPage({ params }: PageProps) {
           {post.body && (
             <Box
               className="prose"
-              style={{
-                color: 'var(--gs-text-primary)',
-                lineHeight: 1.7,
-              }}
+              style={{ color: 'var(--gs-text-primary)', lineHeight: 1.7 }}
               dangerouslySetInnerHTML={{ __html: post.body }}
             />
           )}
 
-          {/* Authors section if multiple */}
-          {post.authors.length > 1 && (
-            <Box pt="xl" style={{ borderTop: '1px solid var(--gs-border-default)' }}>
-              <Text size="sm" fw={500} mb="xs">
-                Authors
-              </Text>
-              <Group gap="xs">
-                {post.authors.map((author, index) => (
-                  <Badge key={index} variant="outline" color="gray">
-                    {author.url ? (
-                      <a
-                        href={author.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: 'none', color: 'inherit' }}
-                      >
-                        {author.name}
-                      </a>
-                    ) : (
-                      author.name
-                    )}
-                  </Badge>
-                ))}
-              </Group>
-            </Box>
-          )}
-
-          {/* Comments Section */}
-          <PostCommentsSection
-            postId={post.id}
-            initialCommentsCount={post.comments_count}
-            allowAnonymous={post.author.allow_anonymous_comments}
-          />
+          {/* Comments */}
+          <PostCommentsSection postId={post.id} initialCommentsCount={post.comments_count} />
         </Stack>
       </Container>
 

@@ -56,13 +56,29 @@ export function ProfilePage({
     '--gs-profile-header-font': getFontFamily(theme.header_font),
     '--gs-profile-body-font': getFontFamily(theme.body_font),
     '--gs-profile-content-max-width': `${theme.content_max_width || 1200}px`,
+    '--gs-card-bg': `color-mix(in srgb, ${theme.card_background_color || theme.font_color} ${theme.card_background_opacity ?? 10}%, transparent)`,
   };
 
   // Inject source data into sections for preview
   const sectionsWithData = useMemo(() => {
     if (!sourceData) return sections;
 
+    // Compute post_base_path from sourceData
+    // Band profiles use /bands/{slug}, user profiles use /blog/{username}
+    const postBasePath = sourceData.band?.slug
+      ? `/bands/${sourceData.band.slug}`
+      : sourceData.user?.username
+        ? `/blog/${sourceData.user.username}`
+        : undefined;
+
     return sections.map((section) => {
+      // For posts sections, always inject post_base_path even if data exists
+      if (section.type === 'posts' && section.data && postBasePath) {
+        return {
+          ...section,
+          data: { ...section.data, post_base_path: postBasePath },
+        };
+      }
       // If section already has data, use it
       if (section.data) return section;
 
@@ -71,10 +87,11 @@ export function ProfilePage({
         case 'hero': {
           const heroData: HeroData = {
             display_name: sourceData.display_name,
-            profile_image_url: sourceData.profile_image_url,
+            profile_image_url: sourceData.profile_image_url || sourceData.band?.profile_picture_url,
             location: sourceData.location,
             streaming_links: sourceData.streaming_links as any,
             social_links: sourceData.social_links as any,
+            owner_user_id: sourceData.user?.id,
           };
           return { ...section, data: heroData };
         }
@@ -88,6 +105,7 @@ export function ProfilePage({
           if (!sourceData.posts || sourceData.posts.length === 0) return section;
           const postsData: PostsData = {
             posts: sourceData.posts,
+            post_base_path: postBasePath,
           };
           return { ...section, data: postsData };
         }

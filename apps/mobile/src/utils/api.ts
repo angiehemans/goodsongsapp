@@ -274,6 +274,10 @@ class MobileApiClient {
   private onTokenRefreshed: ((token: string, refreshToken: string | null) => void) | null = null;
   private onSessionExpired: (() => void) | null = null;
 
+  getToken(): string | null {
+    return this.token;
+  }
+
   setToken(token: string) {
     this.token = token;
   }
@@ -284,6 +288,10 @@ class MobileApiClient {
 
   clearToken() {
     this.token = null;
+  }
+
+  getRefreshToken(): string | null {
+    return this.refreshToken;
   }
 
   clearRefreshToken() {
@@ -334,8 +342,12 @@ class MobileApiClient {
 
     const data = await response.json();
     this.token = data.auth_token;
+    // Token rotation: the old refresh token is now revoked, store the new one
+    if (data.refresh_token) {
+      this.refreshToken = data.refresh_token;
+    }
 
-    // Notify the auth store to persist the new token
+    // Notify the auth store to persist both new tokens
     this.onTokenRefreshed?.(data.auth_token, this.refreshToken);
 
     return data.auth_token;
@@ -364,12 +376,26 @@ class MobileApiClient {
     options: RequestInit = {},
     isRetry = false
   ): Promise<T> {
+    const { headers: optionHeaders, ...restOptions } = options;
     const response = await fetch(`${API_URL}${endpoint}`, {
-      headers: this.getHeaders(),
-      ...options,
+      ...restOptions,
+      headers: {
+        ...this.getHeaders(),
+        ...(optionHeaders as Record<string, string>),
+      },
     });
 
     if (!response.ok) {
+      // Handle rate limiting
+      if (response.status === 429) {
+        let rateLimitMsg = 'Too many requests. Please try again later.';
+        try {
+          const rateLimitError = await response.json();
+          rateLimitMsg = rateLimitError.error?.message || rateLimitError.error || rateLimitMsg;
+        } catch { /* use default message */ }
+        throw new Error(rateLimitMsg);
+      }
+
       let error;
       try {
         error = await response.json();
@@ -377,16 +403,21 @@ class MobileApiClient {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      // Check for token expiration and attempt refresh
-      // Backend returns { error: "Token has expired", code: "token_expired" }
-      const errorCode = error.code || error.error?.code;
-      if (response.status === 401 && errorCode === 'token_expired' && !isRetry) {
+      // Attempt token refresh on any 401 unless it's a permanent auth failure
+      if (response.status === 401 && !isRetry) {
+        const errorCode = error.code || error.error?.code;
+        // Don't refresh for permanent auth failures — go straight to session expired
+        if (errorCode === 'invalid_refresh_token' || errorCode === 'account_disabled') {
+          this.clearAllTokens();
+          this.onSessionExpired?.();
+          throw new Error('Session expired. Please log in again.');
+        }
         try {
           await this.handleTokenRefresh();
           // Retry the original request with new token
           return this.request<T>(endpoint, options, true);
-        } catch (refreshError) {
-          // Refresh failed - throw session expired error
+        } catch {
+          // Refresh failed — onSessionExpired already called in refreshAccessToken
           throw new Error('Session expired. Please log in again.');
         }
       }
@@ -397,6 +428,20 @@ class MobileApiClient {
     }
 
     return response.json();
+  }
+
+  /**
+   * Bootstrap a session from a refresh token alone.
+   * Returns true if a new access token was obtained.
+   */
+  async refreshSession(): Promise<boolean> {
+    if (!this.refreshToken) return false;
+    try {
+      await this.handleTokenRefresh();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // Auth
@@ -478,11 +523,15 @@ class MobileApiClient {
   }
 
   async getUserBands(): Promise<Band[]> {
-    return this.request('/bands/user');
+    const response = await this.request<any>('/bands/user');
+    if (Array.isArray(response)) return response;
+    return response.bands || [];
   }
 
   async getBandEvents(slug: string): Promise<Event[]> {
-    return this.request(`/bands/${slug}/events`);
+    const response = await this.request<any>(`/bands/${slug}/events`);
+    if (Array.isArray(response)) return response;
+    return response.events || [];
   }
 
   async createEvent(
@@ -530,7 +579,9 @@ class MobileApiClient {
   }
 
   async getUserReviews(): Promise<Review[]> {
-    return this.request('/reviews/user');
+    const response = await this.request<any>('/reviews/user');
+    if (Array.isArray(response)) return response;
+    return response.reviews || [];
   }
 
   async createReview(data: {

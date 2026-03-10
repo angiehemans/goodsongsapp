@@ -19,6 +19,7 @@ import {
 } from '@mantine/core';
 import { Logo } from '@/components/Logo';
 import { ProfilePage } from '@/components/SiteBuilder/ProfilePage';
+import { FontPreload } from '@/components/SiteBuilder/FontPreload';
 import { PublicBlogPost, UserProfile } from '@/lib/api';
 import { PublicProfileResponse, ProfileTheme, Section } from '@/lib/site-builder/types';
 import { fixImageUrl } from '@/lib/utils';
@@ -52,7 +53,7 @@ async function getBlogProfile(username: string): Promise<UserProfile | null> {
 }
 
 async function getPublicProfile(username: string): Promise<PublicProfileResponse | null> {
-  const response = await fetch(`${getApiUrl()}/api/v1/profiles/${username}`, {
+  const response = await fetch(`${getApiUrl()}/api/v1/profiles/users/${username}`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -273,6 +274,7 @@ export default async function BlogPage({ params }: PageProps) {
       location: user.location,
       about_text: user.about_me,
       profile_image_url: user.profile_image_url,
+      social_links: user.social_links || {},
       user: {
         id: user.id,
         username: user.username,
@@ -281,12 +283,15 @@ export default async function BlogPage({ params }: PageProps) {
     };
 
     return (
-      <ProfilePage
-        theme={theme}
-        sections={sections}
-        sourceData={sourceData}
-        isPreview={false}
-      />
+      <>
+        <FontPreload fonts={[theme.header_font, theme.body_font]} />
+        <ProfilePage
+          theme={theme}
+          sections={sections}
+          sourceData={sourceData}
+          isPreview={false}
+        />
+      </>
     );
   }
 

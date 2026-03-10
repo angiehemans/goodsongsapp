@@ -1,8 +1,21 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import isEqual from 'lodash/isEqual';
-import { ProfileTheme, Section, ProfileThemeConfig, ProfileSourceData } from './types';
+import { ProfileTheme, Section, ProfileThemeConfig, ProfileSourceData, SinglePostLayout } from './types';
 import { DEFAULT_THEME, DEFAULT_SECTIONS } from './constants';
+
+const DEFAULT_SINGLE_POST_LAYOUT: SinglePostLayout = {
+  show_featured_image: true,
+  show_author: true,
+  show_song_embed: true,
+  show_comments: true,
+  show_related_posts: true,
+  show_navigation: true,
+  content_layout: 'default',
+  background_color: null,
+  font_color: null,
+  max_width: null,
+};
 
 export interface BuilderState {
   // Global theme fields
@@ -11,6 +24,12 @@ export interface BuilderState {
   // Working copy of sections (the draft)
   sections: Section[];
 
+  // Single post layout (working copy)
+  singlePostLayout: SinglePostLayout;
+
+  // Active page tab in editor
+  activePage: 'main' | 'posts';
+
   // Config from API (available section types, limits, etc.)
   config: ProfileThemeConfig | null;
 
@@ -18,7 +37,7 @@ export interface BuilderState {
   sourceData: ProfileSourceData | null;
 
   // Snapshot of the last saved state for dirty detection
-  lastSaved: { theme: ProfileTheme; sections: Section[] } | null;
+  lastSaved: { theme: ProfileTheme; sections: Section[]; singlePostLayout: SinglePostLayout } | null;
 
   // UI state
   expandedSectionId: string | null;
@@ -38,6 +57,8 @@ export interface BuilderActions {
     theme: ProfileTheme;
     sections: Section[];
     draftSections: Section[] | null;
+    singlePostLayout?: SinglePostLayout;
+    draftSinglePostLayout?: SinglePostLayout | null;
     config: ProfileThemeConfig;
     sourceData?: ProfileSourceData;
   }) => void;
@@ -58,6 +79,11 @@ export interface BuilderActions {
   addSection: (type: Section['type']) => void;
   removeSection: (index: number) => void;
 
+  // Single post layout
+  setActivePage: (page: 'main' | 'posts') => void;
+  setSinglePostLayoutField: <K extends keyof SinglePostLayout>(field: K, value: SinglePostLayout[K]) => void;
+  setSinglePostLayout: (layout: Partial<SinglePostLayout>) => void;
+
   // UI state
   setExpandedSectionId: (id: string | null) => void;
   toggleSection: (id: string) => void;
@@ -77,6 +103,8 @@ type BuilderStore = BuilderState & BuilderActions;
 const initialState: BuilderState = {
   theme: DEFAULT_THEME,
   sections: DEFAULT_SECTIONS,
+  singlePostLayout: DEFAULT_SINGLE_POST_LAYOUT,
+  activePage: 'main',
   config: null,
   sourceData: null,
   lastSaved: null,
@@ -94,7 +122,8 @@ function computeHasUnsavedChanges(state: BuilderState): boolean {
   if (!state.lastSaved) return false;
   return (
     !isEqual(state.theme, state.lastSaved.theme) ||
-    !isEqual(state.sections, state.lastSaved.sections)
+    !isEqual(state.sections, state.lastSaved.sections) ||
+    !isEqual(state.singlePostLayout, state.lastSaved.singlePostLayout)
   );
 }
 
@@ -109,10 +138,13 @@ export const useBuilderStore = create<BuilderStore>()(
 
     initialize: (data) => {
       const sections = data.draftSections || data.sections;
-      const lastSaved = { theme: data.theme, sections };
+      const singlePostLayout = data.draftSinglePostLayout || data.singlePostLayout || DEFAULT_SINGLE_POST_LAYOUT;
+      const theme = { ...DEFAULT_THEME, ...data.theme };
+      const lastSaved = { theme, sections, singlePostLayout };
       set({
-        theme: data.theme,
+        theme,
         sections,
+        singlePostLayout,
         config: data.config,
         sourceData: data.sourceData || null,
         lastSaved,
@@ -234,6 +266,24 @@ export const useBuilderStore = create<BuilderStore>()(
       });
     },
 
+    setActivePage: (page) => set({ activePage: page }),
+
+    setSinglePostLayoutField: (field, value) => {
+      set((state) => {
+        const newLayout = { ...state.singlePostLayout, [field]: value };
+        const newState = { ...state, singlePostLayout: newLayout };
+        return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
+      });
+    },
+
+    setSinglePostLayout: (layout) => {
+      set((state) => {
+        const newLayout = { ...state.singlePostLayout, ...layout };
+        const newState = { ...state, singlePostLayout: newLayout };
+        return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
+      });
+    },
+
     setExpandedSectionId: (id) => set({ expandedSectionId: id }),
 
     toggleSection: (id) => {
@@ -250,7 +300,7 @@ export const useBuilderStore = create<BuilderStore>()(
 
     markAsSaved: () => {
       set((state) => ({
-        lastSaved: { theme: state.theme, sections: state.sections },
+        lastSaved: { theme: state.theme, sections: state.sections, singlePostLayout: state.singlePostLayout },
         hasUnsavedChanges: false,
       }));
     },
@@ -261,6 +311,7 @@ export const useBuilderStore = create<BuilderStore>()(
         return {
           theme: state.lastSaved.theme,
           sections: state.lastSaved.sections,
+          singlePostLayout: state.lastSaved.singlePostLayout,
           hasUnsavedChanges: false,
         };
       });
@@ -277,3 +328,5 @@ export const useHasUnsavedChanges = () => useBuilderStore((state) => state.hasUn
 export const useIsLoading = () => useBuilderStore((state) => state.isLoading);
 export const useIsSaving = () => useBuilderStore((state) => state.isSaving);
 export const useIsPublishing = () => useBuilderStore((state) => state.isPublishing);
+export const useSinglePostLayout = () => useBuilderStore((state) => state.singlePostLayout);
+export const useActivePage = () => useBuilderStore((state) => state.activePage);

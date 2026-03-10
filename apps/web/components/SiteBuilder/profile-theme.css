@@ -13,7 +13,7 @@
   /* Derived colors */
   --gs-text-primary: var(--gs-profile-font);
   --gs-text-muted: color-mix(in srgb, var(--gs-profile-font) 60%, transparent);
-  --gs-card-bg: rgba(255, 255, 255, 0.05);
+  --gs-card-bg: color-mix(in srgb, var(--gs-profile-font) 10%, transparent);
   --gs-border-color: rgba(255, 255, 255, 0.1);
 
   min-height: 100vh;
@@ -104,7 +104,6 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 2rem;
 }
 
@@ -122,6 +121,7 @@
   gap: 1.5rem;
   list-style: none;
   margin: 0;
+  margin-left: auto;
   padding: 0;
   flex-wrap: wrap;
 }
@@ -136,6 +136,33 @@
 
 .hero-menu__link:hover {
   color: var(--gs-text-primary);
+}
+
+.hero-menu__follow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  font-family: var(--gs-profile-body-font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0 0.75rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background-color: var(--gs-profile-brand);
+  color: #fff;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  line-height: 1;
+}
+.hero-menu__follow-btn:hover {
+  opacity: 0.85;
+}
+.hero-menu__follow-btn--following {
+  background-color: transparent;
+  border: 1px solid var(--gs-text-muted);
+  color: var(--gs-text-muted);
 }
 
 @container section (max-width: 600px) {
@@ -188,7 +215,6 @@
   border: 3px solid var(--gs-card-bg);
 }
 
-
 .hero__headline {
   font-size: 3rem;
   font-weight: 700;
@@ -217,18 +243,18 @@
 }
 
 /* Custom headline size via CSS variable */
-.hero__headline[style*="--headline-size"] {
+.hero__headline[style*='--headline-size'] {
   font-size: var(--headline-size);
 }
 
 @container section (max-width: 768px) {
-  .hero__headline[style*="--headline-size"] {
+  .hero__headline[style*='--headline-size'] {
     font-size: calc(var(--headline-size) * 0.75);
   }
 }
 
 @container section (max-width: 480px) {
-  .hero__headline[style*="--headline-size"] {
+  .hero__headline[style*='--headline-size'] {
     font-size: calc(var(--headline-size) * 0.5);
   }
 }
@@ -323,7 +349,10 @@
   background-color: var(--gs-card-bg);
   color: var(--gs-text-primary);
   text-decoration: none;
-  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.2s;
 }
 
 .hero__social-link:hover {
@@ -394,7 +423,9 @@
   background-color: var(--gs-card-bg);
   border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .profile-card:hover {
@@ -664,11 +695,21 @@
   flex-direction: column;
 }
 
-.profile-stack--gap-xs { gap: 0.25rem; }
-.profile-stack--gap-sm { gap: 0.5rem; }
-.profile-stack--gap-md { gap: 1rem; }
-.profile-stack--gap-lg { gap: 1.5rem; }
-.profile-stack--gap-xl { gap: 2rem; }
+.profile-stack--gap-xs {
+  gap: 0.25rem;
+}
+.profile-stack--gap-sm {
+  gap: 0.5rem;
+}
+.profile-stack--gap-md {
+  gap: 1rem;
+}
+.profile-stack--gap-lg {
+  gap: 1.5rem;
+}
+.profile-stack--gap-xl {
+  gap: 2rem;
+}
 
 .profile-stack--center {
   align-items: center;
@@ -681,9 +722,15 @@
   align-items: center;
 }
 
-.profile-row--gap-xs { gap: 0.25rem; }
-.profile-row--gap-sm { gap: 0.5rem; }
-.profile-row--gap-md { gap: 1rem; }
+.profile-row--gap-xs {
+  gap: 0.25rem;
+}
+.profile-row--gap-sm {
+  gap: 0.5rem;
+}
+.profile-row--gap-md {
+  gap: 1rem;
+}
 
 .profile-row--nowrap {
   flex-wrap: nowrap;
@@ -833,6 +880,27 @@
 
 .profile-markdown li {
   margin-bottom: 0.25rem;
+}
+
+.profile-markdown blockquote,
+.profile-page blockquote {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 3px solid var(--gs-profile-brand);
+  background-color: var(--gs-card-bg);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--gs-text-muted);
+}
+
+.profile-markdown blockquote p:first-child,
+.profile-page blockquote p:first-child {
+  margin-top: 0;
+}
+
+.profile-markdown blockquote p:last-child,
+.profile-page blockquote p:last-child {
+  margin-bottom: 0;
 }
 
 .profile-markdown h3 {

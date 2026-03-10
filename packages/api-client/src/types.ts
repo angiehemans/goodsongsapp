@@ -43,7 +43,7 @@ export const STREAMING_PLATFORMS: Record<StreamingPlatform, { name: string; colo
 
 export interface User {
   id: number;
-  email: string;
+  email?: string;
   username?: string;
   about_me?: string;
   city?: string;
@@ -89,6 +89,8 @@ export interface AuthResponse {
 
 export interface RefreshTokenResponse {
   auth_token: string;
+  refresh_token: string;
+  expires_in: number;
 }
 
 export interface Session {
@@ -149,7 +151,7 @@ export interface Review extends ReviewData {
 
 export interface UserProfile {
   id: number;
-  email: string;
+  email?: string;
   username: string;
   about_me?: string;
   city?: string;

@@ -5,6 +5,7 @@ export { EditorPanel } from './EditorPanel';
 export { PreviewPanel } from './PreviewPanel';
 export { ThemeControls } from './ThemeControls';
 export { SectionList } from './SectionList';
+export { SinglePostEditor } from './SinglePostEditor';
 export { SectionCard, SectionCardOverlay } from './SectionCard';
 export { AssetPicker } from './AssetPicker';
 export { Onboarding, useOnboarding } from './Onboarding';

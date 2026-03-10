@@ -26,7 +26,7 @@ import { notifications } from '@mantine/notifications';
 import { apiClient, BandData } from '@/lib/api';
 
 function CreateBandForm() {
-  const { user, isBand } = useAuth();
+  const { user, isBand, isPaidBand } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +69,9 @@ function CreateBandForm() {
       });
 
       // Band accounts go to their dashboard, fan accounts go to band page
-      if (isBand) {
+      if (isBand && isPaidBand) {
+        router.push('/user/pro/dashboard');
+      } else if (isBand) {
         router.push('/user/band-dashboard');
       } else {
         router.push(`/bands/${band.slug}`);
@@ -81,7 +83,7 @@ function CreateBandForm() {
     }
   };
 
-  const dashboardUrl = isBand ? '/user/band-dashboard' : '/user/dashboard';
+  const dashboardUrl = isBand && isPaidBand ? '/user/pro/dashboard' : isBand ? '/user/band-dashboard' : '/user/dashboard';
 
   if (!user) {
     return (

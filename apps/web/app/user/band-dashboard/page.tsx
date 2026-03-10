@@ -37,7 +37,7 @@ const EventForm = dynamic(() => import('@/components/EventForm/EventForm').then(
 });
 
 export default function BandDashboardPage() {
-  const { user, isLoading, isOnboardingComplete, isFan, refreshUser } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isFan, isPaidBand, refreshUser } = useAuth();
   const router = useRouter();
   const [band, setBand] = useState<Band | null>(null);
   const [bandReviews, setBandReviews] = useState<Review[]>([]);
@@ -67,7 +67,13 @@ export default function BandDashboardPage() {
       router.push('/user/dashboard');
       return;
     }
-  }, [user, isLoading, isOnboardingComplete, isFan, router]);
+
+    // Paid bands should use the pro dashboard
+    if (!isLoading && user && isPaidBand) {
+      router.push('/user/pro/dashboard');
+      return;
+    }
+  }, [user, isLoading, isOnboardingComplete, isFan, isPaidBand, router]);
 
   const fetchBandData = useCallback(async () => {
     if (!user) return;

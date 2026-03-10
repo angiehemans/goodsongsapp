@@ -21,7 +21,7 @@ import Link from 'next/link';
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
-  const { signup, user, isLoading, isOnboardingComplete, isBand } = useAuth();
+  const { signup, user, isLoading, isOnboardingComplete, isBand, isProUser } = useAuth();
   const router = useRouter();
 
   // Redirect based on auth and onboarding status
@@ -29,13 +29,15 @@ export default function SignupPage() {
     if (!isLoading && user) {
       if (!isOnboardingComplete) {
         router.push('/onboarding');
+      } else if (isProUser) {
+        router.push('/user/pro/dashboard');
       } else if (isBand) {
         router.push('/user/band-dashboard');
       } else {
         router.push('/user/dashboard');
       }
     }
-  }, [user, isLoading, isOnboardingComplete, isBand, router]);
+  }, [user, isLoading, isOnboardingComplete, isBand, isProUser, router]);
 
   const form = useForm({
     initialValues: {

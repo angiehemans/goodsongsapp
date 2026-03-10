@@ -121,7 +121,7 @@ export default function OnboardingPage() {
               cursor: 'pointer',
               borderColor: selectedType === 'fan' ? 'var(--mantine-color-grape-6)' : undefined,
               borderWidth: selectedType === 'fan' ? 2 : 1,
-              backgroundColor: selectedType === 'fan' ? 'var(--mantine-color-grape-0)' : undefined,
+              backgroundColor: selectedType === 'fan' ? 'var(--mantine-color-grape-light)' : undefined,
             }}
             onClick={() => setSelectedType('fan')}
           >
@@ -157,7 +157,7 @@ export default function OnboardingPage() {
               cursor: 'pointer',
               borderColor: selectedType === 'band' ? 'var(--mantine-color-grape-6)' : undefined,
               borderWidth: selectedType === 'band' ? 2 : 1,
-              backgroundColor: selectedType === 'band' ? 'var(--mantine-color-grape-0)' : undefined,
+              backgroundColor: selectedType === 'band' ? 'var(--mantine-color-grape-light)' : undefined,
             }}
             onClick={() => setSelectedType('band')}
           >

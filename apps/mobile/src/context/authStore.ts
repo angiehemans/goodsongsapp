@@ -36,6 +36,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
   // Set up token refresh callback to persist new tokens
   apiClient.setTokenRefreshCallback(async (newToken: string, refreshToken: string | null) => {
     await AsyncStorage.setItem(AUTH_TOKEN_KEY, newToken);
+    if (refreshToken) {
+      await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    }
     set({ token: newToken });
   });
 
@@ -215,6 +218,32 @@ export const useAuthStore = create<AuthState>((set, get) => {
             accountType: role, // Backwards compatibility
             isLoading: false,
           });
+        } else if (refreshToken) {
+          // No access token but refresh token exists — bootstrap session
+          apiClient.setRefreshToken(refreshToken);
+          const ok = await apiClient.refreshSession();
+          if (ok) {
+            const user = await apiClient.getProfile();
+            const role = normalizeRole(user.role ?? user.account_type);
+
+            set({
+              token: apiClient.getToken(),
+              refreshToken: apiClient.getRefreshToken(),
+              user,
+              isAuthenticated: true,
+              isOnboardingComplete: user.onboarding_completed ?? false,
+              role,
+              plan: user.plan ?? null,
+              abilities: user.abilities ?? [],
+              accountType: role,
+              isLoading: false,
+            });
+          } else {
+            // Refresh failed — clean up
+            await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+            apiClient.clearAllTokens();
+            set({ isLoading: false });
+          }
         } else {
           set({ isLoading: false });
         }

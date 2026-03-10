@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
 import { notifications } from '@mantine/notifications';
 import { Center, Loader, Text, Stack } from '@mantine/core';
@@ -14,14 +13,18 @@ import {
 } from '@/components/SiteBuilder/Builder';
 import { useBuilderStore } from '@/lib/site-builder/store';
 import { getProfileTheme } from '@/lib/site-builder/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SiteBuilderClient() {
   const initialized = useRef(false);
   const { initialize, isLoading, setLoading, setError, error } = useBuilderStore();
   const { showOnboarding, checkFirstVisit, completeOnboarding, closeOnboarding } = useOnboarding();
+  const { user, isLoading: authLoading } = useAuth();
 
-  // Fetch theme from API on mount
+  // Fetch theme from API once auth is ready
   useEffect(() => {
+    if (authLoading) return; // Wait for auth bootstrap to finish
+    if (!user) return; // Not logged in — useAuth will redirect
     if (initialized.current) return;
     initialized.current = true;
 
@@ -38,9 +41,14 @@ export default function SiteBuilderClient() {
             font_color: data.font_color,
             header_font: data.header_font,
             body_font: data.body_font,
+            content_max_width: data.content_max_width,
+            card_background_color: data.card_background_color,
+            card_background_opacity: data.card_background_opacity,
           },
           sections: data.sections,
           draftSections: data.draft_sections,
+          singlePostLayout: data.single_post_layout,
+          draftSinglePostLayout: data.draft_single_post_layout,
           config: data.config,
           sourceData: data.source_data,
         });
@@ -61,7 +69,7 @@ export default function SiteBuilderClient() {
     }
 
     loadTheme();
-  }, [initialize, checkFirstVisit, setLoading, setError]);
+  }, [authLoading, user, initialize, checkFirstVisit, setLoading, setError]);
 
   // Show loading state
   if (isLoading) {
@@ -88,7 +96,7 @@ export default function SiteBuilderClient() {
   }
 
   return (
-    <ModalsProvider>
+    <>
       <Notifications position="top-right" />
       <ResponsiveBuilder editor={<EditorPanel />} preview={<PreviewPanel />} />
       <Onboarding
@@ -96,6 +104,6 @@ export default function SiteBuilderClient() {
         onClose={closeOnboarding}
         onComplete={completeOnboarding}
       />
-    </ModalsProvider>
+    </>
   );
 }

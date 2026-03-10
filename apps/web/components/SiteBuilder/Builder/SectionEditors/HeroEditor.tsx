@@ -206,10 +206,10 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
   };
 
   const handleToggleSocialLink = (key: SocialLinkType, checked: boolean) => {
-    // If visible_social_links is null/undefined, it means all are visible
+    // If visible_social_links is not an array, it means all are visible ("configured" or null/undefined)
     // When toggling off a link, we need to create the array with all except that one
     // When toggling on, we add it back
-    if (visibleSocialLinks === null || visibleSocialLinks === undefined) {
+    if (!Array.isArray(visibleSocialLinks)) {
       if (!checked) {
         // First time hiding a link - create array with all except this one
         handleSettingsChange(
@@ -230,7 +230,7 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
   };
 
   const isSocialLinkVisible = (key: SocialLinkType): boolean => {
-    if (visibleSocialLinks === null || visibleSocialLinks === undefined) {
+    if (!Array.isArray(visibleSocialLinks)) {
       return true;
     }
     return visibleSocialLinks.includes(key);
@@ -581,6 +581,14 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
                   <IconX size={14} />
                 </ActionIcon>
               )}
+            </Group>
+            <Group justify="space-between">
+              <Text size="xs">Follow Button</Text>
+              <Switch
+                size="xs"
+                checked={settings?.show_follow_button !== false}
+                onChange={(e) => handleSettingsChange('show_follow_button', e.target.checked)}
+              />
             </Group>
             <Text size="xs" c="dimmed">
               Menu links are automatically generated from your visible sections.

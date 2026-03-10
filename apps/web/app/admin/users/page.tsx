@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
                                 src={fixImageUrl(u.profile_image_url)}
                                 color="grape"
                               >
-                                {u.username?.charAt(0).toUpperCase() || u.email.charAt(0).toUpperCase()}
+                                {u.username?.charAt(0)?.toUpperCase() || u.email?.charAt(0)?.toUpperCase() || '?'}
                               </Avatar>
                               {u.username ? (
                                 <Text
@@ -310,7 +310,7 @@ export default function AdminUsersPage() {
                               color="red"
                               size="xs"
                               leftSection={<IconTrash size={14} />}
-                              onClick={() => handleDeleteClick(u.id, u.username || u.email)}
+                              onClick={() => handleDeleteClick(u.id, u.username || u.email || 'Unknown')}
                             >
                               Delete
                             </Button>

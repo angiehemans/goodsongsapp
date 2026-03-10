@@ -57,7 +57,7 @@ export function PostList() {
     if (post.status === 'published' && user?.username) {
       return `/blog/${user.username}/${post.slug}`;
     }
-    return `/user/blogger/posts/editor?id=${post.id}`;
+    return `/user/pro/posts/editor?id=${post.id}`;
   };
 
   const fetchPosts = useCallback(async () => {
@@ -93,7 +93,7 @@ export function PostList() {
         <Title order={2}>Posts</Title>
         <Button
           component={Link}
-          href="/user/blogger/posts/editor"
+          href="/user/pro/posts/editor"
           leftSection={<IconPlus size={16} />}
           color="grape"
         >
@@ -132,7 +132,7 @@ export function PostList() {
               </Text>
               <Button
                 component={Link}
-                href="/user/blogger/posts/editor"
+                href="/user/pro/posts/editor"
                 leftSection={<IconPlus size={16} />}
                 color="grape"
               >
@@ -193,7 +193,7 @@ export function PostList() {
                   <Table.Td>
                     <ActionIcon
                       component={Link}
-                      href={`/user/blogger/posts/editor?id=${post.id}`}
+                      href={`/user/pro/posts/editor?id=${post.id}`}
                       variant="subtle"
                       color="grape"
                       onClick={(e) => e.stopPropagation()}

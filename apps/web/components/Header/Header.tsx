@@ -29,7 +29,7 @@ export function Header({
   size = 'fluid',
   hideThemeToggle = false,
 }: HeaderProps) {
-  const { isBand } = useAuth();
+  const { isBand, isProUser } = useAuth();
   const router = useRouter();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [mounted, setMounted] = useState(false);
@@ -38,7 +38,7 @@ export function Header({
     setMounted(true);
   }, []);
 
-  const dashboardUrl = isBand ? '/user/band-dashboard' : '/user/dashboard';
+  const dashboardUrl = isProUser ? '/user/pro/dashboard' : isBand ? '/user/band-dashboard' : '/user/dashboard';
 
   return (
     <Container fluid p="md" className={styles.header}>

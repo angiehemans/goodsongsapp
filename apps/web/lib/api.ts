@@ -144,7 +144,7 @@ export function normalizeAccountType(accountType: AccountType | number | undefin
 
 export interface User {
   id: number;
-  email: string;
+  email?: string;
   username?: string;
   about_me?: string;
   city?: string;
@@ -191,13 +191,16 @@ export interface ProfileUpdateData {
 }
 
 export interface AuthResponse {
-  auth_token: string;
+  auth_token?: string;
+  access_token?: string;
   refresh_token?: string;
   message?: string;
 }
 
 export interface RefreshTokenResponse {
-  auth_token: string;
+  auth_token?: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export interface Session {
@@ -231,7 +234,9 @@ export interface ValidateTokenResponse {
 
 export interface ResetPasswordResponse {
   message: string;
-  auth_token: string;
+  auth_token?: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export interface ReviewData {
@@ -375,7 +380,7 @@ export interface ClaimCommentResponse {
 
 export interface UserProfile {
   id: number;
-  email: string;
+  email?: string;
   username: string;
   display_name?: string;
   about_me?: string;
@@ -548,6 +553,7 @@ export interface Band {
     id: number;
     username: string;
   } | null;
+  social_links?: Record<string, string>;
   reviews?: Review[];
   created_at: string;
   updated_at: string;
@@ -1249,6 +1255,8 @@ class ApiClient {
     this.initTokenCache();
     const refreshToken = this.cachedRefreshToken;
     if (!refreshToken) {
+      this.clearAllTokens();
+      this.onSessionExpired?.();
       throw new Error('No refresh token available');
     }
 
@@ -1266,8 +1274,17 @@ class ApiClient {
     }
 
     const data = await response.json();
-    this.setAuthToken(data.auth_token);
-    return data.auth_token;
+    // Backend may return auth_token or access_token depending on endpoint convention
+    const newAuthToken = data.auth_token || data.access_token;
+    if (!newAuthToken) {
+      throw new Error('No auth token in refresh response');
+    }
+    this.setAuthToken(newAuthToken);
+    // Token rotation: the old refresh token is now revoked, store the new one
+    if (data.refresh_token) {
+      this.setRefreshToken(data.refresh_token);
+    }
+    return newAuthToken;
   }
 
   private async handleTokenRefresh(): Promise<string> {
@@ -1288,21 +1305,39 @@ class ApiClient {
     }
   }
 
+  // Endpoints that should never trigger token refresh (unauthenticated routes)
+  private static NO_REFRESH_ENDPOINTS = ['/login', '/signup', '/password/forgot', '/password/reset', '/password/validate-token', '/auth/logout', '/auth/logout-all', '/auth/sessions'];
+
+  private shouldAttemptRefresh(endpoint: string): boolean {
+    return !ApiClient.NO_REFRESH_ENDPOINTS.some(e => endpoint.startsWith(e));
+  }
+
   private async makeRequest<T = any>(
     endpoint: string,
     options: RequestInit = {},
     isRetry = false
   ): Promise<T> {
+    const { headers: optionHeaders, ...restOptions } = options;
     const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
+      ...restOptions,
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
-        ...options.headers,
+        ...(optionHeaders as Record<string, string>),
       },
-      ...options,
     });
 
     if (!response.ok) {
+      // Handle rate limiting
+      if (response.status === 429) {
+        let message = 'Too many requests. Please try again later.';
+        try {
+          const error = await response.json();
+          message = error.error?.message || error.error || message;
+        } catch { /* use default message */ }
+        throw new Error(message);
+      }
+
       let error;
       try {
         error = await response.json();
@@ -1310,16 +1345,21 @@ class ApiClient {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      // Check for token expiration and attempt refresh
-      // Backend returns { error: "Token has expired", code: "token_expired" }
-      const errorCode = error.code || error.error?.code;
-      if (response.status === 401 && errorCode === 'token_expired' && !isRetry) {
+      // Attempt token refresh on 401 for authenticated endpoints only
+      if (response.status === 401 && !isRetry && this.shouldAttemptRefresh(endpoint)) {
+        const errorCode = error.code || error.error?.code;
+        // Don't refresh for permanent auth failures — go straight to session expired
+        if (errorCode === 'invalid_refresh_token' || errorCode === 'account_disabled') {
+          this.clearAllTokens();
+          this.onSessionExpired?.();
+          throw new Error('Session expired. Please log in again.');
+        }
         try {
           await this.handleTokenRefresh();
           // Retry the original request with new token
           return this.makeRequest<T>(endpoint, options, true);
-        } catch (refreshError) {
-          // Refresh failed - throw the original error
+        } catch {
+          // Refresh failed — onSessionExpired already called in refreshAccessToken
           throw new Error('Session expired. Please log in again.');
         }
       }
@@ -1330,6 +1370,16 @@ class ApiClient {
     }
 
     return response.json();
+  }
+
+  // Public wrapper for makeRequest — used by site-builder API functions
+  // so they get token refresh handling
+  async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.makeRequest<T>(endpoint, options);
+  }
+
+  async formRequest<T = any>(endpoint: string, formData: FormData): Promise<T> {
+    return this.makeFormRequest<T>(endpoint, formData);
   }
 
   private async makeFormRequest<T = any>(
@@ -1347,6 +1397,16 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      // Handle rate limiting
+      if (response.status === 429) {
+        let rateLimitMsg = 'Too many requests. Please try again later.';
+        try {
+          const rateLimitError = await response.json();
+          rateLimitMsg = rateLimitError.error?.message || rateLimitError.error || rateLimitMsg;
+        } catch { /* use default message */ }
+        throw new Error(rateLimitMsg);
+      }
+
       let error;
       try {
         error = await response.json();
@@ -1354,15 +1414,21 @@ class ApiClient {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      // Check for token expiration and attempt refresh
-      // Backend returns { error: "Token has expired", code: "token_expired" }
-      const errorCode = error.code || error.error?.code;
-      if (response.status === 401 && errorCode === 'token_expired' && !isRetry) {
+      // Attempt token refresh on 401 for authenticated endpoints only
+      if (response.status === 401 && !isRetry && this.shouldAttemptRefresh(endpoint)) {
+        const errorCode = error.code || error.error?.code;
+        // Don't refresh for permanent auth failures
+        if (errorCode === 'invalid_refresh_token' || errorCode === 'account_disabled') {
+          this.clearAllTokens();
+          this.onSessionExpired?.();
+          throw new Error('Session expired. Please log in again.');
+        }
         try {
           await this.handleTokenRefresh();
           // Retry the original request with new token
           return this.makeFormRequest<T>(endpoint, formData, true);
-        } catch (refreshError) {
+        } catch {
+          // Refresh failed — onSessionExpired already called in refreshAccessToken
           throw new Error('Session expired. Please log in again.');
         }
       }
@@ -1580,6 +1646,22 @@ class ApiClient {
   getAuthToken(): string | null {
     this.initTokenCache();
     return this.cachedAuthToken;
+  }
+
+  /**
+   * Bootstrap a session from a refresh token alone.
+   * Call this when no access token exists but a refresh token is available.
+   * Returns true if a new access token was obtained.
+   */
+  async refreshSession(): Promise<boolean> {
+    this.initTokenCache();
+    if (!this.cachedRefreshToken) return false;
+    try {
+      await this.handleTokenRefresh();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async createReview(data: ReviewData): Promise<any> {
@@ -1865,7 +1947,10 @@ class ApiClient {
       throw new Error(error.error || 'Failed to fetch user bands');
     }
 
-    return response.json();
+    const data = await response.json();
+    // Handle paginated response shape
+    if (Array.isArray(data)) return data;
+    return data.bands || [];
   }
 
   async getUserReviews(): Promise<Review[]> {
@@ -1887,7 +1972,10 @@ class ApiClient {
       throw new Error(errorMessage);
     }
 
-    return response.json();
+    const data = await response.json();
+    // Handle paginated response shape
+    if (Array.isArray(data)) return data;
+    return data.reviews || [];
   }
 
   async connectLastFm(username: string): Promise<{ message: string; username: string; profile: LastFmStatus['profile'] }> {
@@ -2213,19 +2301,27 @@ class ApiClient {
   }
 
   async getFollowing(): Promise<FollowUser[]> {
-    return this.makeRequest('/following');
+    const response = await this.makeRequest<{ users: FollowUser[]; pagination: DiscoverPagination } | FollowUser[]>('/following');
+    if (Array.isArray(response)) return response;
+    return response.users;
   }
 
   async getFollowers(): Promise<FollowUser[]> {
-    return this.makeRequest('/followers');
+    const response = await this.makeRequest<{ users: FollowUser[]; pagination: DiscoverPagination } | FollowUser[]>('/followers');
+    if (Array.isArray(response)) return response;
+    return response.users;
   }
 
   async getUserFollowing(userId: number): Promise<FollowUser[]> {
-    return this.makeRequest(`/users/${userId}/following`);
+    const response = await this.makeRequest<{ users: FollowUser[]; pagination: DiscoverPagination } | FollowUser[]>(`/users/${userId}/following`);
+    if (Array.isArray(response)) return response;
+    return response.users;
   }
 
   async getUserFollowers(userId: number): Promise<FollowUser[]> {
-    return this.makeRequest(`/users/${userId}/followers`);
+    const response = await this.makeRequest<{ users: FollowUser[]; pagination: DiscoverPagination } | FollowUser[]>(`/users/${userId}/followers`);
+    if (Array.isArray(response)) return response;
+    return response.users;
   }
 
   async getFollowingFeed(page: number = 1): Promise<FollowingFeedResponse> {
@@ -2255,9 +2351,12 @@ class ApiClient {
 
   // Event endpoints
   async getBandEvents(slug: string): Promise<Event[]> {
-    return this.makeRequest(`/bands/${slug}/events`, {
+    const response = await this.makeRequest<{ events: Event[]; pagination: DiscoverPagination } | Event[]>(`/bands/${slug}/events`, {
       headers: { 'Content-Type': 'application/json' },
     });
+    // Handle paginated response shape
+    if (Array.isArray(response)) return response;
+    return response.events;
   }
 
   async createEvent(slug: string, data: EventData | FormData): Promise<Event> {
@@ -2316,9 +2415,11 @@ class ApiClient {
   }
 
   async getUserEvents(userId: number): Promise<Event[]> {
-    return this.makeRequest(`/users/${userId}/events`, {
+    const response = await this.makeRequest<{ events: Event[]; pagination: DiscoverPagination } | Event[]>(`/users/${userId}/events`, {
       headers: { 'Content-Type': 'application/json' },
     });
+    if (Array.isArray(response)) return response;
+    return response.events;
   }
 
   async createUserEvent(data: EventData | FormData): Promise<Event> {

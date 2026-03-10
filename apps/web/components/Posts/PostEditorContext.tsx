@@ -228,7 +228,7 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
           });
           // If not publishing, stay in editor with the new post ID
           if (targetStatus !== 'published' && newPostId) {
-            router.replace(`/user/blogger/posts/editor?id=${newPostId}`);
+            router.replace(`/user/pro/posts/editor?id=${newPostId}`);
           }
         }
 
@@ -236,7 +236,7 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
 
         // Redirect to posts list after publishing
         if (targetStatus === 'published') {
-          router.push('/user/blogger/posts');
+          router.push('/user/pro/posts');
         }
       } catch (error) {
         console.error('Failed to save post:', error);
@@ -265,7 +265,7 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
         message: 'Post deleted successfully.',
         color: 'green',
       });
-      router.push('/user/blogger/posts');
+      router.push('/user/pro/posts');
     } catch (error) {
       console.error('Failed to delete post:', error);
       notifications.show({

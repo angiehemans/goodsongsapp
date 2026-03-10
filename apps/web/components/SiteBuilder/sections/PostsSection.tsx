@@ -113,10 +113,14 @@ export function PostsSection({ content, data, settings, isPreview }: PostsSectio
               );
             }
 
+            const postHref = data?.post_base_path
+              ? `${data.post_base_path}/${post.slug}`
+              : `/posts/${post.slug}`;
+
             return (
               <Link
                 key={post.id}
-                href={`/posts/${post.slug}`}
+                href={postHref}
                 className={layout === 'grid' ? 'profile-card profile-card--link' : 'posts-section__stack-link'}
               >
                 {cardContent}

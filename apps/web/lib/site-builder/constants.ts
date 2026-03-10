@@ -7,6 +7,8 @@ export const DEFAULT_THEME: ProfileTheme = {
   font_color: '#f5f5f5',
   header_font: 'Inter',
   body_font: 'Inter',
+  card_background_color: '',
+  card_background_opacity: 10,
 };
 
 // Section type metadata

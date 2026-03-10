@@ -88,8 +88,14 @@ function ResetPasswordForm() {
         values.passwordConfirmation
       );
 
-      // Store the auth token
-      apiClient.setAuthToken(response.auth_token);
+      // Store both tokens (refresh token rotation)
+      const authToken = response.auth_token || response.access_token;
+      if (authToken) {
+        apiClient.setAuthToken(authToken);
+      }
+      if (response.refresh_token) {
+        apiClient.setRefreshToken(response.refresh_token);
+      }
       await refreshUser();
 
       notifications.show({

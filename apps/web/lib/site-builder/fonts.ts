@@ -20,6 +20,14 @@ export const APPROVED_FONTS = [
   // Monospace
   'IBM Plex Mono',
   'JetBrains Mono',
+  'Courier Prime',
+  'Cutive Mono',
+  // Display
+  'Creepster',
+  'Jacquard 12',
+  'Astloch',
+  'Pirata One',
+  'Special Elite',
 ] as const;
 
 export type ApprovedFont = (typeof APPROVED_FONTS)[number];
@@ -52,7 +60,11 @@ export const FONT_CATEGORIES: FontCategory[] = [
   },
   {
     label: 'Monospace',
-    fonts: ['IBM Plex Mono', 'JetBrains Mono'],
+    fonts: ['IBM Plex Mono', 'JetBrains Mono', 'Courier Prime', 'Cutive Mono'],
+  },
+  {
+    label: 'Display',
+    fonts: ['Creepster', 'Jacquard 12', 'Astloch', 'Pirata One', 'Special Elite'],
   },
 ];
 
@@ -92,6 +104,8 @@ export function getFontFamily(font: string): string {
     fallback = 'serif';
   } else if (category?.label === 'Monospace') {
     fallback = 'monospace';
+  } else if (category?.label === 'Display') {
+    fallback = 'cursive';
   }
 
   return `"${font}", ${fallback}`;

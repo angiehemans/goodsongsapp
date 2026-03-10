@@ -194,7 +194,7 @@ export function UserSidebar({
                 </div>
               ) : (
                 <Avatar size="72px">
-                  {user.username?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                  {user.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
                 </Avatar>
               )}
               <FileButton

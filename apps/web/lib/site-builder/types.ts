@@ -1,3 +1,19 @@
+// Single post layout types
+export type SinglePostContentLayout = 'default' | 'wide' | 'narrow';
+
+export interface SinglePostLayout {
+  show_featured_image: boolean;
+  show_author: boolean;
+  show_song_embed: boolean;
+  show_comments: boolean;
+  show_related_posts: boolean;
+  show_navigation: boolean;
+  content_layout: SinglePostContentLayout;
+  background_color: string | null;
+  font_color: string | null;
+  max_width: number | null;
+}
+
 // Section types available in the site builder
 export type SectionType =
   | 'hero'
@@ -22,6 +38,8 @@ export interface ProfileTheme {
   header_font: string;
   body_font: string;
   content_max_width?: number; // Max width for section content in pixels, default 1200
+  card_background_color?: string | null; // Card/surface background color, defaults to font_color. null/'' = inherit
+  card_background_opacity?: number; // Card bg opacity 0-100, defaults to 10
 }
 
 // Layout alignment options for hero section
@@ -55,6 +73,7 @@ export interface HeroSettings {
   show_menu?: boolean;
   menu_title?: string;
   menu_background_color?: string;
+  show_follow_button?: boolean;
 }
 
 export type MusicPlayerLayout = 'left' | 'center' | 'right';
@@ -240,6 +259,7 @@ export interface HeroData {
   };
   // Visible sections for menu navigation
   menu_sections?: MenuSectionInfo[];
+  owner_user_id?: number;
 }
 
 export interface MusicData {
@@ -279,6 +299,7 @@ export interface PostsData {
     featured_image_url?: string;
     publish_date: string;
   }>;
+  post_base_path?: string; // e.g. "/blog/username" or "/bands/slug"
 }
 
 export interface AboutData {
@@ -343,6 +364,8 @@ export interface ProfileThemeConfig {
   section_schemas?: Record<string, unknown>;
   social_link_types?: SocialLinkType[];
   streaming_link_types?: StreamingLinkType[];
+  single_post_content_layouts?: string[];
+  single_post_layout_schema?: Record<string, unknown>;
 }
 
 // Source data from profile theme (user profile info for preview)
@@ -357,6 +380,14 @@ export interface ProfileSourceData {
     id: number;
     username: string;
     role: string;
+  };
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+    location?: string;
+    about?: string;
+    profile_picture_url?: string;
   };
   posts?: Array<{
     id: number;
@@ -387,6 +418,20 @@ export interface ProfileSourceData {
       artist?: string;
     };
   }>;
+  sample_post?: {
+    id: number;
+    title: string;
+    slug: string;
+    body: string;
+    excerpt?: string;
+    featured_image_url?: string;
+    publish_date: string;
+    song?: { name: string; artist?: string; artwork_url?: string };
+    author: { username: string; display_name?: string; profile_image_url?: string };
+    comments?: Array<{ id: number; body: string; author: string; created_at: string }>;
+    related_posts?: Array<{ id: number; title: string; slug: string; featured_image_url?: string }>;
+    navigation?: { prev?: { title: string; slug: string }; next?: { title: string; slug: string } };
+  };
 }
 
 // Full profile theme response from GET /api/v1/profile_theme
@@ -399,7 +444,12 @@ export interface ProfileThemeResponse {
     font_color: string;
     header_font: string;
     body_font: string;
+    content_max_width?: number;
+    card_background_color?: string;
+    card_background_opacity?: number;
     sections: Section[];
+    single_post_layout: SinglePostLayout;
+    draft_single_post_layout: SinglePostLayout | null;
     draft_sections: Section[] | null;
     has_draft: boolean;
     published_at: string | null;
@@ -445,6 +495,7 @@ export interface PublicProfileResponse {
       reviews_count?: number;
       followers_count?: number;
       following_count?: number;
+      social_links?: Record<string, string>;
       primary_band?: {
         id: number;
         slug: string;
@@ -455,6 +506,84 @@ export interface PublicProfileResponse {
     };
     theme: ProfileTheme | null;
     sections: Section[];
+  };
+}
+
+// Themed single post response from GET /api/v1/profiles/bands/:slug/posts/:post_slug
+// or GET /api/v1/profiles/users/:username/posts/:post_slug
+export interface ThemedPostResponse {
+  data: {
+    post: {
+      id: number;
+      title: string;
+      slug: string;
+      excerpt?: string;
+      body?: string;
+      featured_image_url?: string;
+      publish_date: string;
+      tags?: string[];
+      likes_count?: number;
+      liked_by_current_user?: boolean;
+      comments_count?: number;
+      can_edit?: boolean;
+      song?: {
+        song_name: string;
+        band_name: string;
+        album_name?: string;
+        artwork_url?: string;
+        song_link?: string;
+        streaming_links?: Record<string, string>;
+        preferred_link?: string;
+        songlink_url?: string;
+      };
+      author: {
+        id: number;
+        username: string | null;
+        display_name?: string;
+        profile_image_url?: string | null;
+      };
+    };
+    user: {
+      id: number;
+      username: string | null;
+      display_name?: string;
+      profile_image_url?: string | null;
+      primary_band?: {
+        id: number;
+        slug: string;
+        name: string;
+        location?: string;
+        profile_picture_url?: string;
+      };
+    };
+    theme: (ProfileTheme & {
+      single_post_layout?: SinglePostLayout | null;
+    }) | null;
+    comments: {
+      data: Array<{
+        id: number;
+        body: string;
+        author: string;
+        created_at: string;
+      }>;
+      pagination?: {
+        current_page: number;
+        total_count: number;
+        total_pages: number;
+        per_page: number;
+      };
+    };
+    related_posts: Array<{
+      id: number;
+      title: string;
+      slug: string;
+      featured_image_url?: string;
+      publish_date?: string;
+    }>;
+    navigation: {
+      previous_post?: { title: string; slug: string } | null;
+      next_post?: { title: string; slug: string } | null;
+    };
   };
 }
 

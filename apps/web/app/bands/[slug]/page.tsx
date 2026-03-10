@@ -20,7 +20,10 @@ import { Header } from '@/components/Header/Header';
 import { MusicPlayer } from '@/components/MusicPlayer/MusicPlayer';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
+import { ProfilePage } from '@/components/SiteBuilder/ProfilePage';
+import { FontPreload } from '@/components/SiteBuilder/FontPreload';
 import { Band, Event, Review } from '@/lib/api';
+import { PublicProfileResponse } from '@/lib/site-builder/types';
 import styles from './page.module.css';
 
 export async function generateMetadata({
@@ -90,10 +93,31 @@ async function getBandEvents(slug: string): Promise<Event[]> {
       return [];
     }
 
-    return response.json();
+    const data = await response.json();
+    // Handle paginated response shape
+    if (Array.isArray(data)) return data;
+    return data.events || [];
   } catch (error) {
     console.error('Error fetching events:', error);
     return [];
+  }
+}
+
+function getApiUrl(): string {
+  return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000';
+}
+
+async function getPublicProfile(slug: string): Promise<PublicProfileResponse | null> {
+  try {
+    const response = await fetch(`${getApiUrl()}/api/v1/profiles/bands/${slug}`, {
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
   }
 }
 
@@ -112,6 +136,51 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
           Failed to load band profile. Please try again later.
         </Alert>
       </Container>
+    );
+  }
+
+  // Check for a published custom theme
+  const publicProfile = await getPublicProfile(slug);
+  if (publicProfile?.data?.theme && publicProfile.data.sections.length > 0) {
+    const { theme, sections, user } = publicProfile.data;
+
+    const sourceData = {
+      display_name: user.display_name || band.name,
+      location: user.location || band.location,
+      about_text: user.about_me || band.about,
+      profile_image_url: user.profile_image_url || user.primary_band?.profile_picture_url || band.profile_picture_url,
+      user: {
+        id: user.id,
+        username: user.username || band.slug,
+        role: user.role,
+      },
+      band: {
+        id: band.id,
+        slug: band.slug,
+        name: band.name,
+        location: band.location,
+        about: band.about,
+        profile_picture_url: band.profile_picture_url,
+      },
+      social_links: user.social_links || band.social_links || {},
+      streaming_links: {
+        ...(band.spotify_link ? { spotify: band.spotify_link } : {}),
+        ...(band.bandcamp_link ? { bandcamp: band.bandcamp_link } : {}),
+        ...(band.apple_music_link ? { apple_music: band.apple_music_link } : {}),
+        ...(band.youtube_music_link ? { youtube_music: band.youtube_music_link } : {}),
+      },
+    };
+
+    return (
+      <>
+        <FontPreload fonts={[theme.header_font, theme.body_font]} />
+        <ProfilePage
+          theme={theme}
+          sections={sections}
+          sourceData={sourceData}
+          isPreview={false}
+        />
+      </>
     );
   }
 

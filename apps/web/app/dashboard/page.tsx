@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 function DashboardRedirectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading, isOnboardingComplete, isBand, isBlogger } = useAuth();
+  const { user, isLoading, isOnboardingComplete, isBand, isBlogger, isProUser } = useAuth();
 
   useEffect(() => {
     // Wait for auth to load before redirecting
@@ -23,14 +23,14 @@ function DashboardRedirectContent() {
     // Redirect based on onboarding status and role
     if (!isOnboardingComplete) {
       router.replace('/onboarding');
+    } else if (isProUser) {
+      router.replace('/user/pro/dashboard');
     } else if (isBand) {
       router.replace('/user/band-dashboard');
-    } else if (isBlogger) {
-      router.replace('/user/blogger/dashboard');
     } else {
       router.replace('/user/dashboard');
     }
-  }, [router, searchParams, user, isLoading, isOnboardingComplete, isBand, isBlogger]);
+  }, [router, searchParams, user, isLoading, isOnboardingComplete, isBand, isBlogger, isProUser]);
 
   return (
     <Container size="sm" py="xl">

@@ -231,7 +231,7 @@ export function AdminUserDrawer({
 
   const handleDelete = () => {
     if (!userId || !userDetail) return;
-    const displayName = userDetail.username || userDetail.email;
+    const displayName = userDetail.username || userDetail.email || 'Unknown';
     onDeleteClick?.(userId, displayName);
   };
 
