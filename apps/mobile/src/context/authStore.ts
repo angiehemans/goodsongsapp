@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     if (refreshToken) {
       await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     }
-    set({ token: newToken });
+    set({ token: newToken, refreshToken: refreshToken ?? get().refreshToken });
   });
 
   // Set up session expired callback to log out
@@ -248,22 +248,27 @@ export const useAuthStore = create<AuthState>((set, get) => {
           set({ isLoading: false });
         }
       } catch (error) {
-        // Token invalid or expired - the API client will handle refresh automatically
-        // If we get here, even the refresh failed
-        await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
-        apiClient.clearAllTokens();
-        set({
-          isLoading: false,
-          isAuthenticated: false,
-          user: null,
-          token: null,
-          refreshToken: null,
-          isOnboardingComplete: false,
-          role: null,
-          plan: null,
-          abilities: [],
-          accountType: null,
-        });
+        const message = error instanceof Error ? error.message : '';
+        if (message.includes('Session expired')) {
+          // Auth is truly dead — refresh token was invalid/revoked
+          await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+          apiClient.clearAllTokens();
+          set({
+            isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            token: null,
+            refreshToken: null,
+            isOnboardingComplete: false,
+            role: null,
+            plan: null,
+            abilities: [],
+            accountType: null,
+          });
+        } else {
+          // Transient error (network, server 500, etc.) — don't destroy tokens
+          set({ isLoading: false });
+        }
       }
     },
 
@@ -285,8 +290,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
           accountType: role, // Backwards compatibility
         });
       } catch (error) {
-        // If refresh fails, log out
-        await get().logout();
+        // Only logout on auth failures (session expired / invalid token).
+        // The API client already attempted a token refresh on 401 — if we
+        // reach this catch, the refresh itself failed and onSessionExpired
+        // was already called.  For transient errors (network, 500, etc.),
+        // don't destroy the session.
+        const message = error instanceof Error ? error.message : '';
+        if (message.includes('Session expired')) {
+          await get().logout();
+        }
       }
     },
 

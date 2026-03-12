@@ -62,6 +62,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (theme) => ({
     '--gs-text-secondary': theme.colors.grape[8],
     '--gs-text-tertiary': theme.colors.grape[6],
     '--gs-text-muted': theme.colors.grape[6],
+    '--gs-text-extra-muted': theme.colors.grape[4],
     '--gs-text-placeholder': theme.colors.grape[4],
     '--gs-text-inverse': theme.colors.grape[0],
     '--gs-text-label': theme.colors.grape[4],
@@ -129,7 +130,8 @@ export const cssVariablesResolver: CSSVariablesResolver = (theme) => ({
     '--gs-text-primary': gray[0], // #FAFAFA - primary text
     '--gs-text-secondary': gray[1], // #F5F5F5 - secondary text
     '--gs-text-tertiary': gray[5], // #E0E0E0 - tertiary text
-    '--gs-text-muted': gray[5], // #BDBDBD - muted text
+    '--gs-text-muted': gray[5],
+    '--gs-text-extra-muted': gray[6], // #BDBDBD - muted text
     '--gs-text-placeholder': gray[5], // #9E9E9E - placeholder
     '--gs-text-inverse': gray[9], // #212121 - inverse (for light buttons)
     '--gs-text-label': gray[4], // #BDBDBD - form labels

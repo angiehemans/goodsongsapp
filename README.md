@@ -29,6 +29,7 @@ The main GoodSongs web application built with:
 - [SWR](https://swr.vercel.app/) - Data fetching
 
 **Features:**
+
 - User authentication (fan and band accounts)
 - Song reviews and recommendations
 - Band profiles and management
@@ -47,6 +48,7 @@ React Native mobile app for Android, built with:
 - [react-native-bootsplash](https://github.com/zoontek/react-native-bootsplash) - Splash screen
 
 **Features:**
+
 - User and band authentication
 - Song recommendations and discovery feed
 - Music scrobbling via Android notification listener (Spotify, YouTube Music, Tidal, Amazon Music, Apple Music)
@@ -61,6 +63,7 @@ React Native mobile app for Android, built with:
 ### `@goodsongs/tokens`
 
 Design system tokens shared across web and mobile:
+
 - Color palettes (grape, blue, grey)
 - Typography (fonts, sizes, weights)
 - Spacing scale
@@ -69,6 +72,7 @@ Design system tokens shared across web and mobile:
 ### `@goodsongs/api-client`
 
 Shared API layer:
+
 - TypeScript interfaces for all API entities
 - Zod validation schemas
 - Utility functions
@@ -76,6 +80,7 @@ Shared API layer:
 ### `@goodsongs/config`
 
 Shared configurations:
+
 - TypeScript base config
 - Next.js TypeScript config
 - React Native TypeScript config
@@ -166,6 +171,8 @@ cd apps/mobile
 pnpm install
 
 # Run on the connected Android device
+pnpm start
+
 pnpm android
 ```
 
@@ -318,26 +325,27 @@ pnpm clean
 The web app is configured for Vercel deployment. The `vercel.json` at the root handles the monorepo setup automatically.
 
 **Manual Vercel configuration:**
+
 - Root Directory: `apps/web`
 - Build Command: `pnpm build --filter=@goodsongs/web`
 - Install Command: `pnpm install`
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Monorepo | Turborepo, pnpm workspaces |
-| Web Framework | Next.js 15 (App Router) |
+| Category         | Technology                  |
+| ---------------- | --------------------------- |
+| Monorepo         | Turborepo, pnpm workspaces  |
+| Web Framework    | Next.js 15 (App Router)     |
 | Mobile Framework | React Native 0.78+ (Hermes) |
-| UI Library | Mantine 8 (web) |
-| Navigation | React Navigation (mobile) |
+| UI Library       | Mantine 8 (web)             |
+| Navigation       | React Navigation (mobile)   |
 | State Management | SWR (web), Zustand (mobile) |
-| Styling | PostCSS, CSS Modules |
-| Language | TypeScript, Kotlin |
-| Validation | Zod |
-| Testing | Jest, React Testing Library |
-| Storybook | Storybook 8 |
-| Linting | ESLint, Stylelint, Prettier |
+| Styling          | PostCSS, CSS Modules        |
+| Language         | TypeScript, Kotlin          |
+| Validation       | Zod                         |
+| Testing          | Jest, React Testing Library |
+| Storybook        | Storybook 8                 |
+| Linting          | ESLint, Stylelint, Prettier |
 
 ## License
 

@@ -8,6 +8,7 @@ const monorepoRoot = path.resolve(projectRoot, '../..');
 const config = {
   watchFolders: [monorepoRoot],
   resolver: {
+    unstable_enableSymlinks: true,
     nodeModulesPaths: [
       path.resolve(projectRoot, 'node_modules'),
       path.resolve(monorepoRoot, 'node_modules'),

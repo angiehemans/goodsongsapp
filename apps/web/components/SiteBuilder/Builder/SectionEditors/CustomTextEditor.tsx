@@ -58,7 +58,7 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
       </Group>
 
       <div>
-        <Text size="sm" fw={500} mb={4}>
+        <Text className="builder-field-label" mb={4}>
           Text Alignment
         </Text>
         <SegmentedControl

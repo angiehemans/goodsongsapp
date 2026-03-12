@@ -248,7 +248,7 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
 
   const LabelWithTooltip = ({ label, tooltip }: { label: string; tooltip: string }) => (
     <Group gap={4}>
-      <Text size="sm" fw={500}>
+      <Text className="builder-field-label">
         {label}
       </Text>
       <Tooltip label={tooltip} withArrow position="top">
@@ -532,7 +532,7 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
         <Group justify="space-between" mb="xs">
           <Group gap={4}>
             <IconMenu2 size={16} />
-            <Text size="sm" fw={500}>
+            <Text className="builder-field-label">
               Navigation Menu
             </Text>
             <Tooltip
@@ -700,7 +700,7 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
 
       <Box>
         <Group gap={4} mb="xs">
-          <Text size="sm" fw={500}>
+          <Text className="builder-field-label">
             Background Image
           </Text>
           <Tooltip label="Add a background image to your hero section" withArrow position="top">

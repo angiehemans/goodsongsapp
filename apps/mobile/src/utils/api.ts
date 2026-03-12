@@ -271,8 +271,11 @@ class MobileApiClient {
   private refreshToken: string | null = null;
   private isRefreshing = false;
   private refreshPromise: Promise<string> | null = null;
-  private onTokenRefreshed: ((token: string, refreshToken: string | null) => void) | null = null;
+  private onTokenRefreshed: ((token: string, refreshToken: string | null) => Promise<void> | void) | null = null;
   private onSessionExpired: (() => void) | null = null;
+
+  // Endpoints that should never trigger token refresh (unauthenticated routes)
+  private static NO_REFRESH_ENDPOINTS = ['/login', '/signup', '/password/forgot', '/password/reset', '/password/validate-token', '/auth/logout', '/auth/logout-all', '/auth/sessions'];
 
   getToken(): string | null {
     return this.token;
@@ -304,8 +307,12 @@ class MobileApiClient {
   }
 
   // Set callbacks for token refresh events
-  setTokenRefreshCallback(callback: (token: string, refreshToken: string | null) => void) {
+  setTokenRefreshCallback(callback: (token: string, refreshToken: string | null) => Promise<void> | void) {
     this.onTokenRefreshed = callback;
+  }
+
+  private shouldAttemptRefresh(endpoint: string): boolean {
+    return !MobileApiClient.NO_REFRESH_ENDPOINTS.some(e => endpoint.startsWith(e));
   }
 
   setSessionExpiredCallback(callback: () => void) {
@@ -347,8 +354,8 @@ class MobileApiClient {
       this.refreshToken = data.refresh_token;
     }
 
-    // Notify the auth store to persist both new tokens
-    this.onTokenRefreshed?.(data.auth_token, this.refreshToken);
+    // Notify the auth store to persist both new tokens (await to ensure storage completes)
+    await this.onTokenRefreshed?.(data.auth_token, this.refreshToken);
 
     return data.auth_token;
   }
@@ -403,8 +410,8 @@ class MobileApiClient {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      // Attempt token refresh on any 401 unless it's a permanent auth failure
-      if (response.status === 401 && !isRetry) {
+      // Attempt token refresh on 401 for authenticated endpoints only
+      if (response.status === 401 && !isRetry && this.shouldAttemptRefresh(endpoint)) {
         const errorCode = error.code || error.error?.code;
         // Don't refresh for permanent auth failures — go straight to session expired
         if (errorCode === 'invalid_refresh_token' || errorCode === 'account_disabled') {

@@ -66,6 +66,21 @@
   gap: 1rem;
 }
 
+/* Dimmed labels for all builder input fields, selects, and toggles */
+.builder-editor__content .mantine-InputWrapper-label,
+.builder-editor__content .mantine-Switch-label,
+.builder-editor__content .mantine-Select-label {
+  color: var(--gs-text-extra-muted);
+  font-size: 0.675rem;
+}
+
+/* Custom text labels used for layout controls, alignment, background image, etc. */
+.builder-field-label {
+  color: var(--gs-text-extra-muted);
+  font-size: 0.675rem;
+  font-weight: 500;
+}
+
 .theme-control {
   display: flex;
   flex-direction: column;
@@ -147,7 +162,6 @@
   padding: 0.75rem 1rem 1rem;
   background-color: var(--mantine-color-dark-6);
 }
-
 
 /* Preview Container */
 .preview-container {
@@ -263,8 +277,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Preview scale animation */
@@ -272,20 +291,23 @@
   transition: width 0.3s ease;
 }
 
-
 /* Color picker transition */
-.theme-controls input[type="color"] {
+.theme-controls input[type='color'] {
   transition: box-shadow 0.2s ease;
 }
 
-.theme-controls input[type="color"]:focus {
+.theme-controls input[type='color']:focus {
   box-shadow: 0 0 0 2px var(--mantine-primary-color-light);
 }
 
 /* Loading skeleton animation */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .builder-skeleton {
@@ -318,8 +340,13 @@
 
 /* Unsaved indicator pulse */
 @keyframes unsavedPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .builder-unsaved-indicator {

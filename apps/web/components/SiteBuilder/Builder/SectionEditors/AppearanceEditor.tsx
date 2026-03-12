@@ -40,7 +40,7 @@ export function AppearanceEditor({ index, settings, sectionType }: AppearanceEdi
 
   return (
     <Stack gap="md">
-      <Text size="sm" fw={500} c="dimmed">
+      <Text className="builder-field-label">
         Appearance
       </Text>
 

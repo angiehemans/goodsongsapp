@@ -110,7 +110,7 @@ export function PostsEditor({ index, content, settings }: PostsEditorProps) {
 
       {/* Title Alignment */}
       <div>
-        <Text size="sm" fw={500} mb={4}>Title alignment</Text>
+        <Text className="builder-field-label" mb={4}>Title alignment</Text>
         <Group gap="xs">
           {titleAlignOptions.map((option) => (
             <Tooltip key={option.value} label={option.label} position="top">
@@ -128,7 +128,7 @@ export function PostsEditor({ index, content, settings }: PostsEditorProps) {
 
       {/* Layout */}
       <div>
-        <Text size="sm" fw={500} mb={4}>Layout</Text>
+        <Text className="builder-field-label" mb={4}>Layout</Text>
         <Group gap="xs">
           {layoutOptions.map((option) => (
             <Tooltip key={option.value} label={option.label} position="top">
@@ -195,7 +195,7 @@ export function PostsEditor({ index, content, settings }: PostsEditorProps) {
 
       {/* Background Image */}
       <Box>
-        <Text size="sm" fw={500} mb={8}>Background image</Text>
+        <Text className="builder-field-label" mb={8}>Background image</Text>
 
         {settings?.background_image_url ? (
           <Stack gap="xs">

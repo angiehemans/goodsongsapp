@@ -34,7 +34,7 @@ export function SinglePostEditor() {
       </Stack>
 
       {/* Style Overrides */}
-      <Text size="sm" fw={500}>Style Overrides</Text>
+      <Text className="builder-field-label">Style Overrides</Text>
       <Stack gap="sm">
         <ColorInput
           label="Background Color"

@@ -251,7 +251,7 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
 
       {/* Title Alignment */}
       <div>
-        <Text size="sm" fw={500} mb={4}>Title alignment</Text>
+        <Text className="builder-field-label" mb={4}>Title alignment</Text>
         <Group gap="xs">
           {titleAlignOptions.map((option) => (
             <Tooltip key={option.value} label={option.label} position="top">
@@ -270,7 +270,7 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
       {/* Embeds List */}
       <Box>
         <Group justify="space-between" mb={8}>
-          <Text size="sm" fw={500}>
+          <Text className="builder-field-label">
             Embedded players ({embeds.length}/{MAX_EMBEDS})
           </Text>
         </Group>
@@ -381,7 +381,7 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
 
       {/* Player Layout */}
       <div>
-        <Text size="sm" fw={500} mb={4}>Player alignment</Text>
+        <Text className="builder-field-label" mb={4}>Player alignment</Text>
         <Group gap="xs">
           {playerLayoutOptions.map((option) => (
             <Tooltip key={option.value} label={option.label} position="top">
@@ -437,7 +437,7 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
 
       {/* Background Image */}
       <Box>
-        <Text size="sm" fw={500} mb={8}>Background image</Text>
+        <Text className="builder-field-label" mb={8}>Background image</Text>
 
         {settings?.background_image_url ? (
           <Stack gap="xs">

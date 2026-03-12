@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ColorInput, Group, NumberInput, Select, Stack, Text } from '@mantine/core';
+import { ColorInput, Group, NumberInput, Select, Stack, Text, Tooltip } from '@mantine/core';
 import { APPROVED_FONTS, FONT_CATEGORIES, getGoogleFontsUrl } from '@/lib/site-builder/fonts';
 import { useBuilderStore } from '@/lib/site-builder/store';
 
@@ -136,9 +136,9 @@ export function ThemeControls() {
             styles={{ input: { fontFamily: `"${theme.body_font ?? 'Inter'}", sans-serif` } }}
           />
         </Group>
-        <NumberInput
+        <Tooltip label="Maximum width for section content (except hero)" multiline w={220}>
+          <NumberInput
           label="Content Max Width"
-          description="Maximum width for section content (except hero)"
           value={theme.content_max_width ?? 1200}
           onChange={(value) =>
             setThemeField('content_max_width', value === '' ? 1200 : Number(value))
@@ -148,6 +148,7 @@ export function ThemeControls() {
           step={50}
           suffix="px"
         />
+        </Tooltip>
       </Stack>
     </div>
   );

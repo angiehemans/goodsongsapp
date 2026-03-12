@@ -180,17 +180,15 @@ export const useScrobbleStore = create<ScrobbleStoreState>((set, get) => ({
         try {
           const response = await apiClient.submitScrobbles(apiScrobbles);
 
-          if (response.data?.accepted > 0) {
-            // Only mark as synced if API actually accepted them
+          if (response.data && typeof response.data.accepted === 'number') {
+            // Valid response from API — remove batch regardless of accepted/rejected
+            // to prevent infinite retry of duplicates or silently-ignored scrobbles
             syncedIds.push(...batch.map((s) => s.id));
-            console.log(`Synced ${response.data.accepted} scrobbles (${response.data.rejected} rejected)`);
-          } else if (response.data?.rejected > 0) {
-            // All were rejected - log but don't retry (likely invalid data)
-            console.warn(`All ${response.data.rejected} scrobbles in batch were rejected by API`);
-            // Still remove them to prevent infinite retry of bad data
-            syncedIds.push(...batch.map((s) => s.id));
+            if (response.data.accepted > 0 || response.data.rejected > 0) {
+              console.log(`Synced ${response.data.accepted} scrobbles (${response.data.rejected} rejected)`);
+            }
           } else {
-            // Unexpected response - don't remove, will retry
+            // Unexpected response shape - don't remove, will retry
             console.warn('Unexpected API response:', response);
             failedIds.push(...batch.map((s) => s.id));
           }
