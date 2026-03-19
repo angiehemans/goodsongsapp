@@ -1390,10 +1390,11 @@ class ApiClient {
     isRetry = false
   ): Promise<T> {
     const { headers: optionHeaders, ...restOptions } = options;
+    const isFormData = restOptions.body instanceof FormData;
     const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
       ...restOptions,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...this.getAuthHeader(),
         ...(optionHeaders as Record<string, string>),
       },
@@ -2339,6 +2340,46 @@ class ApiClient {
   async adminDeleteReview(reviewId: number): Promise<{ message: string }> {
     return this.makeRequest(`/admin/reviews/${reviewId}`, {
       method: 'DELETE',
+    });
+  }
+
+  async adminUpdateReview(
+    reviewId: number,
+    data: {
+      song_link?: string;
+      band_name?: string;
+      song_name?: string;
+      artwork_url?: string;
+      review_text?: string;
+      liked_aspects?: string[];
+      genres?: string[];
+    }
+  ): Promise<{ message: string; review: Review }> {
+    return this.makeRequest(`/admin/reviews/${reviewId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ review: data }),
+    });
+  }
+
+  async adminUploadTrackArtwork(
+    trackId: string,
+    options: { file?: File; artwork_url?: string; remove?: boolean }
+  ): Promise<{ message: string; track: { id: string; name: string; artwork_url: string } }> {
+    if (options.file) {
+      const formData = new FormData();
+      formData.append('artwork', options.file);
+      return this.makeRequest(`/admin/tracks/${trackId}/artwork`, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type - browser will set it with boundary for FormData
+        headers: {},
+      });
+    }
+    return this.makeRequest(`/admin/tracks/${trackId}/artwork`, {
+      method: 'POST',
+      body: JSON.stringify(
+        options.remove ? { remove_artwork: true } : { artwork_url: options.artwork_url }
+      ),
     });
   }
 

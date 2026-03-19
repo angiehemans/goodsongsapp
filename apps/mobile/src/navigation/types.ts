@@ -76,6 +76,7 @@ export type RootStackParamList = {
   ScrobblePermission: undefined;
   ScrobbleSettings: undefined;
   ReviewDetail: { reviewId: number; username: string };
+  PostDetail: { username: string; slug: string; bandSlug?: string };
 };
 
 // Global type declaration for navigation

@@ -184,6 +184,70 @@ export interface FanDashboardFeedItem {
   };
 }
 
+// Feed item types for the following feed
+export interface FeedEventItem {
+  id: number;
+  name: string;
+  description?: string;
+  event_date: string;
+  ticket_link?: string;
+  image_url?: string;
+  price?: string;
+  venue?: {
+    id: number;
+    name: string;
+    city?: string;
+    region?: string;
+  };
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+  };
+  author: {
+    id: number;
+    username?: string;
+    display_name?: string;
+    role?: string;
+    profile_image_url?: string;
+  };
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+  comments_count?: number;
+  created_at: string;
+}
+
+export interface FeedPostItem {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  featured_image_url?: string;
+  publish_date?: string;
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+  };
+  author: {
+    id: number;
+    username?: string;
+    display_name?: string;
+    role?: string;
+    band_slug?: string;
+    profile_image_url?: string;
+  };
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+  comments_count?: number;
+  created_at: string;
+}
+
+export type FollowingFeedEntry =
+  | { type: 'review'; data: Review }
+  | { type: 'event'; data: FeedEventItem }
+  | { type: 'post'; data: FeedPostItem };
+
 export interface FanDashboardRecentlyPlayed {
   name: string;
   artist: string;
@@ -240,7 +304,7 @@ export interface FanDashboardResponse {
   unread_notifications_count: number;
   recent_reviews: FanDashboardReview[];
   recently_played: FanDashboardRecentlyPlayed[];
-  following_feed_preview: FanDashboardFeedItem[];
+  following_feed_preview: FollowingFeedEntry[];
   stats: FanDashboardStats;
 }
 
@@ -696,10 +760,27 @@ class MobileApiClient {
 
   // Feed
   async getFollowingFeed(page: number = 1): Promise<{
-    reviews: Review[];
+    feed_items: FollowingFeedEntry[];
     pagination: DiscoverPagination;
   }> {
     return this.request(`/feed/following?page=${page}`);
+  }
+
+  // Posts
+  async getPost(username: string, slug: string): Promise<any> {
+    return this.request(`/api/v1/profiles/users/${username}/posts/${slug}`);
+  }
+
+  async getBandPost(bandSlug: string, postSlug: string): Promise<any> {
+    return this.request(`/api/v1/profiles/bands/${bandSlug}/posts/${postSlug}`);
+  }
+
+  async likePost(postId: number): Promise<{ likes_count: number }> {
+    return this.request(`/posts/${postId}/like`, { method: 'POST' });
+  }
+
+  async unlikePost(postId: number): Promise<{ likes_count: number }> {
+    return this.request(`/posts/${postId}/unlike`, { method: 'POST' });
   }
 
   // Notifications

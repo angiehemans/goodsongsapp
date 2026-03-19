@@ -12,9 +12,9 @@ import {
   Alert,
   ActivityIndicator,
   AppState,
+  Linking,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FastImage from "react-native-fast-image";
@@ -32,6 +32,8 @@ import { RouteProp, useFocusEffect } from "@react-navigation/native";
 import {
   Header,
   ReviewCard,
+  FeedPostCard,
+  FeedEventCard,
   LoadingScreen,
   EmptyState,
   Logo,
@@ -43,7 +45,7 @@ import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { useScrobbleStore } from "@/context/scrobbleStore";
 import { useNotificationStore } from "@/context/notificationStore";
-import { apiClient, FanDashboardFeedItem, FanDashboardRecentlyPlayed, CreateScrobbleFromLastfmData } from "@/utils/api";
+import { apiClient, FanDashboardRecentlyPlayed, CreateScrobbleFromLastfmData, FollowingFeedEntry, FeedPostItem, FeedEventItem } from "@/utils/api";
 import { Review, RecentlyPlayedTrack } from "@goodsongs/api-client";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { RootStackParamList, MainTabParamList } from "@/navigation/types";
@@ -62,7 +64,7 @@ export function FeedScreen({ navigation, route }: Props) {
   const pendingCount = useScrobbleStore((state) => state.pendingCount);
   const syncing = useScrobbleStore((state) => state.syncing);
   const setNotificationInitialCount = useNotificationStore((state) => state.setInitialCount);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [feedEntries, setFeedEntries] = useState<FollowingFeedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -206,30 +208,6 @@ export function FeedScreen({ navigation, route }: Props) {
 
   const canResend = currentUser?.can_resend_confirmation && retryAfter === 0;
 
-  // Convert dashboard feed preview to Review format
-  const convertFeedPreviewToReviews = (feedItems: FanDashboardFeedItem[]): Review[] => {
-    return feedItems.map((item) => ({
-      id: item.id,
-      song_name: item.song_name,
-      band_name: item.band_name,
-      artwork_url: item.artwork_url,
-      review_text: item.review_text,
-      created_at: item.created_at,
-      likes_count: item.likes_count,
-      liked_by_current_user: item.liked_by_current_user,
-      comments_count: item.comments_count,
-      author: {
-        id: item.author.id,
-        username: item.author.username,
-        profile_image_url: item.author.profile_image_url,
-      },
-      // Include band data for band links
-      band: item.band,
-      // Include track data for streaming links
-      track: item.track,
-    } as Review));
-  };
-
   // Fetch initial dashboard data (optimized single endpoint)
   // silent mode updates data without affecting loading states (for background refresh)
   const fetchDashboard = useCallback(async (silent = false) => {
@@ -262,15 +240,13 @@ export function FeedScreen({ navigation, route }: Props) {
       setRecentlyPlayed(tracks);
 
       // Set feed preview from dashboard
-      const feedReviews = convertFeedPreviewToReviews(response.following_feed_preview);
-      setReviews(feedReviews);
-      // Dashboard only returns preview, so we always have more
-      setHasMore(feedReviews.length >= 5);
+      setFeedEntries(response.following_feed_preview);
+      setHasMore(response.following_feed_preview.length >= 5);
     } catch (error) {
       console.error("Failed to fetch dashboard:", error);
       // Only clear data on initial load, not on silent refresh
       if (!silent) {
-        setReviews([]);
+        setFeedEntries([]);
         setRecentlyPlayed([]);
         setHasMore(false);
       }
@@ -286,21 +262,20 @@ export function FeedScreen({ navigation, route }: Props) {
   const fetchFeed = useCallback(async (pageNum: number, refresh = false) => {
     try {
       const response = await apiClient.getFollowingFeed(pageNum);
-      const newReviews = response?.reviews || [];
+      const newItems = response?.feed_items || [];
 
       if (refresh) {
-        setReviews(newReviews);
+        setFeedEntries(newItems);
       } else {
-        setReviews((prev) => [...prev, ...newReviews]);
+        setFeedEntries((prev) => [...prev, ...newItems]);
       }
 
       const totalPages = response?.pagination?.total_pages || 1;
       setHasMore(pageNum < totalPages);
     } catch (error) {
       console.error("Failed to fetch feed:", error);
-      // Set empty state on error
       if (refresh) {
-        setReviews([]);
+        setFeedEntries([]);
       }
       setHasMore(false);
     } finally {
@@ -600,22 +575,62 @@ export function FeedScreen({ navigation, route }: Props) {
     }
   }, [navigation]);
 
+  const handlePressPost = useCallback((post: FeedPostItem) => {
+    const username = post.author?.username || '';
+    const bandSlug = post.band?.slug || post.author?.band_slug;
+    const slug = post.slug;
+    if (slug && (username || bandSlug)) {
+      navigation.navigate("PostDetail", { username, slug, bandSlug });
+    }
+  }, [navigation]);
+
+  const handlePressEvent = useCallback((event: FeedEventItem) => {
+    navigation.navigate("EventDetails", { eventId: event.id });
+  }, [navigation]);
+
   // Memoized render function for FlatList - must be defined at top level, not inline
-  const renderReviewItem = useCallback(
-    ({ item }: { item: Review }) => (
-      <View style={styles.cardWrapper}>
-        <ReviewCard
-          review={item}
-          onPressAuthor={handlePressAuthor}
-          onPressBand={handlePressBand}
-          onPressReview={handlePressReview}
-        />
-      </View>
-    ),
-    [handlePressAuthor, handlePressBand, handlePressReview]
+  const renderFeedItem = useCallback(
+    ({ item }: { item: FollowingFeedEntry }) => {
+      switch (item.type) {
+        case 'review':
+          return (
+            <View style={styles.cardWrapper}>
+              <ReviewCard
+                review={item.data}
+                onPressAuthor={handlePressAuthor}
+                onPressBand={handlePressBand}
+                onPressReview={handlePressReview}
+              />
+            </View>
+          );
+        case 'post':
+          return (
+            <View style={styles.cardWrapper}>
+              <FeedPostCard
+                post={item.data}
+                onPressAuthor={handlePressAuthor}
+                onPressPost={handlePressPost}
+              />
+            </View>
+          );
+        case 'event':
+          return (
+            <View style={styles.cardWrapper}>
+              <FeedEventCard
+                event={item.data}
+                onPressAuthor={handlePressAuthor}
+                onPressEvent={handlePressEvent}
+              />
+            </View>
+          );
+        default:
+          return null;
+      }
+    },
+    [handlePressAuthor, handlePressBand, handlePressReview, handlePressPost, handlePressEvent]
   );
 
-  const keyExtractor = useCallback((item: Review) => item.id.toString(), []);
+  const keyExtractor = useCallback((item: FollowingFeedEntry) => `${item.type}-${item.data.id}`, []);
 
   const handleRecommendTrack = (track: RecentlyPlayedTrack) => {
     navigation.navigate("Main", {
@@ -805,7 +820,7 @@ export function FeedScreen({ navigation, route }: Props) {
     }
   };
 
-  if (loading && reviews.length === 0) {
+  if (loading && feedEntries.length === 0) {
     return <LoadingScreen />;
   }
 
@@ -824,9 +839,9 @@ export function FeedScreen({ navigation, route }: Props) {
       />
 
       <FlatList
-        data={reviews}
+        data={feedEntries}
         keyExtractor={keyExtractor}
-        renderItem={renderReviewItem}
+        renderItem={renderFeedItem}
         contentContainerStyle={styles.listContent}
         removeClippedSubviews={true}
         maxToRenderPerBatch={5}
@@ -843,7 +858,7 @@ export function FeedScreen({ navigation, route }: Props) {
         onScroll={handleScroll}
         scrollEventThrottle={400}
         ListFooterComponent={
-          reviews.length > 0 ? (
+          feedEntries.length > 0 ? (
             <View style={styles.footerContainer}>
               {loadingMore ? (
                 <View style={styles.loadingMore}>

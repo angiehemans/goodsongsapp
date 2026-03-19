@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
+  IconEdit,
   IconMessage,
+  IconPhoto,
   IconSearch,
   IconSparkles,
   IconTrash,
+  IconUpload,
 } from '@tabler/icons-react';
 import {
   Avatar,
@@ -15,20 +18,25 @@ import {
   Center,
   Container,
   Group,
+  Image,
   Loader,
   Modal,
   Pagination,
   Paper,
+  SimpleGrid,
   Stack,
   Table,
+  TagsInput,
   Text,
+  Textarea,
   TextInput,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
 import { useDebouncedValue, useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, DiscoverPagination, Review } from '@/lib/api';
+import { apiClient, ArtworkOption, DiscoverPagination, Review } from '@/lib/api';
 import styles from '../page.module.css';
 
 export default function AdminReviewsPage() {
@@ -54,6 +62,26 @@ export default function AdminReviewsPage() {
     name: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit modal state
+  const [editModalOpened, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
+  const [editTarget, setEditTarget] = useState<Review | null>(null);
+  const [editForm, setEditForm] = useState({
+    song_link: '',
+    band_name: '',
+    song_name: '',
+    artwork_url: '',
+    review_text: '',
+    liked_aspects: [] as string[],
+    genres: [] as string[],
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Artwork search state
+  const [artworkResults, setArtworkResults] = useState<ArtworkOption[]>([]);
+  const [artworkSearching, setArtworkSearching] = useState(false);
+  const [artworkSearched, setArtworkSearched] = useState(false);
+  const [artworkUploading, setArtworkUploading] = useState(false);
 
   const fetchReviews = useCallback(async (page: number, query?: string) => {
     if (!user || !isAdmin) return;
@@ -141,6 +169,106 @@ export default function AdminReviewsPage() {
       });
     } finally {
       setEnrichingReviewId(null);
+    }
+  };
+
+  const handleEditClick = (review: Review) => {
+    setEditTarget(review);
+    setEditForm({
+      song_link: (review as any).song_link || '',
+      band_name: review.band_name || '',
+      song_name: review.song_name || '',
+      artwork_url: review.artwork_url || '',
+      review_text: review.review_text || '',
+      liked_aspects: (review as any).liked_aspects?.map((a: any) => typeof a === 'string' ? a : a.name) || [],
+      genres: (review as any).genres?.map((g: any) => typeof g === 'string' ? g : g.name) || [],
+    });
+    setArtworkResults([]);
+    setArtworkSearched(false);
+    openEditModal();
+  };
+
+  const handleSearchArtwork = async () => {
+    if (!editForm.song_name && !editForm.band_name) return;
+    setArtworkSearching(true);
+    try {
+      const response = await apiClient.searchArtwork(editForm.song_name, editForm.band_name);
+      setArtworkResults(response.artwork_options || []);
+      setArtworkSearched(true);
+    } catch (error) {
+      console.error('Artwork search failed:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Artwork search failed. Try again.',
+        color: 'red',
+      });
+    } finally {
+      setArtworkSearching(false);
+    }
+  };
+
+  const handleArtworkFileUpload = async (file: File) => {
+    const trackId = (editTarget as any)?.track?.id;
+    if (!trackId) {
+      notifications.show({
+        title: 'No track linked',
+        message: 'This review has no linked track. Use artwork search or paste a URL instead.',
+        color: 'orange',
+      });
+      return;
+    }
+    setArtworkUploading(true);
+    try {
+      const response = await apiClient.adminUploadTrackArtwork(trackId, { file });
+      setEditForm((f) => ({ ...f, artwork_url: response.track.artwork_url }));
+      notifications.show({
+        title: 'Uploaded',
+        message: 'Artwork uploaded to track. Reviews will inherit this artwork.',
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('Failed to upload artwork:', error);
+      notifications.show({
+        title: 'Upload failed',
+        message: 'Could not upload artwork. Try again or paste a URL.',
+        color: 'red',
+      });
+    } finally {
+      setArtworkUploading(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTarget) return;
+    setIsSaving(true);
+    try {
+      const response = await apiClient.adminUpdateReview(editTarget.id, {
+        song_link: editForm.song_link || undefined,
+        band_name: editForm.band_name || undefined,
+        song_name: editForm.song_name || undefined,
+        artwork_url: editForm.artwork_url || undefined,
+        review_text: editForm.review_text || undefined,
+        liked_aspects: editForm.liked_aspects.length > 0 ? editForm.liked_aspects : undefined,
+        genres: editForm.genres.length > 0 ? editForm.genres : undefined,
+      });
+      setReviews((prev) =>
+        prev.map((r) => (r.id === editTarget.id ? { ...r, ...response.review } : r))
+      );
+      notifications.show({
+        title: 'Updated',
+        message: `Review "${editForm.song_name}" has been updated.`,
+        color: 'green',
+      });
+      closeEditModal();
+    } catch (error) {
+      console.error('Failed to update review:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update review. Please try again.',
+        color: 'red',
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -261,6 +389,14 @@ export default function AdminReviewsPage() {
                           <Group gap="xs" wrap="nowrap">
                             <Button
                               variant="light"
+                              size="xs"
+                              leftSection={<IconEdit size={14} />}
+                              onClick={() => handleEditClick(review)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="light"
                               color="grape"
                               size="xs"
                               leftSection={<IconSparkles size={14} />}
@@ -330,6 +466,139 @@ export default function AdminReviewsPage() {
               leftSection={<IconTrash size={16} />}
             >
               Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+      {/* Edit Review Modal */}
+      <Modal
+        opened={editModalOpened}
+        onClose={closeEditModal}
+        title="Edit Review"
+        centered
+        size="lg"
+      >
+        <Stack>
+          <TextInput
+            label="Song Name"
+            value={editForm.song_name}
+            onChange={(e) => setEditForm((f) => ({ ...f, song_name: e.target.value }))}
+          />
+          <TextInput
+            label="Band / Artist Name"
+            value={editForm.band_name}
+            onChange={(e) => setEditForm((f) => ({ ...f, band_name: e.target.value }))}
+          />
+          <TextInput
+            label="Song Link"
+            placeholder="https://open.spotify.com/track/..."
+            value={editForm.song_link}
+            onChange={(e) => setEditForm((f) => ({ ...f, song_link: e.target.value }))}
+          />
+          {/* Artwork */}
+          <Stack gap="xs">
+            <Group justify="space-between" align="flex-end">
+              <TextInput
+                label="Artwork URL"
+                placeholder="Paste URL or search below"
+                value={editForm.artwork_url}
+                onChange={(e) => setEditForm((f) => ({ ...f, artwork_url: e.target.value }))}
+                style={{ flex: 1 }}
+              />
+              {editForm.artwork_url && (
+                <Avatar src={editForm.artwork_url} size="lg" radius="sm" />
+              )}
+            </Group>
+            <Group gap="xs">
+              <Button
+                variant="light"
+                size="xs"
+                leftSection={artworkSearching ? <Loader size={14} /> : <IconSearch size={14} />}
+                onClick={handleSearchArtwork}
+                disabled={artworkSearching || (!editForm.song_name && !editForm.band_name)}
+              >
+                {artworkSearching ? 'Searching...' : 'Search Artwork'}
+              </Button>
+              <Button
+                variant="light"
+                size="xs"
+                color="grape"
+                leftSection={artworkUploading ? <Loader size={14} /> : <IconUpload size={14} />}
+                disabled={artworkUploading}
+                component="label"
+              >
+                {artworkUploading ? 'Uploading...' : 'Upload to Track'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleArtworkFileUpload(file);
+                    e.target.value = '';
+                  }}
+                />
+              </Button>
+            </Group>
+            {artworkSearched && artworkResults.length === 0 && (
+              <Text size="xs" c="dimmed">No artwork found. Try editing the song/artist name above.</Text>
+            )}
+            {artworkResults.length > 0 && (
+              <Paper p="xs" withBorder radius="sm" style={{ maxHeight: 200, overflowY: 'auto' }}>
+                <SimpleGrid cols={4} spacing="xs">
+                  {artworkResults.map((art, i) => (
+                    <UnstyledButton
+                      key={i}
+                      onClick={() => {
+                        setEditForm((f) => ({ ...f, artwork_url: art.url }));
+                        setArtworkResults([]);
+                        setArtworkSearched(false);
+                      }}
+                      style={{
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        border: editForm.artwork_url === art.url ? '2px solid var(--mantine-primary-color-filled)' : '2px solid transparent',
+                      }}
+                    >
+                      <Image src={art.url} alt={art.album_name || 'Artwork'} h={70} fit="cover" radius="sm" />
+                      <Text size="xs" c="dimmed" lineClamp={1} ta="center" mt={2}>
+                        {art.source_display}
+                      </Text>
+                    </UnstyledButton>
+                  ))}
+                </SimpleGrid>
+              </Paper>
+            )}
+          </Stack>
+          <Textarea
+            label="Review Text"
+            value={editForm.review_text}
+            onChange={(e) => setEditForm((f) => ({ ...f, review_text: e.target.value }))}
+            minRows={3}
+            autosize
+          />
+          <TagsInput
+            label="Liked Aspects"
+            placeholder="Add aspect and press Enter"
+            value={editForm.liked_aspects}
+            onChange={(value) => setEditForm((f) => ({ ...f, liked_aspects: value }))}
+          />
+          <TagsInput
+            label="Genres"
+            placeholder="Add genre and press Enter"
+            value={editForm.genres}
+            onChange={(value) => setEditForm((f) => ({ ...f, genres: value }))}
+          />
+          <Group justify="flex-end" mt="md">
+            <Button variant="light" onClick={closeEditModal} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              loading={isSaving}
+              leftSection={<IconEdit size={16} />}
+            >
+              Save Changes
             </Button>
           </Group>
         </Stack>

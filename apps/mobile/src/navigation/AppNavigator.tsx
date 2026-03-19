@@ -49,6 +49,7 @@ import {
   OnboardingFanProfileScreen,
   OnboardingBandProfileScreen,
   ReviewDetailScreen,
+  PostDetailScreen,
 } from "@/screens";
 
 import {
@@ -344,6 +345,11 @@ export function AppNavigator() {
               <RootStack.Screen
                 name="ReviewDetail"
                 component={ReviewDetailScreen}
+                options={{ presentation: "card" }}
+              />
+              <RootStack.Screen
+                name="PostDetail"
+                component={PostDetailScreen}
                 options={{ presentation: "card" }}
               />
             </>

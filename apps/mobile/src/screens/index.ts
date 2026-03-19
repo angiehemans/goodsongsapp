@@ -21,3 +21,4 @@ export { OnboardingAccountTypeScreen } from './OnboardingAccountTypeScreen';
 export { OnboardingFanProfileScreen } from './OnboardingFanProfileScreen';
 export { OnboardingBandProfileScreen } from './OnboardingBandProfileScreen';
 export { ReviewDetailScreen } from './ReviewDetailScreen';
+export { PostDetailScreen } from './PostDetailScreen';

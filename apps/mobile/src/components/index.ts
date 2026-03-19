@@ -13,3 +13,5 @@ export { MusicPlayer } from './MusicPlayer';
 export { ArtworkPickerModal } from './ArtworkPickerModal';
 export { MentionText } from './MentionText';
 export { MentionTextInput } from './MentionTextInput';
+export { FeedPostCard } from './FeedPostCard';
+export { FeedEventCard } from './FeedEventCard';
