@@ -417,6 +417,13 @@ export interface RecommendationItem {
     name: string;
     artist?: string;
   };
+  author?: {
+    id: number;
+    username: string;
+    display_name?: string;
+    role?: string;
+    profile_image_url?: string;
+  };
 }
 
 export interface RecommendationsData {
