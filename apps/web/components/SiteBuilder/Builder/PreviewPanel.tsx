@@ -5,12 +5,14 @@ import { IconDeviceDesktop, IconDeviceMobile } from '@tabler/icons-react';
 import { SegmentedControl, Box, Center, Text } from '@mantine/core';
 import { useBuilderStore } from '@/lib/site-builder/store';
 import { ProfilePage } from '../ProfilePage';
+import { SingleEventPreview } from '../SingleEventPreview';
 import { SinglePostPreview } from '../SinglePostPreview';
+import { LinkPagePreview } from '../LinkPagePreview';
 
 type PreviewMode = 'desktop' | 'mobile';
 
 export function PreviewPanel() {
-  const { theme, sections, sourceData, activePage, singlePostLayout } = useBuilderStore();
+  const { theme, sections, sourceData, activePage, singlePostLayout, pages, profileLinks } = useBuilderStore();
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
 
   const previewWidth = previewMode === 'mobile' ? 390 : '100%';
@@ -57,10 +59,21 @@ export function PreviewPanel() {
             minHeight: '100vh',
           }}
         >
-          {activePage === 'posts' ? (
+          {activePage === 'links' ? (
+            <LinkPagePreview
+              theme={theme}
+              pages={pages}
+              sourceData={sourceData}
+              profileLinks={profileLinks}
+            />
+          ) : activePage === 'posts' ? (
             <SinglePostPreview
               theme={theme}
               layout={singlePostLayout}
+            />
+          ) : activePage === 'events' ? (
+            <SingleEventPreview
+              theme={theme}
             />
           ) : sections.length > 0 ? (
             <ProfilePage

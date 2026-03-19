@@ -14,7 +14,7 @@ import { apiClient } from '@/lib/api';
 
 export default function DashboardPage() {
   const { user, refreshUser } = useAuth();
-  const { recentlyPlayedTracks, followingFeedItems, isDataLoading } = useUserLayout();
+  const { recentlyPlayedTracks, followingFeedEntries, isDataLoading } = useUserLayout();
 
   // Email confirmation resend state
   const [resendLoading, setResendLoading] = useState(false);
@@ -150,7 +150,7 @@ export default function DashboardPage() {
       {/* Following Feed - data from UserLayoutContext */}
       <FollowingFeed
         title="From People You Follow"
-        initialFeedItems={followingFeedItems.length > 0 ? followingFeedItems : undefined}
+        initialFeedEntries={followingFeedEntries.length > 0 ? followingFeedEntries : undefined}
       />
 
       {/* New Recommendation Drawer */}

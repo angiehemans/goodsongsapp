@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ColorInput, Group, NumberInput, Select, Stack, Text, Tooltip } from '@mantine/core';
+import { ColorInput, NumberInput, Select, Stack, Text } from '@mantine/core';
 import { APPROVED_FONTS, FONT_CATEGORIES, getGoogleFontsUrl } from '@/lib/site-builder/fonts';
 import { useBuilderStore } from '@/lib/site-builder/store';
 
@@ -70,85 +70,139 @@ export function ThemeControls() {
 
   return (
     <div className="theme-controls">
-      <Stack gap="md">
-        <ColorInput
-          label="Background Color"
-          format="hex"
-          value={theme.background_color ?? '#121212'}
-          onChange={(value) => setThemeField('background_color', value)}
-          swatches={COLOR_SWATCHES}
-        />
-        <Group grow align="flex-start">
-          <ColorInput
-            label="Brand Color"
-            format="hex"
-            value={theme.brand_color ?? '#6366f1'}
-            onChange={(value) => setThemeField('brand_color', value)}
-            swatches={COLOR_SWATCHES}
-          />
-
-          <ColorInput
-            label="Text Color"
-            format="hex"
-            value={theme.font_color ?? '#f5f5f5'}
-            onChange={(value) => setThemeField('font_color', value)}
-            swatches={COLOR_SWATCHES}
-          />
-        </Group>
-        <Group grow align="flex-start">
-          <ColorInput
-            label="Card Background"
-            format="hex"
-            placeholder="Inherit from text"
-            value={theme.card_background_color ?? ''}
-            onChange={(value) => setThemeField('card_background_color', value || '')}
-            swatches={COLOR_SWATCHES}
-          />
-
-          <NumberInput
-            label="Card BG Opacity"
-            value={theme.card_background_opacity ?? 10}
-            onChange={(value) =>
-              setThemeField('card_background_opacity', value === '' ? 10 : Number(value))
-            }
-            min={0}
-            max={100}
-            step={5}
-            suffix="%"
-          />
-        </Group>
-        <Group grow align="flex-start">
-          <Select
-            label="Header Font"
-            data={FONT_OPTIONS}
-            value={theme.header_font ?? 'Inter'}
-            onChange={(value) => value && setThemeField('header_font', value)}
-            renderOption={renderFontOption}
-            styles={{ input: { fontFamily: `"${theme.header_font ?? 'Inter'}", sans-serif` } }}
-          />
-
-          <Select
-            label="Body Font"
-            data={FONT_OPTIONS}
-            value={theme.body_font ?? 'Inter'}
-            onChange={(value) => value && setThemeField('body_font', value)}
-            renderOption={renderFontOption}
-            styles={{ input: { fontFamily: `"${theme.body_font ?? 'Inter'}", sans-serif` } }}
-          />
-        </Group>
-        <Tooltip label="Maximum width for section content (except hero)" multiline w={220}>
-          <NumberInput
-          label="Content Max Width"
-          value={theme.content_max_width ?? 1200}
-          onChange={(value) =>
-            setThemeField('content_max_width', value === '' ? 1200 : Number(value))
-          }
-          min={600}
-          max={2000}
-          step={50}
-          suffix="px"
-        />
-        </Tooltip>
+      <Stack gap={16}>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Background Color</div>
+          <div className="builder-field-row__input">
+            <ColorInput
+              format="hex"
+              size="sm"
+              value={theme.background_color ?? '#121212'}
+              onChange={(value) => setThemeField('background_color', value)}
+              swatches={COLOR_SWATCHES}
+              aria-label="Background Color"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Brand Color</div>
+          <div className="builder-field-row__input">
+            <ColorInput
+              format="hex"
+              size="sm"
+              value={theme.brand_color ?? '#6366f1'}
+              onChange={(value) => setThemeField('brand_color', value)}
+              swatches={COLOR_SWATCHES}
+              aria-label="Brand Color"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Text Color</div>
+          <div className="builder-field-row__input">
+            <ColorInput
+              format="hex"
+              size="sm"
+              value={theme.font_color ?? '#f5f5f5'}
+              onChange={(value) => setThemeField('font_color', value)}
+              swatches={COLOR_SWATCHES}
+              aria-label="Text Color"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Card Background</div>
+          <div className="builder-field-row__input">
+            <ColorInput
+              format="hex"
+              size="sm"
+              placeholder="Inherit"
+              value={theme.card_background_color ?? ''}
+              onChange={(value) => setThemeField('card_background_color', value || '')}
+              swatches={COLOR_SWATCHES}
+              aria-label="Card Background"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Card BG Opacity</div>
+          <div className="builder-field-row__input">
+            <NumberInput
+              size="sm"
+              value={theme.card_background_opacity ?? 10}
+              onChange={(value) =>
+                setThemeField('card_background_opacity', value === '' ? 10 : Number(value))
+              }
+              min={0}
+              max={100}
+              step={5}
+              suffix="%"
+              aria-label="Card BG Opacity"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Header Font</div>
+          <div className="builder-field-row__input">
+            <Select
+              size="sm"
+              data={FONT_OPTIONS}
+              value={theme.header_font ?? 'Inter'}
+              onChange={(value) => value && setThemeField('header_font', value)}
+              renderOption={renderFontOption}
+              styles={{ input: { fontFamily: `"${theme.header_font ?? 'Inter'}", sans-serif` } }}
+              aria-label="Header Font"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Body Font</div>
+          <div className="builder-field-row__input">
+            <Select
+              size="sm"
+              data={FONT_OPTIONS}
+              value={theme.body_font ?? 'Inter'}
+              onChange={(value) => value && setThemeField('body_font', value)}
+              renderOption={renderFontOption}
+              styles={{ input: { fontFamily: `"${theme.body_font ?? 'Inter'}", sans-serif` } }}
+              aria-label="Body Font"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Content Max Width</div>
+          <div className="builder-field-row__input">
+            <NumberInput
+              size="sm"
+              value={theme.content_max_width ?? 1200}
+              onChange={(value) =>
+                setThemeField('content_max_width', value === '' ? 1200 : Number(value))
+              }
+              min={600}
+              max={2000}
+              step={50}
+              suffix="px"
+              aria-label="Content Max Width"
+            />
+          </div>
+        </div>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Border Radius</div>
+          <div className="builder-field-row__input">
+            <NumberInput
+              size="sm"
+              value={theme.border_radius ?? 12}
+              onChange={(value) =>
+                setThemeField('border_radius', value === '' ? 12 : Number(value))
+              }
+              min={0}
+              max={32}
+              step={2}
+              suffix="px"
+              aria-label="Border Radius"
+            />
+          </div>
+        </div>
       </Stack>
     </div>
   );

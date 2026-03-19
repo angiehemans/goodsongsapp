@@ -30,7 +30,6 @@ import {
   IconLayoutAlignTop,
   IconLayoutDistributeVertical,
   IconLink,
-  IconMenu2,
   IconPhoto,
   IconTrash,
   IconX,
@@ -45,7 +44,6 @@ import {
   Image,
   NumberInput,
   Select,
-  SimpleGrid,
   Stack,
   Switch,
   Text,
@@ -113,7 +111,7 @@ const handleNumberInputKeyDown = (
 
 interface SortableElementProps {
   id: HeroElement;
-  children: React.ReactNode;
+  children: (gripProps: { attributes: any; listeners: any }) => React.ReactNode;
 }
 
 function SortableElement({ id, children }: SortableElementProps) {
@@ -128,21 +126,27 @@ function SortableElement({ id, children }: SortableElementProps) {
   };
 
   return (
-    <Box ref={setNodeRef} style={style}>
-      <Group gap="xs" align="flex-start">
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="sm"
-          style={{ cursor: 'grab', marginTop: 4 }}
-          {...attributes}
-          {...listeners}
-        >
-          <IconGripVertical size={14} />
-        </ActionIcon>
-        <Box style={{ flex: 1 }}>{children}</Box>
-      </Group>
-    </Box>
+    <div ref={setNodeRef} style={style} className="hero-sortable-item">
+      {children({ attributes, listeners })}
+    </div>
+  );
+}
+
+function InlineGrip({ attributes, listeners }: { attributes: any; listeners: any }) {
+  return (
+    <span
+      style={{
+        cursor: 'grab',
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '2px 4px 2px 1px',
+        touchAction: 'none',
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      <IconGripVertical size={10} style={{ color: 'var(--gs-text-extra-muted)' }} />
+    </span>
   );
 }
 
@@ -246,13 +250,22 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
     }
   };
 
-  const LabelWithTooltip = ({ label, tooltip }: { label: string; tooltip: string }) => (
+  const LabelWithTooltip = ({
+    label,
+    tooltip,
+    grip,
+  }: {
+    label: string;
+    tooltip: string;
+    grip?: React.ReactNode;
+  }) => (
     <Group gap={4}>
-      <Text className="builder-field-label">
+      {grip}
+      <Text className="builder-field-label" c="var(--gs-text-muted)">
         {label}
       </Text>
       <Tooltip label={tooltip} withArrow position="top">
-        <IconInfoCircle size={14} style={{ opacity: 0.5, cursor: 'help' }} />
+        <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
       </Tooltip>
     </Group>
   );
@@ -262,261 +275,294 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
       case 'profile_image':
         return (
           <SortableElement key="profile_image" id="profile_image">
-            <Group justify="space-between">
-              <LabelWithTooltip
-                label="Profile Image"
-                tooltip="Display your profile picture in the hero section"
-              />
-              <Switch
-                size="xs"
-                checked={settings?.show_profile_image !== false}
-                onChange={(e) => handleSettingsChange('show_profile_image', e.target.checked)}
-              />
-            </Group>
+            {({ attributes, listeners }) => (
+              <Group h={24} justify="space-between">
+                <LabelWithTooltip
+                  label="Profile Image"
+                  tooltip="Display your profile picture in the hero section"
+                  grip={<InlineGrip attributes={attributes} listeners={listeners} />}
+                />
+                <Switch
+                  size="xs"
+                  checked={settings?.show_profile_image !== false}
+                  onChange={(e) => handleSettingsChange('show_profile_image', e.target.checked)}
+                />
+              </Group>
+            )}
           </SortableElement>
         );
 
       case 'headline':
         return (
           <SortableElement key="headline" id="headline">
-            <Stack gap="xs">
-              <Group justify="space-between">
-                <LabelWithTooltip
-                  label="Headline"
-                  tooltip="Override your display name or use a logo image"
-                />
-                <Switch
-                  size="xs"
-                  checked={settings?.show_headline !== false}
-                  onChange={(e) => handleSettingsChange('show_headline', e.target.checked)}
-                />
-              </Group>
-
-              {/* Logo Image Option */}
-              {settings?.headline_logo_url ? (
-                <Box pos="relative" style={{ borderRadius: 8, overflow: 'hidden' }}>
-                  <Image
-                    src={settings.headline_logo_url}
-                    alt="Logo preview"
-                    height={80}
-                    fit="contain"
-                    radius="sm"
-                    bg="dark.6"
+            {({ attributes, listeners }) => (
+              <Stack gap="xs">
+                <Group h={24} justify="space-between">
+                  <LabelWithTooltip
+                    label="Headline"
+                    tooltip="Override your display name or use a logo image"
+                    grip={<InlineGrip attributes={attributes} listeners={listeners} />}
                   />
-                  <Group pos="absolute" top={8} right={8} gap="xs">
-                    <ActionIcon
-                      variant="filled"
-                      color="dark"
-                      onClick={() => setLogoPickerOpen(true)}
-                      title="Change logo"
-                    >
-                      <IconPhoto size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="filled"
-                      color="red"
-                      onClick={() => {
-                        handleSettingsChange('headline_logo_url', undefined);
-                        handleSettingsChange('headline_logo_width', undefined);
-                      }}
-                      title="Remove logo"
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Box>
-              ) : (
-                <Button
-                  variant="light"
-                  leftSection={<IconPhoto size={16} />}
-                  onClick={() => setLogoPickerOpen(true)}
-                  fullWidth
-                  size="xs"
-                  disabled={settings?.show_headline === false}
-                >
-                  Use Logo Image
-                </Button>
-              )}
-
-              {/* Logo Width (when logo is set) */}
-              {settings?.headline_logo_url && (
-                <NumberInput
-                  label="Logo Width"
-                  placeholder="e.g. 200"
-                  size="xs"
-                  value={settings?.headline_logo_width || ''}
-                  onChange={(value) =>
-                    handleSettingsChange(
-                      'headline_logo_width',
-                      value === '' ? undefined : Number(value)
-                    )
-                  }
-                  onKeyDownCapture={(e) =>
-                    handleNumberInputKeyDown(
-                      e,
-                      settings?.headline_logo_width,
-                      (v) => handleSettingsChange('headline_logo_width', v),
-                      50,
-                      1024
-                    )
-                  }
-                  min={50}
-                  max={1024}
-                  suffix=" px"
-                  allowDecimal={false}
-                />
-              )}
-
-              {/* Text Headline (when no logo) */}
-              {!settings?.headline_logo_url && (
-                <>
-                  <TextInput
-                    placeholder="Enter headline"
-                    value={content.headline || ''}
-                    onChange={(e) => handleContentChange('headline', e.target.value)}
-                    maxLength={CHAR_LIMITS.hero_headline}
-                    disabled={settings?.show_headline === false}
-                    rightSection={
-                      <Text size="xs" c="dimmed">
-                        {content.headline?.length || 0}/{CHAR_LIMITS.hero_headline}
-                      </Text>
-                    }
-                    rightSectionWidth={50}
-                  />
-                  <NumberInput
-                    label="Font Size"
-                    placeholder="e.g. 48"
+                  <Switch
                     size="xs"
-                    value={settings?.headline_font_size || ''}
-                    onChange={(value) =>
-                      handleSettingsChange(
-                        'headline_font_size',
-                        value === '' ? undefined : Number(value)
-                      )
-                    }
-                    onKeyDownCapture={(e) =>
-                      handleNumberInputKeyDown(
-                        e,
-                        settings?.headline_font_size,
-                        (v) => handleSettingsChange('headline_font_size', v),
-                        16,
-                        120
-                      )
-                    }
-                    min={16}
-                    max={120}
-                    suffix=" px"
-                    allowDecimal={false}
-                    disabled={settings?.show_headline === false}
+                    checked={settings?.show_headline !== false}
+                    onChange={(e) => handleSettingsChange('show_headline', e.target.checked)}
                   />
-                </>
-              )}
-            </Stack>
+                </Group>
+
+                {/* Logo Image Option */}
+                {settings?.headline_logo_url ? (
+                  <Box pos="relative" style={{ borderRadius: 8, overflow: 'hidden' }}>
+                    <Image
+                      src={settings.headline_logo_url}
+                      alt="Logo preview"
+                      height={80}
+                      fit="contain"
+                      radius="sm"
+                      bg="dark.6"
+                    />
+                    <Group pos="absolute" top={8} right={8} gap="xs">
+                      <ActionIcon
+                        variant="filled"
+                        color="dark"
+                        onClick={() => setLogoPickerOpen(true)}
+                        title="Change logo"
+                      >
+                        <IconPhoto size={16} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="filled"
+                        color="red"
+                        onClick={() => {
+                          handleSettingsChange('headline_logo_url', undefined);
+                          handleSettingsChange('headline_logo_width', undefined);
+                        }}
+                        title="Remove logo"
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Group>
+                  </Box>
+                ) : (
+                  <Button
+                    variant="light"
+                    leftSection={<IconPhoto size={16} />}
+                    onClick={() => setLogoPickerOpen(true)}
+                    fullWidth
+                    size="xs"
+                    disabled={settings?.show_headline === false}
+                  >
+                    Use Logo Image
+                  </Button>
+                )}
+
+                {/* Logo Width (when logo is set) */}
+                {settings?.headline_logo_url && (
+                  <div className="builder-field-row">
+                    <div className="builder-field-row__label">Logo Width</div>
+                    <div className="builder-field-row__input">
+                      <NumberInput
+                        aria-label="Logo Width"
+                        placeholder="e.g. 200"
+                        size="sm"
+                        value={settings?.headline_logo_width || ''}
+                        onChange={(value) =>
+                          handleSettingsChange(
+                            'headline_logo_width',
+                            value === '' ? undefined : Number(value)
+                          )
+                        }
+                        onKeyDownCapture={(e) =>
+                          handleNumberInputKeyDown(
+                            e,
+                            settings?.headline_logo_width,
+                            (v) => handleSettingsChange('headline_logo_width', v),
+                            50,
+                            1024
+                          )
+                        }
+                        min={50}
+                        max={1024}
+                        suffix=" px"
+                        allowDecimal={false}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Text Headline (when no logo) */}
+                {!settings?.headline_logo_url && (
+                  <>
+                    <TextInput
+                      placeholder="Enter headline"
+                      value={content.headline || ''}
+                      onChange={(e) => handleContentChange('headline', e.target.value)}
+                      maxLength={CHAR_LIMITS.hero_headline}
+                      disabled={settings?.show_headline === false}
+                      rightSection={
+                        <Text size="xs" c="dimmed">
+                          {content.headline?.length || 0}/{CHAR_LIMITS.hero_headline}
+                        </Text>
+                      }
+                      rightSectionWidth={50}
+                    />
+                    <div className="builder-field-row">
+                      <div className="builder-field-row__label">Font Size</div>
+                      <div className="builder-field-row__input">
+                        <NumberInput
+                          aria-label="Font Size"
+                          placeholder="e.g. 48"
+                          size="sm"
+                          value={settings?.headline_font_size || ''}
+                          onChange={(value) =>
+                            handleSettingsChange(
+                              'headline_font_size',
+                              value === '' ? undefined : Number(value)
+                            )
+                          }
+                          onKeyDownCapture={(e) =>
+                            handleNumberInputKeyDown(
+                              e,
+                              settings?.headline_font_size,
+                              (v) => handleSettingsChange('headline_font_size', v),
+                              16,
+                              120
+                            )
+                          }
+                          min={16}
+                          max={120}
+                          suffix=" px"
+                          allowDecimal={false}
+                          disabled={settings?.show_headline === false}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </Stack>
+            )}
           </SortableElement>
         );
 
       case 'subtitle':
         return (
           <SortableElement key="subtitle" id="subtitle">
-            <Stack gap="xs">
-              <Group justify="space-between">
-                <LabelWithTooltip label="Subtitle" tooltip="Override your location text" />
-                <Switch
-                  size="xs"
-                  checked={settings?.show_subtitle !== false}
-                  onChange={(e) => handleSettingsChange('show_subtitle', e.target.checked)}
+            {({ attributes, listeners }) => (
+              <Stack gap="xs">
+                <Group h={24} justify="space-between">
+                  <LabelWithTooltip
+                    label="Subtitle"
+                    tooltip="Override your location text"
+                    grip={<InlineGrip attributes={attributes} listeners={listeners} />}
+                  />
+                  <Switch
+                    size="xs"
+                    checked={settings?.show_subtitle !== false}
+                    onChange={(e) => handleSettingsChange('show_subtitle', e.target.checked)}
+                  />
+                </Group>
+                <TextInput
+                  placeholder="Enter subtitle"
+                  value={content.subtitle || ''}
+                  onChange={(e) => handleContentChange('subtitle', e.target.value)}
+                  maxLength={CHAR_LIMITS.hero_subtitle}
+                  disabled={settings?.show_subtitle === false}
+                  rightSection={
+                    <Text size="xs" c="dimmed">
+                      {content.subtitle?.length || 0}/{CHAR_LIMITS.hero_subtitle}
+                    </Text>
+                  }
+                  rightSectionWidth={50}
                 />
-              </Group>
-              <TextInput
-                placeholder="Enter subtitle"
-                value={content.subtitle || ''}
-                onChange={(e) => handleContentChange('subtitle', e.target.value)}
-                maxLength={CHAR_LIMITS.hero_subtitle}
-                disabled={settings?.show_subtitle === false}
-                rightSection={
-                  <Text size="xs" c="dimmed">
-                    {content.subtitle?.length || 0}/{CHAR_LIMITS.hero_subtitle}
-                  </Text>
-                }
-                rightSectionWidth={50}
-              />
-            </Stack>
+              </Stack>
+            )}
           </SortableElement>
         );
 
       case 'description':
         return (
           <SortableElement key="description" id="description">
-            <Stack gap="xs">
-              <Group justify="space-between">
-                <LabelWithTooltip label="Description" tooltip="A short bio or tagline" />
-                <Switch
-                  size="xs"
-                  checked={settings?.show_description !== false}
-                  onChange={(e) => handleSettingsChange('show_description', e.target.checked)}
+            {({ attributes, listeners }) => (
+              <Stack gap="xs">
+                <Group h={24} justify="space-between">
+                  <LabelWithTooltip
+                    label="Description"
+                    tooltip="A short bio or tagline"
+                    grip={<InlineGrip attributes={attributes} listeners={listeners} />}
+                  />
+                  <Switch
+                    size="xs"
+                    checked={settings?.show_description !== false}
+                    onChange={(e) => handleSettingsChange('show_description', e.target.checked)}
+                  />
+                </Group>
+                <Textarea
+                  placeholder="Tell visitors a bit about yourself..."
+                  value={content.description || ''}
+                  onChange={(e) => handleContentChange('description', e.target.value)}
+                  maxLength={CHAR_LIMITS.hero_description}
+                  minRows={2}
+                  maxRows={4}
+                  autosize
+                  disabled={settings?.show_description === false}
                 />
-              </Group>
-              <Textarea
-                placeholder="Tell visitors a bit about yourself..."
-                value={content.description || ''}
-                onChange={(e) => handleContentChange('description', e.target.value)}
-                maxLength={CHAR_LIMITS.hero_description}
-                minRows={2}
-                maxRows={4}
-                autosize
-                disabled={settings?.show_description === false}
-              />
-              <Text size="xs" c="dimmed" ta="right">
-                {content.description?.length || 0}/{CHAR_LIMITS.hero_description}
-              </Text>
-            </Stack>
+                <Text size="xs" c="dimmed" ta="right">
+                  {content.description?.length || 0}/{CHAR_LIMITS.hero_description}
+                </Text>
+              </Stack>
+            )}
           </SortableElement>
         );
 
       case 'social_links':
         return (
           <SortableElement key="social_links" id="social_links">
-            {socialLinksWithValues.length > 0 ? (
-              <Stack gap="xs">
-                <Group justify="space-between">
-                  <LabelWithTooltip
-                    label="Social Links"
-                    tooltip="Display your social media links in the hero section"
-                  />
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    size="sm"
-                    onClick={() => setSocialLinksOpen(true)}
-                    title="Edit social links"
-                  >
-                    <IconLink size={14} />
-                  </ActionIcon>
-                </Group>
-                <Stack gap={4}>
-                  {socialLinksWithValues.map((key) => (
-                    <Group key={key} justify="space-between">
-                      <Text size="xs">{SOCIAL_PLATFORMS[key].name}</Text>
-                      <Switch
-                        size="xs"
-                        checked={isSocialLinkVisible(key)}
-                        onChange={(e) => handleToggleSocialLink(key, e.target.checked)}
-                      />
-                    </Group>
-                  ))}
+            {({ attributes, listeners }) =>
+              socialLinksWithValues.length > 0 ? (
+                <Stack gap="xs">
+                  <Group h={24} justify="space-between">
+                    <LabelWithTooltip
+                      label="Social Links"
+                      tooltip="Display your social media links in the hero section"
+                      grip={<InlineGrip attributes={attributes} listeners={listeners} />}
+                    />
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      size="sm"
+                      onClick={() => setSocialLinksOpen(true)}
+                      title="Edit social links"
+                    >
+                      <IconLink size={14} />
+                    </ActionIcon>
+                  </Group>
+                  <Stack gap={4}>
+                    {socialLinksWithValues.map((key) => (
+                      <Group key={key} justify="space-between">
+                        <Text c="var(--gs-text-extra-muted)" size="xs">
+                          {SOCIAL_PLATFORMS[key].name}
+                        </Text>
+                        <Switch
+                          size="xs"
+                          checked={isSocialLinkVisible(key)}
+                          onChange={(e) => handleToggleSocialLink(key, e.target.checked)}
+                        />
+                      </Group>
+                    ))}
+                  </Stack>
                 </Stack>
-              </Stack>
-            ) : (
-              <Button
-                variant="light"
-                leftSection={<IconLink size={16} />}
-                onClick={() => setSocialLinksOpen(true)}
-                fullWidth
-                size="xs"
-              >
-                Add Social Links
-              </Button>
-            )}
+              ) : (
+                <Button
+                  variant="light"
+                  leftSection={<IconLink size={16} />}
+                  onClick={() => setSocialLinksOpen(true)}
+                  fullWidth
+                  size="xs"
+                >
+                  Add Social Links
+                </Button>
+              )
+            }
           </SortableElement>
         );
 
@@ -526,17 +572,16 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
   };
 
   return (
-    <Stack gap="sm">
+    <Stack gap={12}>
       {/* Menu Section */}
       <Box>
         <Group justify="space-between" mb="xs">
-          <Group gap={4}>
-            <IconMenu2 size={16} />
-            <Text className="builder-field-label">
+          <Group h={36} gap={4}>
+            <Text fw={500} c="var(--gs-text-muted)" className="builder-field-label">
               Navigation Menu
             </Text>
             <Tooltip
-              label="Add a navigation menu at the top of your hero section"
+              label="Add a navigation menu at the top of your hero section. Menu links are automatically generated from your visible sections."
               withArrow
               position="top"
             >
@@ -551,48 +596,57 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
         </Group>
         {settings?.show_menu && (
           <Stack gap="xs">
-            <TextInput
-              label="Menu Title"
-              placeholder="Override band/username"
-              size="xs"
-              value={settings?.menu_title || ''}
-              onChange={(e) => handleSettingsChange('menu_title', e.target.value || undefined)}
-            />
-            <Group gap="xs" align="flex-end">
-              <ColorInput
-                label="Background Color"
-                placeholder="Transparent"
-                size="xs"
-                value={settings?.menu_background_color || ''}
-                onChange={(value) =>
-                  handleSettingsChange('menu_background_color', value || undefined)
-                }
-                swatches={['#000000', '#ffffff', '#1a1a1a', '#2d2d2d']}
-                style={{ flex: 1 }}
-              />
-              {settings?.menu_background_color && (
-                <ActionIcon
-                  variant="light"
-                  color="gray"
-                  size="md"
-                  onClick={() => handleSettingsChange('menu_background_color', undefined)}
-                  title="Reset to transparent"
-                >
-                  <IconX size={14} />
-                </ActionIcon>
-              )}
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs">Follow Button</Text>
+            <div className="builder-field-row">
+              <div className="builder-field-row__label">Menu Title</div>
+              <div className="builder-field-row__input">
+                <TextInput
+                  aria-label="Menu Title"
+                  placeholder="Override band/username"
+                  size="sm"
+                  value={settings?.menu_title || ''}
+                  onChange={(e) => handleSettingsChange('menu_title', e.target.value || undefined)}
+                />
+              </div>
+            </div>
+            <div className="builder-field-row">
+              <div className="builder-field-row__label">Background Color</div>
+              <div className="builder-field-row__input">
+                <Group gap="xs" align="flex-end">
+                  <ColorInput
+                    aria-label="Background Color"
+                    placeholder="Transparent"
+                    size="sm"
+                    value={settings?.menu_background_color || ''}
+                    onChange={(value) =>
+                      handleSettingsChange('menu_background_color', value || undefined)
+                    }
+                    swatches={['#000000', '#ffffff', '#1a1a1a', '#2d2d2d']}
+                    style={{ flex: 1 }}
+                  />
+                  {settings?.menu_background_color && (
+                    <ActionIcon
+                      variant="light"
+                      color="gray"
+                      size="md"
+                      onClick={() => handleSettingsChange('menu_background_color', undefined)}
+                      title="Reset to transparent"
+                    >
+                      <IconX size={14} />
+                    </ActionIcon>
+                  )}
+                </Group>
+              </div>
+            </div>
+            <Group h={36} justify="space-between">
+              <Text size="xs" c="var(--gs-text-extra-muted)">
+                Follow Button
+              </Text>
               <Switch
                 size="xs"
                 checked={settings?.show_follow_button !== false}
                 onChange={(e) => handleSettingsChange('show_follow_button', e.target.checked)}
               />
             </Group>
-            <Text size="xs" c="dimmed">
-              Menu links are automatically generated from your visible sections.
-            </Text>
           </Stack>
         )}
       </Box>
@@ -606,107 +660,162 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
         <SortableContext items={elementOrder} strategy={verticalListSortingStrategy}>
-          <Stack gap="md">{elementOrder.map(renderElement)}</Stack>
+          <div>{elementOrder.map(renderElement)}</div>
         </SortableContext>
       </DndContext>
 
       <Divider my="xs" />
 
-      <Stack gap="sm">
+      {/* Section Layout sub-heading */}
+      <div className="builder-section-subheading">
+        <span className="builder-section-subheading__title">Section Layout</span>
+        <Tooltip
+          label="Control how content is positioned within the hero section"
+          withArrow
+          position="top"
+        >
+          <IconInfoCircle
+            size={14}
+            style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }}
+          />
+        </Tooltip>
+      </div>
+
+      <Stack gap={12}>
         {/* Horizontal Alignment */}
-        <Box>
-          <Text size="xs" fw={500} mb={4}>
-            Horizontal
-          </Text>
-          <Group gap={4}>
-            {[
-              { value: 'left', icon: IconLayoutAlignLeft, label: 'Left' },
-              { value: 'center', icon: IconLayoutAlignCenter, label: 'Center' },
-              { value: 'right', icon: IconLayoutAlignRight, label: 'Right' },
-            ].map(({ value, icon: Icon, label }) => (
-              <ActionIcon
-                key={value}
-                variant={(settings?.layout || 'center') === value ? 'filled' : 'default'}
-                size="lg"
-                onClick={() => handleSettingsChange('layout', value as HeroLayout)}
-                title={label}
-              >
-                <Icon size={18} />
-              </ActionIcon>
-            ))}
-          </Group>
-        </Box>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Horizontal</div>
+          <div className="builder-field-row__input">
+            <Group gap={10}>
+              {[
+                { value: 'left', icon: IconLayoutAlignLeft, label: 'Left' },
+                { value: 'center', icon: IconLayoutAlignCenter, label: 'Center' },
+                { value: 'right', icon: IconLayoutAlignRight, label: 'Right' },
+              ].map(({ value, icon: Icon, label }) => (
+                <ActionIcon
+                  key={value}
+                  variant={(settings?.layout || 'center') === value ? 'filled' : 'default'}
+                  size="lg"
+                  onClick={() => handleSettingsChange('layout', value as HeroLayout)}
+                  title={label}
+                >
+                  <Icon size={18} />
+                </ActionIcon>
+              ))}
+            </Group>
+          </div>
+        </div>
 
         {/* Vertical Alignment */}
-        <Box>
-          <Text size="xs" fw={500} mb={4}>
-            Vertical
-          </Text>
-          <Group gap={4}>
-            {[
-              { value: 'top', icon: IconLayoutAlignTop, label: 'Top', rotate: false },
-              { value: 'center', icon: IconLayoutAlignMiddle, label: 'Center', rotate: false },
-              { value: 'bottom', icon: IconLayoutAlignBottom, label: 'Bottom', rotate: false },
-              {
-                value: 'space-between',
-                icon: IconLayoutDistributeVertical,
-                label: 'Space Between',
-                rotate: true,
-              },
-            ].map(({ value, icon: Icon, label, rotate }) => (
-              <ActionIcon
-                key={value}
-                variant={(settings?.justify || 'center') === value ? 'filled' : 'default'}
-                size="lg"
-                onClick={() => handleSettingsChange('justify', value as HeroJustify)}
-                title={label}
-              >
-                <Icon size={18} style={rotate ? { transform: 'rotate(90deg)' } : undefined} />
-              </ActionIcon>
-            ))}
-          </Group>
-        </Box>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Vertical</div>
+          <div className="builder-field-row__input">
+            <Group gap={4} justify="space-between">
+              {[
+                { value: 'top', icon: IconLayoutAlignTop, label: 'Top', rotate: false },
+                { value: 'center', icon: IconLayoutAlignMiddle, label: 'Center', rotate: false },
+                { value: 'bottom', icon: IconLayoutAlignBottom, label: 'Bottom', rotate: false },
+                {
+                  value: 'space-between',
+                  icon: IconLayoutDistributeVertical,
+                  label: 'Space Between',
+                  rotate: true,
+                },
+              ].map(({ value, icon: Icon, label, rotate }) => (
+                <ActionIcon
+                  key={value}
+                  variant={(settings?.justify || 'center') === value ? 'filled' : 'default'}
+                  size="lg"
+                  onClick={() => handleSettingsChange('justify', value as HeroJustify)}
+                  title={label}
+                >
+                  <Icon size={18} style={rotate ? { transform: 'rotate(90deg)' } : undefined} />
+                </ActionIcon>
+              ))}
+            </Group>
+          </div>
+        </div>
 
         {/* Gap and Height */}
-        <SimpleGrid cols={2} spacing="sm">
-          <Select
-            label="Gap"
-            size="xs"
-            value={settings?.gap || 'lg'}
-            onChange={(value) => handleSettingsChange('gap', value as HeroGap)}
-            data={[
-              { value: 'none', label: 'None' },
-              { value: 'sm', label: 'Small' },
-              { value: 'md', label: 'Medium' },
-              { value: 'lg', label: 'Large' },
-              { value: 'xl', label: 'Extra Large' },
-            ]}
-          />
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Gap</div>
+          <div className="builder-field-row__input">
+            <Select
+              aria-label="Gap"
+              size="sm"
+              value={settings?.gap || 'lg'}
+              onChange={(value) => handleSettingsChange('gap', value as HeroGap)}
+              data={[
+                { value: 'none', label: 'None' },
+                { value: 'sm', label: 'Small' },
+                { value: 'md', label: 'Medium' },
+                { value: 'lg', label: 'Large' },
+                { value: 'xl', label: 'Extra Large' },
+              ]}
+            />
+          </div>
+        </div>
 
-          <Select
-            label="Height"
-            size="xs"
-            value={settings?.height || 'auto'}
-            onChange={(value) => handleSettingsChange('height', value as HeroHeight)}
-            data={[
-              { value: 'auto', label: 'Auto' },
-              { value: 'fullscreen', label: 'Fullscreen' },
-            ]}
-          />
-        </SimpleGrid>
+        <div className="builder-field-row">
+          <div className="builder-field-row__label">Height</div>
+          <div className="builder-field-row__input">
+            <Select
+              aria-label="Height"
+              size="sm"
+              value={settings?.height || 'auto'}
+              onChange={(value) => handleSettingsChange('height', value as HeroHeight)}
+              data={[
+                { value: 'auto', label: 'Auto' },
+                { value: 'fullscreen', label: 'Fullscreen' },
+              ]}
+            />
+          </div>
+        </div>
       </Stack>
 
       <Divider my="xs" />
 
       <Box>
         <Group gap={4} mb="xs">
-          <Text className="builder-field-label">
-            Background Image
+          <Text className="builder-field-label" c="var(--gs-text-muted)">
+            Background
           </Text>
-          <Tooltip label="Add a background image to your hero section" withArrow position="top">
-            <IconInfoCircle size={14} style={{ opacity: 0.5, cursor: 'help' }} />
+          <Tooltip
+            label="Customize the background color and image of your hero section"
+            withArrow
+            position="top"
+          >
+            <IconInfoCircle
+              size={14}
+              style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }}
+            />
           </Tooltip>
         </Group>
+
+        <Stack gap="xs" mb="sm">
+          <div className="builder-field-row">
+            <div className="builder-field-row__label">Background Color</div>
+            <div className="builder-field-row__input">
+              <ColorInput
+                aria-label="Background Color"
+                placeholder="Inherit"
+                size="sm"
+                format="hex"
+                value={settings?.background_color || ''}
+                onChange={(value) => handleSettingsChange('background_color', value || undefined)}
+                swatches={[
+                  '#121212',
+                  '#1a1a1a',
+                  '#0a0a0a',
+                  '#1e1e2e',
+                  '#0f172a',
+                  '#ffffff',
+                  '#f5f5f5',
+                ]}
+              />
+            </div>
+          </div>
+        </Stack>
 
         {settings?.background_image_url ? (
           <Stack gap="xs">
@@ -738,7 +847,9 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
               </Group>
             </Box>
             <Group justify="space-between">
-              <Text size="xs">Color Overlay</Text>
+              <Text c="var(--gs-text-extra-muted)" size="xs">
+                Color Overlay
+              </Text>
               <Switch
                 size="xs"
                 checked={settings?.background_overlay !== false}
@@ -746,30 +857,35 @@ export function HeroEditor({ index, content, settings }: HeroEditorProps) {
               />
             </Group>
             {settings?.background_overlay !== false && (
-              <NumberInput
-                label="Overlay Opacity"
-                size="xs"
-                value={settings?.background_overlay_opacity ?? 85}
-                onChange={(value) =>
-                  handleSettingsChange(
-                    'background_overlay_opacity',
-                    value === '' ? undefined : Number(value)
-                  )
-                }
-                onKeyDownCapture={(e) =>
-                  handleNumberInputKeyDown(
-                    e,
-                    settings?.background_overlay_opacity ?? 85,
-                    (v) => handleSettingsChange('background_overlay_opacity', v),
-                    0,
-                    100
-                  )
-                }
-                min={0}
-                max={100}
-                suffix="%"
-                allowDecimal={false}
-              />
+              <div className="builder-field-row">
+                <div className="builder-field-row__label">Overlay Opacity</div>
+                <div className="builder-field-row__input">
+                  <NumberInput
+                    aria-label="Overlay Opacity"
+                    size="sm"
+                    value={settings?.background_overlay_opacity ?? 85}
+                    onChange={(value) =>
+                      handleSettingsChange(
+                        'background_overlay_opacity',
+                        value === '' ? undefined : Number(value)
+                      )
+                    }
+                    onKeyDownCapture={(e) =>
+                      handleNumberInputKeyDown(
+                        e,
+                        settings?.background_overlay_opacity ?? 85,
+                        (v) => handleSettingsChange('background_overlay_opacity', v),
+                        0,
+                        100
+                      )
+                    }
+                    min={0}
+                    max={100}
+                    suffix="%"
+                    allowDecimal={false}
+                  />
+                </div>
+              </div>
             )}
           </Stack>
         ) : (

@@ -1,4 +1,4 @@
-import { ProfileTheme, Section, SectionType } from './types';
+import { ProfilePage, ProfileTheme, Section, SectionType } from './types';
 
 // Default theme values
 export const DEFAULT_THEME: ProfileTheme = {
@@ -123,6 +123,9 @@ export const CHAR_LIMITS = {
   about_body: 2000,
   mailing_list_description: 500,
   custom_text_body: 5000,
+  link_page_heading: 120,
+  link_page_description: 500,
+  link_title: 100,
 };
 
 // Display limits (per API spec)
@@ -167,3 +170,26 @@ export const IMAGE_UPLOAD = {
 // Link types
 export const STREAMING_LINK_TYPES = ['spotify', 'appleMusic', 'bandcamp', 'soundcloud', 'youtubeMusic'] as const;
 export const SOCIAL_LINK_TYPES = ['instagram', 'twitter', 'facebook', 'tiktok', 'youtube', 'website'] as const;
+
+// Default link page
+export const DEFAULT_LINK_PAGE: ProfilePage = {
+  type: 'links',
+  slug: 'links',
+  visible: true,
+  settings: {
+    show_social_links: true,
+    show_streaming_links: true,
+    layout: 'list',
+  },
+};
+
+export const LINK_ICON_OPTIONS = [
+  { value: 'link', label: 'Link' },
+  { value: 'music', label: 'Music' },
+  { value: 'shop', label: 'Shop' },
+  { value: 'video', label: 'Video' },
+  { value: 'heart', label: 'Heart' },
+  { value: 'star', label: 'Star' },
+  { value: 'globe', label: 'Globe' },
+  { value: 'mail', label: 'Email' },
+] as const;

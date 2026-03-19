@@ -86,7 +86,7 @@ function ThemedLikeButton({ postId, initialLiked = false, initialLikesCount = 0 
         border: 'none',
         cursor: 'pointer',
         padding: '2px 4px',
-        borderRadius: 4,
+        borderRadius: 'var(--gs-radius-xs)',
         color: isLiked ? '#e03131' : 'var(--gs-profile-font)',
         opacity: isLiking ? 0.5 : 0.7,
         transition: 'opacity 0.2s',
@@ -216,7 +216,7 @@ function ThemedCommentsSection({ postId, initialCommentsCount = 0 }: {
     fontSize: '0.875rem',
     backgroundColor: 'color-mix(in srgb, var(--gs-card-bg) 60%, transparent)',
     border: '1px solid var(--gs-card-bg)',
-    borderRadius: 6,
+    borderRadius: 'var(--gs-radius-sm)',
     color: 'var(--gs-profile-font)',
     outline: 'none',
     resize: 'vertical' as const,
@@ -234,14 +234,14 @@ function ThemedCommentsSection({ postId, initialCommentsCount = 0 }: {
     backgroundColor: 'var(--gs-profile-brand)',
     color: '#fff',
     border: 'none',
-    borderRadius: 6,
+    borderRadius: 'var(--gs-radius-sm)',
     cursor: 'pointer',
     opacity: (!newComment.trim() || isSubmitting) ? 0.5 : 1,
   };
 
   const commentCardStyle: CSSProperties = {
     background: 'var(--gs-card-bg)',
-    borderRadius: 8,
+    borderRadius: 'var(--gs-radius-md)',
     padding: '0.75rem 1rem',
     fontFamily: 'var(--gs-profile-body-font)',
     color: 'var(--gs-profile-font)',
@@ -441,7 +441,7 @@ function ThemedCommentsSection({ postId, initialCommentsCount = 0 }: {
                 disabled={isLoadingMore}
                 style={{
                   background: 'none', border: '1px solid var(--gs-card-bg)',
-                  borderRadius: 6, padding: '0.5rem 1.25rem',
+                  borderRadius: 'var(--gs-radius-sm)', padding: '0.5rem 1.25rem',
                   color: 'var(--gs-profile-font)', opacity: isLoadingMore ? 0.4 : 0.7,
                   cursor: 'pointer', fontFamily: 'var(--gs-profile-body-font)',
                   fontSize: '0.875rem',
@@ -497,6 +497,7 @@ export function ThemedPostPage({
     '--gs-profile-content-max-width': layout.max_width
       ? `${layout.max_width}px`
       : `${theme.content_max_width || 1200}px`,
+    '--gs-profile-radius': `${theme.border_radius ?? 12}px`,
     '--gs-card-bg': `color-mix(in srgb, ${theme.card_background_color || theme.font_color} ${theme.card_background_opacity ?? 10}%, transparent)`,
   };
 
@@ -514,7 +515,7 @@ export function ThemedPostPage({
         {layout.show_featured_image && featuredImageUrl && (
           <div style={{
             marginBottom: '1.5rem',
-            borderRadius: 8,
+            borderRadius: 'var(--gs-radius-md)',
             overflow: 'hidden',
             position: 'relative',
             height: 280,
@@ -584,7 +585,7 @@ export function ThemedPostPage({
         {layout.show_song_embed && post.song && (
           <div style={{
             background: 'var(--gs-card-bg)',
-            borderRadius: 8,
+            borderRadius: 'var(--gs-radius-md)',
             padding: '0.75rem 1rem',
             marginBottom: '1.5rem',
             display: 'flex',
@@ -598,13 +599,13 @@ export function ThemedPostPage({
                 src={fixImageUrl(post.song.artwork_url)}
                 alt={`${post.song.song_name} artwork`}
                 style={{
-                  width: 48, height: 48, borderRadius: 4,
+                  width: 48, height: 48, borderRadius: 'var(--gs-radius-xs)',
                   objectFit: 'cover', flexShrink: 0,
                 }}
               />
             ) : (
               <div style={{
-                width: 48, height: 48, borderRadius: 4,
+                width: 48, height: 48, borderRadius: 'var(--gs-radius-xs)',
                 background: 'var(--gs-profile-brand)', opacity: 0.6,
                 flexShrink: 0, display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
@@ -744,7 +745,7 @@ export function ThemedPostPage({
                   >
                     <div style={{
                       background: 'var(--gs-card-bg)',
-                      borderRadius: 8,
+                      borderRadius: 'var(--gs-radius-md)',
                       overflow: 'hidden',
                     }}>
                       <div style={{

@@ -27,26 +27,34 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
 
   return (
     <Stack gap="sm">
-      <TextInput
-        label="Title"
-        description="Optional section title"
-        placeholder="e.g., Press & Booking"
-        value={content.title || ''}
-        onChange={(e) => handleContentChange('title', e.target.value)}
-        maxLength={CHAR_LIMITS.section_heading}
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Title</div>
+        <div className="builder-field-row__input">
+          <TextInput
+            placeholder="e.g., Press & Booking"
+            value={content.title || ''}
+            onChange={(e) => handleContentChange('title', e.target.value)}
+            maxLength={CHAR_LIMITS.section_heading}
+            size="sm"
+            aria-label="Title"
+          />
+        </div>
+      </div>
 
-      <Textarea
-        label="Content"
-        description="Supports markdown: **bold**, *italic*, [links](url), lists"
-        placeholder="Add your custom content here..."
-        value={content.body || ''}
-        onChange={(e) => handleContentChange('body', e.target.value)}
-        maxLength={CHAR_LIMITS.custom_text_body}
-        minRows={6}
-        autosize
-        maxRows={15}
-      />
+      <div>
+        <div className="builder-field-row__label">Content</div>
+        <Textarea
+          description="Supports markdown: **bold**, *italic*, [links](url), lists"
+          placeholder="Add your custom content here..."
+          value={content.body || ''}
+          onChange={(e) => handleContentChange('body', e.target.value)}
+          maxLength={CHAR_LIMITS.custom_text_body}
+          minRows={6}
+          autosize
+          maxRows={15}
+          aria-label="Content"
+        />
+      </div>
 
       <Group justify="space-between">
         <Text size="xs" c="dimmed">

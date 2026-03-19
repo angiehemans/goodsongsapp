@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import isEqual from 'lodash/isEqual';
-import { ProfileTheme, Section, ProfileThemeConfig, ProfileSourceData, SinglePostLayout } from './types';
-import { DEFAULT_THEME, DEFAULT_SECTIONS } from './constants';
+import { LinkPageSettings, PageType, ProfileLink, ProfilePage, ProfileTheme, Section, ProfileThemeConfig, ProfileSourceData, SinglePostLayout } from './types';
+import { DEFAULT_THEME, DEFAULT_SECTIONS, DEFAULT_LINK_PAGE } from './constants';
 
 const DEFAULT_SINGLE_POST_LAYOUT: SinglePostLayout = {
   show_featured_image: true,
@@ -27,8 +27,14 @@ export interface BuilderState {
   // Single post layout (working copy)
   singlePostLayout: SinglePostLayout;
 
+  // Pages (link page, etc.) — working copy
+  pages: ProfilePage[];
+
+  // Custom profile links (managed via direct CRUD, not draft system)
+  profileLinks: ProfileLink[];
+
   // Active page tab in editor
-  activePage: 'main' | 'posts';
+  activePage: 'main' | 'posts' | 'events' | 'links';
 
   // Config from API (available section types, limits, etc.)
   config: ProfileThemeConfig | null;
@@ -37,7 +43,7 @@ export interface BuilderState {
   sourceData: ProfileSourceData | null;
 
   // Snapshot of the last saved state for dirty detection
-  lastSaved: { theme: ProfileTheme; sections: Section[]; singlePostLayout: SinglePostLayout } | null;
+  lastSaved: { theme: ProfileTheme; sections: Section[]; singlePostLayout: SinglePostLayout; pages: ProfilePage[] } | null;
 
   // UI state
   expandedSectionId: string | null;
@@ -59,6 +65,9 @@ export interface BuilderActions {
     draftSections: Section[] | null;
     singlePostLayout?: SinglePostLayout;
     draftSinglePostLayout?: SinglePostLayout | null;
+    pages?: ProfilePage[];
+    draftPages?: ProfilePage[] | null;
+    profileLinks?: Array<{ id: number; title: string; url: string; icon?: string; position: number }>;
     config: ProfileThemeConfig;
     sourceData?: ProfileSourceData;
   }) => void;
@@ -79,8 +88,14 @@ export interface BuilderActions {
   addSection: (type: Section['type']) => void;
   removeSection: (index: number) => void;
 
+  // Pages
+  setPages: (pages: ProfilePage[]) => void;
+  updatePageSettings: (pageType: PageType, settings: Partial<LinkPageSettings>) => void;
+  togglePageVisibility: (pageType: PageType) => void;
+  setProfileLinks: (links: ProfileLink[]) => void;
+
   // Single post layout
-  setActivePage: (page: 'main' | 'posts') => void;
+  setActivePage: (page: 'main' | 'posts' | 'events' | 'links') => void;
   setSinglePostLayoutField: <K extends keyof SinglePostLayout>(field: K, value: SinglePostLayout[K]) => void;
   setSinglePostLayout: (layout: Partial<SinglePostLayout>) => void;
 
@@ -104,6 +119,8 @@ const initialState: BuilderState = {
   theme: DEFAULT_THEME,
   sections: DEFAULT_SECTIONS,
   singlePostLayout: DEFAULT_SINGLE_POST_LAYOUT,
+  pages: [DEFAULT_LINK_PAGE],
+  profileLinks: [],
   activePage: 'main',
   config: null,
   sourceData: null,
@@ -123,7 +140,8 @@ function computeHasUnsavedChanges(state: BuilderState): boolean {
   return (
     !isEqual(state.theme, state.lastSaved.theme) ||
     !isEqual(state.sections, state.lastSaved.sections) ||
-    !isEqual(state.singlePostLayout, state.lastSaved.singlePostLayout)
+    !isEqual(state.singlePostLayout, state.lastSaved.singlePostLayout) ||
+    !isEqual(state.pages, state.lastSaved.pages)
   );
 }
 
@@ -139,12 +157,24 @@ export const useBuilderStore = create<BuilderStore>()(
     initialize: (data) => {
       const sections = data.draftSections || data.sections;
       const singlePostLayout = data.draftSinglePostLayout || data.singlePostLayout || DEFAULT_SINGLE_POST_LAYOUT;
+      const rawPages = data.draftPages || data.pages || [];
+      // Ensure a links page always exists (API may return empty array)
+      const hasLinksPage = rawPages.some((p) => p.type === 'links');
+      const pages = hasLinksPage ? rawPages : [...rawPages, DEFAULT_LINK_PAGE];
+      const profileLinks: ProfileLink[] = (data.profileLinks || []).map((l) => ({
+        ...l,
+        visible: (l as any).visible ?? true,
+        created_at: (l as any).created_at || '',
+        updated_at: (l as any).updated_at || '',
+      }));
       const theme = { ...DEFAULT_THEME, ...data.theme };
-      const lastSaved = { theme, sections, singlePostLayout };
+      const lastSaved = { theme, sections, singlePostLayout, pages };
       set({
         theme,
         sections,
         singlePostLayout,
+        pages,
+        profileLinks,
         config: data.config,
         sourceData: data.sourceData || null,
         lastSaved,
@@ -242,14 +272,15 @@ export const useBuilderStore = create<BuilderStore>()(
 
     addSection: (type) => {
       set((state) => {
+        const newIndex = state.sections.length;
         const newSection: Section = {
           type,
           visible: true,
-          order: state.sections.length,
+          order: newIndex,
           content: {},
         };
         const newSections = [...state.sections, newSection];
-        const newState = { ...state, sections: newSections };
+        const newState = { ...state, sections: newSections, expandedSectionId: `${type}-${newIndex}` };
         return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
       });
     },
@@ -265,6 +296,41 @@ export const useBuilderStore = create<BuilderStore>()(
         return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
       });
     },
+
+    setPages: (pages) => {
+      set((state) => {
+        const newState = { ...state, pages };
+        return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
+      });
+    },
+
+    updatePageSettings: (pageType, settings) => {
+      set((state) => {
+        const newPages = state.pages.map((page) => {
+          if (page.type === pageType) {
+            return { ...page, settings: { ...page.settings, ...settings } };
+          }
+          return page;
+        });
+        const newState = { ...state, pages: newPages };
+        return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
+      });
+    },
+
+    togglePageVisibility: (pageType) => {
+      set((state) => {
+        const newPages = state.pages.map((page) => {
+          if (page.type === pageType) {
+            return { ...page, visible: !page.visible };
+          }
+          return page;
+        });
+        const newState = { ...state, pages: newPages };
+        return { ...newState, hasUnsavedChanges: computeHasUnsavedChanges(newState) };
+      });
+    },
+
+    setProfileLinks: (links) => set({ profileLinks: links }),
 
     setActivePage: (page) => set({ activePage: page }),
 
@@ -300,7 +366,7 @@ export const useBuilderStore = create<BuilderStore>()(
 
     markAsSaved: () => {
       set((state) => ({
-        lastSaved: { theme: state.theme, sections: state.sections, singlePostLayout: state.singlePostLayout },
+        lastSaved: { theme: state.theme, sections: state.sections, singlePostLayout: state.singlePostLayout, pages: state.pages },
         hasUnsavedChanges: false,
       }));
     },
@@ -312,6 +378,7 @@ export const useBuilderStore = create<BuilderStore>()(
           theme: state.lastSaved.theme,
           sections: state.lastSaved.sections,
           singlePostLayout: state.lastSaved.singlePostLayout,
+          pages: state.lastSaved.pages,
           hasUnsavedChanges: false,
         };
       });
@@ -330,3 +397,5 @@ export const useIsSaving = () => useBuilderStore((state) => state.isSaving);
 export const useIsPublishing = () => useBuilderStore((state) => state.isPublishing);
 export const useSinglePostLayout = () => useBuilderStore((state) => state.singlePostLayout);
 export const useActivePage = () => useBuilderStore((state) => state.activePage);
+export const usePages = () => useBuilderStore((state) => state.pages);
+export const useProfileLinks = () => useBuilderStore((state) => state.profileLinks);

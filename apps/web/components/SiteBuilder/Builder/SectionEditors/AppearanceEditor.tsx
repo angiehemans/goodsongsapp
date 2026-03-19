@@ -3,7 +3,6 @@
 import {
   Stack,
   ColorInput,
-  Switch,
   Text,
 } from '@mantine/core';
 import { useBuilderStore } from '@/lib/site-builder/store';
@@ -16,7 +15,7 @@ interface AppearanceEditorProps {
 }
 
 export function AppearanceEditor({ index, settings, sectionType }: AppearanceEditorProps) {
-  const { theme, updateSectionSettings } = useBuilderStore();
+  const { updateSectionSettings } = useBuilderStore();
 
   // Only hero and custom_text sections support background_color override
   const supportsBackgroundColor = sectionType === 'hero' || sectionType === 'custom_text';
@@ -26,36 +25,27 @@ export function AppearanceEditor({ index, settings, sectionType }: AppearanceEdi
   }
 
   const currentSettings = settings as { background_color?: string } | undefined;
-  const useCustomBg = !!currentSettings?.background_color;
-
-  const handleToggleCustomBg = (checked: boolean) => {
-    updateSectionSettings(index, {
-      background_color: checked ? theme.background_color : undefined,
-    });
-  };
 
   const handleBgColorChange = (value: string) => {
-    updateSectionSettings(index, { background_color: value });
+    updateSectionSettings(index, { background_color: value || undefined });
   };
 
   return (
     <Stack gap="md">
-      <Text className="builder-field-label">
+      <Text className="builder-field-label" c="var(--gs-text-muted)">
         Appearance
       </Text>
 
-      <div>
-        <Switch
-          label="Custom background color"
-          checked={useCustomBg}
-          onChange={(e) => handleToggleCustomBg(e.target.checked)}
-          mb={useCustomBg ? 'xs' : 0}
-        />
-        {useCustomBg && (
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Background Color</div>
+        <div className="builder-field-row__input">
           <ColorInput
             value={currentSettings?.background_color || ''}
             onChange={handleBgColorChange}
+            placeholder="Inherit from theme"
             format="hex"
+            size="sm"
+            aria-label="Background Color"
             swatches={[
               '#121212',
               '#1a1a1a',
@@ -66,7 +56,7 @@ export function AppearanceEditor({ index, settings, sectionType }: AppearanceEdi
               '#f5f5f5',
             ]}
           />
-        )}
+        </div>
       </div>
     </Stack>
   );

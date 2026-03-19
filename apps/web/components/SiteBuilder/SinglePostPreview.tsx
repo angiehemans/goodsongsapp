@@ -86,6 +86,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
       ? `${layout.max_width}px`
       : `${theme.content_max_width || 1200}px`,
     '--gs-card-bg': `color-mix(in srgb, ${theme.card_background_color || layout.font_color || theme.font_color} ${theme.card_background_opacity ?? 10}%, transparent)`,
+    '--gs-profile-radius': `${theme.border_radius ?? 12}px`,
   };
 
   const contentMaxWidth = layout.max_width
@@ -100,7 +101,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
           <div
             style={{
               marginBottom: '1.5rem',
-              borderRadius: 8,
+              borderRadius: 'var(--gs-radius-md)',
               overflow: 'hidden',
               background: 'var(--gs-card-bg)',
               height: 280,
@@ -181,7 +182,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
           <div
             style={{
               background: 'var(--gs-card-bg)',
-              borderRadius: 8,
+              borderRadius: 'var(--gs-radius-md)',
               padding: '0.75rem 1rem',
               marginBottom: '1.5rem',
               display: 'flex',
@@ -195,7 +196,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
               style={{
                 width: 48,
                 height: 48,
-                borderRadius: 4,
+                borderRadius: 'var(--gs-radius-xs)',
                 background: 'var(--gs-profile-brand)',
                 opacity: 0.6,
                 flexShrink: 0,
@@ -277,7 +278,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
                   key={post.id}
                   style={{
                     background: 'var(--gs-card-bg)',
-                    borderRadius: 8,
+                    borderRadius: 'var(--gs-radius-md)',
                     overflow: 'hidden',
                   }}
                 >
@@ -341,7 +342,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
             <div
               style={{
                 background: 'var(--gs-card-bg)',
-                borderRadius: 8,
+                borderRadius: 'var(--gs-radius-md)',
                 padding: '1rem',
                 marginBottom: '1rem',
                 fontFamily: 'var(--gs-profile-body-font)',
@@ -371,7 +372,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
                 style={{
                   background: 'color-mix(in srgb, var(--gs-card-bg) 60%, transparent)',
                   border: '1px solid var(--gs-card-bg)',
-                  borderRadius: 6,
+                  borderRadius: 'var(--gs-radius-sm)',
                   padding: '0.625rem 0.75rem',
                   minHeight: 80,
                   fontSize: '0.875rem',
@@ -386,7 +387,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
                   style={{
                     background: 'var(--gs-profile-brand)',
                     color: '#fff',
-                    borderRadius: 6,
+                    borderRadius: 'var(--gs-radius-sm)',
                     padding: '0.4rem 1rem',
                     fontSize: '0.8125rem',
                     fontWeight: 600,
@@ -404,7 +405,7 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
                   key={comment.id}
                   style={{
                     background: 'var(--gs-card-bg)',
-                    borderRadius: 8,
+                    borderRadius: 'var(--gs-radius-md)',
                     padding: '0.75rem 1rem',
                     fontFamily: 'var(--gs-profile-body-font)',
                     color: 'var(--gs-profile-font)',

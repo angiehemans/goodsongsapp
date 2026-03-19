@@ -247,7 +247,7 @@ function renderEmbed(embedCode: string, embedType: EmbedType, theme: ProfileThem
             frameBorder="0"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
-            style={{ borderRadius: '12px' }}
+            style={{ borderRadius: 'var(--gs-radius-lg)' }}
           />
         </div>
       );
@@ -277,7 +277,7 @@ function renderEmbed(embedCode: string, embedType: EmbedType, theme: ProfileThem
             allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
             sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
             loading="lazy"
-            style={{ borderRadius: '10px', overflow: 'hidden', background: 'transparent' }}
+            style={{ borderRadius: 'var(--gs-radius-lg)', overflow: 'hidden', background: 'transparent' }}
           />
         </div>
       );
@@ -337,7 +337,7 @@ function renderEmbed(embedCode: string, embedType: EmbedType, theme: ProfileThem
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             loading="lazy"
-            style={{ borderRadius: '12px' }}
+            style={{ borderRadius: 'var(--gs-radius-lg)' }}
           />
         </div>
       );
@@ -367,7 +367,7 @@ function renderEmbed(embedCode: string, embedType: EmbedType, theme: ProfileThem
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             loading="lazy"
-            style={{ borderRadius: '12px' }}
+            style={{ borderRadius: 'var(--gs-radius-lg)' }}
           />
         </div>
       );

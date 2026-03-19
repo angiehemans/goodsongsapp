@@ -14,25 +14,30 @@ import { MentionText } from '@/components/MentionText/MentionText';
 import { MentionTextarea } from '@/components/MentionTextarea/MentionTextarea';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
-import { apiClient, ReviewComment } from '@/lib/api';
+import { apiClient, PostComment, ReviewComment } from '@/lib/api';
 import { formatTimeAgoCompact } from '@/lib/utils';
 import styles from './CommentsDrawer.module.css';
 
+type CommentableType = 'review' | 'event' | 'post';
+
 interface CommentsDrawerProps {
-  reviewId: number;
+  resourceType?: CommentableType;
+  resourceId: number;
   opened: boolean;
   onClose: () => void;
   onCommentCountChange?: (count: number) => void;
 }
 
 export function CommentsDrawer({
-  reviewId,
+  resourceType = 'review',
+  resourceId,
   opened,
   onClose,
   onCommentCountChange,
 }: CommentsDrawerProps) {
   const { user } = useAuth();
-  const [comments, setComments] = useState<ReviewComment[]>([]);
+  type Comment = ReviewComment | PostComment;
+  const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -43,12 +48,55 @@ export function CommentsDrawer({
   const [likingId, setLikingId] = useState<number | null>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
 
+  const getComments = async (id: number, pageNum: number): Promise<{ comments: Comment[]; pagination: { has_next_page: boolean } }> => {
+    switch (resourceType) {
+      case 'event': return apiClient.getEventComments(id, pageNum);
+      case 'post': return apiClient.getPostComments(id, pageNum);
+      default: return apiClient.getReviewComments(id, pageNum);
+    }
+  };
+
+  const createComment = async (id: number, body: string): Promise<Comment> => {
+    switch (resourceType) {
+      case 'event': return apiClient.createEventComment(id, body);
+      case 'post': {
+        const res = await apiClient.createPostComment(id, { body });
+        return res.comment;
+      }
+      default: return apiClient.createReviewComment(id, body);
+    }
+  };
+
+  const deleteComment = (id: number, commentId: number) => {
+    switch (resourceType) {
+      case 'event': return apiClient.deleteEventComment(id, commentId);
+      case 'post': return apiClient.deletePostComment(id, commentId);
+      default: return apiClient.deleteReviewComment(id, commentId);
+    }
+  };
+
+  const likeCommentApi = (commentId: number) => {
+    switch (resourceType) {
+      case 'event': return apiClient.likeEventComment(commentId);
+      case 'post': return apiClient.likePostComment(commentId);
+      default: return apiClient.likeComment(commentId);
+    }
+  };
+
+  const unlikeCommentApi = (commentId: number) => {
+    switch (resourceType) {
+      case 'event': return apiClient.unlikeEventComment(commentId);
+      case 'post': return apiClient.unlikePostComment(commentId);
+      default: return apiClient.unlikeComment(commentId);
+    }
+  };
+
   // Load comments when drawer opens
   useEffect(() => {
     if (opened) {
       loadComments(1, true);
     }
-  }, [opened, reviewId]);
+  }, [opened, resourceId]);
 
   const loadComments = async (pageNum: number, reset: boolean = false) => {
     if (reset) {
@@ -58,7 +106,7 @@ export function CommentsDrawer({
     }
 
     try {
-      const response = await apiClient.getReviewComments(reviewId, pageNum);
+      const response = await getComments(resourceId, pageNum);
       if (reset) {
         setComments(response.comments);
       } else {
@@ -86,18 +134,7 @@ export function CommentsDrawer({
     const commentText = newComment.trim();
     setIsSubmitting(true);
     try {
-      const response = await apiClient.createReviewComment(reviewId, commentText);
-      // Construct the full comment object with fallbacks in case API doesn't return all fields
-      const comment = {
-        ...response,
-        body: response.body || commentText,
-        created_at: response.created_at || new Date().toISOString(),
-        author: response.author || {
-          id: user.id,
-          username: user.username,
-          profile_image_url: user.profile_image_url,
-        },
-      };
+      const comment = await createComment(resourceId, commentText);
       setComments((prev) => [...prev, comment]);
       setNewComment('');
       onCommentCountChange?.(comments.length + 1);
@@ -111,7 +148,7 @@ export function CommentsDrawer({
   const handleDeleteComment = async (commentId: number) => {
     setDeletingId(commentId);
     try {
-      await apiClient.deleteReviewComment(reviewId, commentId);
+      await deleteComment(resourceId, commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       onCommentCountChange?.(Math.max(0, comments.length - 1));
     } catch (error) {
@@ -121,13 +158,13 @@ export function CommentsDrawer({
     }
   };
 
-  const handleLikeComment = async (comment: ReviewComment) => {
+  const handleLikeComment = async (comment: Comment) => {
     if (likingId !== null) return;
 
     setLikingId(comment.id);
     try {
       if (comment.liked_by_current_user) {
-        const response = await apiClient.unlikeComment(comment.id);
+        const response = await unlikeCommentApi(comment.id);
         setComments((prev) =>
           prev.map((c) =>
             c.id === comment.id
@@ -136,7 +173,7 @@ export function CommentsDrawer({
           )
         );
       } else {
-        const response = await apiClient.likeComment(comment.id);
+        const response = await likeCommentApi(comment.id);
         setComments((prev) =>
           prev.map((c) =>
             c.id === comment.id

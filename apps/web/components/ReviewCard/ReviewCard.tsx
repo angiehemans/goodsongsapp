@@ -677,7 +677,8 @@ export function ReviewCard({ review, onLikeChange }: ReviewCardProps) {
 
       {/* Comments Drawer */}
       <CommentsDrawer
-        reviewId={review.id}
+        resourceType="review"
+        resourceId={review.id}
         opened={commentsDrawerOpen}
         onClose={() => setCommentsDrawerOpen(false)}
         onCommentCountChange={setCommentsCount}

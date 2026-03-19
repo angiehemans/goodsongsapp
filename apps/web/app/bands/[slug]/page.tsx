@@ -15,6 +15,7 @@ import {
   Title,
 } from '@mantine/core';
 import { PageViewTracker } from '@/components/Analytics';
+import { BandFollowButton } from '@/components/BandFollowButton/BandFollowButton';
 import { EventCard } from '@/components/EventCard/EventCard';
 import { Header } from '@/components/Header/Header';
 import { MusicPlayer } from '@/components/MusicPlayer/MusicPlayer';
@@ -237,6 +238,9 @@ export default async function BandProfilePage({ params }: { params: Promise<{ sl
               {reviewsCount} recommendation{reviewsCount !== 1 ? 's' : ''}
             </Badge>
           </Group>
+          {band.owner?.id && (
+            <BandFollowButton ownerUserId={band.owner.id} />
+          )}
         </Flex>
 
         {/* Main Content */}

@@ -60,13 +60,16 @@ export function UserSidebar({
   badgeText,
   actionButtons,
   onProfileSaved,
-  followersCount = 0,
-  followingCount = 0,
+  followersCount: followersCountProp,
+  followingCount: followingCountProp,
   onNewRecommendation,
 }: UserSidebarProps) {
   const { user, refreshUser, isBand, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
   const pathname = usePathname();
+
+  const followersCount = followersCountProp ?? user?.followers_count ?? 0;
+  const followingCount = followingCountProp ?? user?.following_count ?? 0;
 
   // Helper to check if a nav item is active
   const isActive = (href: string) => {

@@ -191,7 +191,7 @@ export function SectionCard({ id, section, index }: SectionCardProps) {
             <SectionEditor section={section} index={index} />
 
             {/* Appearance settings (only for sections that support it) */}
-            {(section.type === 'hero' || section.type === 'custom_text') && (
+            {section.type === 'custom_text' && (
               <>
                 <Divider my="xs" />
                 <AppearanceEditor index={index} settings={section.settings} sectionType={section.type} />

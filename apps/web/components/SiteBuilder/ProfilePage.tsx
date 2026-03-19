@@ -56,6 +56,7 @@ export function ProfilePage({
     '--gs-profile-header-font': getFontFamily(theme.header_font),
     '--gs-profile-body-font': getFontFamily(theme.body_font),
     '--gs-profile-content-max-width': `${theme.content_max_width || 1200}px`,
+    '--gs-profile-radius': `${theme.border_radius ?? 12}px`,
     '--gs-card-bg': `color-mix(in srgb, ${theme.card_background_color || theme.font_color} ${theme.card_background_opacity ?? 10}%, transparent)`,
   };
 
@@ -77,6 +78,13 @@ export function ProfilePage({
         return {
           ...section,
           data: { ...section.data, post_base_path: postBasePath },
+        };
+      }
+      // For hero sections, always inject owner_user_id even if data exists
+      if (section.type === 'hero' && section.data && sourceData.user?.id) {
+        return {
+          ...section,
+          data: { ...section.data, owner_user_id: sourceData.user.id },
         };
       }
       // If section already has data, use it

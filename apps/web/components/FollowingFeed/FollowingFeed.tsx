@@ -4,46 +4,48 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { IconMusic, IconUsers } from '@tabler/icons-react';
 import { Button, Center, Loader, Paper, Stack, Text, Title } from '@mantine/core';
+import { FeedEventCard } from '@/components/FeedEventCard/FeedEventCard';
+import { FeedPostCard } from '@/components/FeedPostCard/FeedPostCard';
 import { ReviewCard } from '@/components/ReviewCard/ReviewCard';
-import { apiClient, FollowingFeedItem, Review } from '@/lib/api';
+import { apiClient, FollowingFeedEntry, Review } from '@/lib/api';
 import styles from './FollowingFeed.module.css';
 
 interface FollowingFeedProps {
   /** Title to display above the feed */
   title?: string;
-  /** Initial feed items from dashboard endpoint */
-  initialFeedItems?: FollowingFeedItem[];
+  /** Initial feed entries from dashboard endpoint */
+  initialFeedEntries?: FollowingFeedEntry[];
 }
 
 // Convert FollowingFeedItem to Review format for ReviewCard
-function feedItemToReview(item: FollowingFeedItem): Review {
+function feedItemToReview(item: FollowingFeedEntry & { type: 'review' }): Review {
+  const data = item.data;
   return {
-    id: item.id,
-    song_name: item.song_name,
-    band_name: item.band_name,
-    artwork_url: item.artwork_url || '',
-    song_link: item.song_link || '',
-    review_text: item.review_text,
-    formatted_review_text: item.formatted_review_text,
-    mentions: item.mentions,
-    liked_aspects: item.liked_aspects || [],
-    created_at: item.created_at,
-    updated_at: item.created_at,
-    author: item.author,
-    band: item.band,
-    likes_count: item.likes_count,
-    liked_by_current_user: item.liked_by_current_user,
-    comments_count: item.comments_count,
-    // Include track data for streaming links
-    track: item.track,
+    id: data.id,
+    song_name: data.song_name,
+    band_name: data.band_name,
+    artwork_url: data.artwork_url || '',
+    song_link: data.song_link || '',
+    review_text: data.review_text,
+    formatted_review_text: data.formatted_review_text,
+    mentions: data.mentions,
+    liked_aspects: data.liked_aspects || [],
+    created_at: data.created_at,
+    updated_at: data.created_at,
+    author: data.author,
+    band: data.band,
+    likes_count: data.likes_count,
+    liked_by_current_user: data.liked_by_current_user,
+    comments_count: data.comments_count,
+    track: data.track,
   } as Review;
 }
 
-export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: FollowingFeedProps) {
-  const [feedItems, setFeedItems] = useState<FollowingFeedItem[]>(initialFeedItems || []);
-  const [isLoading, setIsLoading] = useState(!initialFeedItems);
+export function FollowingFeed({ title = 'Following Feed', initialFeedEntries }: FollowingFeedProps) {
+  const [feedEntries, setFeedEntries] = useState<FollowingFeedEntry[]>(initialFeedEntries || []);
+  const [isLoading, setIsLoading] = useState(!initialFeedEntries);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(initialFeedItems ? initialFeedItems.length >= 5 : false);
+  const [hasNextPage, setHasNextPage] = useState(initialFeedEntries ? initialFeedEntries.length >= 5 : false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const fetchFeed = useCallback(async (page: number, append: boolean = false) => {
@@ -55,37 +57,33 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
 
     try {
       const response = await apiClient.getFollowingFeed(page);
-      const reviews = response?.reviews || [];
+      const entries = response?.feed_items || [];
       if (append) {
-        setFeedItems((prev) => {
-          const ids = new Set(prev.map((r) => r.id));
-          return [...prev, ...reviews.filter((r) => !ids.has(r.id))];
+        setFeedEntries((prev) => {
+          const keys = new Set(prev.map((e) => `${e.type}-${e.data.id}`));
+          return [...prev, ...entries.filter((e) => !keys.has(`${e.type}-${e.data.id}`))];
         });
       } else {
-        setFeedItems(reviews);
+        setFeedEntries(entries);
       }
-      // Handle both 'meta' and 'pagination' response structures
-      const pagination = (response as any)?.meta || (response as any)?.pagination;
-      const currentPageNum = pagination?.current_page || 1;
-      const totalPagesNum = pagination?.total_pages || 1;
-      const hasNext = pagination?.has_next_page ?? currentPageNum < totalPagesNum;
-      setCurrentPage(currentPageNum);
-      setHasNextPage(hasNext);
+      const pagination = response?.pagination;
+      setCurrentPage(pagination?.current_page || 1);
+      setHasNextPage(pagination?.has_next_page ?? false);
     } catch (error) {
       console.error('Failed to fetch following feed:', error);
-      setFeedItems([]);
+      setFeedEntries([]);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
   }, []);
 
-  // Only fetch on mount if no initial items provided
+  // Only fetch on mount if no initial entries provided
   useEffect(() => {
-    if (!initialFeedItems) {
+    if (!initialFeedEntries) {
       fetchFeed(1);
     }
-  }, [fetchFeed, initialFeedItems]);
+  }, [fetchFeed, initialFeedEntries]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isLoadingMore) {
@@ -113,6 +111,19 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
     [handleLoadMore]
   );
 
+  const renderFeedEntry = (entry: FollowingFeedEntry, index: number) => {
+    switch (entry.type) {
+      case 'review':
+        return <ReviewCard key={`review-${entry.data.id}`} review={feedItemToReview(entry)} />;
+      case 'event':
+        return <FeedEventCard key={`event-${entry.data.id}`} event={entry.data} />;
+      case 'post':
+        return <FeedPostCard key={`post-${entry.data.id}`} post={entry.data} />;
+      default:
+        return null;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -126,7 +137,7 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
     );
   }
 
-  if (feedItems.length === 0) {
+  if (feedEntries.length === 0) {
     return (
       <div className={styles.container}>
         <Title order={2} mb="sm" style={{ color: 'var(--gs-text-heading)' }} fw={500}>
@@ -155,9 +166,7 @@ export function FollowingFeed({ title = 'Following Feed', initialFeedItems }: Fo
         {title}
       </Title>
       <Stack gap={0}>
-        {feedItems.map((item) => (
-          <ReviewCard key={item.id} review={feedItemToReview(item)} />
-        ))}
+        {feedEntries.map((entry, index) => renderFeedEntry(entry, index))}
 
         {hasNextPage && (
           <div ref={sentinelRef}>

@@ -28,7 +28,7 @@ const gray: MantineColorsTuple = [
   '#B3B3B3', // 400
   '#808080', // 500
   '#4D4D4D', // 600
-  '#333333', // 700
+  '#242424', // 700
   '#1A1A1A', // 800
   '#141414', // 900
 ];
@@ -139,7 +139,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (theme) => ({
     '--gs-text-accent': gray[2], // #E6E6E6 - accent text in dark mode
 
     // Border colors
-    '--gs-border-default': gray[7], // #616161 - default borders
+    '--gs-border-default': gray[7], // #242424 - default borders
     '--gs-border-strong': gray[5], // #9E9E9E - strong/focus borders
     '--gs-border-subtle': gray[8], // #424242 - subtle borders
     '--gs-border-accent': gray[6], // #757575 - accent borders
@@ -261,7 +261,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
@@ -279,7 +279,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           paddingTop: '2px',
@@ -297,7 +297,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
@@ -314,7 +314,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
@@ -328,7 +328,7 @@ export const theme = createTheme({
         dropdown: {
           backgroundColor: 'var(--gs-bg-elevated)',
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
         },
@@ -348,7 +348,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
@@ -362,7 +362,7 @@ export const theme = createTheme({
         dropdown: {
           backgroundColor: 'var(--gs-bg-elevated)',
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
         },
@@ -382,7 +382,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
@@ -396,7 +396,7 @@ export const theme = createTheme({
         dropdown: {
           backgroundColor: 'var(--gs-bg-elevated)',
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
         },
@@ -416,7 +416,7 @@ export const theme = createTheme({
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
@@ -431,7 +431,7 @@ export const theme = createTheme({
         dropdown: {
           backgroundColor: 'var(--gs-bg-elevated)',
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',
         },
@@ -447,11 +447,52 @@ export const theme = createTheme({
         },
       },
     },
+    ColorInput: {
+      styles: {
+        input: {
+          borderWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+          backgroundColor: 'var(--gs-bg-input)',
+          fontFamily: 'var(--gs-font-display)',
+          color: 'var(--gs-text-secondary)',
+          paddingTop: '2px',
+          '&::placeholder': {
+            color: 'var(--gs-text-placeholder)',
+          },
+        },
+        label: {
+          color: 'var(--gs-text-label)',
+        },
+        dropdown: {
+          backgroundColor: 'var(--gs-bg-elevated)',
+          borderWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+        },
+      },
+    },
+    NumberInput: {
+      styles: {
+        input: {
+          borderWidth: 'var(--gs-border-width)',
+          borderColor: 'var(--gs-border-default)',
+          backgroundColor: 'var(--gs-bg-input)',
+          fontFamily: 'var(--gs-font-display)',
+          color: 'var(--gs-text-secondary)',
+          paddingTop: '2px',
+          '&::placeholder': {
+            color: 'var(--gs-text-placeholder)',
+          },
+        },
+        label: {
+          color: 'var(--gs-text-label)',
+        },
+      },
+    },
     FileInput: {
       styles: {
         input: {
           borderWidth: 'var(--gs-border-width)',
-          borderColor: 'var(--gs-border-strong)',
+          borderColor: 'var(--gs-border-default)',
           backgroundColor: 'var(--gs-bg-input)',
           fontFamily: 'var(--gs-font-display)',
           color: 'var(--gs-text-secondary)',

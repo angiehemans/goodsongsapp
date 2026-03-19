@@ -62,6 +62,9 @@ function parseFormattedText(text: string): TextPart[] {
 }
 
 export function MentionText({ text, inline = false, ...textProps }: MentionTextProps) {
+  if (!text) {
+    return null;
+  }
   const parts = parseFormattedText(text);
 
   const content = parts.map((part, index) => {

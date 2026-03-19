@@ -24,23 +24,34 @@ export function MerchEditor({ index, content, settings }: MerchEditorProps) {
 
   return (
     <Stack gap="sm">
-      <TextInput
-        label="Heading"
-        placeholder="Merch"
-        value={content.heading || ''}
-        onChange={(e) => handleContentChange('heading', e.target.value)}
-        maxLength={CHAR_LIMITS.section_heading}
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Heading</div>
+        <div className="builder-field-row__input">
+          <TextInput
+            placeholder="Merch"
+            value={content.heading || ''}
+            onChange={(e) => handleContentChange('heading', e.target.value)}
+            maxLength={CHAR_LIMITS.section_heading}
+            size="sm"
+            aria-label="Heading"
+          />
+        </div>
+      </div>
 
-      <TextInput
-        label="Store URL"
-        description="Link to your external merch store"
-        placeholder="https://yourband.bandcamp.com/merch"
-        value={settings?.store_url || ''}
-        onChange={(e) => handleSettingsChange('store_url', e.target.value)}
-        type="url"
-        required
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Store URL</div>
+        <div className="builder-field-row__input">
+          <TextInput
+            placeholder="https://yourband.bandcamp.com/merch"
+            value={settings?.store_url || ''}
+            onChange={(e) => handleSettingsChange('store_url', e.target.value)}
+            type="url"
+            required
+            size="sm"
+            aria-label="Store URL"
+          />
+        </div>
+      </div>
 
       <Text size="sm" c="dimmed">
         Visitors will be directed to your external merch store.

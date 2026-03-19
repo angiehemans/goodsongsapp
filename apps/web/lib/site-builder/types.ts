@@ -1,3 +1,99 @@
+// Page types
+export type PageType = 'links';
+export type LinkPageLayout = 'list' | 'grid';
+
+// Link page header element types (same concept as HeroElement)
+export type LinkPageHeaderElement = 'profile_image' | 'headline' | 'subtitle' | 'description' | 'social_links';
+export type LinkPageHeaderLayout = 'left' | 'center' | 'right';
+export type LinkPageHeaderJustify = 'top' | 'center' | 'bottom' | 'space-between';
+export type LinkPageHeaderGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
+export type LinkPageHeaderHeight = 'auto' | 'fullscreen';
+
+// Link page settings (stored in pages[].settings)
+export interface LinkPageSettings {
+  heading?: string;
+  description?: string;
+  show_social_links?: boolean;
+  show_streaming_links?: boolean;
+  layout?: LinkPageLayout;
+  // Header settings (mirrors hero section)
+  show_profile_image?: boolean;
+  show_headline?: boolean;
+  show_subtitle?: boolean;
+  show_description?: boolean;
+  headline_text?: string;
+  headline_logo_url?: string;
+  headline_logo_width?: number;
+  headline_font_size?: number;
+  subtitle_text?: string;
+  description_text?: string;
+  element_order?: LinkPageHeaderElement[];
+  visible_social_links?: SocialLinkType[] | null;
+  header_layout?: LinkPageHeaderLayout;
+  header_justify?: LinkPageHeaderJustify;
+  header_gap?: LinkPageHeaderGap;
+  header_height?: LinkPageHeaderHeight;
+  background_image_url?: string;
+  background_overlay?: boolean;
+  background_overlay_opacity?: number;
+  // Link card styles
+  link_bg_color?: string;
+  link_font_color?: string;
+  link_font_size?: number;
+  link_border_width?: number;
+  link_border_color?: string;
+  link_border_style?: 'solid' | 'dashed' | 'dotted';
+  link_hover_bg_color?: string;
+  link_hover_font_color?: string;
+  link_font_family?: string;
+}
+
+// A page in the profile theme
+export interface ProfilePage {
+  type: PageType;
+  slug: string;
+  visible: boolean;
+  settings?: LinkPageSettings;
+}
+
+// Custom link from profile_links table
+export interface ProfileLink {
+  id: number;
+  title: string;
+  url: string;
+  icon?: string;
+  thumbnail_url?: string;
+  position: number;
+  visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Public link page response
+export interface LinkPageResponse {
+  data: {
+    user: PublicProfileResponse['data']['user'];
+    theme: ProfileTheme | null;
+    page_settings: LinkPageSettings;
+    profile: {
+      display_name: string;
+      about?: string;
+      profile_image_url?: string;
+      location?: string;
+    };
+    custom_links: Array<{
+      id: number;
+      title: string;
+      url: string;
+      icon?: string;
+      thumbnail_url?: string;
+      position: number;
+    }>;
+    social_links: Record<string, string>;
+    streaming_links: Record<string, string>;
+  };
+}
+
 // Single post layout types
 export type SinglePostContentLayout = 'default' | 'wide' | 'narrow';
 
@@ -40,6 +136,7 @@ export interface ProfileTheme {
   content_max_width?: number; // Max width for section content in pixels, default 1200
   card_background_color?: string | null; // Card/surface background color, defaults to font_color. null/'' = inherit
   card_background_opacity?: number; // Card bg opacity 0-100, defaults to 10
+  border_radius?: number; // Global border radius in pixels, default 12
 }
 
 // Layout alignment options for hero section
@@ -366,6 +463,8 @@ export interface ProfileThemeConfig {
   streaming_link_types?: StreamingLinkType[];
   single_post_content_layouts?: string[];
   single_post_layout_schema?: Record<string, unknown>;
+  page_types?: PageType[];
+  page_schemas?: Record<string, unknown>;
 }
 
 // Source data from profile theme (user profile info for preview)
@@ -418,6 +517,14 @@ export interface ProfileSourceData {
       artist?: string;
     };
   }>;
+  profile_links?: Array<{
+    id: number;
+    title: string;
+    url: string;
+    icon?: string;
+    thumbnail_url?: string;
+    position: number;
+  }>;
   sample_post?: {
     id: number;
     title: string;
@@ -447,10 +554,13 @@ export interface ProfileThemeResponse {
     content_max_width?: number;
     card_background_color?: string;
     card_background_opacity?: number;
+    border_radius?: number;
     sections: Section[];
+    pages: ProfilePage[];
     single_post_layout: SinglePostLayout;
     draft_single_post_layout: SinglePostLayout | null;
     draft_sections: Section[] | null;
+    draft_pages: ProfilePage[] | null;
     has_draft: boolean;
     published_at: string | null;
     created_at: string;

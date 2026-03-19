@@ -20,6 +20,7 @@ import {
 import {
   IconCheck,
   IconGripVertical,
+  IconInfoCircle,
   IconLayoutAlignCenter,
   IconLayoutAlignLeft,
   IconLayoutAlignRight,
@@ -240,31 +241,39 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
   const titleAlign = settings?.title_align || 'left';
 
   return (
-    <Stack gap="md">
+    <Stack gap={12}>
       {/* Section Title */}
-      <TextInput
-        label="Section title"
-        placeholder="Music"
-        value={content.heading || ''}
-        onChange={(e) => handleContentChange('heading', e.target.value)}
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Section title</div>
+        <div className="builder-field-row__input">
+          <TextInput
+            placeholder="Music"
+            value={content.heading || ''}
+            onChange={(e) => handleContentChange('heading', e.target.value)}
+            size="sm"
+            aria-label="Section title"
+          />
+        </div>
+      </div>
 
       {/* Title Alignment */}
-      <div>
-        <Text className="builder-field-label" mb={4}>Title alignment</Text>
-        <Group gap="xs">
-          {titleAlignOptions.map((option) => (
-            <Tooltip key={option.value} label={option.label} position="top">
-              <ActionIcon
-                variant={titleAlign === option.value ? 'filled' : 'default'}
-                size="lg"
-                onClick={() => handleSettingsChange('title_align', option.value)}
-              >
-                {option.icon}
-              </ActionIcon>
-            </Tooltip>
-          ))}
-        </Group>
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Title alignment</div>
+        <div className="builder-field-row__input">
+          <Group gap={10}>
+            {titleAlignOptions.map((option) => (
+              <Tooltip key={option.value} label={option.label} position="top">
+                <ActionIcon
+                  variant={titleAlign === option.value ? 'filled' : 'default'}
+                  size="lg"
+                  onClick={() => handleSettingsChange('title_align', option.value)}
+                >
+                  {option.icon}
+                </ActionIcon>
+              </Tooltip>
+            ))}
+          </Group>
+        </div>
       </div>
 
       {/* Embeds List */}
@@ -283,7 +292,7 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
                 key={embedIndex}
                 p="sm"
                 style={{
-                  backgroundColor: 'var(--mantine-color-dark-6)',
+                  backgroundColor: 'var(--gs-bg-surface-alt)',
                   borderRadius: 'var(--mantine-radius-md)',
                 }}
               >
@@ -307,9 +316,9 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
           {/* Add Embed Form */}
           {isAddingEmbed ? (
             <Stack gap="xs" p="sm" style={{
-              backgroundColor: 'var(--mantine-color-dark-7)',
+              backgroundColor: 'var(--gs-bg-surface)',
               borderRadius: 'var(--mantine-radius-md)',
-              border: '1px solid var(--mantine-color-dark-4)',
+              border: '1px solid var(--gs-border-default)',
             }}>
               <Textarea
                 placeholder={`Paste embed code or link...
@@ -380,64 +389,70 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
       </Box>
 
       {/* Player Layout */}
-      <div>
-        <Text className="builder-field-label" mb={4}>Player alignment</Text>
-        <Group gap="xs">
-          {playerLayoutOptions.map((option) => (
-            <Tooltip key={option.value} label={option.label} position="top">
-              <ActionIcon
-                variant={playerLayout === option.value ? 'filled' : 'default'}
-                size="lg"
-                onClick={() => handleSettingsChange('player_layout', option.value)}
-              >
-                {option.icon}
-              </ActionIcon>
-            </Tooltip>
-          ))}
-        </Group>
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Player alignment</div>
+        <div className="builder-field-row__input">
+          <Group gap={10}>
+            {playerLayoutOptions.map((option) => (
+              <Tooltip key={option.value} label={option.label} position="top">
+                <ActionIcon
+                  variant={playerLayout === option.value ? 'filled' : 'default'}
+                  size="lg"
+                  onClick={() => handleSettingsChange('player_layout', option.value)}
+                >
+                  {option.icon}
+                </ActionIcon>
+              </Tooltip>
+            ))}
+          </Group>
+        </div>
       </div>
 
       {/* Gap */}
-      <Select
-        label="Gap"
-        size="xs"
-        value={settings?.gap || 'md'}
-        onChange={(value) => handleSettingsChange('gap', value as MusicGap)}
-        data={[
-          { value: 'none', label: 'None' },
-          { value: 'sm', label: 'Small' },
-          { value: 'md', label: 'Medium' },
-          { value: 'lg', label: 'Large' },
-          { value: 'xl', label: 'Extra Large' },
-        ]}
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Gap</div>
+        <div className="builder-field-row__input">
+          <Select
+            size="sm"
+            value={settings?.gap || 'md'}
+            onChange={(value) => handleSettingsChange('gap', value as MusicGap)}
+            data={[
+              { value: 'none', label: 'None' },
+              { value: 'sm', label: 'Small' },
+              { value: 'md', label: 'Medium' },
+              { value: 'lg', label: 'Large' },
+              { value: 'xl', label: 'Extra Large' },
+            ]}
+            aria-label="Gap"
+          />
+        </div>
+      </div>
 
-      {/* Background Color */}
-      <Group align="flex-end" gap="xs">
-        <ColorInput
-          label="Background color"
-          placeholder="Use theme default"
-          value={settings?.background_color || ''}
-          onChange={(value) => handleSettingsChange('background_color', value || undefined)}
-          style={{ flex: 1 }}
-          size="xs"
-        />
-        {settings?.background_color && (
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
-            onClick={() => handleSettingsChange('background_color', undefined)}
-            title="Reset to default"
-          >
-            <IconX size={16} />
-          </ActionIcon>
-        )}
-      </Group>
-
-      {/* Background Image */}
+      {/* Background */}
       <Box>
-        <Text className="builder-field-label" mb={8}>Background image</Text>
+        <Group gap={4} mb="xs">
+          <Text className="builder-field-label" c="var(--gs-text-muted)">Background</Text>
+          <Tooltip label="Customize the background of this section" withArrow position="top">
+            <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
+          </Tooltip>
+        </Group>
+
+        <Stack gap="xs" mb="sm">
+          <div className="builder-field-row">
+            <div className="builder-field-row__label">Background Color</div>
+            <div className="builder-field-row__input">
+              <ColorInput
+                aria-label="Background Color"
+                placeholder="Inherit"
+                size="sm"
+                format="hex"
+                value={settings?.background_color || ''}
+                onChange={(value) => handleSettingsChange('background_color', value || undefined)}
+                swatches={['#121212', '#1a1a1a', '#0a0a0a', '#1e1e2e', '#0f172a', '#ffffff', '#f5f5f5']}
+              />
+            </div>
+          </div>
+        </Stack>
 
         {settings?.background_image_url ? (
           <Stack gap="xs">
@@ -477,30 +492,35 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
               />
             </Group>
             {settings?.background_overlay !== false && (
-              <NumberInput
-                label="Overlay Opacity"
-                size="xs"
-                value={settings?.background_overlay_opacity ?? 85}
-                onChange={(value) =>
-                  handleSettingsChange(
-                    'background_overlay_opacity',
-                    value === '' ? undefined : Number(value)
-                  )
-                }
-                onKeyDownCapture={(e) =>
-                  handleNumberInputKeyDown(
-                    e,
-                    settings?.background_overlay_opacity ?? 85,
-                    (v) => handleSettingsChange('background_overlay_opacity', v),
-                    0,
-                    100
-                  )
-                }
-                min={0}
-                max={100}
-                suffix="%"
-                allowDecimal={false}
-              />
+              <div className="builder-field-row">
+                <div className="builder-field-row__label">Overlay Opacity</div>
+                <div className="builder-field-row__input">
+                  <NumberInput
+                    size="sm"
+                    value={settings?.background_overlay_opacity ?? 85}
+                    onChange={(value) =>
+                      handleSettingsChange(
+                        'background_overlay_opacity',
+                        value === '' ? undefined : Number(value)
+                      )
+                    }
+                    onKeyDownCapture={(e) =>
+                      handleNumberInputKeyDown(
+                        e,
+                        settings?.background_overlay_opacity ?? 85,
+                        (v) => handleSettingsChange('background_overlay_opacity', v),
+                        0,
+                        100
+                      )
+                    }
+                    min={0}
+                    max={100}
+                    suffix="%"
+                    allowDecimal={false}
+                    aria-label="Overlay Opacity"
+                  />
+                </div>
+              </div>
             )}
           </Stack>
         ) : (
@@ -514,10 +534,6 @@ export function MusicEditor({ index, content, settings, data }: MusicEditorProps
           </Button>
         )}
       </Box>
-
-      <Text size="xs" c="dimmed">
-        Bandcamp embeds will use your theme colors automatically.
-      </Text>
 
       <AssetPicker
         opened={assetPickerOpen}

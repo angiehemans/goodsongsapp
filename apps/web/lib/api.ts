@@ -455,13 +455,81 @@ export interface FollowingFeedItem {
   };
 }
 
+export interface FeedEventItem {
+  id: number;
+  name: string;
+  description?: string;
+  event_date: string;
+  ticket_link?: string;
+  image_url?: string;
+  price?: string;
+  venue?: {
+    id: number;
+    name: string;
+    city: string;
+    region?: string;
+  };
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+    profile_picture_url?: string;
+  };
+  author: {
+    id: number;
+    username?: string;
+    display_name?: string;
+    role?: string;
+    band_slug?: string;
+    profile_image_url?: string;
+  };
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+  comments_count?: number;
+  created_at: string;
+}
+
+export interface FeedPostItem {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  featured_image_url?: string;
+  publish_date?: string;
+  authors?: PostAuthor[];
+  band?: {
+    id: number;
+    slug: string;
+    name: string;
+  };
+  author: {
+    id: number;
+    username?: string;
+    display_name?: string;
+    role?: string;
+    band_slug?: string;
+    profile_image_url?: string;
+  };
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+  comments_count?: number;
+  created_at: string;
+}
+
+export type FollowingFeedEntry =
+  | { type: 'review'; data: FollowingFeedItem }
+  | { type: 'event'; data: FeedEventItem }
+  | { type: 'post'; data: FeedPostItem };
+
 export interface FollowingFeedResponse {
-  reviews: FollowingFeedItem[];
-  meta: {
+  feed_items: FollowingFeedEntry[];
+  pagination: {
     current_page: number;
     total_pages: number;
     total_count: number;
     per_page: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
   };
 }
 
@@ -601,6 +669,10 @@ export interface Event {
   age_restriction?: string;
   venue: Venue;
   band: EventBand;
+  user_id?: number;
+  likes_count?: number;
+  liked_by_current_user?: boolean;
+  comments_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -1215,7 +1287,7 @@ export interface FanDashboardResponse {
   unread_notifications_count: number;
   recent_reviews: FanDashboardReview[];
   recently_played: FanDashboardRecentlyPlayed[];
-  following_feed_preview: FanDashboardFeedItem[];
+  following_feed_preview: FollowingFeedEntry[];
   stats: FanDashboardStats;
 }
 
@@ -2661,6 +2733,56 @@ class ApiClient {
   // Posts - Unlike a post
   async unlikePost(postId: number): Promise<LikeResponse> {
     return this.makeRequest(`/posts/${postId}/like`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Events - Like an event
+  async likeEvent(eventId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/events/${eventId}/like`, {
+      method: 'POST',
+    });
+  }
+
+  // Events - Unlike an event
+  async unlikeEvent(eventId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/events/${eventId}/like`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Event Comments - Get comments for an event
+  async getEventComments(eventId: number, page: number = 1): Promise<ReviewCommentsResponse> {
+    return this.makeRequest(`/events/${eventId}/comments?page=${page}`);
+  }
+
+  // Event Comments - Create a comment
+  async createEventComment(eventId: number, body: string): Promise<ReviewComment> {
+    const response = await this.makeRequest<{ comment: ReviewComment }>(`/events/${eventId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: { body } }),
+    });
+    return response.comment;
+  }
+
+  // Event Comments - Delete a comment
+  async deleteEventComment(eventId: number, commentId: number): Promise<{ message: string; comments_count: number }> {
+    return this.makeRequest(`/events/${eventId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Event Comments - Like a comment
+  async likeEventComment(commentId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/event_comments/${commentId}/like`, {
+      method: 'POST',
+    });
+  }
+
+  // Event Comments - Unlike a comment
+  async unlikeEventComment(commentId: number): Promise<LikeResponse> {
+    return this.makeRequest(`/event_comments/${commentId}/like`, {
       method: 'DELETE',
     });
   }

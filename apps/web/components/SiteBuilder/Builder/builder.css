@@ -3,7 +3,7 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--mantine-color-dark-8);
+  background-color: var(--gs-bg-app);
 }
 
 .builder-layout__editor {
@@ -11,8 +11,8 @@
   min-width: 380px;
   height: 100vh;
   overflow-y: auto;
-  background-color: var(--mantine-color-dark-7);
-  border-right: 1px solid var(--mantine-color-dark-5);
+  background-color: var(--builder-bg, var(--gs-bg-surface));
+  border-right: 2px solid var(--builder-border, var(--gs-border-default));
   display: flex;
   flex-direction: column;
 }
@@ -29,12 +29,37 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background-color: var(--builder-bg);
+
+  /* Builder panel CSS variables — light mode defaults */
+  --builder-bg: var(--gs-bg-surface);
+  --builder-bg-header: var(--gs-bg-surface-alt);
+  --builder-bg-input: var(--gs-bg-input);
+  --builder-border: var(--gs-border-default);
+  --builder-text-label: var(--gs-text-extra-muted);
+  --builder-text-heading: var(--gs-text-muted);
+  --builder-text-value: var(--gs-text-secondary);
+  --builder-text-active: var(--gs-text-primary);
+  --builder-text-inactive: var(--gs-text-tertiary);
+}
+
+/* Builder panel — dark mode overrides (from Figma) */
+[data-mantine-color-scheme='dark'] .builder-editor {
+  --builder-bg: #1a1a1a;
+  --builder-bg-header: #171717;
+  --builder-bg-input: #141414;
+  --builder-border: #242424;
+  --builder-text-label: #424242;
+  --builder-text-heading: #808080;
+  --builder-text-value: #f2f2f2;
+  --builder-text-active: #ffffff;
+  --builder-text-inactive: #b8b8b8;
 }
 
 .builder-editor__topbar {
   padding: 1rem;
-  border-bottom: 1px solid var(--mantine-color-dark-5);
-  background-color: var(--mantine-color-dark-7);
+  border-bottom: 2px solid var(--builder-border);
+  background-color: var(--builder-bg);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -43,20 +68,11 @@
 .builder-editor__content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0;
 }
 
 .builder-editor__section {
-  margin-bottom: 1.5rem;
-}
-
-.builder-editor__section-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--mantine-color-dimmed);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0;
 }
 
 /* Theme Controls */
@@ -70,15 +86,30 @@
 .builder-editor__content .mantine-InputWrapper-label,
 .builder-editor__content .mantine-Switch-label,
 .builder-editor__content .mantine-Select-label {
-  color: var(--gs-text-extra-muted);
-  font-size: 0.675rem;
+  color: var(--builder-text-label);
+  font-size: 12px;
 }
 
 /* Custom text labels used for layout controls, alignment, background image, etc. */
 .builder-field-label {
-  color: var(--gs-text-extra-muted);
-  font-size: 0.675rem;
+  color: var(--builder-text-label);
+  font-size: 12px;
   font-weight: 500;
+}
+
+/* Builder icon color — override Mantine's !important on ActionIcon */
+.builder-editor .mantine-ActionIcon-root[data-variant='subtle'] {
+  color: var(--gs-text-extra-muted) !important;
+}
+
+.builder-editor .section-card__drag-handle {
+  color: var(--gs-text-extra-muted) !important;
+}
+
+/* Info/helper icons in builder controls */
+.builder-editor .icon-tabler-info-circle,
+.builder-editor .builder-page-item .icon-tabler {
+  color: var(--gs-text-extra-muted) !important;
 }
 
 .theme-control {
@@ -97,27 +128,27 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin: 0 -1rem;
+  margin: 0;
 }
 
 /* Section Accordion */
 .section-card {
   overflow: hidden;
-  border-bottom: 1px solid var(--mantine-color-dark-5);
+  border-bottom: 1px solid var(--builder-border);
   transition: background-color 0.15s ease;
 }
 
 .section-card:first-child {
-  border-top: 1px solid var(--mantine-color-dark-5);
+  border-top: 1px solid var(--builder-border);
 }
 
 .section-card:hover {
-  background-color: var(--mantine-color-dark-6);
+  background-color: var(--gs-bg-surface-hover);
 }
 
 .section-card--dragging {
   opacity: 0.5;
-  background-color: var(--mantine-color-dark-6);
+  background-color: var(--gs-bg-surface-hover);
 }
 
 .section-card--hidden {
@@ -127,7 +158,8 @@
 .section-card__header {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
+  height: 42px;
+  padding: 0 12px;
   gap: 0.5rem;
   cursor: pointer;
   user-select: none;
@@ -135,7 +167,7 @@
 
 .section-card__drag-handle {
   cursor: grab;
-  color: var(--mantine-color-dimmed);
+  color: var(--gs-text-extra-muted);
   display: flex;
   align-items: center;
   padding: 0.25rem;
@@ -160,12 +192,150 @@
 
 .section-card__content {
   padding: 0.75rem 1rem 1rem;
-  background-color: var(--mantine-color-dark-6);
+  background-color: var(--builder-bg);
+}
+
+/* ============================================
+   Builder Collapsible Sections
+   ============================================ */
+
+.builder-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 18px;
+  background-color: var(--builder-bg-header);
+  /* border-bottom: 2px solid var(--builder-border); */
+  border-top: 2px solid var(--builder-border);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.builder-section-header:first-child {
+  border-top: none;
+}
+
+.builder-section-header__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--builder-text-heading);
+  letter-spacing: 0.02em;
+}
+
+.builder-section-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.builder-section-content {
+  padding: 16px 18px;
+}
+
+/* ============================================
+   Builder Page List
+   ============================================ */
+
+.builder-page-list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.builder-page-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--builder-text-inactive);
+  transition: background-color 0.1s ease;
+}
+
+.builder-page-item:hover {
+  opacity: 0.8;
+}
+
+.builder-page-item--active {
+  background-color: var(--builder-bg-input);
+  color: var(--builder-text-active);
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* ============================================
+   Builder Side-by-Side Field Row
+   ============================================ */
+
+.builder-field-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  width: 100%;
+}
+
+.builder-field-row__label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--builder-text-label);
+  min-width: 0;
+  line-height: 1.8;
+}
+
+.builder-field-row__input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Hero editor sortable elements — dashed border separators */
+.hero-sortable-item {
+  border-bottom: 1px dashed var(--builder-border);
+  padding: 10px 0 10px;
+}
+
+.hero-sortable-item:last-child {
+  border-bottom: none;
+}
+
+/* Section sub-heading (e.g. "Section Layout") */
+.builder-section-subheading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.builder-section-subheading__title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gs-text-muted);
+}
+
+/* Builder-scoped Mantine input overrides */
+.builder-editor .mantine-Input-input,
+.builder-editor .mantine-ColorInput-input {
+  border-color: var(--builder-border);
+  background-color: var(--builder-bg-input);
+  border-radius: 4px;
+  height: 36px;
+  min-height: 36px;
+  font-size: 14px;
+  color: var(--builder-text-value);
+}
+
+.builder-editor .mantine-NumberInput-controls {
+  border-color: var(--builder-border);
 }
 
 /* Preview Container */
 .preview-container {
-  background-color: var(--mantine-color-dark-9);
+  background-color: var(--gs-bg-app);
   border-radius: 8px;
   overflow: hidden;
   min-height: 100%;
@@ -187,7 +357,7 @@
     height: auto;
     max-height: 50vh;
     border-right: none;
-    border-bottom: 1px solid var(--mantine-color-dark-5);
+    border-bottom: 1px solid var(--gs-border-default);
   }
 
   .builder-layout__preview {
@@ -199,8 +369,8 @@
 
 /* Drag overlay */
 .section-card-overlay {
-  background-color: var(--mantine-color-dark-6);
-  border: 1px solid var(--mantine-color-grape-5);
+  background-color: var(--gs-bg-surface-alt);
+  border: 1px solid var(--gs-border-accent);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   opacity: 0.95;
 }
@@ -214,7 +384,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--mantine-color-dark-8);
+  background-color: var(--gs-bg-app);
 }
 
 .mobile-builder-layout__banner {
@@ -228,8 +398,8 @@
 .mobile-builder-layout__tabs {
   flex-shrink: 0;
   padding: 0.75rem 1rem;
-  background-color: var(--mantine-color-dark-7);
-  border-bottom: 1px solid var(--mantine-color-dark-5);
+  background-color: var(--gs-bg-surface);
+  border-bottom: 1px solid var(--gs-border-default);
 }
 
 .mobile-builder-layout__content {
@@ -313,9 +483,9 @@
 .builder-skeleton {
   background: linear-gradient(
     90deg,
-    var(--mantine-color-dark-6) 25%,
-    var(--mantine-color-dark-5) 50%,
-    var(--mantine-color-dark-6) 75%
+    var(--gs-bg-surface-alt) 25%,
+    var(--gs-bg-surface-hover) 50%,
+    var(--gs-bg-surface-alt) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -379,7 +549,7 @@
   }
 
   .section-list {
-    margin: 0 -0.75rem;
+    margin: 0;
   }
 
   .section-card__header {

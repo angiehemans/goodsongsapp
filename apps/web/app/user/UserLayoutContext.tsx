@@ -9,9 +9,8 @@ import {
   Review,
   FanDashboardResponse,
   FanDashboardRecentlyPlayed,
-  FanDashboardFeedItem,
+  FollowingFeedEntry,
   RecentlyPlayedTrack,
-  FollowingFeedItem,
 } from '@/lib/api';
 
 interface UserLayoutContextType {
@@ -25,7 +24,7 @@ interface UserLayoutContextType {
   // Dashboard data for child components
   dashboardData: FanDashboardResponse | null;
   recentlyPlayedTracks: RecentlyPlayedTrack[];
-  followingFeedItems: FollowingFeedItem[];
+  followingFeedEntries: FollowingFeedEntry[];
   unreadNotificationsCount: number;
   refreshDashboard: () => Promise<void>;
 }
@@ -62,25 +61,6 @@ function convertRecentlyPlayed(tracks: FanDashboardRecentlyPlayed[]): RecentlyPl
   }));
 }
 
-// Convert dashboard feed preview to FollowingFeedItem format
-function convertFeedItems(items: FanDashboardFeedItem[]): FollowingFeedItem[] {
-  return items.map((item) => ({
-    id: item.id,
-    song_name: item.song_name,
-    band_name: item.band_name,
-    artwork_url: item.artwork_url,
-    review_text: item.review_text,
-    created_at: item.created_at,
-    likes_count: item.likes_count,
-    liked_by_current_user: item.liked_by_current_user,
-    comments_count: item.comments_count,
-    author: item.author,
-    // Include band data for band links
-    band: item.band,
-    // Include track data for streaming links
-    track: item.track,
-  }));
-}
 
 // Cache duration in milliseconds (30 seconds)
 const DASHBOARD_CACHE_DURATION = 30 * 1000;
@@ -94,7 +74,7 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [recentlyPlayedTracks, setRecentlyPlayedTracks] = useState<RecentlyPlayedTrack[]>([]);
-  const [followingFeedItems, setFollowingFeedItems] = useState<FollowingFeedItem[]>([]);
+  const [followingFeedEntries, setFollowingFeedEntries] = useState<FollowingFeedEntry[]>([]);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
@@ -163,7 +143,7 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
       // Set notification count in the notification context
       setNotificationInitialCount(data.unread_notifications_count);
       setRecentlyPlayedTracks(convertRecentlyPlayed(data.recently_played));
-      setFollowingFeedItems(convertFeedItems(data.following_feed_preview));
+      setFollowingFeedEntries(data.following_feed_preview);
       // Convert recent_reviews to Review format for sidebar
       setReviews(data.recent_reviews.map((r) => ({
         id: r.id,
@@ -220,7 +200,7 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
         refreshFollowCounts,
         dashboardData,
         recentlyPlayedTracks,
-        followingFeedItems,
+        followingFeedEntries,
         unreadNotificationsCount,
         refreshDashboard,
       }}

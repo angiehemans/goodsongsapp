@@ -21,9 +21,9 @@ import {
   IconLayoutAlignRight,
   IconLayoutGrid,
   IconLayoutList,
+  IconInfoCircle,
   IconPhoto,
   IconTrash,
-  IconX,
 } from '@tabler/icons-react';
 import { useBuilderStore } from '@/lib/site-builder/store';
 import { EventsContent, EventsSettings, EventsLayout, EventsTitleAlign, EventsGap } from '@/lib/site-builder/types';
@@ -93,52 +93,61 @@ export function EventsEditor({ index, settings }: EventsEditorProps) {
   const titleAlign = settings?.title_align || 'left';
 
   return (
-    <Stack gap="md">
+    <Stack gap={12}>
       {/* Title Alignment */}
-      <div>
-        <Text className="builder-field-label" mb={4}>Title alignment</Text>
-        <Group gap="xs">
-          {titleAlignOptions.map((option) => (
-            <Tooltip key={option.value} label={option.label} position="top">
-              <ActionIcon
-                variant={titleAlign === option.value ? 'filled' : 'default'}
-                size="lg"
-                onClick={() => handleSettingsChange('title_align', option.value)}
-              >
-                {option.icon}
-              </ActionIcon>
-            </Tooltip>
-          ))}
-        </Group>
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Title alignment</div>
+        <div className="builder-field-row__input">
+          <Group gap={10}>
+            {titleAlignOptions.map((option) => (
+              <Tooltip key={option.value} label={option.label} position="top">
+                <ActionIcon
+                  variant={titleAlign === option.value ? 'filled' : 'default'}
+                  size="lg"
+                  onClick={() => handleSettingsChange('title_align', option.value)}
+                >
+                  {option.icon}
+                </ActionIcon>
+              </Tooltip>
+            ))}
+          </Group>
+        </div>
       </div>
 
       {/* Layout */}
-      <div>
-        <Text className="builder-field-label" mb={4}>Layout</Text>
-        <Group gap="xs">
-          {layoutOptions.map((option) => (
-            <Tooltip key={option.value} label={option.label} position="top">
-              <ActionIcon
-                variant={layout === option.value ? 'filled' : 'default'}
-                size="lg"
-                onClick={() => handleSettingsChange('layout', option.value)}
-              >
-                {option.icon}
-              </ActionIcon>
-            </Tooltip>
-          ))}
-        </Group>
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Layout</div>
+        <div className="builder-field-row__input">
+          <Group gap={10}>
+            {layoutOptions.map((option) => (
+              <Tooltip key={option.value} label={option.label} position="top">
+                <ActionIcon
+                  variant={layout === option.value ? 'filled' : 'default'}
+                  size="lg"
+                  onClick={() => handleSettingsChange('layout', option.value)}
+                >
+                  {option.icon}
+                </ActionIcon>
+              </Tooltip>
+            ))}
+          </Group>
+        </div>
       </div>
 
       {/* Events to Show */}
-      <NumberInput
-        label="Events to show"
-        value={settings?.display_limit || DISPLAY_LIMITS.events.default}
-        onChange={(value) => handleSettingsChange('display_limit', value === '' ? undefined : Number(value))}
-        min={DISPLAY_LIMITS.events.min}
-        max={DISPLAY_LIMITS.events.max}
-        size="xs"
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Events to show</div>
+        <div className="builder-field-row__input">
+          <NumberInput
+            aria-label="Events to show"
+            value={settings?.display_limit || DISPLAY_LIMITS.events.default}
+            onChange={(value) => handleSettingsChange('display_limit', value === '' ? undefined : Number(value))}
+            min={DISPLAY_LIMITS.events.min}
+            max={DISPLAY_LIMITS.events.max}
+            size="sm"
+          />
+        </div>
+      </div>
 
       {/* Show Past Events */}
       <Switch
@@ -149,46 +158,50 @@ export function EventsEditor({ index, settings }: EventsEditorProps) {
       />
 
       {/* Gap */}
-      <Select
-        label="Gap"
-        size="xs"
-        value={settings?.gap || 'md'}
-        onChange={(value) => handleSettingsChange('gap', value as EventsGap)}
-        data={[
-          { value: 'none', label: 'None' },
-          { value: 'sm', label: 'Small' },
-          { value: 'md', label: 'Medium' },
-          { value: 'lg', label: 'Large' },
-          { value: 'xl', label: 'Extra Large' },
-        ]}
-      />
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Gap</div>
+        <div className="builder-field-row__input">
+          <Select
+            aria-label="Gap"
+            size="sm"
+            value={settings?.gap || 'md'}
+            onChange={(value) => handleSettingsChange('gap', value as EventsGap)}
+            data={[
+              { value: 'none', label: 'None' },
+              { value: 'sm', label: 'Small' },
+              { value: 'md', label: 'Medium' },
+              { value: 'lg', label: 'Large' },
+              { value: 'xl', label: 'Extra Large' },
+            ]}
+          />
+        </div>
+      </div>
 
-      {/* Background Color */}
-      <Group align="flex-end" gap="xs">
-        <ColorInput
-          label="Background color"
-          placeholder="Use theme default"
-          value={settings?.background_color || ''}
-          onChange={(value) => handleSettingsChange('background_color', value || undefined)}
-          style={{ flex: 1 }}
-          size="xs"
-        />
-        {settings?.background_color && (
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
-            onClick={() => handleSettingsChange('background_color', undefined)}
-            title="Reset to default"
-          >
-            <IconX size={16} />
-          </ActionIcon>
-        )}
-      </Group>
-
-      {/* Background Image */}
+      {/* Background */}
       <Box>
-        <Text className="builder-field-label" mb={8}>Background image</Text>
+        <Group gap={4} mb="xs">
+          <Text className="builder-field-label" c="var(--gs-text-muted)">Background</Text>
+          <Tooltip label="Customize the background of this section" withArrow position="top">
+            <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
+          </Tooltip>
+        </Group>
+
+        <Stack gap="xs" mb="sm">
+          <div className="builder-field-row">
+            <div className="builder-field-row__label">Background Color</div>
+            <div className="builder-field-row__input">
+              <ColorInput
+                aria-label="Background Color"
+                placeholder="Inherit"
+                size="sm"
+                format="hex"
+                value={settings?.background_color || ''}
+                onChange={(value) => handleSettingsChange('background_color', value || undefined)}
+                swatches={['#121212', '#1a1a1a', '#0a0a0a', '#1e1e2e', '#0f172a', '#ffffff', '#f5f5f5']}
+              />
+            </div>
+          </div>
+        </Stack>
 
         {settings?.background_image_url ? (
           <Stack gap="xs">
@@ -228,30 +241,35 @@ export function EventsEditor({ index, settings }: EventsEditorProps) {
               />
             </Group>
             {settings?.background_overlay !== false && (
-              <NumberInput
-                label="Overlay Opacity"
-                size="xs"
-                value={settings?.background_overlay_opacity ?? 85}
-                onChange={(value) =>
-                  handleSettingsChange(
-                    'background_overlay_opacity',
-                    value === '' ? undefined : Number(value)
-                  )
-                }
-                onKeyDownCapture={(e) =>
-                  handleNumberInputKeyDown(
-                    e,
-                    settings?.background_overlay_opacity ?? 85,
-                    (v) => handleSettingsChange('background_overlay_opacity', v),
-                    0,
-                    100
-                  )
-                }
-                min={0}
-                max={100}
-                suffix="%"
-                allowDecimal={false}
-              />
+              <div className="builder-field-row">
+                <div className="builder-field-row__label">Overlay Opacity</div>
+                <div className="builder-field-row__input">
+                  <NumberInput
+                    aria-label="Overlay Opacity"
+                    size="sm"
+                    value={settings?.background_overlay_opacity ?? 85}
+                    onChange={(value) =>
+                      handleSettingsChange(
+                        'background_overlay_opacity',
+                        value === '' ? undefined : Number(value)
+                      )
+                    }
+                    onKeyDownCapture={(e) =>
+                      handleNumberInputKeyDown(
+                        e,
+                        settings?.background_overlay_opacity ?? 85,
+                        (v) => handleSettingsChange('background_overlay_opacity', v),
+                        0,
+                        100
+                      )
+                    }
+                    min={0}
+                    max={100}
+                    suffix="%"
+                    allowDecimal={false}
+                  />
+                </div>
+              </div>
             )}
           </Stack>
         ) : (

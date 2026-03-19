@@ -1,0 +1,49 @@
+.cardBorder {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: none;
+  border-bottom: 2px solid var(--gs-border-accent);
+}
+
+.authorName,
+.eventName {
+  font-family: var(--mantine-font-family-headings);
+}
+
+.eventRow {
+  background-color: var(--gs-bg-surface-alt);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-sm);
+}
+
+.dateBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+  border-radius: var(--mantine-radius-sm);
+  background-color: var(--gs-bg-accent);
+  flex-shrink: 0;
+}
+
+.dateDay {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gs-text-primary);
+  font-family: var(--mantine-font-family-headings);
+}
+
+.dateMonth {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--gs-text-tertiary);
+}
+
+.actionItems {
+}

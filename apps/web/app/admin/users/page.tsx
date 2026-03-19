@@ -231,7 +231,7 @@ export default function AdminUsersPage() {
                   <Table.Thead>
                     <Table.Tr>
                       <Table.Th>User</Table.Th>
-                      <Table.Th className={styles.hideOnMobile}>Email</Table.Th>
+                      <Table.Th className={styles.hideOnMobile}>Email Confirmed</Table.Th>
                       <Table.Th>Account Type</Table.Th>
                       <Table.Th className={styles.hideOnMobile}>Reviews</Table.Th>
                       <Table.Th className={styles.hideOnMobile}>Onboarding</Table.Th>
@@ -268,7 +268,15 @@ export default function AdminUsersPage() {
                           </UnstyledButton>
                         </Table.Td>
                         <Table.Td className={styles.hideOnMobile}>
-                          <Text size="sm">{u.email}</Text>
+                          {u.email_confirmed ? (
+                            <Badge color="green" variant="filled">
+                              True
+                            </Badge>
+                          ) : (
+                            <Badge color="red" variant="filled">
+                              False
+                            </Badge>
+                          )}
                         </Table.Td>
                         <Table.Td>{getRoleBadge(u)}</Table.Td>
                         <Table.Td className={styles.hideOnMobile}>
