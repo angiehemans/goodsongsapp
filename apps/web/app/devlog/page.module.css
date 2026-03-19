@@ -12,7 +12,8 @@
   right: 0;
   z-index: 100;
   background-color: var(--gs-bg-app);
-  border-bottom: 2px solid var(--mantine-color-blue-9);
+  border-bottom: var(--gs-border-width) solid var(--gs-border-default);
+  backdrop-filter: blur(12px);
 }
 
 .logo {
@@ -20,7 +21,8 @@
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: var(--mantine-color-blue-9);
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
 }
 
 .logo:hover {
@@ -31,19 +33,39 @@
 .hero {
   position: relative;
   width: 100%;
-  padding-top: 120px;
+  padding-top: 140px;
   padding-bottom: 60px;
   text-align: center;
   background-color: var(--gs-bg-app);
 }
 
+.heroTitle {
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
+}
+
+.heroSubtitle {
+  color: var(--gs-text-tertiary);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
 /* Section Styles */
-.sectionLight {
+.section {
   background-color: var(--gs-bg-app);
 }
 
-.sectionDark {
-  background-color: var(--mantine-color-blue-9);
+.sectionAlt {
+  background-color: var(--gs-bg-surface);
+}
+
+.sectionTitle {
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
+}
+
+.sectionSubtitle {
+  color: var(--gs-text-tertiary);
 }
 
 /* Feature Category Header */
@@ -61,19 +83,9 @@
   align-items: center;
   justify-content: center;
   background-color: var(--gs-bg-surface-alt);
-  border: 2px solid var(--mantine-color-blue-9);
-  color: var(--mantine-color-blue-9);
-}
-
-.categoryIconDark {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--mantine-color-blue-8);
-  border: 2px solid var(--gs-border-default);
-  color: var(--gs-text-inverse);
+  border: var(--gs-border-width) solid var(--gs-border-default);
+  border-radius: 12px;
+  color: var(--mantine-primary-color-filled);
 }
 
 /* Feature Item */
@@ -83,30 +95,56 @@
   gap: 12px;
   padding: 1rem;
   background-color: var(--gs-bg-surface);
-  border: 2px solid var(--gs-border-default);
-  margin-bottom: 0.75rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: var(--gs-border-width) solid var(--gs-border-default);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .featureItem:hover {
   transform: translateX(4px);
-  box-shadow: 4px 4px 0 var(--mantine-color-blue-9);
+  border-color: var(--gs-border-accent);
 }
 
-.featureItemDark {
+/* Roadmap Item */
+.roadmapCard {
+  background-color: var(--gs-bg-surface);
+  border: var(--gs-border-width) solid var(--gs-border-default);
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.roadmapItem {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 1rem;
-  background-color: var(--mantine-color-blue-8);
-  border: 2px solid var(--mantine-color-blue-6);
-  margin-bottom: 0.75rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 10px;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gs-border-subtle);
 }
 
-.featureItemDark:hover {
-  transform: translateX(4px);
-  box-shadow: 4px 4px 0 var(--gs-border-default);
+.roadmapItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.roadmapTitle {
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
+}
+
+.roadmapDescription {
+  color: var(--gs-text-tertiary);
+}
+
+.roadmapItemText {
+  color: var(--gs-text-secondary);
+}
+
+.roadmapItemIcon {
+  color: var(--mantine-primary-color-filled);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 /* Status Badges */
@@ -114,99 +152,73 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
+  padding: 3px 8px;
+  font-size: 0.6875rem;
   font-weight: 600;
-  border: 2px solid;
+  border-radius: 100px;
+  flex-shrink: 0;
 }
 
 .badgeWeb {
-  background-color: var(--mantine-color-blue-1);
-  border-color: var(--mantine-color-blue-6);
-  color: var(--mantine-color-blue-9);
+  background-color: var(--gs-bg-surface-alt);
+  color: var(--gs-text-tertiary);
 }
 
 .badgeMobile {
-  background-color: var(--gs-bg-surface);
-  border-color: var(--gs-interactive-muted);
-  color: var(--gs-text-primary);
+  background-color: var(--gs-bg-surface-alt);
+  color: var(--gs-text-tertiary);
 }
 
 .badgeBoth {
-  background-color: var(--mantine-color-green-1);
-  border-color: var(--mantine-color-green-6);
-  color: var(--mantine-color-green-9);
+  background-color: var(--mantine-color-green-light);
+  color: var(--mantine-color-green-light-color);
 }
 
-.badgePlanned {
-  background-color: var(--mantine-color-orange-1);
-  border-color: var(--mantine-color-orange-6);
-  color: var(--mantine-color-orange-9);
+/* Platform Cards */
+.platformCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 2rem 1.5rem;
+  background-color: var(--gs-bg-surface);
+  border: var(--gs-border-width) solid var(--gs-border-default);
+  border-radius: 12px;
+  text-align: center;
 }
 
-/* Roadmap Timeline */
-.timelineItem {
-  position: relative;
-  padding-left: 2rem;
-  padding-bottom: 2rem;
-  border-left: 3px solid var(--gs-text-placeholder);
+.platformIcon {
+  color: var(--gs-text-heading);
 }
 
-.timelineItem:last-child {
-  border-left-color: transparent;
+.platformName {
+  color: var(--gs-text-heading);
+  font-weight: 600;
+  font-size: 1.125rem;
 }
 
-.timelineDot {
-  position: absolute;
-  left: -10px;
-  top: 0;
-  width: 18px;
-  height: 18px;
-  background-color: var(--gs-bg-app);
-  border: 3px solid var(--gs-interactive-muted);
-  border-radius: 50%;
-}
-
-.timelineItemDark {
-  position: relative;
-  padding-left: 2rem;
-  padding-bottom: 2rem;
-  border-left: 3px solid var(--mantine-color-blue-6);
-}
-
-.timelineItemDark:last-child {
-  border-left-color: transparent;
-}
-
-.timelineDotDark {
-  position: absolute;
-  left: -10px;
-  top: 0;
-  width: 18px;
-  height: 18px;
-  background-color: var(--mantine-color-blue-9);
-  border: 3px solid var(--gs-border-default);
-  border-radius: 50%;
+.platformDescription {
+  color: var(--gs-text-tertiary);
 }
 
 /* Footer */
 .footer {
-  background-color: var(--mantine-color-blue-9);
-  border-top: 2px solid var(--mantine-color-blue-6);
+  background-color: var(--gs-bg-surface);
+  border-top: var(--gs-border-width) solid var(--gs-border-default);
 }
 
 .footerLink {
-  color: var(--mantine-color-blue-3);
+  color: var(--gs-text-tertiary);
   text-decoration: none;
   font-size: 0.875rem;
   transition: color 0.2s ease;
 }
 
 .footerLink:hover {
-  color: var(--gs-text-inverse);
+  color: var(--gs-text-heading);
 }
 
 .footerBottom {
-  border-top: 1px solid var(--mantine-color-blue-7);
+  border-top: 1px solid var(--gs-border-subtle);
   padding: 1.5rem 0;
 }

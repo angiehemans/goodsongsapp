@@ -12,7 +12,8 @@
   right: 0;
   z-index: 100;
   background-color: var(--gs-bg-app);
-  border-bottom: 2px solid var(--mantine-color-blue-9);
+  border-bottom: var(--gs-border-width) solid var(--gs-border-default);
+  backdrop-filter: blur(12px);
 }
 
 .logo {
@@ -20,7 +21,8 @@
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: var(--mantine-color-blue-9);
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
 }
 
 .logo:hover {
@@ -31,56 +33,54 @@
 .hero {
   position: relative;
   width: 100%;
-  padding-top: 120px;
-  padding-bottom: 20px;
+  padding-top: 140px;
+  padding-bottom: 40px;
   text-align: center;
   background-color: var(--gs-bg-app);
 }
 
+.heroTitle {
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
+}
+
+.heroSubtitle {
+  color: var(--gs-text-tertiary);
+  max-width: 550px;
+  line-height: 1.6;
+}
+
 /* Section Styles */
-.sectionLight {
+.section {
   background-color: var(--gs-bg-app);
 }
 
-.sectionDark {
-  background-color: var(--mantine-color-blue-9);
+.sectionAlt {
+  background-color: var(--gs-bg-surface);
 }
 
 /* Content Cards */
 .contentCard {
   background-color: var(--gs-bg-surface);
-  border: 2px solid var(--gs-border-default);
-  padding: 2.5rem;
-}
-
-.contentCardDark {
-  background-color: var(--mantine-color-blue-8);
-  border: 2px solid var(--mantine-color-blue-6);
+  border: var(--gs-border-width) solid var(--gs-border-default);
+  border-radius: 12px;
   padding: 2.5rem;
 }
 
 @media (max-width: 768px) {
-  .contentCard,
-  .contentCardDark {
+  .contentCard {
     padding: 1.5rem;
   }
 }
 
 /* Section Titles */
 .sectionTitle {
-  font-size: 1.75rem;
-  color: var(--mantine-color-blue-9);
+  font-size: 1.5rem;
+  color: var(--gs-text-heading);
+  font-family: var(--gs-font-display);
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--gs-border-default);
-}
-
-.sectionTitleDark {
-  font-size: 1.75rem;
-  color: var(--gs-text-inverse);
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--mantine-color-blue-6);
+  border-bottom: var(--gs-border-width) solid var(--gs-border-default);
 }
 
 /* Text Styles */
@@ -95,47 +95,69 @@
   margin-bottom: 0;
 }
 
-.paragraphDark {
-  color: var(--gs-text-inverse);
-  line-height: 1.8;
-  margin-bottom: 1rem;
-  font-size: 1.0625rem;
+/* Highlight block */
+.highlight {
+  background-color: var(--gs-bg-surface-alt);
+  border-left: 4px solid var(--mantine-primary-color-filled);
+  border-radius: 0 8px 8px 0;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
 }
 
-.paragraphDark:last-child {
+.highlight p {
   margin-bottom: 0;
+  color: var(--gs-text-secondary);
+  font-style: italic;
 }
 
 /* Link Styles */
 .link {
-  color: var(--gs-text-secondary);
+  color: var(--mantine-primary-color-filled);
   text-decoration: underline;
-  transition: color 0.2s ease;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s ease;
   font-weight: 500;
 }
 
 .link:hover {
-  color: var(--mantine-color-blue-9);
+  opacity: 0.8;
+}
+
+/* Contact card */
+.contactCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.25rem;
+  background-color: var(--gs-bg-surface-alt);
+  border: var(--gs-border-width) solid var(--gs-border-default);
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.contactCard svg {
+  color: var(--mantine-primary-color-filled);
+  flex-shrink: 0;
 }
 
 /* Footer */
 .footer {
-  background-color: var(--mantine-color-blue-9);
-  border-top: 2px solid var(--mantine-color-blue-6);
+  background-color: var(--gs-bg-surface);
+  border-top: var(--gs-border-width) solid var(--gs-border-default);
 }
 
 .footerLink {
-  color: var(--mantine-color-blue-3);
+  color: var(--gs-text-tertiary);
   text-decoration: none;
   font-size: 0.875rem;
   transition: color 0.2s ease;
 }
 
 .footerLink:hover {
-  color: var(--gs-text-inverse);
+  color: var(--gs-text-heading);
 }
 
 .footerBottom {
-  border-top: 1px solid var(--mantine-color-blue-7);
+  border-top: 1px solid var(--gs-border-subtle);
   padding: 1.5rem 0;
 }
