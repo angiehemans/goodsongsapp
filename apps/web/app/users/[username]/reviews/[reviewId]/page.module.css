@@ -1,6 +1,6 @@
 .container {
   min-height: 100vh;
-  background-color: var(--mantine-color-body);
+  background-color: var(--gs-bg-app);
 }
 
 @media (max-width: 768px) {
@@ -164,11 +164,7 @@
   width: 280px;
   height: 280px;
   border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    var(--gs-gradient-start) 0%,
-    var(--gs-gradient-end) 100%
-  );
+  background: linear-gradient(135deg, var(--gs-gradient-start) 0%, var(--gs-gradient-end) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -286,11 +282,7 @@
   width: 160px;
   height: 160px;
   border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    var(--gs-gradient-start) 0%,
-    var(--gs-gradient-end) 100%
-  );
+  background: linear-gradient(135deg, var(--gs-gradient-start) 0%, var(--gs-gradient-end) 100%);
   display: flex;
   align-items: center;
   justify-content: center;

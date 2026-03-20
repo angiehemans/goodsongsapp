@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
+  IconBrandThreads,
   IconCalendarEvent,
   IconHeart,
   IconHeartFilled,
   IconMapPin,
   IconMessage,
+  IconShare,
   IconTicket,
 } from '@tabler/icons-react';
-import { ActionIcon, Badge, Card, Group, Stack, Text } from '@mantine/core';
+import { ActionIcon, Badge, Card, Group, Menu, Stack, Text } from '@mantine/core';
 import { CommentsDrawer } from '@/components/CommentsDrawer/CommentsDrawer';
 import { ProfilePhoto } from '@/components/ProfilePhoto/ProfilePhoto';
 import { useAuth } from '@/hooks/useAuth';
@@ -204,6 +206,35 @@ export function FeedEventCard({ event }: FeedEventCardProps) {
 
         {/* Actions Row */}
         <Group gap="sm" justify="flex-end" className={styles.actionItems}>
+          {/* Share Menu */}
+          <Menu shadow="md" width={200} position="bottom-end">
+            <Menu.Target>
+              <ActionIcon variant="subtle" color="grape" aria-label="Share event">
+                <IconShare size={20} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Share this event</Menu.Label>
+              <Menu.Item
+                leftSection={<IconBrandThreads size={16} />}
+                onClick={async () => {
+                  try {
+                    const payload = await apiClient.getSharePayload('event', event.id);
+                    if (payload.threads_intent_url) {
+                      window.open(payload.threads_intent_url, '_blank', 'noopener');
+                    }
+                  } catch {
+                    // Fallback
+                    const text = `${event.name}\n\n${window.location.origin}/events/${event.id}`;
+                    window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+                  }
+                }}
+              >
+                Share on Threads
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+
           {/* Comments */}
           <Group gap={4}>
             <ActionIcon variant="subtle" color="grape" aria-label="View comments" onClick={() => setCommentsDrawerOpen(true)}>

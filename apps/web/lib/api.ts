@@ -2383,6 +2383,21 @@ class ApiClient {
     });
   }
 
+  async getSharePayload(
+    postableType: 'review' | 'post' | 'event',
+    postableId: number | string
+  ): Promise<{
+    text: string;
+    url: string;
+    image_url: string | null;
+    threads_intent_url: string;
+    instagram_intent_url: string | null;
+  }> {
+    return this.makeRequest(
+      `/api/v1/share_payload?postable_type=${postableType}&postable_id=${postableId}`
+    );
+  }
+
   async enrichReview(reviewId: number): Promise<{
     message: string;
     band: Band;

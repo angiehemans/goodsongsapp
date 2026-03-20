@@ -32,6 +32,7 @@ import {
   Title,
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
+import { CreationShareOptions } from '@/components/social';
 import { SongPickerModal } from '@/components/SongPicker';
 import { usePostEditorContext } from './PostEditorContext';
 
@@ -50,6 +51,8 @@ export function PostEditorAside() {
     handleSave,
     handleDelete,
     setAttachedSong,
+    setShareThreads,
+    setShareInstagram,
   } = usePostEditorContext();
 
   const [showScheduleUI, setShowScheduleUI] = useState(false);
@@ -427,6 +430,16 @@ export function PostEditorAside() {
         value={state.authors.map((a) => a.name)}
         onChange={(names) => setAuthors(names.map((name) => ({ name })))}
       />
+
+      {/* Share Options (only for new posts) */}
+      {!state.postId && (
+        <CreationShareOptions
+          threadsChecked={state.shareThreads}
+          instagramChecked={state.shareInstagram}
+          onThreadsChange={setShareThreads}
+          onInstagramChange={setShareInstagram}
+        />
+      )}
     </Stack>
   );
 }

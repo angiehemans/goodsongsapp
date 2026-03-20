@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useEffect, useRef, useState } from 'react';
+import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ProfileTheme } from '@/lib/site-builder/types';
 import { getFontFamily, getGoogleFontsUrl } from '@/lib/site-builder/fonts';
@@ -92,6 +92,136 @@ function ThemedLikeButton({ eventId, initialLiked = false, initialLikesCount = 0
       </svg>
       {likesCount > 0 && <span>{likesCount}</span>}
     </button>
+  );
+}
+
+// ─── Themed Share Button (no Mantine) ──────────────────────────────
+function ThemedShareButton({ postableType, postableId, bgColor, fontColor: themeFontColor, bodyFont, borderRadius }: {
+  postableType: 'review' | 'post' | 'event';
+  postableId: number;
+  bgColor?: string;
+  fontColor?: string;
+  bodyFont?: string;
+  borderRadius?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [shared, setShared] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleThreadsShare = useCallback(async () => {
+    try {
+      const payload = await apiClient.getSharePayload(postableType, postableId);
+      if (payload.threads_intent_url) {
+        window.open(payload.threads_intent_url, '_blank', 'noopener');
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      }
+    } catch {
+      // Silent fail
+    }
+    setOpen(false);
+  }, [postableType, postableId]);
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const portalRef = useRef<HTMLDivElement | null>(null);
+  const resolvedBg = bgColor || '#1a1a1a';
+  const fontColor = themeFontColor || '#f5f5f5';
+  const fontFamily = bodyFont ? `"${bodyFont}", sans-serif` : 'Inter, sans-serif';
+  const radius = borderRadius ?? 12;
+
+  // Render dropdown into document.body via DOM portal to escape container-type stacking
+  useEffect(() => {
+    if (!open || !buttonRef.current) {
+      if (portalRef.current) {
+        portalRef.current.remove();
+        portalRef.current = null;
+      }
+      return;
+    }
+
+    const rect = buttonRef.current.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position: fixed;
+      top: ${rect.bottom + 4}px;
+      left: ${Math.max(8, rect.right - 180)}px;
+      background-color: ${resolvedBg};
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: ${Math.round(radius * 0.67)}px;
+      padding: 0.25rem;
+      min-width: 180px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      z-index: 2147483646;
+      font-family: ${fontFamily};
+    `;
+    el.innerHTML = `
+      <div style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; opacity: 0.5; color: ${fontColor}; text-transform: uppercase; letter-spacing: 0.05em;">Share</div>
+      <button data-share-threads style="display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; cursor: pointer; padding: 0.4rem 0.5rem; border-radius: ${Math.round(radius * 0.33)}px; color: ${fontColor}; font-size: 0.8125rem; font-family: inherit; transition: background 0.15s;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7.5c-1.333 -3 -3.667 -4.5 -7 -4.5c-5 0 -8 2.5 -8 9s3.5 9 8 9s7 -3 7 -5s-1 -5 -7 -5c-2.5 0 -3 1.25 -3 2.5c0 1.5 1 2.5 2.5 2.5c2.5 0 3.5 -1.5 3.5 -5s-2 -4 -3 -4s-1.833 .333 -2.5 1"></path></svg>
+        ${shared ? 'Opened in Threads' : 'Share on Threads'}
+      </button>
+    `;
+
+    const btn = el.querySelector('[data-share-threads]') as HTMLElement;
+    btn.addEventListener('mouseenter', () => { btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.backgroundColor = 'transparent'; });
+    btn.addEventListener('click', () => { handleThreadsShare(); });
+
+    document.body.appendChild(el);
+    portalRef.current = el;
+
+    return () => {
+      el.remove();
+      portalRef.current = null;
+    };
+  }, [open, shared, resolvedBg, fontColor, fontFamily, handleThreadsShare]);
+
+  // Close on outside click for portal
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (
+        ref.current && !ref.current.contains(e.target as Node) &&
+        portalRef.current && !portalRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ display: 'inline-flex' }}>
+      <button
+        ref={buttonRef}
+        onClick={() => setOpen(!open)}
+        aria-label="Share"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '2px 4px',
+          borderRadius: 4,
+          color: 'var(--gs-profile-font)',
+          opacity: 0.7,
+          transition: 'opacity 0.2s',
+          fontFamily: 'var(--gs-profile-body-font)',
+          fontSize: '0.875rem',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+          <path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+          <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+          <path d="M8.7 10.7l6.6 -3.4" />
+          <path d="M8.7 13.3l6.6 3.4" />
+        </svg>
+      </button>
+    </div>
   );
 }
 
@@ -578,6 +708,7 @@ export function ThemedEventPage({
             {profileName}
           </Link>
 
+          <ThemedShareButton postableType="event" postableId={event.id} bgColor={theme.background_color} fontColor={theme.font_color} bodyFont={theme.body_font} borderRadius={theme.border_radius} />
           <ThemedLikeButton
             eventId={event.id}
             initialLiked={event.liked_by_current_user}

@@ -4,6 +4,7 @@ import { createContext, ReactNode, useCallback, useContext, useState } from 'rea
 import { useRouter } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
 import { apiClient, PostAuthorInput, PostStatus } from '@/lib/api';
+import { shareToThreads, shareToInstagram } from '@/utils/share';
 import { Editor } from '@tiptap/react';
 
 // Attached song type for blog posts
@@ -33,6 +34,8 @@ interface PostEditorState {
   featuredImageUrl: string | null;
   featuredImagePreview: string | null;
   attachedSong: AttachedSong | null;
+  shareThreads: boolean;
+  shareInstagram: boolean;
 }
 
 interface PostEditorContextValue {
@@ -57,6 +60,8 @@ interface PostEditorContextValue {
   handleDelete: () => Promise<void>;
   resetEditor: () => void;
   setAttachedSong: (song: AttachedSong | null) => void;
+  setShareThreads: (checked: boolean) => void;
+  setShareInstagram: (checked: boolean) => void;
 }
 
 const PostEditorContext = createContext<PostEditorContextValue | null>(null);
@@ -79,6 +84,8 @@ const initialState: PostEditorState = {
   featuredImageUrl: null,
   featuredImagePreview: null,
   attachedSong: null,
+  shareThreads: false,
+  shareInstagram: false,
 };
 
 export function PostEditorProvider({ children }: { children: ReactNode }) {
@@ -116,6 +123,14 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
 
   const setAttachedSong = useCallback(
     (attachedSong: AttachedSong | null) => setState((s) => ({ ...s, attachedSong })),
+    []
+  );
+  const setShareThreads = useCallback(
+    (shareThreads: boolean) => setState((s) => ({ ...s, shareThreads })),
+    []
+  );
+  const setShareInstagram = useCallback(
+    (shareInstagram: boolean) => setState((s) => ({ ...s, shareInstagram })),
     []
   );
 
@@ -230,6 +245,20 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
           if (targetStatus !== 'published' && newPostId) {
             router.replace(`/user/pro/posts/editor?id=${newPostId}`);
           }
+          // Trigger shares after publishing a new post
+          if (targetStatus === 'published' && newPostId && (state.shareThreads || state.shareInstagram)) {
+            try {
+              const payload = await apiClient.getSharePayload('post', newPostId);
+              if (state.shareThreads && payload.threads_intent_url) {
+                shareToThreads(payload.threads_intent_url);
+              }
+              if (state.shareInstagram) {
+                shareToInstagram(payload.text, payload.url);
+              }
+            } catch {
+              // Don't block navigation on share failure
+            }
+          }
         }
 
         setState((s) => ({ ...s, status: targetStatus }));
@@ -309,6 +338,8 @@ export function PostEditorProvider({ children }: { children: ReactNode }) {
         handleDelete,
         resetEditor,
         setAttachedSong,
+        setShareThreads,
+        setShareInstagram,
       }}
     >
       {children}

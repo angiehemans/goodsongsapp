@@ -911,6 +911,53 @@ Returns array of users (same format as GET /following)
 
 ---
 
+## Social Sharing Endpoints
+
+### GET /api/v1/share_payload
+
+Returns a pre-built share payload for a piece of content, including caption text, canonical URL, image URL, and platform-specific intent URLs. The frontend uses this to power "Share to Threads" and other sharing features without constructing share text itself.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+| Param           | Required | Values                    |
+| --------------- | -------- | ------------------------- |
+| `postable_type` | Yes      | `review`, `post`, `event` |
+| `postable_id`   | Yes      | ID of the record          |
+
+**Response (200 OK):**
+
+```json
+{
+  "text": "\"Chaise Longue\" by Wet Leg - This song hits so hard\n\nRecommended on https://goodsongs.app/users/yabadabajew/reviews/abc123",
+  "url": "https://goodsongs.app/users/yabadabajew/reviews/abc123",
+  "image_url": "https://api.goodsongs.app/rails/active_storage/blobs/.../artwork.jpg",
+  "threads_intent_url": "https://www.threads.net/intent/post?text=This%20song%20hits...",
+  "instagram_intent_url": null
+}
+```
+
+**Notes:**
+
+- `instagram_intent_url` is always `null` in Phase 1 — Instagram has no web intent URL. The frontend handles Instagram sharing via Web Share API or clipboard fallback.
+- `image_url` may be `null` if the content has no associated image.
+- Text is automatically truncated to fit Threads' 500 character limit.
+- Caption format varies by content type:
+  - **Review:** `"\"{song_name}\" by {band_name} - {review_text}\n\nRecommended on {url}"`
+  - **Post:** `"{title}\n\n{url}"`
+  - **Event:** `"{name} — at {venue} — {date}\n\n{url}"`
+
+**Error Responses:**
+
+| Code | Reason                               |
+| ---- | ------------------------------------ |
+| 401  | Unauthenticated                      |
+| 404  | Record not found                     |
+| 422  | Invalid or unallowed `postable_type` |
+
+---
+
 ## Profile Customization Endpoints
 
 Profile customization allows paid band and blogger accounts to customize their public profiles with theming, sections, and layout ordering.

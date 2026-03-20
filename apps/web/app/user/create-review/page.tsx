@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconAlertCircle, IconArrowLeft, IconBrandLastfm, IconMusic } from '@tabler/icons-react';
+import { CreationShareOptions } from '@/components/social';
+import { shareToThreads, shareToInstagram } from '@/utils/share';
 import {
   Alert,
   Button,
@@ -41,6 +43,8 @@ function CreateReviewForm() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shareThreads, setShareThreads] = useState(false);
+  const [shareInstagram, setShareInstagram] = useState(false);
 
   // Edit mode detection
   const reviewId = searchParams.get('reviewId');
@@ -132,7 +136,22 @@ function CreateReviewForm() {
         router.push(`/users/${username}/reviews/${reviewId}`);
       } else {
         // Create new review
-        await apiClient.createReview(formData);
+        const created = await apiClient.createReview(formData);
+
+        // Trigger shares if checked
+        if (shareThreads || shareInstagram) {
+          try {
+            const payload = await apiClient.getSharePayload('review', created.id);
+            if (shareThreads && payload.threads_intent_url) {
+              shareToThreads(payload.threads_intent_url);
+            }
+            if (shareInstagram) {
+              shareToInstagram(payload.text, payload.url);
+            }
+          } catch {
+            // Don't block navigation on share failure
+          }
+        }
 
         notifications.show({
           title: 'Recommendation created!',
@@ -277,6 +296,15 @@ function CreateReviewForm() {
                   onChange={(value) => setFormData({ ...formData, review_text: value })}
                 />
               </div>
+
+              {!isEditMode && (
+                <CreationShareOptions
+                  threadsChecked={shareThreads}
+                  instagramChecked={shareInstagram}
+                  onThreadsChange={setShareThreads}
+                  onInstagramChange={setShareInstagram}
+                />
+              )}
 
               <Group justify="flex-end">
                 <Button

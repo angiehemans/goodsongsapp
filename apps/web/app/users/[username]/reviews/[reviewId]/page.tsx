@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import {
   IconArrowBackUp,
   IconBrandInstagram,
+  IconBrandThreads,
   IconCheck,
   IconEdit,
   IconExternalLink,
@@ -462,7 +463,11 @@ export default function SingleReviewPage() {
                 <Center
                   w={48}
                   h={48}
-                  style={{ backgroundColor: 'var(--gs-bg-accent)', borderRadius: 'var(--mantine-radius-sm)', flexShrink: 0 }}
+                  style={{
+                    backgroundColor: 'var(--gs-bg-accent)',
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    flexShrink: 0,
+                  }}
                 >
                   <img
                     src="/logo-grape.svg"
@@ -533,6 +538,28 @@ export default function SingleReviewPage() {
                 <Menu.Label>Share this review</Menu.Label>
                 <Menu.Item leftSection={<IconLink size={16} />} onClick={handleCopyLink}>
                   {copied ? 'Copied!' : 'Copy link'}
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconBrandThreads size={16} />}
+                  onClick={async () => {
+                    try {
+                      const payload = await apiClient.getSharePayload('review', review.id);
+                      if (payload.threads_intent_url) {
+                        window.open(payload.threads_intent_url, '_blank', 'noopener');
+                      }
+                    } catch {
+                      // Fallback
+                      const url = window.location.href;
+                      const text = `"${review.song_name}" by ${review.band_name} - ${review.review_text?.slice(0, 200) || ''}\n\nRecommended on ${url}`;
+                      window.open(
+                        `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`,
+                        '_blank',
+                        'noopener'
+                      );
+                    }
+                  }}
+                >
+                  Share on Threads
                 </Menu.Item>
                 <Menu.Divider />
                 <Menu.Label>Download for Instagram</Menu.Label>
@@ -637,7 +664,7 @@ export default function SingleReviewPage() {
             </Text>
           )}
 
-          <Divider my="md" />
+          <Divider my="md" size={2} color="var(--gs-border-default)" />
 
           {/* Comments List */}
           {commentsLoading ? (
