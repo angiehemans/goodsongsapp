@@ -252,6 +252,7 @@ export interface RecommendationsSettings {
 
 export interface CustomTextSettings {
   text_align?: 'left' | 'center' | 'right';
+  layout?: 'row' | 'row-reverse' | 'stack';
   background_color?: string;
 }
 
@@ -321,6 +322,9 @@ export interface MerchContent {
 export interface CustomTextContent {
   title?: string;
   body?: string;
+  image_url?: string;
+  button_text?: string;
+  button_url?: string;
 }
 
 // Union type for all section content types

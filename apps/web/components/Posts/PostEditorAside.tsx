@@ -438,6 +438,7 @@ export function PostEditorAside() {
           instagramChecked={state.shareInstagram}
           onThreadsChange={setShareThreads}
           onInstagramChange={setShareInstagram}
+          contentType="band_posts"
         />
       )}
     </Stack>

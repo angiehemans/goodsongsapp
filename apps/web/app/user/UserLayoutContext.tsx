@@ -12,6 +12,8 @@ import {
   FollowingFeedEntry,
   RecentlyPlayedTrack,
 } from '@/lib/api';
+// TODO: Uncomment when Facebook business accounts are set up
+// import { useConnectedAccounts } from '@/lib/connectedAccounts';
 
 interface UserLayoutContextType {
   reviews: Review[];
@@ -169,6 +171,15 @@ export function UserLayoutProvider({ children }: UserLayoutProviderProps) {
   const refreshFollowCounts = useCallback(async () => {
     await refreshDashboard();
   }, [refreshDashboard]);
+
+  // TODO: Uncomment when Facebook business accounts are set up
+  // const { fetchAccounts: fetchConnectedAccounts, hasFetched: hasConnectedAccountsFetched } = useConnectedAccounts();
+  //
+  // useEffect(() => {
+  //   if (user && !hasConnectedAccountsFetched) {
+  //     fetchConnectedAccounts();
+  //   }
+  // }, [user, hasConnectedAccountsFetched, fetchConnectedAccounts]);
 
   // Initial data fetch using optimized dashboard endpoint
   // Only runs when user/loading state changes, not on every navigation

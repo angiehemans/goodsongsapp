@@ -18,6 +18,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
+import { showShareMenu } from '@/utils/share';
 
 function stripHtml(html: string): string {
   return html
@@ -91,24 +92,13 @@ export function PostDetailScreen({ route, navigation }: any) {
     }
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!post) return;
     const baseUrl = __DEV__ ? 'http://localhost:3001' : 'https://www.goodsongs.app';
-    let postUrl: string;
-    if (bandSlug) {
-      postUrl = `${baseUrl}/bands/${bandSlug}/${slug}`;
-    } else {
-      postUrl = `${baseUrl}/blog/${username}/${slug}`;
-    }
-    try {
-      await Share.share({
-        title: post.title,
-        message: postUrl,
-        url: postUrl,
-      });
-    } catch (error) {
-      // User cancelled
-    }
+    const postUrl = bandSlug
+      ? `${baseUrl}/bands/${bandSlug}/${slug}`
+      : `${baseUrl}/blog/${username}/${slug}`;
+    showShareMenu('post', post.id, post.title, postUrl);
   };
 
   const handlePressAuthor = () => {

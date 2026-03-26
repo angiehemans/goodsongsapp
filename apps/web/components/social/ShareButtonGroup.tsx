@@ -53,7 +53,15 @@ export function ShareButtonGroup({ postableType, postableId, size = 'xs' }: Shar
   return (
     <Group gap={4} wrap="wrap">
       {payload.threads_intent_url && (
-        <ThreadsShareButton intentUrl={payload.threads_intent_url} size={size} />
+        <ThreadsShareButton
+          intentUrl={payload.threads_intent_url}
+          contentType={
+            postableType === 'review' ? 'recommendations'
+            : postableType === 'post' ? 'band_posts'
+            : 'events'
+          }
+          size={size}
+        />
       )}
       <InstagramShareButton text={payload.text} url={payload.url} imageUrl={payload.image_url} size={size} />
       <CopyLinkButton url={payload.url} size={size} />

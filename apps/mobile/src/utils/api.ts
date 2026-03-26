@@ -766,6 +766,22 @@ class MobileApiClient {
     return this.request(`/feed/following?page=${page}`);
   }
 
+  // Share payload
+  async getSharePayload(
+    postableType: 'review' | 'post' | 'event',
+    postableId: number | string
+  ): Promise<{
+    text: string;
+    url: string;
+    image_url: string | null;
+    threads_intent_url: string;
+    instagram_intent_url: string | null;
+  }> {
+    return this.request(
+      `/api/v1/share_payload?postable_type=${postableType}&postable_id=${postableId}`
+    );
+  }
+
   // Posts
   async getPost(username: string, slug: string): Promise<any> {
     return this.request(`/api/v1/profiles/users/${username}/posts/${slug}`);

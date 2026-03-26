@@ -17,6 +17,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { SemanticColors } from '@/theme/semanticColors';
 import { apiClient } from '@/utils/api';
 import { fixImageUrl } from '@/utils/imageUrl';
+import { showShareMenu } from '@/utils/share';
 import { Event } from '@goodsongs/api-client';
 
 export function EventDetailsScreen({ route, navigation }: any) {
@@ -226,6 +227,18 @@ export function EventDetailsScreen({ route, navigation }: any) {
             icon="external-link"
           />
         )}
+
+        {/* Share Button */}
+        <Button
+          title="Share Event"
+          onPress={() => {
+            const fallbackUrl = `https://goodsongs.app/events/${event.id}`;
+            showShareMenu('event', event.id, event.name, fallbackUrl);
+          }}
+          fullWidth
+          icon="share"
+          variant="outline"
+        />
 
         <View style={styles.bottomSpacer} />
       </ScrollView>

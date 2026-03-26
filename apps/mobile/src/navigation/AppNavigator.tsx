@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { AppState, Platform, View, Text, StyleSheet } from "react-native";
 import BootSplash from "react-native-bootsplash";
 import {
@@ -13,6 +13,8 @@ import Icon from "@react-native-vector-icons/feather";
 type IconName = React.ComponentProps<typeof Icon>["name"];
 
 import { LoadingScreen } from "@/components";
+import { ShareSheet, ShareSheetRef } from "@/components/ShareSheet";
+import { setShareSheetRef } from "@/utils/share";
 import { useAuthStore } from "@/context/authStore";
 import { useScrobbleStore } from "@/context/scrobbleStore";
 import { useNotificationStore } from "@/context/notificationStore";
@@ -295,7 +297,15 @@ export function AppNavigator() {
     return <LoadingScreen />;
   }
 
+  const shareSheetRef = useRef<ShareSheetRef>(null);
+
+  useEffect(() => {
+    setShareSheetRef(shareSheetRef.current);
+    return () => setShareSheetRef(null);
+  }, []);
+
   return (
+    <>
     <NavigationContainer ref={navigationRef}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
@@ -374,6 +384,8 @@ export function AppNavigator() {
         )}
       </RootStack.Navigator>
     </NavigationContainer>
+    <ShareSheet ref={shareSheetRef} />
+  </>
   );
 }
 

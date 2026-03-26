@@ -24,6 +24,8 @@ import { Header } from '@/components/Header/Header';
 import { UserSidebar } from '@/components/UserSidebar/UserSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient, Band } from '@/lib/api';
+// TODO: Uncomment when Facebook business accounts are set up
+// import { ConnectedAccountsSection } from '@/components/social';
 import { StreamingPlatform, STREAMING_PLATFORMS } from '@/lib/streaming';
 import styles from './page.module.css';
 
@@ -239,6 +241,9 @@ export default function SettingsPage() {
                 <LastFmConnection />
               </Suspense>
             )}
+
+            {/* Connected Accounts — uncomment when Facebook business accounts are ready */}
+            {/* <ConnectedAccountsSection /> */}
 
             {/* Streaming Preferences Section */}
             <Paper p="lg" radius="md" withBorder>

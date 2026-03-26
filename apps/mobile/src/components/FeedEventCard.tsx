@@ -8,12 +8,14 @@ import {
 import {
   IconMessageCircle,
   IconHeart,
+  IconShare,
 } from "@tabler/icons-react-native";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { theme } from "@/theme";
 import { useTheme } from "@/hooks/useTheme";
 import { SemanticColors } from "@/theme/semanticColors";
 import { FeedEventItem } from "@/utils/api";
+import { showShareMenu } from "@/utils/share";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -131,6 +133,16 @@ export const FeedEventCard = memo(function FeedEventCard({
 
       {/* Actions Row */}
       <View style={styles.actionsRow}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            const fallbackUrl = `https://goodsongs.app/events/${event.id}`;
+            showShareMenu('event', event.id, event.name, fallbackUrl);
+          }}
+        >
+          <IconShare size={22} color={colors.iconMuted} />
+        </TouchableOpacity>
+
         <View style={styles.actionButton}>
           <IconMessageCircle size={22} color={colors.iconMuted} />
           {commentsCount > 0 && (

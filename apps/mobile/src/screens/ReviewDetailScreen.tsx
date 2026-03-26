@@ -52,6 +52,7 @@ import { SemanticColors } from "@/theme/semanticColors";
 import { useAuthStore } from "@/context/authStore";
 import { apiClient, ReviewComment } from "@/utils/api";
 import { fixImageUrl } from "@/utils/imageUrl";
+import { showShareMenu } from "@/utils/share";
 import { RootStackParamList, HomeStackParamList } from "@/navigation/types";
 
 type ReviewDetailRouteProp = RouteProp<HomeStackParamList, "ReviewDetail">;
@@ -188,19 +189,12 @@ export function ReviewDetailScreen() {
   };
 
   // Handle share
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!review) return;
-    try {
-      const authorName =
-        review.author?.username || review.user?.username || username;
-      const shareUrl = `https://goodsongs.app/users/${authorName}/reviews/${review.id}`;
-      await Share.share({
-        message: `Check out this song recommendation on GoodSongs: "${review.song_name}" by ${review.band_name}\n\n${shareUrl}`,
-        url: shareUrl,
-      });
-    } catch (error) {
-      console.error("Failed to share:", error);
-    }
+    const authorName = review.author?.username || review.user?.username || username;
+    const fallbackUrl = `https://goodsongs.app/users/${authorName}/reviews/${review.id}`;
+    const fallbackText = `Check out this song recommendation on GoodSongs: "${review.song_name}" by ${review.band_name}`;
+    showShareMenu('review', review.id, fallbackText, fallbackUrl);
   };
 
   // Handle submit comment

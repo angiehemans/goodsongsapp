@@ -303,6 +303,7 @@ function CreateReviewForm() {
                   instagramChecked={shareInstagram}
                   onThreadsChange={setShareThreads}
                   onInstagramChange={setShareInstagram}
+                  contentType="recommendations"
                 />
               )}
 

@@ -968,6 +968,74 @@
   font-size: 1.125rem;
 }
 
+/* Custom section layouts */
+.custom-section--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.custom-section--row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.custom-section--row .custom-section__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-section--row .custom-section__image {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+@container profile (max-width: 600px) {
+  .custom-section--row {
+    flex-direction: column;
+  }
+
+  .custom-section--row .custom-section__image {
+    flex: none;
+    max-width: 100%;
+  }
+}
+
+.custom-section__image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--gs-radius-md);
+}
+
+.custom-section__image--stack {
+  margin-bottom: 1.5rem;
+}
+
+.custom-section__image--row {
+  margin-bottom: 0;
+}
+
+/* Action button for custom sections */
+.profile-action-button {
+  display: inline-block;
+  padding: 0.625rem 1.5rem;
+  background-color: var(--gs-profile-brand);
+  color: #fff;
+  font-family: var(--gs-profile-body-font);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--gs-radius-md);
+  transition: opacity 0.2s ease;
+}
+
+.profile-action-button:hover {
+  opacity: 0.85;
+}
+
 /* ============================================
    EMPTY STATE
    ============================================ */

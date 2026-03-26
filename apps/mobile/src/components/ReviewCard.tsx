@@ -27,6 +27,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { SemanticColors } from "@/theme/semanticColors";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { apiClient, StreamingLinks } from "@/utils/api";
+import { showShareMenu } from "@/utils/share";
 import { useAuthStore } from "@/context/authStore";
 
 const formatDate = (dateString: string) => {
@@ -188,16 +189,10 @@ export const ReviewCard = memo(function ReviewCard({
     }
   };
 
-  const handleShare = async () => {
-    try {
-      const shareUrl = `https://goodsongs.app/users/${authorUsername}/reviews/${review.id}`;
-      await Share.share({
-        message: `Check out this song recommendation on GoodSongs: "${review.song_name}" by ${review.band_name}\n\n${shareUrl}`,
-        url: shareUrl,
-      });
-    } catch (error) {
-      console.error("Failed to share:", error);
-    }
+  const handleShare = () => {
+    const fallbackUrl = `https://goodsongs.app/users/${authorUsername}/reviews/${review.id}`;
+    const fallbackText = `Check out this song recommendation on GoodSongs: "${review.song_name}" by ${review.band_name}`;
+    showShareMenu('review', review.id, fallbackText, fallbackUrl);
   };
 
   const handleLikePress = async () => {

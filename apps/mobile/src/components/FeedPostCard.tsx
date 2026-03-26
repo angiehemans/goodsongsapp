@@ -9,6 +9,7 @@ import FastImage from "react-native-fast-image";
 import {
   IconMessageCircle,
   IconHeart,
+  IconShare,
 } from "@tabler/icons-react-native";
 import { ProfilePhoto } from "./ProfilePhoto";
 import { theme } from "@/theme";
@@ -16,6 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { SemanticColors } from "@/theme/semanticColors";
 import { fixImageUrl } from "@/utils/imageUrl";
 import { FeedPostItem } from "@/utils/api";
+import { showShareMenu } from "@/utils/share";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -98,6 +100,16 @@ export const FeedPostCard = memo(function FeedPostCard({
 
       {/* Actions Row */}
       <View style={styles.actionsRow}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            const fallbackUrl = `https://goodsongs.app/blog/${post.author?.username || ''}/${post.slug}`;
+            showShareMenu('post', post.id, post.title, fallbackUrl);
+          }}
+        >
+          <IconShare size={22} color={colors.iconMuted} />
+        </TouchableOpacity>
+
         <View style={styles.actionButton}>
           <IconMessageCircle size={22} color={colors.iconMuted} />
           {commentsCount > 0 && (

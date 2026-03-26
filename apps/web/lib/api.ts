@@ -239,6 +239,18 @@ export interface ResetPasswordResponse {
   refresh_token?: string;
 }
 
+export interface ConnectedAccount {
+  platform: 'threads' | 'instagram';
+  platform_username: string;
+  account_type: 'BUSINESS' | 'CREATOR' | 'PERSONAL' | null;
+  auto_post_recommendations: boolean;
+  auto_post_band_posts: boolean;
+  auto_post_events: boolean;
+  needs_reauth: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ReviewData {
   song_link: string;
   band_name: string;
@@ -2396,6 +2408,35 @@ class ApiClient {
     return this.makeRequest(
       `/api/v1/share_payload?postable_type=${postableType}&postable_id=${postableId}`
     );
+  }
+
+  // Connected Accounts
+  async getConnectedAccounts(): Promise<ConnectedAccount[]> {
+    return this.makeRequest('/api/v1/connected_accounts');
+  }
+
+  async updateConnectedAccountPreferences(
+    platform: 'threads' | 'instagram',
+    prefs: {
+      auto_post_recommendations?: boolean;
+      auto_post_band_posts?: boolean;
+      auto_post_events?: boolean;
+    }
+  ): Promise<ConnectedAccount> {
+    return this.makeRequest(`/api/v1/connected_accounts/${platform}`, {
+      method: 'PATCH',
+      body: JSON.stringify(prefs),
+    });
+  }
+
+  async disconnectAccount(platform: 'threads' | 'instagram'): Promise<{ message: string }> {
+    return this.makeRequest(`/api/v1/connected_accounts/${platform}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getOAuthAuthorizeUrl(platform: 'threads' | 'instagram'): Promise<{ authorize_url: string }> {
+    return this.makeRequest(`/auth/${platform}/authorize`);
   }
 
   async enrichReview(reviewId: number): Promise<{

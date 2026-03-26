@@ -1,10 +1,30 @@
 'use client';
 
-import { TextInput, Textarea, Stack, Text, Group, SegmentedControl } from '@mantine/core';
-import { IconAlignLeft, IconAlignCenter, IconAlignRight } from '@tabler/icons-react';
+import { useState } from 'react';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Group,
+  Image,
+  SegmentedControl,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Textarea,
+} from '@mantine/core';
+import {
+  IconAlignLeft,
+  IconAlignCenter,
+  IconAlignRight,
+  IconPhoto,
+  IconTrash,
+} from '@tabler/icons-react';
 import { useBuilderStore } from '@/lib/site-builder/store';
 import { CustomTextContent, CustomTextSettings } from '@/lib/site-builder/types';
 import { CHAR_LIMITS } from '@/lib/site-builder/constants';
+import { AssetPicker } from '../AssetPicker';
 
 interface CustomTextEditorProps {
   index: number;
@@ -14,8 +34,9 @@ interface CustomTextEditorProps {
 
 export function CustomTextEditor({ index, content, settings }: CustomTextEditorProps) {
   const { updateSectionContent, updateSectionSettings } = useBuilderStore();
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
 
-  const handleContentChange = (field: keyof CustomTextContent, value: string) => {
+  const handleContentChange = (field: keyof CustomTextContent, value: string | undefined) => {
     updateSectionContent(index, { [field]: value });
   };
 
@@ -23,10 +44,15 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
     updateSectionSettings(index, { [field]: value });
   };
 
+  const handleImageSelect = (url: string) => {
+    handleContentChange('image_url', url);
+    setAssetPickerOpen(false);
+  };
+
   const charCount = content.body?.length || 0;
 
   return (
-    <Stack gap="sm">
+    <Stack gap={12}>
       <div className="builder-field-row">
         <div className="builder-field-row__label">Title</div>
         <div className="builder-field-row__input">
@@ -65,6 +91,111 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
         </Text>
       </Group>
 
+      {/* Image */}
+      <Box>
+        <Text className="builder-field-label" c="var(--gs-text-muted)" mb="xs">
+          Image
+        </Text>
+        {content.image_url ? (
+          <Stack gap="xs">
+            <Box pos="relative" style={{ borderRadius: 8, overflow: 'hidden' }}>
+              <Image
+                src={content.image_url}
+                alt="Section image"
+                height={120}
+                fit="cover"
+                radius="sm"
+              />
+              <Group pos="absolute" top={8} right={8} gap="xs">
+                <ActionIcon
+                  variant="filled"
+                  color="dark"
+                  onClick={() => setAssetPickerOpen(true)}
+                  title="Change image"
+                >
+                  <IconPhoto size={16} />
+                </ActionIcon>
+                <ActionIcon
+                  variant="filled"
+                  color="red"
+                  onClick={() => handleContentChange('image_url', undefined)}
+                  title="Remove image"
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Group>
+            </Box>
+          </Stack>
+        ) : (
+          <Button
+            variant="light"
+            leftSection={<IconPhoto size={16} />}
+            onClick={() => setAssetPickerOpen(true)}
+            fullWidth
+            size="xs"
+          >
+            Add Image
+          </Button>
+        )}
+      </Box>
+
+      {/* Action Button */}
+      <Box>
+        <Text className="builder-field-label" c="var(--gs-text-muted)" mb="xs">
+          Action Button
+        </Text>
+        <Stack gap="xs">
+          <div className="builder-field-row">
+            <div className="builder-field-row__label">Button Text</div>
+            <div className="builder-field-row__input">
+              <TextInput
+                placeholder="e.g., Book Now"
+                value={content.button_text || ''}
+                onChange={(e) => handleContentChange('button_text', e.target.value || undefined)}
+                size="sm"
+                aria-label="Button Text"
+                maxLength={50}
+              />
+            </div>
+          </div>
+          <div className="builder-field-row">
+            <div className="builder-field-row__label">Button URL</div>
+            <div className="builder-field-row__input">
+              <TextInput
+                placeholder="https://..."
+                value={content.button_url || ''}
+                onChange={(e) => handleContentChange('button_url', e.target.value || undefined)}
+                size="sm"
+                aria-label="Button URL"
+                type="url"
+              />
+            </div>
+          </div>
+          {content.button_text && !content.button_url && (
+            <Text size="xs" c="orange">Add a URL for the button to work</Text>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Layout */}
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">Layout</div>
+        <div className="builder-field-row__input">
+          <Select
+            value={settings?.layout || 'row'}
+            onChange={(value) => value && handleSettingsChange('layout', value)}
+            data={[
+              { value: 'row', label: 'Row' },
+              { value: 'row-reverse', label: 'Row Reverse' },
+              { value: 'stack', label: 'Stacked' },
+            ]}
+            size="sm"
+            aria-label="Layout"
+          />
+        </div>
+      </div>
+
+      {/* Text Alignment */}
       <div>
         <Text className="builder-field-label" mb={4}>
           Text Alignment
@@ -104,6 +235,12 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
           fullWidth
         />
       </div>
+
+      <AssetPicker
+        opened={assetPickerOpen}
+        onClose={() => setAssetPickerOpen(false)}
+        onSelect={handleImageSelect}
+      />
     </Stack>
   );
 }
