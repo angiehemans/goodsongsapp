@@ -103,7 +103,7 @@ export default async function BloggerEventPage({ params }: PageProps) {
     const { theme } = publicProfile.data;
     return (
       <div style={{ margin: '-1px 0 0 0', position: 'relative', zIndex: 1 }}>
-        <FontPreload fonts={[theme.header_font, theme.body_font]} />
+        <FontPreload fonts={[theme.header_font_name || theme.header_font, theme.body_font_name || theme.body_font]} customFontUrls={theme.custom_font_urls} />
         <ThemedEventPage
           theme={theme}
           event={event}

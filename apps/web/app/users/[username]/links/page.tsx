@@ -38,7 +38,7 @@ export default async function UserLinksPage({ params }: PageProps) {
   return (
     <>
       {data.data.theme && (
-        <FontPreload fonts={[data.data.theme.header_font, data.data.theme.body_font]} />
+        <FontPreload fonts={[data.data.theme.header_font_name || data.data.theme.header_font, data.data.theme.body_font_name || data.data.theme.body_font]} customFontUrls={data.data.theme.custom_font_urls} />
       )}
       <LinkPage data={data.data} />
     </>

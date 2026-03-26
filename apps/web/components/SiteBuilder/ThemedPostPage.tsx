@@ -598,32 +598,52 @@ export function ThemedPostPage({
   postBasePath,
   authorImageOverride,
 }: ThemedPostPageProps) {
-  // Load Google Fonts
+  // Load Google Fonts (approved fonts + custom font URLs)
   useEffect(() => {
-    const fonts = [theme.header_font, theme.body_font].filter(Boolean);
-    if (fonts.length === 0) return;
+    // Load approved fonts by name
+    const approvedFonts = [
+      theme.header_font_name || theme.header_font,
+      theme.body_font_name || theme.body_font,
+    ].filter((f) => f && !f.startsWith('https://'));
 
-    const fontsUrl = getGoogleFontsUrl(fonts);
-    const linkId = 'profile-google-fonts';
-    let linkEl = document.getElementById(linkId) as HTMLLinkElement | null;
-
-    if (linkEl) {
-      if (linkEl.href !== fontsUrl) linkEl.href = fontsUrl;
-    } else {
-      linkEl = document.createElement('link');
-      linkEl.id = linkId;
-      linkEl.rel = 'stylesheet';
-      linkEl.href = fontsUrl;
-      document.head.appendChild(linkEl);
+    if (approvedFonts.length > 0) {
+      const fontsUrl = getGoogleFontsUrl(approvedFonts);
+      const linkId = 'profile-google-fonts';
+      let linkEl = document.getElementById(linkId) as HTMLLinkElement | null;
+      if (linkEl) {
+        if (linkEl.href !== fontsUrl) linkEl.href = fontsUrl;
+      } else {
+        linkEl = document.createElement('link');
+        linkEl.id = linkId;
+        linkEl.rel = 'stylesheet';
+        linkEl.href = fontsUrl;
+        document.head.appendChild(linkEl);
+      }
     }
-  }, [theme.header_font, theme.body_font]);
+
+    // Load custom font URLs from the backend
+    if (theme.custom_font_urls) {
+      theme.custom_font_urls.forEach((url, i) => {
+        const linkId = `profile-custom-font-${i}`;
+        if (!document.getElementById(linkId)) {
+          const linkEl = document.createElement('link');
+          linkEl.id = linkId;
+          linkEl.rel = 'stylesheet';
+          linkEl.href = url;
+          document.head.appendChild(linkEl);
+        }
+      });
+    }
+  }, [theme.header_font, theme.body_font, theme.header_font_name, theme.body_font_name, theme.custom_font_urls]);
 
   const style: CSSProperties & Record<string, string> = {
     '--gs-profile-bg': layout.background_color || theme.background_color,
     '--gs-profile-brand': theme.brand_color,
     '--gs-profile-font': layout.font_color || theme.font_color,
-    '--gs-profile-header-font': getFontFamily(theme.header_font),
-    '--gs-profile-body-font': getFontFamily(theme.body_font),
+    '--gs-profile-header-font': getFontFamily(theme.header_font, theme.header_font_name),
+    '--gs-profile-body-font': getFontFamily(theme.body_font, theme.body_font_name),
+    '--gs-profile-header-font-weight': String(theme.header_font_weight ?? 700),
+    '--gs-profile-body-font-weight': String(theme.body_font_weight ?? 400),
     '--gs-profile-content-max-width': layout.max_width
       ? `${layout.max_width}px`
       : `${theme.content_max_width || 1200}px`,

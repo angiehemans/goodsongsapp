@@ -133,10 +133,15 @@ export interface ProfileTheme {
   font_color: string;
   header_font: string;
   body_font: string;
-  content_max_width?: number; // Max width for section content in pixels, default 1200
-  card_background_color?: string | null; // Card/surface background color, defaults to font_color. null/'' = inherit
-  card_background_opacity?: number; // Card bg opacity 0-100, defaults to 10
-  border_radius?: number; // Global border radius in pixels, default 12
+  header_font_name?: string; // Resolved display name for CSS (from backend)
+  body_font_name?: string;   // Resolved display name for CSS (from backend)
+  header_font_weight?: number; // Font weight for headers, default 700
+  body_font_weight?: number;   // Font weight for body text, default 400
+  custom_font_urls?: string[]; // Google Fonts URLs to load (from backend)
+  content_max_width?: number;
+  card_background_color?: string | null;
+  card_background_opacity?: number;
+  border_radius?: number;
 }
 
 // Layout alignment options for hero section

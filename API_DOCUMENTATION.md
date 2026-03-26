@@ -1917,9 +1917,30 @@ The `single_post_layout` controls how individual blog post pages are rendered. I
 
 ---
 
-### Approved Fonts
+### Fonts
 
-Inter, Space Grotesk, DM Sans, Plus Jakarta Sans, Outfit, Sora, Manrope, Rubik, Work Sans, Nunito Sans, Lora, Merriweather, Playfair Display, Source Serif 4, Libre Baskerville, IBM Plex Mono, JetBrains Mono
+Both `header_font` and `body_font` accept either:
+
+1. **An approved font name** from the curated list (returned in `config.approved_fonts`):
+   Inter, Space Grotesk, DM Sans, Plus Jakarta Sans, Outfit, Sora, Manrope, Rubik, Work Sans, Nunito Sans, Lora, Merriweather, Playfair Display, Source Serif 4, Libre Baskerville, IBM Plex Mono, JetBrains Mono, Creepster, Jacquard 12, Astloch, Pirata One, Special Elite, Courier Prime, Cutive Mono
+
+2. **A Google Fonts URL** in the format `https://fonts.google.com/specimen/FontName` (e.g., `https://fonts.google.com/specimen/Open+Sans`). This allows users to use any font from Google Fonts beyond the curated list.
+
+**Font weight:** `header_font_weight` and `body_font_weight` control the CSS font weight. Valid values: `100`, `200`, `300`, `400` (default), `500`, `600`, `700`, `800`, `900`. Available weights are returned in `config.font_weights`.
+
+**Response fields for fonts:**
+
+| Field                | Description                                                                  |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `header_font`        | The stored value (font name or Google Fonts URL)                             |
+| `header_font_name`   | The resolved display name (e.g., `"Open Sans"` extracted from the URL)       |
+| `header_font_weight` | CSS font weight for headers (integer, default `400`)                         |
+| `body_font`          | The stored value (font name or Google Fonts URL)                             |
+| `body_font_name`     | The resolved display name                                                    |
+| `body_font_weight`   | CSS font weight for body text (integer, default `400`)                       |
+| `custom_font_urls`   | Array of Google Fonts URLs that need to be loaded (empty if all are curated) |
+
+The frontend should use `header_font_name` / `body_font_name` for CSS `font-family` values, `header_font_weight` / `body_font_weight` for CSS `font-weight`, and load any URLs in `custom_font_urls` via Google Fonts CSS API.
 
 ---
 

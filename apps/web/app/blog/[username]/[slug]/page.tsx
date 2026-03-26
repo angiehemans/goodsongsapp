@@ -145,7 +145,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     };
     return (
       <div style={{ margin: '-1px 0 0 0', position: 'relative', zIndex: 1 }}>
-        <FontPreload fonts={[theme.header_font, theme.body_font]} />
+        <FontPreload fonts={[theme.header_font_name || theme.header_font, theme.body_font_name || theme.body_font]} customFontUrls={theme.custom_font_urls} />
         <PageViewTracker type="post" id={post.id} />
         <ThemedPostPage
           theme={theme}

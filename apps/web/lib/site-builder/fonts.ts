@@ -95,9 +95,12 @@ export function getFontPreloadLinks(fonts: string[]): Array<{ href: string; as: 
 }
 
 // Get font-family CSS value with fallback
-export function getFontFamily(font: string): string {
+// If fontName is provided (from backend's header_font_name/body_font_name), use that instead
+export function getFontFamily(font: string, fontName?: string): string {
+  const resolvedName = fontName || (isGoogleFontsUrl(font) ? fontNameFromUrl(font) : null) || font;
+
   // Determine the fallback based on font category
-  const category = FONT_CATEGORIES.find((cat) => cat.fonts.includes(font as ApprovedFont));
+  const category = FONT_CATEGORIES.find((cat) => cat.fonts.includes(resolvedName as ApprovedFont));
 
   let fallback = 'sans-serif';
   if (category?.label === 'Serif') {
@@ -108,10 +111,32 @@ export function getFontFamily(font: string): string {
     fallback = 'cursive';
   }
 
-  return `"${font}", ${fallback}`;
+  return `"${resolvedName}", ${fallback}`;
 }
 
 // Check if a font is approved
 export function isApprovedFont(font: string): font is ApprovedFont {
   return APPROVED_FONTS.includes(font as ApprovedFont);
+}
+
+// Check if a value is a Google Fonts URL
+export function isGoogleFontsUrl(value: string): boolean {
+  return value.startsWith('https://fonts.google.com/specimen/');
+}
+
+// Extract the font name from a Google Fonts specimen URL
+// e.g., "https://fonts.google.com/specimen/Open+Sans" → "Open Sans"
+export function fontNameFromUrl(url: string): string | null {
+  const match = url.match(/\/specimen\/(.+?)(?:\?|$)/);
+  if (!match) return null;
+  return decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+// Get the resolved font name — uses font_name from backend if available, falls back to extracting from URL
+export function getResolvedFontName(fontValue: string, fontName?: string): string {
+  if (fontName) return fontName;
+  if (isGoogleFontsUrl(fontValue)) {
+    return fontNameFromUrl(fontValue) || fontValue;
+  }
+  return fontValue;
 }

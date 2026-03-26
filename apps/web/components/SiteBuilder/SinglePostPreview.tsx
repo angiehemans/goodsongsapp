@@ -80,8 +80,10 @@ export function SinglePostPreview({ theme, layout }: SinglePostPreviewProps) {
     '--gs-profile-bg': layout.background_color || theme.background_color,
     '--gs-profile-brand': theme.brand_color,
     '--gs-profile-font': layout.font_color || theme.font_color,
-    '--gs-profile-header-font': getFontFamily(theme.header_font),
-    '--gs-profile-body-font': getFontFamily(theme.body_font),
+    '--gs-profile-header-font': getFontFamily(theme.header_font, theme.header_font_name),
+    '--gs-profile-body-font': getFontFamily(theme.body_font, theme.body_font_name),
+    '--gs-profile-header-font-weight': String(theme.header_font_weight ?? 700),
+    '--gs-profile-body-font-weight': String(theme.body_font_weight ?? 400),
     '--gs-profile-content-max-width': layout.max_width
       ? `${layout.max_width}px`
       : `${theme.content_max_width || 1200}px`,
