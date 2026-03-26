@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { IconCheck, IconX, IconArrowLeft } from '@tabler/icons-react';
@@ -18,11 +18,11 @@ import {
 import { useConnectedAccounts } from '@/lib/connectedAccounts';
 import { ConnectedAccountsSection } from '@/components/social/ConnectedAccountsSection';
 
-export default function ConnectionsCallbackPage() {
+function ConnectionsContent() {
   const searchParams = useSearchParams();
   const status = searchParams.get('status');
   const platform = searchParams.get('platform');
-  const { invalidate, fetchAccounts, hasFetched } = useConnectedAccounts();
+  const { invalidate, fetchAccounts } = useConnectedAccounts();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -94,5 +94,19 @@ export default function ConnectionsCallbackPage() {
         )}
       </Stack>
     </Container>
+  );
+}
+
+export default function ConnectionsCallbackPage() {
+  return (
+    <Suspense fallback={
+      <Container size="sm" py="xl">
+        <Center py="xl">
+          <Loader size="md" />
+        </Center>
+      </Container>
+    }>
+      <ConnectionsContent />
+    </Suspense>
   );
 }
