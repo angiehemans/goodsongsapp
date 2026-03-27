@@ -405,7 +405,7 @@
 }
 
 .hero__subtitle {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: var(--gs-text-muted);
   margin: 0;
 }
