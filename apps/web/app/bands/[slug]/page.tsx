@@ -41,6 +41,9 @@ export async function generateMetadata({
       description:
         band.about ||
         `Check out ${band.name} on Goodsongs. ${band.reviews_count} recommendation${band.reviews_count !== 1 ? 's' : ''} and counting.`,
+      alternates: {
+        canonical: `https://${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'goodsongs.app'}`,
+      },
     };
   } catch {
     return {

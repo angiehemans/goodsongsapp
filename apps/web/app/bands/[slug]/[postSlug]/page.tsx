@@ -53,6 +53,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: `${post.title} - ${user.display_name || user.username} - Goodsongs`,
       description: post.excerpt || `Read ${post.title} on Goodsongs.`,
+      alternates: {
+        canonical: `https://${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'goodsongs.app'}/${postSlug}`,
+      },
       openGraph: {
         title: post.title,
         description: post.excerpt || undefined,

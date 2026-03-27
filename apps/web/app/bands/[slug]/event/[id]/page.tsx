@@ -47,6 +47,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: `${event.name} - ${event.band?.name || slug} - Goodsongs`,
       description: event.description || `${event.name} on Goodsongs.`,
+      alternates: {
+        canonical: `https://${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'goodsongs.app'}/event/${id}`,
+      },
     };
   } catch {
     return {

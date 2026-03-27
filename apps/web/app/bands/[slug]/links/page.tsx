@@ -19,6 +19,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${data.data.profile.display_name} - Links`,
     description: data.data.page_settings.description || `Links for ${data.data.profile.display_name}`,
+    alternates: {
+      canonical: `https://${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'goodsongs.app'}/links`,
+    },
     openGraph: {
       title: `${data.data.profile.display_name} - Links`,
       description: data.data.page_settings.description || `Links for ${data.data.profile.display_name}`,
