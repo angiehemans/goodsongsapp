@@ -27,6 +27,13 @@ import { Band, Event, Review } from '@/lib/api';
 import { PublicProfileResponse } from '@/lib/site-builder/types';
 import styles from './page.module.css';
 
+function truncateForMeta(text: string, maxLength = 155): string {
+  if (text.length <= maxLength) return text;
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '...';
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -36,13 +43,44 @@ export async function generateMetadata({
 
   try {
     const band = await getBand(slug);
+
+    const title = `${band.name} on goodsongs.app`;
+    const description = band.about
+      ? truncateForMeta(band.about)
+      : `Check out ${band.name} on Goodsongs. ${band.reviews_count} recommendation${band.reviews_count !== 1 ? 's' : ''} and counting.`;
+    const imageUrl = band.profile_picture_url || band.spotify_image_url || null;
+    const canonicalUrl = `https://${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'goodsongs.app'}`;
+
     return {
-      title: `${band.name} - Goodsongs`,
-      description:
-        band.about ||
-        `Check out ${band.name} on Goodsongs. ${band.reviews_count} recommendation${band.reviews_count !== 1 ? 's' : ''} and counting.`,
+      title,
+      description,
       alternates: {
-        canonical: `https://${slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'goodsongs.app'}`,
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title,
+        description,
+        url: canonicalUrl,
+        siteName: 'Goodsongs',
+        type: 'profile',
+        ...(imageUrl && {
+          images: [
+            {
+              url: imageUrl,
+              width: 500,
+              height: 500,
+              alt: band.name,
+            },
+          ],
+        }),
+      },
+      twitter: {
+        card: imageUrl ? 'summary_large_image' : 'summary',
+        title,
+        description,
+        ...(imageUrl && {
+          images: [imageUrl],
+        }),
       },
     };
   } catch {

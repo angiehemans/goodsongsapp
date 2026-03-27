@@ -23,6 +23,18 @@ export default withBundleAnalyzer({
         protocol: 'https',
         hostname: '*.coverartarchive.org',
       },
+      {
+        protocol: 'https',
+        hostname: 'goodsongs-images.sfo3.cdn.digitaloceanspaces.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.goodsongs.app',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
   },
 });
