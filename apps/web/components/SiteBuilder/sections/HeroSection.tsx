@@ -10,6 +10,8 @@ import {
   IconBrandTiktok,
   IconBrandFacebook,
   IconBrandYoutube,
+  IconMenu2,
+  IconX,
 } from '@tabler/icons-react';
 import { HeroContent, HeroData, HeroSettings, HeroElement, SectionProps, SocialLinkType } from '@/lib/site-builder/types';
 import { fixImageUrl } from '@/lib/utils';
@@ -37,6 +39,7 @@ const SocialIcons: Record<SocialLinkType, React.ReactNode> = {
 export function HeroSection({ content, data, settings, isPreview }: HeroSectionProps) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Follow button settings
   const showFollowButton = settings?.show_follow_button !== false;
@@ -263,6 +266,65 @@ export function HeroSection({ content, data, settings, isPreview }: HeroSectionP
                   <button
                     className={`hero-menu__follow-btn ${isFollowing ? 'hero-menu__follow-btn--following' : ''}`}
                     onClick={handleFollow}
+                  >
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                </li>
+              )}
+            </ul>
+            <button
+              className="hero-menu__hamburger"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <IconMenu2 size={24} />
+            </button>
+          </div>
+
+          {/* Mobile slide-in drawer */}
+          <div
+            className={`hero-menu__overlay ${mobileMenuOpen ? 'hero-menu__overlay--open' : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className={`hero-menu__drawer ${mobileMenuOpen ? 'hero-menu__drawer--open' : ''}`}>
+            <div className="hero-menu__drawer-header">
+              {menuTitle && (
+                <span className="hero-menu__title">{menuTitle}</span>
+              )}
+              <button
+                className="hero-menu__close"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+              >
+                <IconX size={24} />
+              </button>
+            </div>
+            <ul className="hero-menu__drawer-links">
+              {menuSections.map((section) => (
+                <li key={section.anchor}>
+                  <a
+                    href={`#${section.anchor}`}
+                    className="hero-menu__drawer-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileMenuOpen(false);
+                      document.getElementById(section.anchor)?.scrollIntoView({
+                        behavior: 'smooth',
+                      });
+                    }}
+                  >
+                    {section.label}
+                  </a>
+                </li>
+              ))}
+              {showFollowButton && (!isOwnProfile || isPreview) && (
+                <li>
+                  <button
+                    className={`hero-menu__follow-btn ${isFollowing ? 'hero-menu__follow-btn--following' : ''}`}
+                    onClick={() => {
+                      handleFollow();
+                      setMobileMenuOpen(false);
+                    }}
                   >
                     {isFollowing ? 'Following' : 'Follow'}
                   </button>

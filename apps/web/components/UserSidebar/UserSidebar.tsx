@@ -456,7 +456,10 @@ export function MobileNav() {
     return pathname?.startsWith(href);
   };
 
+  // Hide on pages that have their own navigation
   if (!user) return null;
+  if (pathname?.startsWith('/bands/')) return null;
+  if (pathname?.startsWith('/user/pro/')) return null;
 
   return (
     <div className={styles.mobileNav}>

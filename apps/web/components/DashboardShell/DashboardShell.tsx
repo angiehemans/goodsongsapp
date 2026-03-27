@@ -11,6 +11,7 @@ import {
 import {
   ActionIcon,
   AppShell,
+  Burger,
   Center,
   Group,
   Loader,
@@ -20,6 +21,7 @@ import {
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -44,6 +46,7 @@ export function DashboardShell({ navItems, logoHref, children }: DashboardShellP
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const pathname = usePathname();
   const router = useRouter();
+  const [navOpened, { toggle: toggleNav, close: closeNav }] = useDisclosure();
 
   if (isLoading) {
     return (
@@ -60,7 +63,7 @@ export function DashboardShell({ navItems, logoHref, children }: DashboardShellP
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 250, breakpoint: 'sm' }}
+      navbar={{ width: 250, breakpoint: 'sm', collapsed: { mobile: !navOpened } }}
       padding={0}
       styles={{
         header: { backgroundColor: 'var(--gs-bg-app)' },
@@ -92,8 +95,8 @@ export function DashboardShell({ navItems, logoHref, children }: DashboardShellP
             </Group>
           </Link>
 
-          {/* Right - Spacer for balance */}
-          <div style={{ width: 34 }} />
+          {/* Right - Burger (mobile) */}
+          <Burger opened={navOpened} onClick={toggleNav} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
         </Group>
       </AppShell.Header>
 
@@ -135,6 +138,7 @@ export function DashboardShell({ navItems, logoHref, children }: DashboardShellP
               color="grape"
               style={{ borderRadius: 0 }}
               target={item.external ? '_blank' : undefined}
+              onClick={closeNav}
             />
           ))}
         </Stack>

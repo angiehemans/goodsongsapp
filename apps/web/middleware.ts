@@ -71,13 +71,13 @@ export function middleware(req: NextRequest) {
         const remainingPath = url.pathname.replace(`/bands/${pathSlug}`, '') || '';
         return NextResponse.redirect(
           `http://${pathSlug}.localhost${port}${remainingPath}${url.search}`,
-          301
+          302
         );
       }
       const remainingPath = url.pathname.replace(`/bands/${pathSlug}`, '') || '';
       return NextResponse.redirect(
         `https://${pathSlug}.${ROOT_DOMAIN}${remainingPath}${url.search}`,
-        301
+        308
       );
     }
   }
