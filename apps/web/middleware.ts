@@ -66,6 +66,13 @@ export function middleware(req: NextRequest) {
   if (isRootOrWww && url.pathname.startsWith('/bands/')) {
     const pathSlug = url.pathname.split('/')[2];
     if (pathSlug) {
+      // Don't redirect RSC/prefetch requests — they're internal Next.js fetches
+      // that would fail with CORS errors if redirected cross-origin
+      const isRSC = req.headers.get('rsc') === '1' || url.searchParams.has('_rsc');
+      if (isRSC) {
+        return NextResponse.next();
+      }
+
       // In local dev, redirect to subdomain on localhost
       if (isLocalhost) {
         const port = hostname.includes(':') ? `:${hostname.split(':')[1]}` : '';
