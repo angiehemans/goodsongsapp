@@ -4,7 +4,7 @@ import { AboutContent, AboutData, AboutSettings, SectionProps } from '@/lib/site
 type AboutSectionProps = SectionProps<AboutContent, AboutData, AboutSettings>;
 
 // Allowed markdown elements for security
-const ALLOWED_ELEMENTS = ['p', 'strong', 'em', 'a', 'br', 'ul', 'ol', 'li'];
+const ALLOWED_ELEMENTS = ['p', 'strong', 'em', 'a', 'br', 'ul', 'ol', 'li', 'h3', 'h4', 'blockquote'];
 
 export function AboutSection({ content, data, settings, isPreview }: AboutSectionProps) {
   // Use content bio or fall back to profile about_me

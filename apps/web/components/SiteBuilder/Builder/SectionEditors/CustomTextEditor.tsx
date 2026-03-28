@@ -13,11 +13,13 @@ import {
   Text,
   TextInput,
   Textarea,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconAlignLeft,
   IconAlignCenter,
   IconAlignRight,
+  IconInfoCircle,
   IconPhoto,
   IconTrash,
 } from '@tabler/icons-react';
@@ -68,9 +70,38 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
       </div>
 
       <div>
-        <div className="builder-field-row__label">Content</div>
+        <Group gap={4} mb={4}>
+          <div className="builder-field-row__label" style={{ marginBottom: 0 }}>Content</div>
+          <Tooltip
+            label={
+              '**text** — Bold\n' +
+              '*text* — Italic\n' +
+              '[text](url) — Link\n' +
+              '### text — Heading 3\n' +
+              '#### text — Heading 4\n' +
+              '- item — Bullet list\n' +
+              '1. item — Numbered list\n' +
+              '> text — Blockquote'
+            }
+            multiline
+            w={220}
+            position="top"
+            withArrow
+            styles={{
+              tooltip: {
+                whiteSpace: 'pre-line',
+                fontSize: '12px',
+                lineHeight: 1.8,
+                backgroundColor: 'var(--gs-bg-app)',
+                color: 'var(--gs-text-primary)',
+                border: '1px solid var(--gs-border-default)',
+              },
+            }}
+          >
+            <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
+          </Tooltip>
+        </Group>
         <Textarea
-          description="Supports markdown: **bold**, *italic*, [links](url), lists"
           placeholder="Add your custom content here..."
           value={content.body || ''}
           onChange={(e) => handleContentChange('body', e.target.value)}
@@ -82,10 +113,7 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
         />
       </div>
 
-      <Group justify="space-between">
-        <Text size="xs" c="dimmed">
-          Use ### for headings, **bold**, *italic*, and [links](url)
-        </Text>
+      <Group justify="flex-end">
         <Text size="xs" c={charCount > CHAR_LIMITS.custom_text_body * 0.9 ? 'orange' : 'dimmed'}>
           {charCount}/{CHAR_LIMITS.custom_text_body}
         </Text>

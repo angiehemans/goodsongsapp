@@ -132,6 +132,17 @@ export function fontNameFromUrl(url: string): string | null {
   return decodeURIComponent(match[1].replace(/\+/g, ' '));
 }
 
+// Normalize a Google Fonts URL by stripping query parameters
+// e.g., "https://fonts.google.com/specimen/Open+Sans?preview.script=Latn" → "https://fonts.google.com/specimen/Open+Sans"
+export function normalizeGoogleFontsUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return url;
+  }
+}
+
 // Get the resolved font name — uses font_name from backend if available, falls back to extracting from URL
 export function getResolvedFontName(fontValue: string, fontName?: string): string {
   if (fontName) return fontName;

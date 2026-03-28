@@ -130,10 +130,39 @@ export function AboutEditor({ index, content, settings }: AboutEditorProps) {
 
       {/* About Text */}
       <div>
-        <div className="builder-field-row__label">About text</div>
+        <Group gap={4} mb={4}>
+          <div className="builder-field-row__label" style={{ marginBottom: 0 }}>About text</div>
+          <Tooltip
+            label={
+              '**text** — Bold\n' +
+              '*text* — Italic\n' +
+              '[text](url) — Link\n' +
+              '### text — Heading 3\n' +
+              '#### text — Heading 4\n' +
+              '- item — Bullet list\n' +
+              '1. item — Numbered list\n' +
+              '> text — Blockquote'
+            }
+            multiline
+            w={220}
+            position="top"
+            withArrow
+            styles={{
+              tooltip: {
+                whiteSpace: 'pre-line',
+                fontSize: '12px',
+                lineHeight: 1.8,
+                backgroundColor: 'var(--gs-bg-app)',
+                color: 'var(--gs-text-primary)',
+                border: '1px solid var(--gs-border-default)',
+              },
+            }}
+          >
+            <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
+          </Tooltip>
+        </Group>
         <Textarea
           placeholder="Tell visitors about yourself..."
-          description="Supports basic markdown: **bold**, *italic*, [links](url)"
           value={content.bio || ''}
           onChange={(e) => handleContentChange('bio', e.target.value)}
           maxLength={CHAR_LIMITS.about_body}
@@ -144,10 +173,7 @@ export function AboutEditor({ index, content, settings }: AboutEditorProps) {
         />
       </div>
 
-      <Group justify="space-between">
-        <Text size="xs" c="dimmed">
-          Tip: Use **text** for bold, *text* for italic
-        </Text>
+      <Group justify="flex-end">
         <Text size="xs" c={charCount > CHAR_LIMITS.about_body * 0.9 ? 'orange' : 'dimmed'}>
           {charCount}/{CHAR_LIMITS.about_body}
         </Text>

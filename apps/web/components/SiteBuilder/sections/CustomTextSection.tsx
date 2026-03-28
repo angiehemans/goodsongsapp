@@ -5,7 +5,7 @@ import { fixImageUrl } from '@/lib/utils';
 type CustomTextSectionProps = SectionProps<CustomTextContent, CustomTextData, CustomTextSettings>;
 
 // Allowed markdown elements for security
-const ALLOWED_ELEMENTS = ['p', 'strong', 'em', 'a', 'br', 'ul', 'ol', 'li', 'h3', 'h4'];
+const ALLOWED_ELEMENTS = ['p', 'strong', 'em', 'a', 'br', 'ul', 'ol', 'li', 'h3', 'h4', 'blockquote'];
 
 export function CustomTextSection({ content, settings, isPreview }: CustomTextSectionProps) {
   const title = content.title;

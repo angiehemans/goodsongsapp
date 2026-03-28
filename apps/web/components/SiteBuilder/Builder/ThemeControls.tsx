@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ColorInput, Group, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
-import { APPROVED_FONTS, FONT_CATEGORIES, getGoogleFontsUrl, isGoogleFontsUrl, fontNameFromUrl } from '@/lib/site-builder/fonts';
+import { APPROVED_FONTS, FONT_CATEGORIES, getGoogleFontsUrl, isGoogleFontsUrl, fontNameFromUrl, normalizeGoogleFontsUrl } from '@/lib/site-builder/fonts';
 import { useBuilderStore } from '@/lib/site-builder/store';
 
 // Build grouped font options from the shared font list
@@ -68,7 +68,9 @@ function FontField({ label, value, onChange }: FontFieldProps) {
   const handleCustomUrlChange = (url: string) => {
     setCustomUrl(url);
     if (isGoogleFontsUrl(url)) {
-      onChange(url);
+      const normalized = normalizeGoogleFontsUrl(url);
+      setCustomUrl(normalized);
+      onChange(normalized);
     }
   };
 
