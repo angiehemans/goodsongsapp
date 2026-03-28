@@ -35,7 +35,6 @@
   container-name: profile;
 }
 
-
 .profile-page h1,
 .profile-page h2,
 .profile-page h3,
@@ -261,7 +260,9 @@
   font-size: 1rem;
   color: var(--gs-text-muted);
   text-decoration: none;
-  transition: color 0.2s, background-color 0.2s;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
 }
 
 .hero-menu__drawer-link:hover {
@@ -694,6 +695,9 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  padding: 0.5rem;
+  background-color: var(--gs-card-bg);
+  border-radius: var(--gs-radius-lg);
 }
 
 .recommendation-card__artwork {

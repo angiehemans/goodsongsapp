@@ -124,6 +124,7 @@ export default function ProSettingsPage() {
     if (band) {
       const changed =
         bandName !== (band.name || '') ||
+        bandSlug !== (band.slug || '') ||
         bandAbout !== (band.about || '') ||
         bandSpotify !== (band.spotify_link || '') ||
         bandBandcamp !== (band.bandcamp_link || '') ||
@@ -131,7 +132,7 @@ export default function ProSettingsPage() {
         bandYoutubeMusic !== (band.youtube_music_link || '');
       setBandHasChanges(changed);
     }
-  }, [bandName, bandAbout, bandSpotify, bandBandcamp, bandAppleMusic, bandYoutubeMusic, band]);
+  }, [bandName, bandSlug, bandAbout, bandSpotify, bandBandcamp, bandAppleMusic, bandYoutubeMusic, band]);
 
   // Countdown timer for retry
   useEffect(() => {
@@ -198,6 +199,7 @@ export default function ProSettingsPage() {
     try {
       await apiClient.updateBand(band.slug, {
         name: bandName,
+        slug: bandSlug,
         about: bandAbout,
         spotify_link: bandSpotify,
         bandcamp_link: bandBandcamp,
@@ -208,7 +210,7 @@ export default function ProSettingsPage() {
       notifications.show({ title: 'Band Updated', message: 'Your band profile has been updated.', color: 'green' });
     } catch (error) {
       console.error('Failed to update band:', error);
-      notifications.show({ title: 'Error', message: 'Failed to update band profile.', color: 'red' });
+      notifications.show({ title: 'Error', message: error instanceof Error ? error.message : 'Failed to update band profile.', color: 'red' });
     } finally {
       setBandSaving(false);
     }
@@ -410,10 +412,10 @@ export default function ProSettingsPage() {
             />
 
             <TextInput
-              label="Slug"
+              label="Custom URL"
               value={bandSlug}
-              disabled
-              description="Band URL slug cannot be changed"
+              onChange={(e) => setBandSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+              description={`goodsongs.app/bands/${bandSlug || 'your-band-name'}`}
             />
 
             <Textarea

@@ -167,7 +167,7 @@ export function BandSidebar({ band, badgeText, actionButtons, onBandSaved }: Ban
       console.error('Failed to update band:', error);
       notifications.show({
         title: 'Error',
-        message: 'Failed to update band profile. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to update band profile. Please try again.',
         color: 'red',
       });
     } finally {
