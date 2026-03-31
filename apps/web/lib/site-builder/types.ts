@@ -291,6 +291,7 @@ export interface HeroContent {
 // Music section content (data hydrated from band)
 export interface MusicContent {
   heading?: string;
+  menu_label?: string;
   embed_code?: string; // Legacy single embed (for backwards compatibility)
   embed_codes?: string[]; // Multiple embeds (up to 8)
 }
@@ -301,11 +302,13 @@ export interface EventsContent {}
 // Posts section content (data hydrated from user)
 export interface PostsContent {
   heading?: string;
+  menu_label?: string;
 }
 
 // About section content
 export interface AboutContent {
   heading?: string;
+  menu_label?: string;
   bio?: string;
 }
 
@@ -315,17 +318,20 @@ export interface RecommendationsContent {}
 // Mailing list section content
 export interface MailingListContent {
   heading?: string;
+  menu_label?: string;
   description?: string;
 }
 
 // Merch section content
 export interface MerchContent {
   heading?: string;
+  menu_label?: string;
 }
 
 // Custom text section content
 export interface CustomTextContent {
   title?: string;
+  menu_label?: string;
   body?: string;
   image_url?: string;
   button_text?: string;

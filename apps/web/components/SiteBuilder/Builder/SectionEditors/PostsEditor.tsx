@@ -114,6 +114,27 @@ export function PostsEditor({ index, content, settings }: PostsEditorProps) {
         </div>
       </div>
 
+      {/* Menu Text */}
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">
+          <Group gap={4}>
+            Menu text
+            <Tooltip label="Leave blank to use section title" withArrow position="top">
+              <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
+            </Tooltip>
+          </Group>
+        </div>
+        <div className="builder-field-row__input">
+          <TextInput
+            placeholder=""
+            value={content.menu_label || ''}
+            onChange={(e) => handleContentChange('menu_label', e.target.value)}
+            size="sm"
+            aria-label="Menu text"
+          />
+        </div>
+      </div>
+
       {/* Title Alignment */}
       <div className="builder-field-row">
         <div className="builder-field-row__label">Title alignment</div>

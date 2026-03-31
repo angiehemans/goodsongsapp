@@ -90,7 +90,7 @@ export function ProfileSections({ sections, theme, isPreview = false }: ProfileS
     .filter((section) => section.type !== 'hero')
     .map((section) => ({
       type: section.type,
-      label: sectionLabels[section.type],
+      label: (section.content as any)?.menu_label || (section.content as any)?.title || (section.content as any)?.heading || sectionLabels[section.type],
       anchor: `section-${section.type}`,
     }));
 

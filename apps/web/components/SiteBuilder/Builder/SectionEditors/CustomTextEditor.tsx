@@ -69,9 +69,31 @@ export function CustomTextEditor({ index, content, settings }: CustomTextEditorP
         </div>
       </div>
 
+      {/* Menu Text */}
+      <div className="builder-field-row">
+        <div className="builder-field-row__label">
+          <Group gap={4}>
+            Menu text
+            <Tooltip label="Leave blank to use section title" withArrow position="top">
+              <IconInfoCircle size={14} style={{ color: 'var(--gs-text-extra-muted)', cursor: 'help' }} />
+            </Tooltip>
+          </Group>
+        </div>
+        <div className="builder-field-row__input">
+          <TextInput
+            placeholder=""
+            value={content.menu_label || ''}
+            onChange={(e) => handleContentChange('menu_label', e.target.value)}
+            size="sm"
+            aria-label="Menu text"
+          />
+        </div>
+      </div>
+
       <div>
         <Group gap={4} mb={4}>
           <div className="builder-field-row__label" style={{ marginBottom: 0 }}>Content</div>
+          <Text size="xs" c="dimmed">— you can use markdown</Text>
           <Tooltip
             label={
               '**text** — Bold\n' +
